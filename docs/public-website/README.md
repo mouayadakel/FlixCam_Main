@@ -11,6 +11,7 @@ This folder contains **all specifications and planning for the Public Website** 
 
 - **[PUBLIC_WEBSITE_COMPLETE_SPECIFICATION.md](./PUBLIC_WEBSITE_COMPLETE_SPECIFICATION.md)** – Complete specification: decisions, admin→public mapping, reference sites, product decisions (deferred registration, Equipment as catalog, Arabic + English + Chinese), UX requirements, and open questions.
 - **[CURSOR_BUILD_SPEC_PUBLIC_WEBSITE.md](./CURSOR_BUILD_SPEC_PUBLIC_WEBSITE.md)** – Implementation-ready build spec for Cursor: scope, API contracts, sitemap, deferred registration flow, i18n (ar/en/zh), phased plan, UI components, and acceptance criteria.
+- **[FILE_MANAGEMENT_PUBLIC_WEBSITE.md](./FILE_MANAGEMENT_PUBLIC_WEBSITE.md)** – File management: folder and file structure for the public website (app routes, layouts, components, lib API client, hooks, i18n, public API routes). Use as reference before implementing.
 
 ## Typical scope
 
