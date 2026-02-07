@@ -86,7 +86,7 @@ export class DeliveryPolicy {
     const permissionMap: Record<string, string> = {
       schedule: 'delivery.schedule',
       update: 'delivery.update',
-      view: 'delivery.view',
+      view: 'delivery.read',
       manage: 'delivery.manage',
     }
 

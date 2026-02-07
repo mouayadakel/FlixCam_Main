@@ -99,7 +99,7 @@ export class MarketingPolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'marketing.create',
-      view: 'marketing.view',
+      view: 'marketing.read',
       update: 'marketing.update',
       send: 'marketing.send',
       delete: 'marketing.delete',

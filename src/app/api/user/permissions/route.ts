@@ -34,7 +34,14 @@ export async function GET(request: Request) {
 
     const permissions = await getUserPermissions(session.user.id)
 
-    return NextResponse.json({ permissions })
+    return NextResponse.json(
+      { permissions },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=300',
+        },
+      }
+    )
   } catch (error: any) {
     // Log error only in development
     if (process.env.NODE_ENV === 'development') {

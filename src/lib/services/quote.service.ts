@@ -236,7 +236,7 @@ export class QuoteService {
    */
   static async getById(id: string, userId: string): Promise<Quote> {
     // Check permission
-    const canView = await hasPermission(userId, 'quote.view' as any)
+    const canView = await hasPermission(userId, 'quote.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view quotes')
     }
@@ -314,7 +314,7 @@ export class QuoteService {
     } = {}
   ): Promise<{ quotes: Quote[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'quote.view' as any)
+    const canView = await hasPermission(userId, 'quote.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view quotes')
     }

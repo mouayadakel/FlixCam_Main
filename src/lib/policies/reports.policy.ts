@@ -53,7 +53,7 @@ export class ReportsPolicy {
   ): Promise<boolean> {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
-      view: 'reports.view',
+      view: 'reports.read',
       export: 'reports.export',
     }
 

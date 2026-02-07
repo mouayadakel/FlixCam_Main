@@ -1,4 +1,8 @@
 {
+  "header": {
+    "searchPlaceholder": "我在找...",
+    "topBarContact": "联系"
+  },
   "nav": {
     "home": "首页",
     "equipment": "设备",
@@ -27,6 +31,7 @@
     "clear": "清除",
     "viewAll": "查看全部",
     "noResults": "未找到结果",
+    "productsCount": "产品",
     "recommendations": "您可能还喜欢",
     "addToCart": "加入购物车",
     "bookNow": "立即预订",
@@ -52,18 +57,37 @@
     "heroTitle": "影视设备与工作室租赁",
     "heroSubtitle": "在利雅得为您的项目预订合适的设备和工作室",
     "featuredEquipment": "精选设备",
+    "topBrandsTitle": "热门品牌",
     "exploreStudios": "探索工作室",
     "howItWorksTitle": "如何运作",
     "howItWorksStep1": "选择",
     "howItWorksStep2": "预订",
     "howItWorksStep3": "收货",
     "ctaTitle": "准备开始？",
-    "ctaButton": "立即预订"
+    "ctaButton": "立即预订",
+    "testimonialsTitle": "客户评价",
+    "testimonials": [
+      { "quote": "设备很棒，预订流程顺畅。强烈推荐用于电影项目。", "authorName": "Sarah M.", "rating": 5 },
+      { "quote": "专业服务，设备维护良好。会再次租赁。", "authorName": "Ahmed K.", "rating": 5 },
+      { "quote": "从预订到归还都很简单。团队非常帮忙。", "authorName": "Lisa T.", "rating": 5 }
+    ]
   },
   "footer": {
     "links": "快速链接",
     "contact": "联系我们",
-    "copyright": "版权所有"
+    "copyright": "版权所有",
+    "contactUs": "联系我们",
+    "brand": "品牌",
+    "category": "分类",
+    "about": "关于",
+    "aboutText": "我们在利雅得提供专业影视设备与工作室租赁。预订相机、灯光、音频等。",
+    "gotQuestion": "有问题？全天候致电我们",
+    "phone": "电话",
+    "email": "邮箱",
+    "followUs": "关注我们",
+    "paymentMethods": "我们接受",
+    "phoneNumber": "+966 XX XXX XXXX",
+    "emailAddress": "hello@example.com"
   },
   "checkout": {
     "title": "结账",

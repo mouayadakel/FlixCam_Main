@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { usePermissions } from '@/hooks/use-permissions'
 import {
   Home,
   Calendar,
@@ -44,93 +45,94 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'مركز القيادة', en: 'Command Center' },
     icon: Home,
     items: [
-      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, href: '/admin/dashboard' },
-      { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center' },
-      { label: { ar: 'الموافقات', en: 'Approvals' }, href: '/admin/approvals' },
-      { label: { ar: 'العمليات الحية', en: 'Live Operations' }, href: '/admin/live-ops' },
+      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, href: '/admin/dashboard', permission: 'dashboard.read' },
+      { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center', permission: 'dashboard.read' },
+      { label: { ar: 'الموافقات', en: 'Approvals' }, href: '/admin/approvals', permission: 'approval.read' },
+      { label: { ar: 'العمليات الحية', en: 'Live Operations' }, href: '/admin/live-ops', permission: 'dashboard.read' },
     ],
   },
   {
     title: { ar: 'محرك الحجوزات', en: 'Booking Engine' },
     icon: Calendar,
     items: [
-      { label: { ar: 'عروض الأسعار', en: 'Quotes' }, href: '/admin/quotes' },
-      { label: { ar: 'الحجوزات', en: 'Bookings' }, href: '/admin/bookings' },
-      { label: { ar: 'الحجوزات المتكررة', en: 'Recurring Bookings' }, href: '/admin/recurring-bookings' },
-      { label: { ar: 'التقويم', en: 'Calendar' }, href: '/admin/calendar' },
+      { label: { ar: 'عروض الأسعار', en: 'Quotes' }, href: '/admin/quotes', permission: 'quote.read' },
+      { label: { ar: 'الحجوزات', en: 'Bookings' }, href: '/admin/bookings', permission: 'booking.read' },
+      { label: { ar: 'الحجوزات المتكررة', en: 'Recurring Bookings' }, href: '/admin/recurring-bookings', permission: 'booking.read' },
+      { label: { ar: 'التقويم', en: 'Calendar' }, href: '/admin/calendar', permission: 'booking.read' },
     ],
   },
   {
     title: { ar: 'أدوات البيع الذكية', en: 'Smart Sales Tools' },
     icon: Brain,
     items: [
-      { label: { ar: 'ميزات الذكاء الاصطناعي', en: 'AI Features' }, href: '/admin/ai' },
-      { label: { ar: 'منشئ الحزم', en: 'Kit Builder' }, href: '/admin/kit-builder' },
-      { label: { ar: 'التسعير الديناميكي', en: 'Dynamic Pricing' }, href: '/admin/dynamic-pricing' },
-      { label: { ar: 'التوصيات الذكية', en: 'AI Recommendations' }, href: '/admin/ai-recommendations' },
+      { label: { ar: 'ميزات الذكاء الاصطناعي', en: 'AI Features' }, href: '/admin/ai', permission: 'ai.use' },
+      { label: { ar: 'منشئ الحزم', en: 'Kit Builder' }, href: '/admin/kit-builder', permission: 'kit.read' },
+      { label: { ar: 'التسعير الديناميكي', en: 'Dynamic Pricing' }, href: '/admin/dynamic-pricing', permission: 'pricing.read' },
+      { label: { ar: 'التوصيات الذكية', en: 'AI Recommendations' }, href: '/admin/ai-recommendations', permission: 'ai.use' },
     ],
   },
   {
     title: { ar: 'المخزون والأصول', en: 'Inventory & Assets' },
     icon: Package,
     items: [
-      { label: { ar: 'المعدات', en: 'Equipment' }, href: '/admin/inventory/equipment' },
-      { label: { ar: 'الحزم (المجموعات)', en: 'Kits & Bundles' }, href: '/admin/inventory/kits' },
-      { label: { ar: 'الفئات', en: 'Categories' }, href: '/admin/inventory/categories' },
-      { label: { ar: 'العلامات التجارية', en: 'Brands' }, href: '/admin/inventory/brands' },
-      { label: { ar: 'الاستوديوهات', en: 'Studios' }, href: '/admin/studios' },
-      { label: { ar: 'الاستيراد', en: 'Import' }, href: '/admin/inventory/import' },
+      { label: { ar: 'المعدات', en: 'Equipment' }, href: '/admin/inventory/equipment', permission: 'equipment.read' },
+      { label: { ar: 'الحزم (المجموعات)', en: 'Kits & Bundles' }, href: '/admin/inventory/kits', permission: 'kit.read' },
+      { label: { ar: 'الفئات', en: 'Categories' }, href: '/admin/inventory/categories', permission: 'category.read' },
+      { label: { ar: 'العلامات التجارية', en: 'Brands' }, href: '/admin/inventory/brands', permission: 'brand.read' },
+      { label: { ar: 'الاستوديوهات', en: 'Studios' }, href: '/admin/studios', permission: 'studio.read' },
+      { label: { ar: 'الاستيراد', en: 'Import' }, href: '/admin/inventory/import', permission: 'import.read' },
     ],
   },
   {
     title: { ar: 'العمليات الميدانية', en: 'Field Operations' },
     icon: Wrench,
     items: [
-      { label: { ar: 'المستودع', en: 'Warehouse' }, href: '/admin/ops/warehouse' },
-      { label: { ar: 'التوصيل', en: 'Delivery' }, href: '/admin/ops/delivery' },
-      { label: { ar: 'الفنيون', en: 'Technicians' }, href: '/admin/technicians' },
-      { label: { ar: 'الصيانة', en: 'Maintenance' }, href: '/admin/maintenance' },
-      { label: { ar: 'مطالبات الأضرار', en: 'Damage Claims' }, href: '/admin/damage-claims' },
+      { label: { ar: 'المستودع', en: 'Warehouse' }, href: '/admin/ops/warehouse', permission: 'warehouse.read' },
+      { label: { ar: 'التوصيل', en: 'Delivery' }, href: '/admin/ops/delivery', permission: 'delivery.read' },
+      { label: { ar: 'الفنيون', en: 'Technicians' }, href: '/admin/technicians', permission: 'user.read' },
+      { label: { ar: 'الصيانة', en: 'Maintenance' }, href: '/admin/maintenance', permission: 'maintenance.read' },
+      { label: { ar: 'مطالبات الأضرار', en: 'Damage Claims' }, href: '/admin/damage-claims', permission: 'booking.read' },
     ],
   },
   {
     title: { ar: 'المالية والقانونية', en: 'Finance & Legal' },
     icon: DollarSign,
     items: [
-      { label: { ar: 'الفواتير', en: 'Invoices' }, href: '/admin/invoices' },
-      { label: { ar: 'المدفوعات', en: 'Payments' }, href: '/admin/payments' },
-      { label: { ar: 'العقود', en: 'Contracts' }, href: '/admin/contracts' },
-      { label: { ar: 'التقارير المالية', en: 'Financial Reports' }, href: '/admin/finance/reports' },
-      { label: { ar: 'التحليلات والإشغال', en: 'Analytics & Utilization' }, href: '/admin/analytics' },
+      { label: { ar: 'الفواتير', en: 'Invoices' }, href: '/admin/invoices', permission: 'invoice.read' },
+      { label: { ar: 'المدفوعات', en: 'Payments' }, href: '/admin/payments', permission: 'payment.read' },
+      { label: { ar: 'العقود', en: 'Contracts' }, href: '/admin/contracts', permission: 'contract.read' },
+      { label: { ar: 'التقارير المالية', en: 'Financial Reports' }, href: '/admin/finance/reports', permission: 'reports.read_financial' },
+      { label: { ar: 'التحليلات والإشغال', en: 'Analytics & Utilization' }, href: '/admin/analytics', permission: 'dashboard.analytics' },
     ],
   },
   {
     title: { ar: 'العملاء والتسويق', en: 'CRM & Marketing' },
     icon: Users,
     items: [
-      { label: { ar: 'العملاء', en: 'Clients' }, href: '/admin/clients' },
-      { label: { ar: 'التقييمات', en: 'Reviews' }, href: '/admin/reviews' },
-      { label: { ar: 'شرائح العملاء', en: 'Customer Segments' }, href: '/admin/settings/customer-segments' },
-      { label: { ar: 'الكوبونات', en: 'Coupons' }, href: '/admin/coupons' },
-      { label: { ar: 'التسويق', en: 'Marketing' }, href: '/admin/marketing' },
+      { label: { ar: 'العملاء', en: 'Clients' }, href: '/admin/clients', permission: 'client.read' },
+      { label: { ar: 'التقييمات', en: 'Reviews' }, href: '/admin/reviews', permission: 'client.read' },
+      { label: { ar: 'شرائح العملاء', en: 'Customer Segments' }, href: '/admin/settings/customer-segments', permission: 'client.read' },
+      { label: { ar: 'الكوبونات', en: 'Coupons' }, href: '/admin/coupons', permission: 'coupon.read' },
+      { label: { ar: 'التسويق', en: 'Marketing' }, href: '/admin/marketing', permission: 'marketing.read' },
     ],
   },
   {
     title: { ar: 'الإعدادات', en: 'Settings' },
     icon: Settings,
     items: [
-      { label: { ar: 'الإعدادات العامة', en: 'General Settings' }, href: '/admin/settings' },
-      { label: { ar: 'قوالب الإشعارات', en: 'Notification Templates' }, href: '/admin/settings/notification-templates' },
-      { label: { ar: 'التكاملات', en: 'Integrations' }, href: '/admin/settings/integrations' },
-      { label: { ar: 'الميزات', en: 'Features' }, href: '/admin/settings/features' },
-      { label: { ar: 'الأدوار', en: 'Roles' }, href: '/admin/settings/roles' },
-      { label: { ar: 'التحكم بالذكاء الاصطناعي', en: 'AI Control' }, href: '/admin/settings/ai-control' },
+      { label: { ar: 'الإعدادات العامة', en: 'General Settings' }, href: '/admin/settings', permission: 'settings.read' },
+      { label: { ar: 'قوالب الإشعارات', en: 'Notification Templates' }, href: '/admin/settings/notification-templates', permission: 'settings.read' },
+      { label: { ar: 'التكاملات', en: 'Integrations' }, href: '/admin/settings/integrations', permission: 'settings.read' },
+      { label: { ar: 'الميزات', en: 'Features' }, href: '/admin/settings/features', permission: 'settings.update' },
+      { label: { ar: 'الأدوار', en: 'Roles' }, href: '/admin/settings/roles', permission: 'settings.manage_roles' },
+      { label: { ar: 'التحكم بالذكاء الاصطناعي', en: 'AI Control' }, href: '/admin/settings/ai-control', permission: 'settings.update' },
     ],
   },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { hasPermission } = usePermissions()
   const [collapsed, setCollapsed] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
@@ -209,8 +211,10 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {sidebarSections.map((section) => {
+          const filteredItems = section.items.filter((item) => hasPermission(item.permission))
+          if (filteredItems.length === 0) return null
           const isExpanded = expandedSections.includes(section.title.ar)
-          const hasActiveItem = section.items.some((item) => isActive(item.href))
+          const hasActiveItem = filteredItems.some((item) => isActive(item.href))
 
           return (
             <div key={section.title.ar} className="space-y-1">
@@ -240,7 +244,7 @@ export function AdminSidebar() {
               {/* Section Items */}
               {!collapsed && isExpanded && (
                 <ul className="mr-4 space-y-1 border-r-2 border-neutral-100 pr-2">
-                  {section.items.map((item) => {
+                  {filteredItems.map((item) => {
                     const active = isActive(item.href)
                     return (
                       <li key={item.href}>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { ImportService } from '@/lib/services/import.service'
 import { addImportJob } from '@/lib/queue/import.queue'
@@ -36,6 +37,9 @@ export async function POST(request: NextRequest) {
 
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await hasPermission(session.user.id, PERMISSIONS.IMPORT_CREATE))) {
+    return NextResponse.json({ error: 'Forbidden - import.create required' }, { status: 403 })
+  }
 
   try {
     const formData = await request.formData()

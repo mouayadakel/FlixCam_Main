@@ -1,12 +1,13 @@
 /**
  * @file layout.tsx
- * @description Admin layout with sidebar, header, and breadcrumbs (Arabic-first, RTL)
+ * @description Admin layout with sidebar, header, breadcrumbs, and route protection
  * @module app/admin
  */
 
 import { AdminSidebar } from '@/components/layouts/admin-sidebar'
 import { AdminHeader } from '@/components/layouts/admin-header'
 import { AdminBreadcrumbs } from '@/components/layouts/admin-breadcrumbs'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Suspense } from 'react'
 
 export default function AdminLayout({
@@ -35,9 +36,9 @@ export default function AdminLayout({
             <div className="mb-6">
               <AdminBreadcrumbs />
             </div>
-            
-            {/* Page Content */}
-            {children}
+
+            {/* Page Content - protected by permission based on route */}
+            <ProtectedRoute>{children}</ProtectedRoute>
           </div>
         </main>
       </div>

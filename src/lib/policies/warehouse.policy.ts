@@ -86,7 +86,7 @@ export class WarehousePolicy {
     const permissionMap: Record<string, string> = {
       check_out: 'warehouse.check_out',
       check_in: 'warehouse.check_in',
-      view: 'warehouse.view',
+      view: 'warehouse.read',
       manage: 'warehouse.manage',
     }
 

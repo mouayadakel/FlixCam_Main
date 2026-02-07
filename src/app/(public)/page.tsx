@@ -7,6 +7,8 @@ import { prisma } from '@/lib/db/prisma'
 import { HomeHero } from '@/components/features/home/home-hero'
 import { HomeFeaturedEquipment } from '@/components/features/home/home-featured-equipment'
 import { HomeHowItWorks } from '@/components/features/home/home-how-it-works'
+import { HomeTopBrands } from '@/components/features/home/home-top-brands'
+import { HomeTestimonials } from '@/components/features/home/home-testimonials'
 import { HomeFaq } from '@/components/features/home/home-faq'
 import { HomeCta } from '@/components/features/home/home-cta'
 
@@ -44,7 +46,9 @@ export default async function PublicHomePage() {
     <main className="flex flex-col">
       <HomeHero />
       <HomeFeaturedEquipment items={featured} />
+      <HomeTopBrands />
       <HomeHowItWorks />
+      <HomeTestimonials />
       <HomeFaq />
       <HomeCta />
     </main>

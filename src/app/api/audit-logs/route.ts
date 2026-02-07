@@ -31,10 +31,10 @@ export async function GET(request: Request) {
     }
 
     // Check permission
-    const canView = await hasPermission(session.user.id, 'audit.view' as any)
+    const canView = await hasPermission(session.user.id, 'audit.read' as any)
     if (!canView) {
       return NextResponse.json(
-        { error: 'Forbidden - Missing audit.view permission' },
+        { error: 'Forbidden - Missing audit.read permission' },
         { status: 403 }
       )
     }

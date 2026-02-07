@@ -4,6 +4,7 @@
 
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { PublicHeader } from '@/components/public/public-header'
 import { PublicFooter } from '@/components/public/public-footer'
 import { WhatsAppCta } from '@/components/public/whatsapp-cta'
@@ -30,8 +31,17 @@ export const metadata: Metadata = {
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      <Link
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:start-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-brand-primary focus:text-white focus:rounded-public-button focus:outline-none"
+      >
+        Skip to main content
+      </Link>
       <PublicHeader />
-      <main className="min-h-[calc(100vh-theme(spacing.14)-1px)] flex flex-col">
+      <main
+        id="main-content"
+        className="min-h-[calc(100vh-theme(spacing.14)-1px)] flex flex-col"
+      >
         {children}
       </main>
       <PublicFooter />

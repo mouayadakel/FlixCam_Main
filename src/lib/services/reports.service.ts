@@ -35,7 +35,7 @@ export class ReportsService {
     userId: string
   ): Promise<RevenueReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -174,7 +174,7 @@ export class ReportsService {
     userId: string
   ): Promise<BookingReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -324,7 +324,7 @@ export class ReportsService {
     userId: string
   ): Promise<EquipmentReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -450,7 +450,7 @@ export class ReportsService {
     userId: string
   ): Promise<CustomerReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -557,7 +557,7 @@ export class ReportsService {
     userId: string
   ): Promise<FinancialReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -661,7 +661,7 @@ export class ReportsService {
     userId: string
   ): Promise<InventoryReport> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }
@@ -747,7 +747,7 @@ export class ReportsService {
    */
   static async getDashboardStats(userId: string): Promise<DashboardStats> {
     // Check permission
-    const canView = await hasPermission(userId, 'reports.view' as any)
+    const canView = await hasPermission(userId, 'reports.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view reports')
     }

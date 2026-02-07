@@ -1,10 +1,14 @@
 /**
- * Equipment card for catalog (Phase 2.2).
+ * Equipment card for catalog – design cards.product:
+ * image, vendor_label, title, price; sold_out badge; hover lift.
  */
+
+'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
+import { cn } from '@/lib/utils'
 
 export interface EquipmentCardItem {
   id: string
@@ -24,15 +28,15 @@ interface EquipmentCardProps {
 
 export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   const { t } = useLocale()
-  const available = (item.quantityAvailable ?? 0) > 0
+  const soldOut = (item.quantityAvailable ?? 0) <= 0
 
   if (layout === 'list') {
     return (
       <Link
         href={`/equipment/${item.id}`}
-        className="flex gap-4 rounded-lg border bg-card p-3 hover:shadow-md transition-shadow"
+        className="flex gap-4 rounded-public-card border border-border-light bg-white p-3 transition-[box-shadow,transform] hover:shadow-card-hover motion-reduce:transition-none [@media(pointer:fine)]:hover:-translate-y-0.5"
       >
-        <div className="relative h-24 w-32 shrink-0 rounded-md overflow-hidden bg-muted">
+        <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-public-card bg-surface-light">
           {item.media[0]?.url ? (
             <Image
               src={item.media[0].url}
@@ -42,25 +46,33 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
               sizes="128px"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+            <div className="flex h-full w-full items-center justify-center text-text-muted text-xs">
               No image
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium truncate">{item.model ?? item.sku}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-label-small uppercase tracking-wide text-text-muted">
+            {item.brand?.name ?? item.category?.name ?? '—'}
+          </p>
+          <p className="font-medium truncate text-text-heading">
+            {item.model ?? item.sku}
+          </p>
+          <p className="text-price-tag text-text-heading">
             {item.dailyPrice > 0
               ? `${Number(item.dailyPrice).toLocaleString()} SAR / ${t('common.pricePerDay')}`
               : '—'}
           </p>
         </div>
         <span
-          className={`shrink-0 text-xs font-medium px-2 py-1 rounded ${
-            available ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'
-          }`}
+          className={cn(
+            'shrink-0 rounded px-2 py-1 text-label-small uppercase',
+            soldOut
+              ? 'bg-sold-out text-white'
+              : 'bg-surface-light text-text-body'
+          )}
         >
-          {available ? t('common.available') : t('common.unavailable')}
+          {soldOut ? t('common.unavailable') : t('common.available')}
         </span>
       </Link>
     )
@@ -69,33 +81,36 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   return (
     <Link
       href={`/equipment/${item.id}`}
-      className="group rounded-lg border bg-card overflow-hidden hover:shadow-md transition-shadow"
+      className="group flex flex-col overflow-hidden rounded-public-card border border-border-light bg-white transition-[box-shadow,transform] hover:shadow-card-hover motion-reduce:transition-none [@media(pointer:fine)]:hover:-translate-y-0.5"
     >
-      <div className="aspect-[4/3] relative bg-muted">
+      <div className="relative aspect-[4/3] shrink-0 bg-surface-light">
         {item.media[0]?.url ? (
           <Image
             src={item.media[0].url}
             alt={item.model ?? item.sku ?? item.id}
             fill
-            className="object-cover group-hover:scale-105 transition-transform"
+            className="object-cover transition-transform duration-200 group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+          <div className="flex h-full w-full items-center justify-center text-text-muted text-sm">
             No image
           </div>
         )}
-        <span
-          className={`absolute top-2 end-2 text-xs font-medium px-2 py-1 rounded ${
-            available ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          {available ? t('common.available') : t('common.unavailable')}
-        </span>
+        {soldOut && (
+          <span className="absolute top-2 end-2 rounded bg-sold-out px-2 py-1 text-label-small uppercase text-white">
+            {t('common.unavailable')}
+          </span>
+        )}
       </div>
-      <div className="p-3">
-        <p className="font-medium truncate">{item.model ?? item.sku}</p>
-        <p className="text-sm text-muted-foreground">
+      <div className="flex min-w-0 flex-1 flex-col p-3">
+        <p className="text-label-small uppercase tracking-wide text-text-muted">
+          {item.brand?.name ?? item.category?.name ?? '—'}
+        </p>
+        <p className="mt-1 truncate text-card-title text-text-heading">
+          {item.model ?? item.sku ?? item.id}
+        </p>
+        <p className="mt-1 text-price-tag text-text-heading">
           {item.dailyPrice > 0
             ? `${Number(item.dailyPrice).toLocaleString()} SAR / ${t('common.pricePerDay')}`
             : '—'}

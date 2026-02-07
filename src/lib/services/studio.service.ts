@@ -182,7 +182,7 @@ export class StudioService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ) {
     // Check permission
-    const canEdit = await hasPermission(userId, 'equipment.edit' as any)
+    const canEdit = await hasPermission(userId, 'equipment.update' as any)
     if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit studios')
     }
@@ -341,7 +341,7 @@ export class StudioService {
    */
   static async getById(id: string, userId: string) {
     // Check permission
-    const canView = await hasPermission(userId, 'equipment.view' as any)
+    const canView = await hasPermission(userId, 'equipment.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view studios')
     }
@@ -391,7 +391,7 @@ export class StudioService {
     } = {}
   ) {
     // Check permission
-    const canView = await hasPermission(userId, 'equipment.view' as any)
+    const canView = await hasPermission(userId, 'equipment.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view studios')
     }
@@ -643,7 +643,7 @@ export class StudioService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ) {
     // Check permission
-    const canEdit = await hasPermission(userId, 'equipment.edit' as any)
+    const canEdit = await hasPermission(userId, 'equipment.update' as any)
     if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit studios')
     }
@@ -726,7 +726,7 @@ export class StudioService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ) {
     // Check permission
-    const canEdit = await hasPermission(userId, 'equipment.edit' as any)
+    const canEdit = await hasPermission(userId, 'equipment.update' as any)
     if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit studios')
     }

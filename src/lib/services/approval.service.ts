@@ -117,7 +117,7 @@ export class ApprovalService {
     }
 
     // Check permission to approve
-    const canApprove = await hasPermission(input.approvedBy, 'payment.approve' as any)
+    const canApprove = await hasPermission(input.approvedBy, 'approval.approve' as any)
     if (!canApprove) {
       throw new ForbiddenError('You do not have permission to approve requests')
     }
@@ -182,7 +182,7 @@ export class ApprovalService {
     }
 
     // Check permission to reject
-    const canApprove = await hasPermission(input.rejectedBy, 'payment.approve' as any)
+    const canApprove = await hasPermission(input.rejectedBy, 'approval.approve' as any)
     if (!canApprove) {
       throw new ForbiddenError('You do not have permission to reject requests')
     }

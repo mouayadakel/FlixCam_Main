@@ -99,7 +99,7 @@ export class PaymentPolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'payment.create',
-      view: 'payment.view',
+      view: 'payment.read',
       update: 'payment.update',
       refund: 'payment.refund',
       delete: 'payment.delete',

@@ -99,7 +99,7 @@ export class ContractPolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'contract.create',
-      view: 'contract.view',
+      view: 'contract.read',
       update: 'contract.update',
       sign: 'contract.sign',
       delete: 'contract.delete',

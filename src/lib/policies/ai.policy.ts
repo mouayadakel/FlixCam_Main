@@ -53,7 +53,7 @@ export class AIPolicy {
   }
 
   static async canViewDemandForecast(userId: string): Promise<PolicyResult> {
-    const hasAccess = await hasPermission(userId, 'ai.demand_forecast') || await hasPermission(userId, 'reports.view')
+    const hasAccess = await hasPermission(userId, 'ai.demand_forecast') || await hasPermission(userId, 'reports.read')
     if (!hasAccess) {
       return {
         allowed: false,

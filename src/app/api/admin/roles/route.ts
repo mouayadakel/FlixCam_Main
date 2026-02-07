@@ -1,156 +1,101 @@
 /**
  * @file route.ts
- * @description Role management API endpoints
+ * @description Role management API - list and create roles from DB
  * @module app/api/admin/roles
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db/prisma'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
-import { getRoleDetails } from '@/lib/auth/role-details'
+import { RoleService } from '@/lib/auth/role-service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { AuditService } from '@/lib/services/audit.service'
 import { z } from 'zod'
 
-// Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 const createRoleSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().optional(),
-  permissions: z.array(z.string()).optional(),
+  name: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/, 'Use lowercase letters, numbers, underscore only'),
+  displayName: z.string().min(1).max(100),
+  displayNameAr: z.string().max(100).optional(),
+  description: z.string().max(500).optional(),
+  color: z.string().max(20).optional(),
+  permissionIds: z.array(z.string().cuid()).default([]),
 })
 
+async function requireAuthAndRolesPermission() {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+  const canManage = await hasPermission(session.user.id, PERMISSIONS.SETTINGS_MANAGE_ROLES)
+  if (!canManage) {
+    return { error: NextResponse.json({ error: 'Forbidden - Missing settings.manage_roles permission' }, { status: 403 }) }
+  }
+  return { session }
+}
+
 /**
- * GET /api/admin/roles
- * List all roles with user counts
+ * GET /api/admin/roles - List roles from DB
  */
 export async function GET(request: NextRequest) {
   try {
-    const rateLimit = rateLimitAPI(request)
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      )
+    if (!rateLimitAPI(request).allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
+    const authResult = await requireAuthAndRolesPermission()
+    if (authResult.error) return authResult.error
 
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const { searchParams } = new URL(request.url)
+    const isSystem = searchParams.get('isSystem')
+    const filters = isSystem !== null && isSystem !== undefined
+      ? { isSystem: isSystem === 'true' }
+      : undefined
 
-    // Check permission
-    const canView = await hasPermission(session.user.id, PERMISSIONS.SETTINGS_MANAGE_ROLES)
-    if (!canView) {
-      return NextResponse.json(
-        { error: 'Forbidden - Missing settings.manage_roles permission' },
-        { status: 403 }
-      )
-    }
-
-    // Get all roles from UserRole enum
-    const roles = [
-      { id: 'ADMIN', name: 'Admin', description: 'Full operational access' },
-      { id: 'SALES_MANAGER', name: 'Sales Manager', description: 'Manage sales, bookings, quotes, clients' },
-      { id: 'ACCOUNTANT', name: 'Accountant', description: 'Financial operations and reporting' },
-      { id: 'WAREHOUSE_MANAGER', name: 'Warehouse Manager', description: 'Equipment and inventory management' },
-      { id: 'TECHNICIAN', name: 'Technician', description: 'Equipment maintenance and inspection' },
-      { id: 'CUSTOMER_SERVICE', name: 'Customer Service', description: 'Customer support and basic operations' },
-      { id: 'MARKETING_MANAGER', name: 'Marketing Manager', description: 'Marketing campaigns and analytics' },
-      { id: 'RISK_MANAGER', name: 'Risk Manager', description: 'Risk assessment and approvals' },
-      { id: 'APPROVAL_AGENT', name: 'Approval Agent', description: 'Process approval requests' },
-      { id: 'AUDITOR', name: 'Auditor', description: 'Read-only access for auditing' },
-      { id: 'AI_OPERATOR', name: 'AI Operator', description: 'AI features and automation' },
-      { id: 'DATA_ENTRY', name: 'Data Entry', description: 'Basic data entry access' },
-    ]
-
-    // Get user counts and permissions for each role
-    const rolesWithCounts = await Promise.all(
-      roles.map(async (role) => {
-        const userCount = await prisma.user.count({
-          where: {
-            role: role.id as any,
-            deletedAt: null,
-          },
-        })
-        const details = getRoleDetails(role.id)
-        return {
-          ...role,
-          userCount,
-          permissions: details?.permissions ?? [],
-        }
-      })
-    )
-
-    return NextResponse.json({
-      success: true,
-      data: rolesWithCounts,
-    })
-  } catch (error: any) {
+    const roles = await RoleService.list(filters)
+    return NextResponse.json({ success: true, data: roles })
+  } catch (error: unknown) {
     console.error('Error fetching roles:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
     )
   }
 }
 
 /**
- * POST /api/admin/roles
- * Create a new custom role (future enhancement)
+ * POST /api/admin/roles - Create custom role
  */
 export async function POST(request: NextRequest) {
   try {
-    const rateLimit = rateLimitAPI(request)
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      )
+    if (!rateLimitAPI(request).allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
-
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permission
-    const canCreate = await hasPermission(session.user.id, PERMISSIONS.SETTINGS_MANAGE_ROLES)
-    if (!canCreate) {
-      return NextResponse.json(
-        { error: 'Forbidden - Missing settings.manage_roles permission' },
-        { status: 403 }
-      )
-    }
+    const authResult = await requireAuthAndRolesPermission()
+    if (authResult.error) return authResult.error
+    const { session } = authResult
 
     const body = await request.json()
-    const validatedData = createRoleSchema.parse(body)
+    const validated = createRoleSchema.parse(body)
 
-    // Note: Custom roles would require database schema changes
-    // For now, we only support the predefined UserRole enum
-    return NextResponse.json(
-      { error: 'Custom roles not yet supported. Use predefined roles.' },
-      { status: 400 }
+    const role = await RoleService.create(
+      {
+        name: validated.name,
+        displayName: validated.displayName,
+        displayNameAr: validated.displayNameAr,
+        description: validated.description,
+        color: validated.color,
+        permissionIds: validated.permissionIds,
+      },
+      session!.user.id
     )
-  } catch (error: any) {
+    return NextResponse.json({ success: true, data: role })
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 })
     }
-
     console.error('Error creating role:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
     )
   }

@@ -84,7 +84,7 @@ export class ClientPolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'client.create',
-      view: 'client.view',
+      view: 'client.read',
       update: 'client.update',
       delete: 'client.delete',
     }

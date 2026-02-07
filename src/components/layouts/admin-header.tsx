@@ -28,9 +28,18 @@ export function AdminHeader() {
   const [notificationsCount, setNotificationsCount] = useState(0)
 
   useEffect(() => {
-    // TODO: Fetch real notification count from API
-    // For now, using mock data
-    setNotificationsCount(3)
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/notifications?countOnly=true')
+        if (res.ok) {
+          const data = await res.json()
+          setNotificationsCount(data.unreadCount ?? 0)
+        }
+      } catch {
+        // Silently ignore - user may not be logged in yet
+      }
+    }
+    fetchCount()
   }, [])
 
   return (

@@ -9,7 +9,8 @@ import { auth } from '@/lib/auth'
 import { BookingService } from '@/lib/services/booking.service'
 import { AuditService } from '@/lib/services/audit.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { UserRole, BookingStatus } from '@prisma/client'
+import { BookingStatus } from '@prisma/client'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 
 export async function POST(request: Request) {
   const rateLimit = rateLimitAPI(request)
@@ -31,9 +32,9 @@ export async function POST(request: Request) {
       )
     }
 
-    if (session.user.role !== UserRole.ADMIN) {
+    if (!(await hasPermission(session.user.id, PERMISSIONS.BOOKING_TRANSITION))) {
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Forbidden - booking.transition permission required' },
         { status: 403 }
       )
     }

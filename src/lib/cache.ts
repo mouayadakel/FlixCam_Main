@@ -20,6 +20,8 @@ const TTL = {
   otp: 300,
   /** One-time login token after OTP verify (2 min). Phase 3.2. */
   authToken: 120,
+  /** RBAC: user effective permissions (1 hour). */
+  userPermissions: 3600,
 } as const
 
 export type CacheNamespace = keyof typeof TTL

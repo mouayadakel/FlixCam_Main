@@ -122,7 +122,7 @@ export class CouponService {
   }
 
   static async getById(idOrCode: string, userId: string): Promise<Coupon> {
-    const canView = await hasPermission(userId, 'coupon.view' as any)
+    const canView = await hasPermission(userId, 'coupon.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view coupons')
     }
@@ -155,7 +155,7 @@ export class CouponService {
       pageSize?: number
     } = {}
   ): Promise<{ coupons: Coupon[]; total: number; page: number; pageSize: number }> {
-    const canView = await hasPermission(userId, 'coupon.view' as any)
+    const canView = await hasPermission(userId, 'coupon.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view coupons')
     }

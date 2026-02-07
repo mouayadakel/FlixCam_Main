@@ -111,7 +111,7 @@ export class MarketingService {
   }
 
   static async getById(id: string, userId: string): Promise<Campaign> {
-    const canView = await hasPermission(userId, 'marketing.view' as any)
+    const canView = await hasPermission(userId, 'marketing.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view campaigns')
     }
@@ -139,7 +139,7 @@ export class MarketingService {
       pageSize?: number
     } = {}
   ): Promise<{ campaigns: Campaign[]; total: number; page: number; pageSize: number }> {
-    const canView = await hasPermission(userId, 'marketing.view' as any)
+    const canView = await hasPermission(userId, 'marketing.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view campaigns')
     }

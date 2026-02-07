@@ -43,7 +43,7 @@ export class PaymentService {
    */
   static async create(input: CreatePaymentInput) {
     // Check permission
-    const canProcess = await hasPermission(input.userId, 'payment.process' as any)
+    const canProcess = await hasPermission(input.userId, 'payment.read' as any)
     if (!canProcess) {
       throw new ForbiddenError('You do not have permission to process payments')
     }
@@ -362,7 +362,7 @@ export class PaymentService {
    * Get payment by ID
    */
   static async getById(paymentId: string, userId: string) {
-    const canView = await hasPermission(userId, 'payment.view' as any)
+    const canView = await hasPermission(userId, 'payment.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view payments')
     }
@@ -398,7 +398,7 @@ export class PaymentService {
    * Get payments for a booking
    */
   static async getByBookingId(bookingId: string, userId: string) {
-    const canView = await hasPermission(userId, 'payment.view' as any)
+    const canView = await hasPermission(userId, 'payment.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view payments')
     }
@@ -445,7 +445,7 @@ export class PaymentService {
       pageSize?: number
     } = {}
   ) {
-    const canView = await hasPermission(userId, 'payment.view' as any)
+    const canView = await hasPermission(userId, 'payment.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view payments')
     }

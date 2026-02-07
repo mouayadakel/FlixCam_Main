@@ -352,7 +352,7 @@ export class DeliveryService {
     bookingId: string,
     userId: string
   ): Promise<DeliveryTrackingInfo[]> {
-    const canView = await hasPermission(userId, 'delivery.view' as any)
+    const canView = await hasPermission(userId, 'delivery.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }
@@ -408,7 +408,7 @@ export class DeliveryService {
       dateTo?: Date
     } = {}
   ) {
-    const canView = await hasPermission(userId, 'delivery.view' as any)
+    const canView = await hasPermission(userId, 'delivery.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }
@@ -476,7 +476,7 @@ export class DeliveryService {
       dateTo?: Date
     } = {}
   ) {
-    const canView = await hasPermission(userId, 'delivery.view' as any)
+    const canView = await hasPermission(userId, 'delivery.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }

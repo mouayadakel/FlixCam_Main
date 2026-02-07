@@ -1,0 +1,166 @@
+{
+    "design_system_profile": {
+      "meta": {
+        "project_name": "GrabGrip Rental Marketplace",
+        "design_style": "Clean, Modern E-commerce",
+        "visual_identity": "High contrast, generous whitespace, rounded corners, and bold primary accents."
+      },
+      "design_tokens": {
+        "colors": {
+          "brand": {
+            "primary": "#C92C37",
+            "primary_hover": "#A8242D",
+            "secondary_accent": "#25D366" 
+          },
+          "background": {
+            "body": "#FFFFFF",
+            "surface_light": "#F9F9F9",
+            "surface_modal": "#F2F2F2",
+            "footer_dark": "#3E3735",
+            "footer_darker": "#2C2826"
+          },
+          "text": {
+            "heading": "#1A1A1A",
+            "body": "#666666",
+            "muted": "#999999",
+            "inverse_heading": "#FFFFFF",
+            "inverse_body": "#CCCCCC"
+          },
+          "status": {
+            "error": "#D32F2F",
+            "success": "#388E3C",
+            "warning": "#FBC02D",
+            "sold_out": "#666666"
+          },
+          "border": {
+            "light": "#E5E5E5",
+            "input": "#E0E0E0",
+            "dashed": "#AAAAAA"
+          }
+        },
+        "typography": {
+          "font_family_primary": "Inter, system-ui, -apple-system, sans-serif",
+          "scale": {
+            "h1_hero": { "size": "36px", "weight": "700", "line_height": "1.2" },
+            "h2_section": { "size": "28px", "weight": "600", "margin_bottom": "24px" },
+            "h3_card": { "size": "16px", "weight": "600", "line_height": "1.4" },
+            "body_main": { "size": "14px", "weight": "400", "line_height": "1.6" },
+            "label_small": { "size": "12px", "weight": "500", "text_transform": "uppercase", "letter_spacing": "0.5px" },
+            "price_tag": { "size": "16px", "weight": "700", "color": "text.heading" }
+          }
+        },
+        "spacing": {
+          "container_max_width": "1280px",
+          "section_padding": "64px",
+          "grid_gap": "24px",
+          "element_gap": "12px"
+        },
+        "radius": {
+          "button": "6px",
+          "card": "8px",
+          "input": "4px",
+          "hero_banner": "20px",
+          "pill": "50px"
+        },
+        "shadows": {
+          "card_hover": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          "modal": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+        }
+      },
+      "components_library": {
+        "buttons": {
+          "primary": {
+            "bg": "brand.primary",
+            "text": "#FFFFFF",
+            "radius": "radius.button",
+            "padding": "12px 24px",
+            "font_weight": "600"
+          },
+          "icon_only": {
+            "bg": "transparent",
+            "text": "text.heading",
+            "hover_bg": "background.surface_light"
+          },
+          "floating_action": {
+            "bg": "brand.secondary_accent",
+            "shape": "circle",
+            "icon": "whatsapp",
+            "position": "fixed_bottom_right"
+          }
+        },
+        "inputs": {
+          "text_field": {
+            "bg": "#FFFFFF",
+            "border": "1px solid border.input",
+            "radius": "radius.input",
+            "height": "48px",
+            "padding": "0 16px"
+          },
+          "search_bar": {
+            "style": "pill_shape",
+            "button_style": "attached_right_pill",
+            "button_color": "brand.primary"
+          }
+        },
+        "cards": {
+          "product": {
+            "layout": "vertical",
+            "elements": ["image", "vendor_label", "title", "price"],
+            "badges": ["sold_out_top_left"],
+            "hover_effect": "lift_up"
+          },
+          "testimonial": {
+            "layout": "centered_stack",
+            "elements": ["avatar_circle", "quote_text", "star_rating", "author_name"],
+            "alignment": "center"
+          }
+        },
+        "sections": {
+          "header": {
+            "top_bar": "visible_with_contact_info",
+            "nav_bar": "logo_left_search_center_icons_right",
+            "category_bar": "text_links_horizontal"
+          },
+          "hero": {
+            "style": "banner_contained",
+            "bg_color": "brand.primary",
+            "text_color": "#FFFFFF",
+            "layout": "text_left_image_right_cutout"
+          },
+          "footer_hybrid": {
+            "description": "Combines the content structure of the light footer with the visual style of the dark footer.",
+            "visual_style": {
+              "bg": "background.footer_dark",
+              "text_heading": "text.inverse_heading",
+              "text_body": "text.inverse_body",
+              "border_color": "rgba(255,255,255,0.1)"
+            },
+            "layout_structure": {
+              "columns": 4,
+              "col_1": "Contact Info (Phone/Email/Socials)",
+              "col_2": "Brand Links",
+              "col_3": "Category Links",
+              "col_4": "About Links"
+            },
+            "bottom_bar": {
+              "content": ["Copyright", "Payment Icons"],
+              "bg": "background.footer_darker"
+            }
+          }
+        }
+      },
+      "content_schema": {
+        "instruction": "This section defines the variable text data. Extract this into a separate 'content.json' file for easy editing.",
+        "fields": {
+          "hero_title": "String",
+          "hero_subtitle": "String",
+          "modal_heading": "String",
+          "modal_discount_text": "String",
+          "product_categories": "Array<String>",
+          "contact_phone": "String",
+          "contact_email": "String",
+          "footer_about_text": "String"
+        }
+      }
+    }
+  }

@@ -9,9 +9,10 @@
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission } from '@/lib/auth/permissions'
+import { PERMISSIONS } from '@/lib/auth/permissions'
 import { AuditService } from '@/lib/services/audit.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { UserRole } from '@prisma/client'
 import { getReadOnlyMode, setReadOnlyMode } from '@/lib/middleware/read-only.middleware'
 
 // Force dynamic rendering for this API route
@@ -37,9 +38,9 @@ export async function GET(request: Request) {
       )
     }
 
-    if (session.user.role !== UserRole.ADMIN) {
+    if (!(await hasPermission(session.user.id, PERMISSIONS.SYSTEM_READ_ONLY_MODE))) {
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Forbidden - system.read_only_mode permission required' },
         { status: 403 }
       )
     }
@@ -74,9 +75,9 @@ export async function POST(request: Request) {
       )
     }
 
-    if (session.user.role !== UserRole.ADMIN) {
+    if (!(await hasPermission(session.user.id, PERMISSIONS.SYSTEM_READ_ONLY_MODE))) {
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Forbidden - system.read_only_mode permission required' },
         { status: 403 }
       )
     }

@@ -4,7 +4,7 @@
  * @module prisma/seed
  */
 
-import { PrismaClient, EquipmentCondition, FeatureFlagScope } from '@prisma/client'
+import { PrismaClient, EquipmentCondition, FeatureFlagScope, NotificationChannel } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -289,6 +289,28 @@ async function main() {
     })
   }
   console.log(`✅ Created ${featureFlags.length} feature flags`)
+
+  // Sample in-app notifications for admin (for testing notifications page)
+  const sampleNotifications = [
+    { id: 'seed-notif-1', type: 'booking.confirmed', title: 'Booking Confirmed', message: 'Booking #BK-001 has been confirmed.', channel: NotificationChannel.IN_APP, userId: admin.id },
+    { id: 'seed-notif-2', type: 'payment.success', title: 'Payment Successful', message: 'Payment of 1,500 SAR has been processed successfully.', channel: NotificationChannel.IN_APP, userId: admin.id },
+    { id: 'seed-notif-3', type: 'contract.signed', title: 'Contract Signed', message: 'Contract for booking #BK-001 has been signed.', channel: NotificationChannel.IN_APP, userId: admin.id },
+  ]
+  for (const n of sampleNotifications) {
+    const { id, ...data } = n
+    await prisma.notification.upsert({
+      where: { id },
+      update: {},
+      create: {
+        id,
+        ...data,
+        data: {},
+        read: false,
+        createdBy: admin.id,
+      },
+    })
+  }
+  console.log(`✅ Created ${sampleNotifications.length} sample notifications`)
 
   console.log('🎉 Database seed completed!')
 }

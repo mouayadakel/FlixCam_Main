@@ -22,8 +22,8 @@ export function HomeFaq() {
   const { t } = useLocale()
 
   return (
-    <section className="py-12 md:py-16 border-t">
-      <div className="container px-4 max-w-2xl mx-auto">
+    <section className="py-12 md:py-16 lg:py-20 border-t border-border-light">
+      <div className="mx-auto w-full max-w-public-container px-4 max-w-2xl">
         <h2 className="text-2xl font-semibold text-center mb-8">
           {t('faq.title')}
         </h2>

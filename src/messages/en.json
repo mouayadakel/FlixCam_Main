@@ -1,4 +1,8 @@
 {
+  "header": {
+    "searchPlaceholder": "I'm looking for...",
+    "topBarContact": "Contact"
+  },
   "nav": {
     "home": "Home",
     "equipment": "Equipment",
@@ -27,6 +31,7 @@
     "clear": "Clear",
     "viewAll": "View all",
     "noResults": "No results found",
+    "productsCount": "Products",
     "recommendations": "You might also like",
     "addToCart": "Add to cart",
     "bookNow": "Book now",
@@ -52,18 +57,37 @@
     "heroTitle": "Cinematic Equipment & Studio Rental",
     "heroSubtitle": "Book the right equipment and studios for your project in Riyadh",
     "featuredEquipment": "Featured Equipment",
+    "topBrandsTitle": "Top Brands",
     "exploreStudios": "Explore Studios",
     "howItWorksTitle": "How It Works",
     "howItWorksStep1": "Choose",
     "howItWorksStep2": "Book",
     "howItWorksStep3": "Receive",
     "ctaTitle": "Ready to get started?",
-    "ctaButton": "Book now"
+    "ctaButton": "Book now",
+    "testimonialsTitle": "What People Are Saying",
+    "testimonials": [
+      { "quote": "Great equipment and smooth booking. Highly recommend for film projects.", "authorName": "Sarah M.", "rating": 5 },
+      { "quote": "Professional service and well-maintained gear. Will rent again.", "authorName": "Ahmed K.", "rating": 5 },
+      { "quote": "Easy process from booking to return. The team was very helpful.", "authorName": "Lisa T.", "rating": 5 }
+    ]
   },
   "footer": {
     "links": "Quick links",
     "contact": "Contact us",
-    "copyright": "All rights reserved"
+    "copyright": "All rights reserved",
+    "contactUs": "Contact Us",
+    "brand": "Brand",
+    "category": "Category",
+    "about": "About",
+    "aboutText": "We offer professional cinematic equipment and studio rentals in Riyadh. Book cameras, lighting, audio, and more.",
+    "gotQuestion": "Got question? Call us 24/7",
+    "phone": "Phone",
+    "email": "Email",
+    "followUs": "Follow us",
+    "paymentMethods": "We accept",
+    "phoneNumber": "+966 XX XXX XXXX",
+    "emailAddress": "hello@example.com"
   },
   "checkout": {
     "title": "Checkout",

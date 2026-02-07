@@ -6,9 +6,9 @@
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { AuditService } from '@/lib/services/audit.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { UserRole } from '@prisma/client'
 
 export async function POST(request: Request) {
   const rateLimit = rateLimitAPI(request)
@@ -30,9 +30,9 @@ export async function POST(request: Request) {
       )
     }
 
-    if (session.user.role !== UserRole.ADMIN) {
+    if (!(await hasPermission(session.user.id, PERMISSIONS.SYSTEM_CLEAR_CACHE))) {
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Forbidden - system.clear_cache permission required' },
         { status: 403 }
       )
     }

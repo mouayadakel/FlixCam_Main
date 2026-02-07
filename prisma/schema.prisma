@@ -471,6 +471,7 @@ model User {
 
   // Relations
   permissions     UserPermission[]
+  userRoles       AssignedUserRole[]
   bookings        Booking[]        @relation("CustomerBookings")
   createdBookings Booking[]        @relation("CreatedBookings")
   auditLogs       AuditLog[]
@@ -508,13 +509,39 @@ model User {
   @@index([deletedAt])
 }
 
+// ============================================
+// RBAC - Permission Categories
+// ============================================
+
+model PermissionCategory {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  nameAr      String?
+  description String? @db.Text
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions Permission[]
+
+  @@index([sortOrder])
+}
+
 model Permission {
   id          String  @id @default(cuid())
-  name        String  @unique // e.g., "booking.create", "equipment.edit"
+  name        String  @unique
   description String?
+  descriptionAr String?
+  categoryId  String?
+  isSystem    Boolean @default(false)
+  sortOrder   Int     @default(0)
 
   // Relations
-  userPermissions UserPermission[]
+  category         PermissionCategory?  @relation(fields: [categoryId], references: [id])
+  userPermissions  UserPermission[]
+  rolePermissions  RolePermission[]
+  menuItemPermissions MenuItemPermission[]
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -525,6 +552,7 @@ model Permission {
   deletedBy String?
 
   @@index([name])
+  @@index([categoryId])
   @@index([deletedAt])
 }
 
@@ -549,6 +577,128 @@ model UserPermission {
   @@index([userId])
   @@index([permissionId])
   @@index([deletedAt])
+}
+
+// ============================================
+// RBAC - Roles (DB-driven)
+// ============================================
+
+model Role {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  displayName  String
+  displayNameAr String?
+  description  String?  @db.Text
+  descriptionAr String? @db.Text
+  isSystem     Boolean  @default(false)
+  isDefault    Boolean  @default(false)
+  priority     Int      @default(0)
+  color        String?
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  rolePermissions RolePermission[]
+  userRoles       AssignedUserRole[]
+  roleConflictsA  RoleConflict[] @relation("RoleConflictA")
+  roleConflictsB  RoleConflict[] @relation("RoleConflictB")
+
+  @@index([name])
+  @@index([isSystem])
+  @@index([deletedAt])
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model AssignedUserRole {
+  id         String    @id @default(cuid())
+  userId     String
+  roleId     String
+  isPrimary  Boolean   @default(false)
+  assignedAt DateTime  @default(now())
+  assignedBy String?
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RoleConflict {
+  id      String @id @default(cuid())
+  roleAId String
+  roleBId String
+  reason  String @db.Text
+
+  createdAt DateTime @default(now())
+
+  roleA Role @relation("RoleConflictA", fields: [roleAId], references: [id], onDelete: Cascade)
+  roleB Role @relation("RoleConflictB", fields: [roleBId], references: [id], onDelete: Cascade)
+
+  @@unique([roleAId, roleBId])
+  @@index([roleAId])
+  @@index([roleBId])
+}
+
+// ============================================
+// RBAC - Menu Items (sidebar)
+// ============================================
+
+model MenuItem {
+  id                     String   @id @default(cuid())
+  parentId               String?
+  name                   String   @unique
+  label                  String
+  labelAr                String?
+  icon                   String?
+  href                   String?
+  sortOrder              Int      @default(0)
+  isActive               Boolean  @default(true)
+  requiresAllPermissions Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   MenuItem?         @relation("MenuItemHierarchy", fields: [parentId], references: [id])
+  children MenuItem[]        @relation("MenuItemHierarchy")
+  menuItemPermissions MenuItemPermission[]
+
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model MenuItemPermission {
+  id           String @id @default(cuid())
+  menuItemId   String
+  permissionId String
+
+  menuItem   MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, permissionId])
+  @@index([menuItemId])
+  @@index([permissionId])
 }
 
 // ============================================

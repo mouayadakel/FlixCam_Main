@@ -6,9 +6,9 @@
 
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { UserRole } from '@prisma/client'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -33,10 +33,9 @@ export async function GET(request: Request) {
       )
     }
 
-    // Only ADMIN can access
-    if (session.user.role !== UserRole.ADMIN) {
+    if (!(await hasPermission(session.user.id, PERMISSIONS.SYSTEM_HEALTH_CHECK))) {
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Forbidden - system.health_check permission required' },
         { status: 403 }
       )
     }

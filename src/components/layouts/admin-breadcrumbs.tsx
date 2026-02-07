@@ -37,6 +37,7 @@ const routeLabels: Record<string, { ar: string; en: string }> = {
   features: { ar: 'الميزات', en: 'Features' },
   roles: { ar: 'الأدوار', en: 'Roles' },
   'ai-control': { ar: 'التحكم بالذكاء الاصطناعي', en: 'AI Control' },
+  notifications: { ar: 'الإشعارات', en: 'Notifications' },
 }
 
 export function AdminBreadcrumbs() {

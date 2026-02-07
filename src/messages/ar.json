@@ -1,4 +1,8 @@
 {
+  "header": {
+    "searchPlaceholder": "أبحث عن...",
+    "topBarContact": "تواصل"
+  },
   "nav": {
     "home": "الرئيسية",
     "equipment": "المعدات",
@@ -27,6 +31,7 @@
     "clear": "مسح",
     "viewAll": "عرض الكل",
     "noResults": "لا توجد نتائج",
+    "productsCount": "منتج",
     "recommendations": "قد يعجبك أيضاً",
     "addToCart": "أضف للسلة",
     "bookNow": "احجز الآن",
@@ -52,18 +57,37 @@
     "heroTitle": "تأجير معدات سينمائية واستوديوهات",
     "heroSubtitle": "احجز المعدات والاستوديوهات المناسبة لمشروعك في الرياض",
     "featuredEquipment": "معدات مميزة",
+    "topBrandsTitle": "أبرز العلامات",
     "exploreStudios": "استكشف الاستوديوهات",
     "howItWorksTitle": "كيف يعمل",
     "howItWorksStep1": "اختر",
     "howItWorksStep2": "احجز",
     "howItWorksStep3": "استلم",
     "ctaTitle": "جاهز للبدء؟",
-    "ctaButton": "احجز الآن"
+    "ctaButton": "احجز الآن",
+    "testimonialsTitle": "ماذا يقول العملاء",
+    "testimonials": [
+      { "quote": "معدات ممتازة وحجز سلس. أنصح بها لمشاريع الأفلام.", "authorName": "سارة م.", "rating": 5 },
+      { "quote": "خدمة احترافية ومعدات محفوظة جيداً. سأستأجر مرة أخرى.", "authorName": "أحمد خ.", "rating": 5 },
+      { "quote": "عملية سهلة من الحجز حتى الإرجاع. الفريق كان مساعداً جداً.", "authorName": "ليزا ت.", "rating": 5 }
+    ]
   },
   "footer": {
     "links": "روابط سريعة",
     "contact": "تواصل معنا",
-    "copyright": "جميع الحقوق محفوظة"
+    "copyright": "جميع الحقوق محفوظة",
+    "contactUs": "تواصل معنا",
+    "brand": "العلامة",
+    "category": "التصنيفات",
+    "about": "عن الموقع",
+    "aboutText": "نقدم تأجير معدات سينمائية واستوديوهات احترافية في الرياض. احجز كاميرات، إضاءة، صوت والمزيد.",
+    "gotQuestion": "لديك سؤال؟ اتصل بنا ٢٤/٧",
+    "phone": "الهاتف",
+    "email": "البريد",
+    "followUs": "تابعنا",
+    "paymentMethods": "نقبل",
+    "phoneNumber": "+966 XX XXX XXXX",
+    "emailAddress": "hello@example.com"
   },
   "checkout": {
     "title": "إتمام الطلب",

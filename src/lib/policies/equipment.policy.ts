@@ -23,7 +23,7 @@ export class EquipmentPolicy extends BasePolicy {
    * Check if user can view equipment
    */
   static async canView(userId: string): Promise<PolicyResult> {
-    const hasPerm = await hasPermission(userId, 'equipment.view' as any)
+    const hasPerm = await hasPermission(userId, 'equipment.read' as any)
     if (!hasPerm) {
       return this.denied('User does not have permission to view equipment')
     }
@@ -34,7 +34,7 @@ export class EquipmentPolicy extends BasePolicy {
    * Check if user can edit equipment
    */
   static async canEdit(userId: string, equipmentId?: string): Promise<PolicyResult> {
-    const hasPerm = await hasPermission(userId, 'equipment.edit' as any)
+    const hasPerm = await hasPermission(userId, 'equipment.update' as any)
     if (!hasPerm) {
       return this.denied('User does not have permission to edit equipment')
     }

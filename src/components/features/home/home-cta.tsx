@@ -12,8 +12,8 @@ export function HomeCta() {
   const { t } = useLocale()
 
   return (
-    <section className="py-12 md:py-16 border-t bg-primary text-primary-foreground">
-      <div className="container px-4 text-center">
+    <section className="py-12 md:py-16 lg:py-20 border-t border-border-light bg-brand-primary text-inverse-heading">
+      <div className="mx-auto w-full max-w-public-container px-4 text-center">
         <h2 className="text-2xl font-semibold">{t('home.ctaTitle')}</h2>
         <Button
           size="lg"

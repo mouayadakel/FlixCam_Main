@@ -60,16 +60,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permission
-    const canView = await hasPermission(session.user.id, PERMISSIONS.USER_VIEW)
+    const canView = await hasPermission(session.user.id, PERMISSIONS.USER_READ)
     if (!canView) {
       return NextResponse.json(
-        { error: 'Forbidden - Missing user.view permission' },
+        { error: 'Forbidden - Missing user.read permission' },
         { status: 403 }
       )
     }
 
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
+    const excludeRoleId = searchParams.get('excludeRoleId') // RBAC role ID - exclude users who have this role
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
@@ -81,6 +82,18 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       where.role = role
+    }
+
+    // Exclude users already assigned to this RBAC role (for assign-user-to-role flow)
+    if (excludeRoleId) {
+      where.NOT = {
+        userRoles: {
+          some: {
+            roleId: excludeRoleId,
+            OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          },
+        },
+      }
     }
 
     if (search) {

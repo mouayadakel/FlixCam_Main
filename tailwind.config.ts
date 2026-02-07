@@ -106,12 +106,56 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			// Public site design tokens (landing-page-design.json)
+  			brand: {
+  				primary: '#C92C37',
+  				'primary-hover': '#A8242D',
+  				'secondary-accent': '#25D366',
+  			},
+  			surface: {
+  				light: '#F9F9F9',
+  				modal: '#F2F2F2',
+  			},
+  			footer: {
+  				dark: '#3E3735',
+  				darker: '#2C2826',
+  			},
+  			'text-heading': '#1A1A1A',
+  			'text-body': '#666666',
+  			'text-muted': '#999999',
+  			'inverse-heading': '#FFFFFF',
+  			'inverse-body': '#CCCCCC',
+  			'border-light': '#E5E5E5',
+  			'border-input': '#E0E0E0',
+  			'sold-out': '#666666',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			'public-button': '6px',
+  			'public-card': '8px',
+  			'public-input': '4px',
+  			'hero-banner': '20px',
+  			'pill': '50px',
+  		},
+  		boxShadow: {
+  			'card-hover':
+  				'0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  			'modal':
+  				'0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  		},
+  		maxWidth: {
+  			'public-container': '1280px',
+  		},
+  		fontSize: {
+  			'hero-title': ['36px', { lineHeight: '1.2', fontWeight: '700' }],
+  			'section-title': ['28px', { lineHeight: '1.2', fontWeight: '600' }],
+  			'card-title': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
+  			'body-main': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
+  			'label-small': ['12px', { lineHeight: '1.4', fontWeight: '500', letterSpacing: '0.5px' }],
+  			'price-tag': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
   		},
   		fontFamily: {
   			arabic: ['"Cairo"', 'system-ui', 'sans-serif'],

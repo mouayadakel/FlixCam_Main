@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { matchesPermission } from '@/lib/auth/matches-permission'
 import {
   Package,
   Camera,
@@ -77,31 +78,31 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Orders',
       href: '/admin/orders',
       icon: ShoppingCart,
-      permission: 'orders.view',
+      permission: 'booking.read',
     },
     {
       label: 'Users',
       href: '/admin/users',
       icon: Users,
-      permission: 'users.view',
+      permission: 'user.read',
     },
     {
       label: 'Invoices',
       href: '/admin/invoices',
       icon: FileText,
-      permission: 'invoices.view',
+      permission: 'invoice.read',
     },
     {
       label: 'Wallet',
       href: '/admin/wallet',
       icon: Wallet,
-      permission: 'wallet.view',
+      permission: 'payment.read',
     },
     {
       label: 'Calendar',
       href: '/admin/calendar',
       icon: Calendar,
-      permission: 'calendar.view',
+      permission: 'booking.read',
     },
   ],
   inventory: [
@@ -109,13 +110,13 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Equipment',
       href: '/admin/inventory/equipment',
       icon: Camera,
-      permission: 'equipment.view',
+      permission: 'equipment.read',
     },
     {
       label: 'Categories',
       href: '/admin/inventory/categories',
       icon: FolderTree,
-      permission: 'equipment.view',
+      permission: 'equipment.read',
     },
     {
       label: 'Import',
@@ -127,13 +128,13 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Studios',
       href: '/admin/studios',
       icon: Building2,
-      permission: 'studios.view',
+      permission: 'studio.read',
     },
     {
       label: 'Technicians',
       href: '/admin/technicians',
       icon: Wrench,
-      permission: 'technicians.view',
+      permission: 'user.read',
     },
   ],
   settings: [
@@ -141,25 +142,25 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Features',
       href: '/admin/settings/features',
       icon: Flag,
-      permission: 'settings.view',
+      permission: 'settings.read',
     },
     {
       label: 'Integrations',
       href: '/admin/settings/integrations',
       icon: Plug,
-      permission: 'settings.view',
+      permission: 'settings.read',
     },
     {
       label: 'Roles',
       href: '/admin/settings/roles',
       icon: Shield,
-      permission: 'settings.view',
+      permission: 'settings.manage_roles',
     },
     {
       label: 'AI Control',
       href: '/admin/settings/ai-control',
       icon: Sparkles,
-      permission: 'settings.view',
+      permission: 'settings.read',
     },
   ],
   bookings: [
@@ -175,7 +176,7 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Payments',
       href: '/admin/finance',
       icon: DollarSign,
-      permission: 'payment.process',
+      permission: 'payment.read',
     },
   ],
   marketing: [
@@ -183,7 +184,7 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Coupons',
       href: '/admin/coupons',
       icon: Percent,
-      permission: 'coupons.view',
+      permission: 'coupon.read',
     },
   ],
 }
@@ -222,7 +223,7 @@ export function ContextSidebar() {
     if (loading) return true
     // If permissions array is empty, show all (fallback for admin or if API fails)
     if (permissions.length === 0) return true
-    return permissions.includes(permission)
+    return permissions.some((p) => matchesPermission(p, permission))
   }
 
   // Determine which context section to show based on current path

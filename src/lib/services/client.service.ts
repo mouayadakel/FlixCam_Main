@@ -105,7 +105,7 @@ export class ClientService {
    */
   static async getById(id: string, userId: string): Promise<Client> {
     // Check permission
-    const canView = await hasPermission(userId, 'client.view' as any)
+    const canView = await hasPermission(userId, 'client.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view clients')
     }
@@ -147,7 +147,7 @@ export class ClientService {
     } = {}
   ): Promise<{ clients: Client[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'client.view' as any)
+    const canView = await hasPermission(userId, 'client.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view clients')
     }

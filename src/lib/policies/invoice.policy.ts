@@ -104,7 +104,7 @@ export class InvoicePolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'invoice.create',
-      view: 'invoice.view',
+      view: 'invoice.read',
       update: 'invoice.update',
       mark_paid: 'invoice.mark_paid',
       delete: 'invoice.delete',

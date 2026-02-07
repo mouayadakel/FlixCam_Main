@@ -100,7 +100,7 @@ export class MaintenancePolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'maintenance.create',
-      view: 'maintenance.view',
+      view: 'maintenance.read',
       update: 'maintenance.update',
       complete: 'maintenance.complete',
       delete: 'maintenance.delete',

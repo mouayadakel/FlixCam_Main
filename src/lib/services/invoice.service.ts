@@ -222,7 +222,7 @@ export class InvoiceService {
    */
   static async getById(id: string, userId: string): Promise<Invoice> {
     // Check permission
-    const canView = await hasPermission(userId, 'invoice.view' as any)
+    const canView = await hasPermission(userId, 'invoice.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view invoices')
     }
@@ -286,7 +286,7 @@ export class InvoiceService {
     } = {}
   ): Promise<{ invoices: Invoice[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'invoice.view' as any)
+    const canView = await hasPermission(userId, 'invoice.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view invoices')
     }

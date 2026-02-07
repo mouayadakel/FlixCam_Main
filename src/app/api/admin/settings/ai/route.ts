@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { prisma } from '@/lib/db/prisma'
 
@@ -24,6 +25,9 @@ export async function GET(request: NextRequest) {
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  if (!(await hasPermission(session.user.id, PERMISSIONS.SETTINGS_UPDATE))) {
+    return NextResponse.json({ error: 'Forbidden - settings.update required' }, { status: 403 })
   }
 
   try {
@@ -60,6 +64,9 @@ export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  if (!(await hasPermission(session.user.id, PERMISSIONS.SETTINGS_UPDATE))) {
+    return NextResponse.json({ error: 'Forbidden - settings.update required' }, { status: 403 })
   }
 
   try {

@@ -133,7 +133,7 @@ export class QuotePolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'quote.create',
-      view: 'quote.view',
+      view: 'quote.read',
       update: 'quote.update',
       convert: 'quote.convert',
       delete: 'quote.delete',

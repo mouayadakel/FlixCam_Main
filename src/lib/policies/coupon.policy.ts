@@ -84,7 +84,7 @@ export class CouponPolicy {
     // Map actions to permission strings
     const permissionMap: Record<string, string> = {
       create: 'coupon.create',
-      view: 'coupon.view',
+      view: 'coupon.read',
       update: 'coupon.update',
       delete: 'coupon.delete',
     }

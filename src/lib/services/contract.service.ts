@@ -243,7 +243,7 @@ export class ContractService {
    */
   static async getById(id: string, userId: string): Promise<Contract> {
     // Check permission
-    const canView = await hasPermission(userId, 'contract.view' as any)
+    const canView = await hasPermission(userId, 'contract.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view contracts')
     }
@@ -293,7 +293,7 @@ export class ContractService {
     } = {}
   ): Promise<{ contracts: Contract[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'contract.view' as any)
+    const canView = await hasPermission(userId, 'contract.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view contracts')
     }

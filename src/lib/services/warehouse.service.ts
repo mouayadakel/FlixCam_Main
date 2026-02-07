@@ -331,7 +331,7 @@ export class WarehouseService {
     } = {}
   ): Promise<WarehouseInventoryItem[]> {
     // Check permission
-    const canView = await hasPermission(userId, 'warehouse.view' as any)
+    const canView = await hasPermission(userId, 'warehouse.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view warehouse inventory')
     }
@@ -403,7 +403,7 @@ export class WarehouseService {
    */
   static async getReadyForCheckOut(userId: string) {
     // Check permission
-    const canView = await hasPermission(userId, 'warehouse.view' as any)
+    const canView = await hasPermission(userId, 'warehouse.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view check-out queue')
     }
@@ -452,7 +452,7 @@ export class WarehouseService {
    */
   static async getReadyForCheckIn(userId: string) {
     // Check permission
-    const canView = await hasPermission(userId, 'warehouse.view' as any)
+    const canView = await hasPermission(userId, 'warehouse.read' as any)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view check-in queue')
     }
