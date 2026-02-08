@@ -1,0 +1,79 @@
+{
+  "designSystemName": "FlixCam Auth Modal",
+  "version": "1.0.0",
+  "basedOn": "MallHub Modern UI",
+  "visualIdentity": {
+    "colorPalette": {
+      "primary": "#C92C37",
+      "primaryHover": "#A8242D",
+      "textMain": "#1A1A1A",
+      "textMuted": "#999999",
+      "borderDefault": "#E5E5E5",
+      "backgroundOverlay": "rgba(0, 0, 0, 0.5)",
+      "surfaceWhite": "#FFFFFF"
+    },
+    "typography": {
+      "fontFamily": "Cairo (Arabic) / Inter (Latin)",
+      "sizes": {
+        "label": "14px",
+        "input": "16px",
+        "tab": "16px",
+        "button": "16px"
+      }
+    },
+    "spacingAndBorders": {
+      "borderRadius": "8px",
+      "inputPadding": "12px 16px",
+      "containerPadding": "32px",
+      "gapSmall": "12px",
+      "gapMedium": "20px"
+    }
+  },
+  "components": {
+    "loginModal": {
+      "structure": "Centrally aligned card over blurred background overlay",
+      "header": {
+        "logoAlignment": "Center",
+        "logoText": "FlixCam.rent",
+        "tabs": ["REGISTER", "LOGIN"],
+        "activeTabIndicator": "2px solid primary"
+      },
+      "inputs": {
+        "style": "Outlined",
+        "labelPosition": "Top-left",
+        "placeholderColor": "textMuted",
+        "height": "48px"
+      },
+      "loginForm": {
+        "usernameLabel": "Username",
+        "usernamePlaceholder": "User ID / Email Address",
+        "passwordPlaceholder": "Enter Your Password",
+        "keepMeSignedIn": "Checkbox (left)",
+        "forgotPassword": "Link (right)"
+      },
+      "actions": {
+        "primaryButton": "Full-width, rectangular, primary color, SIGN IN",
+        "secondaryLinks": "Bold, primary color, no underline unless hovered",
+        "socialAuth": "Row of circular icons (Facebook, Twitter, Google)"
+      }
+    }
+  },
+  "functionalLogic": {
+    "modalDeployment": "Global component triggered on all public routes via AuthModalProvider",
+    "authenticationFlow": {
+      "trigger": "onSubmit(signIn)",
+      "validation": "Credentials (email/password)",
+      "routingLogic": [
+        {
+          "role": "DATA_ENTRY",
+          "destination": "/portal/dashboard"
+        },
+        {
+          "role": "staff/admin",
+          "destination": "/admin/dashboard"
+        }
+      ]
+    },
+    "persistentState": "Keep Me Signed In checkbox (session/cookie)"
+  }
+}

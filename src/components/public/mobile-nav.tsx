@@ -5,8 +5,8 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Menu } from 'lucide-react'
+import { useAuthModal } from '@/components/auth/auth-modal-provider'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { useLocale } from '@/hooks/use-locale'
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const { t } = useLocale()
+  const { openAuthModal } = useAuthModal()
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -50,15 +51,24 @@ export function MobileNav() {
             <MiniCart />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" asChild>
-              <Link href="/login" onClick={() => setOpen(false)}>
-                {t('nav.login')}
-              </Link>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setOpen(false)
+                openAuthModal('login')
+              }}
+            >
+              {t('nav.login')}
             </Button>
-            <Button className="flex-1" asChild>
-              <Link href="/register" onClick={() => setOpen(false)}>
-                {t('nav.register')}
-              </Link>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setOpen(false)
+                openAuthModal('register')
+              }}
+            >
+              {t('nav.register')}
             </Button>
           </div>
         </div>

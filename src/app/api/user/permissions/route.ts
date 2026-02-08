@@ -27,15 +27,16 @@ export async function GET(request: Request) {
     
     if (!session?.user) {
       return NextResponse.json(
-        { permissions: [] },
+        { permissions: [], isSuperAdmin: false },
         { status: 200 }
       )
     }
 
     const permissions = await getUserPermissions(session.user.id)
+    const isSuperAdmin = permissions.includes('*')
 
     return NextResponse.json(
-      { permissions },
+      { permissions, isSuperAdmin },
       {
         headers: {
           'Cache-Control': 'private, max-age=300',
@@ -47,9 +48,8 @@ export async function GET(request: Request) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error fetching permissions:', error)
     }
-    // Return empty permissions array instead of error to prevent UI breakage
     return NextResponse.json(
-      { permissions: [] },
+      { permissions: [], isSuperAdmin: false },
       { status: 200 }
     )
   }

@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
  */
 export const ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/dashboard': 'dashboard.read',
+  '/admin/profile': 'dashboard.read',
   '/admin/notifications': 'dashboard.read',
   '/admin/action-center': 'dashboard.read',
   '/admin/approvals': 'approval.read',

@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   Menu,
   X,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -132,7 +134,7 @@ const sidebarSections: SidebarSection[] = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const { hasPermission } = usePermissions()
+  const { hasPermission, loading, error } = usePermissions()
   const [collapsed, setCollapsed] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
@@ -210,7 +212,23 @@ export function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {sidebarSections.map((section) => {
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3" dir="rtl">
+            <Loader2 className="h-6 w-6 animate-spin text-primary-600" />
+            <span className="text-sm text-neutral-500">جاري التحميل...</span>
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4" dir="rtl">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-red-800">خطأ</p>
+                <p className="text-red-700">فشل تحميل الصلاحيات. يرجى تحديث الصفحة.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+        sidebarSections.map((section) => {
           const filteredItems = section.items.filter((item) => hasPermission(item.permission))
           if (filteredItems.length === 0) return null
           const isExpanded = expandedSections.includes(section.title.ar)
@@ -266,7 +284,8 @@ export function AdminSidebar() {
               )}
             </div>
           )
-        })}
+        })
+        )}
       </nav>
 
       {/* Footer - Language Toggle */}

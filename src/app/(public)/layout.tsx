@@ -5,9 +5,7 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { PublicHeader } from '@/components/public/public-header'
-import { PublicFooter } from '@/components/public/public-footer'
-import { WhatsAppCta } from '@/components/public/whatsapp-cta'
+import { PublicLayoutClient } from '@/components/public/public-layout-client'
 
 const BASE_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://flixcam.rent'
 
@@ -37,15 +35,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       >
         Skip to main content
       </Link>
-      <PublicHeader />
-      <main
-        id="main-content"
-        className="min-h-[calc(100vh-theme(spacing.14)-1px)] flex flex-col"
-      >
-        {children}
-      </main>
-      <PublicFooter />
-      <WhatsAppCta />
+      <PublicLayoutClient>{children}</PublicLayoutClient>
     </>
   )
 }

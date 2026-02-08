@@ -95,6 +95,17 @@ export const deferredRegisterSchema = z.object({
   name: z.string().max(100).optional(),
 })
 
+/**
+ * Register page form schema (includes confirm password).
+ */
+export const registerFormSchema = deferredRegisterSchema.extend({
+  confirmPassword: z.string().min(1, { message: 'تأكيد كلمة المرور مطلوب' }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'كلمات المرور غير متطابقة',
+  path: ['confirmPassword'],
+})
+
 export type SendOtpInput = z.infer<typeof sendOtpSchema>
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>
 export type DeferredRegisterInput = z.infer<typeof deferredRegisterSchema>
+export type RegisterFormData = z.infer<typeof registerFormSchema>

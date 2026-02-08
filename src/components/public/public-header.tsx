@@ -7,6 +7,7 @@
 
 import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
+import { useAuthModalOptional } from '@/components/auth/auth-modal-provider'
 import { Search } from 'lucide-react'
 import { PublicContainer } from './public-container'
 import { LanguageSwitcher } from './language-switcher'
@@ -26,6 +27,7 @@ import {
 
 export function PublicHeader() {
   const { t } = useLocale()
+  const authModal = useAuthModalOptional()
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white">
@@ -53,10 +55,10 @@ export function PublicHeader() {
         </PublicContainer>
       </div>
 
-      {/* Main bar */}
-      <div className="border-b border-border-light">
+      {/* Main bar – overflow-x-auto ensures auth buttons are reachable when content overflows (RTL) */}
+      <div className="border-b border-border-light overflow-x-auto">
         <PublicContainer>
-          <div className="flex h-14 min-w-0 items-center gap-3 md:gap-6">
+          <div className="flex h-14 min-w-max items-center gap-3 md:gap-6">
             <Link
               href="/"
               className="flex shrink-0 items-center gap-2 font-semibold text-text-heading"
@@ -95,16 +97,38 @@ export function PublicHeader() {
 
             <PublicNav className="hidden flex-shrink-0 md:flex" />
 
-            <div className="flex flex-shrink-0 items-center gap-2">
+            {/* Auth actions – ms-auto keeps them at end (visible in RTL) */}
+            <div className="ms-auto flex flex-shrink-0 items-center gap-2">
               <div className="hidden md:flex md:items-center md:gap-2">
                 <LanguageSwitcher />
                 <MiniCart />
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">{t('nav.login')}</Link>
-                </Button>
-                <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover" asChild>
-                  <Link href="/register">{t('nav.register')}</Link>
-                </Button>
+                {authModal ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => authModal.openAuthModal('login')}
+                    >
+                      {t('nav.login')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-brand-primary hover:bg-brand-primary-hover"
+                      onClick={() => authModal.openAuthModal('register')}
+                    >
+                      {t('nav.register')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href="/login">{t('nav.login')}</Link>
+                    </Button>
+                    <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover" asChild>
+                      <Link href="/register">{t('nav.register')}</Link>
+                    </Button>
+                  </>
+                )}
               </div>
               <div className="md:hidden">
                 <MiniCart />
