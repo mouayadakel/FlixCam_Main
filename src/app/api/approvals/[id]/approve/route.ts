@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { ApprovalService } from '@/lib/services/approval.service'
 import { FeatureFlagService } from '@/lib/services/feature-flag.service'
+import { PaymentService } from '@/lib/services/payment.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
 export async function POST(
@@ -51,6 +52,19 @@ export async function POST(
           userId: session.user.id,
         })
       }
+    }
+
+    // If this is a payment refund approval, execute the refund (per ROLES_AND_SECURITY: approval then execute)
+    if (
+      approval.resourceType === 'payment' &&
+      approval.action === 'payment.refund' &&
+      approval.status === 'approved'
+    ) {
+      await PaymentService.processRefund(
+        approval.resourceId,
+        approval.id,
+        session.user.id
+      )
     }
 
     return NextResponse.json({ approval })

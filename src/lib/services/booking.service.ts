@@ -9,6 +9,7 @@ import { AuditService } from './audit.service'
 import { EquipmentService } from './equipment.service'
 import { StudioService } from './studio.service'
 import { EventBus } from '@/lib/events/event-bus'
+import { PayoutService } from './payout.service'
 import {
   NotFoundError,
   ValidationError,
@@ -531,6 +532,12 @@ export class BookingService {
         booking: updated,
         userId,
       })
+      // Create vendor payouts for equipment with vendors
+      await PayoutService.createVendorPayoutsForBooking(bookingId, userId).catch(
+        (err) => {
+          console.error('[BookingService] Failed to create vendor payouts:', err)
+        }
+      )
     } else if (newStatus === BookingStatus.CANCELLED) {
       await EventBus.emit('booking.cancelled', {
         booking: updated,

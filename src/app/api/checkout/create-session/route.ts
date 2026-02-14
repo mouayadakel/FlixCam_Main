@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { CartService } from '@/lib/services/cart.service'
 import { BookingService } from '@/lib/services/booking.service'
+import { PricingService } from '@/lib/services/pricing.service'
 import { getCartSessionId } from '@/lib/cart-session'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 import { TapClient } from '@/lib/integrations/tap/client'
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
 
   const totalAmount = cart.total
   const vatAmount = totalAmount * 0.15
+  const depositAmount = await PricingService.calculateDeposit(equipment)
 
   const booking = await BookingService.create(
     {
@@ -122,7 +124,7 @@ export async function POST(request: NextRequest) {
         description: `Booking ${booking.bookingNumber}`,
       })
       const redirectUrl = charge.redirect?.url || charge.transaction?.url || redirectSuccess
-      return NextResponse.json({ redirectUrl, bookingId: booking.id })
+      return NextResponse.json({ redirectUrl, bookingId: booking.id, depositAmount })
     } catch (e) {
       console.error('Tap createCharge error:', e)
       return NextResponse.json(
@@ -135,5 +137,6 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     redirectUrl: redirectSuccess,
     bookingId: booking.id,
+    depositAmount,
   })
 }

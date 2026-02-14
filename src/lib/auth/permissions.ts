@@ -244,6 +244,17 @@ export const PERMISSIONS = {
   AI_CHATBOT: 'ai.chatbot',
 
   // ========================================
+  // VENDOR MANAGEMENT (multi-vendor marketplace)
+  // ========================================
+  VENDOR_READ: 'vendor.read',
+  VENDOR_CREATE: 'vendor.create',
+  VENDOR_UPDATE: 'vendor.update',
+  VENDOR_APPROVE: 'vendor.approve',
+  VENDOR_SUSPEND: 'vendor.suspend',
+  VENDOR_MANAGE_PAYOUTS: 'vendor.manage_payouts',
+  VENDOR_TOGGLE_VISIBILITY: 'vendor.toggle_visibility',
+
+  // ========================================
   // SYSTEM MANAGEMENT
   // ========================================
   SYSTEM_READ_ONLY_MODE: 'system.read_only_mode',
@@ -335,6 +346,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.AI_PRICING,
     PERMISSIONS.AI_DEMAND_FORECAST,
     PERMISSIONS.AI_CHATBOT,
+    PERMISSIONS.VENDOR_READ,
+    PERMISSIONS.VENDOR_CREATE,
+    PERMISSIONS.VENDOR_UPDATE,
+    PERMISSIONS.VENDOR_APPROVE,
+    PERMISSIONS.VENDOR_SUSPEND,
+    PERMISSIONS.VENDOR_MANAGE_PAYOUTS,
+    PERMISSIONS.VENDOR_TOGGLE_VISIBILITY,
   ],
   staff: [
     PERMISSIONS.DASHBOARD_READ,

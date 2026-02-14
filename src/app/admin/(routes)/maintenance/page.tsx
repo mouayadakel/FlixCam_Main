@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Eye, Wrench, Calendar, AlertCircle } from 'lucide-react'
+import { Plus, Eye, Wrench, Calendar, AlertCircle, Download } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -21,7 +21,9 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/lib/utils/format.utils'
+import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { exportToCSV } from '@/lib/utils/export.utils'
+import { TablePagination } from '@/components/tables/table-pagination'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { MaintenanceStatus, MaintenanceType, MaintenancePriority } from '@/lib/types/maintenance.types'
@@ -37,6 +39,7 @@ interface Maintenance {
   completedDate?: string | null
   technicianId?: string | null
   description: string
+  cost?: number
   equipment: {
     id: string
     sku: string
@@ -79,6 +82,11 @@ export default function MaintenancePage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const statuses: Array<MaintenanceStatus | 'all'> = [
     'all',
@@ -108,7 +116,7 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     loadMaintenance()
-  }, [statusFilter, typeFilter, priorityFilter])
+  }, [statusFilter, typeFilter, priorityFilter, page, pageSize, dateFrom, dateTo])
 
   const loadMaintenance = async () => {
     setLoading(true)
@@ -117,8 +125,10 @@ export default function MaintenancePage() {
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (typeFilter !== 'all') params.set('type', typeFilter)
       if (priorityFilter !== 'all') params.set('priority', priorityFilter)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      if (dateFrom) params.set('dateFrom', dateFrom)
+      if (dateTo) params.set('dateTo', dateTo)
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
 
       const response = await fetch(`/api/maintenance?${params.toString()}`)
       if (!response.ok) {
@@ -127,6 +137,7 @@ export default function MaintenancePage() {
 
       const data = await response.json()
       setMaintenance(data.data || [])
+      setTotal(data.total ?? 0)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -154,6 +165,38 @@ export default function MaintenancePage() {
     return PRIORITY_LABELS[priority]?.ar || priority
   }
 
+  const durationDays = (item: Maintenance): number | null => {
+    const start = new Date(item.scheduledDate).getTime()
+    const end = item.completedDate ? new Date(item.completedDate).getTime() : Date.now()
+    if (end <= start) return null
+    return Math.floor((end - start) / 86400000)
+  }
+
+  const handleExportCSV = () => {
+    const rows = filteredMaintenance.map((m) => ({
+      maintenanceNumber: m.maintenanceNumber,
+      equipmentSku: m.equipment.sku,
+      type: getTypeLabel(m.type),
+      status: getStatusLabel(m.status),
+      priority: getPriorityLabel(m.priority),
+      cost: m.cost != null ? formatCurrency(m.cost) : '',
+      scheduledDate: formatDate(m.scheduledDate),
+      completedDate: m.completedDate ? formatDate(m.completedDate) : '',
+      technicianName: m.technician?.name ?? '',
+    }))
+    exportToCSV(rows, `maintenance-${new Date().toISOString().slice(0, 10)}`, [
+      { key: 'maintenanceNumber', label: 'رقم الطلب' },
+      { key: 'equipmentSku', label: 'المعدة' },
+      { key: 'type', label: 'النوع' },
+      { key: 'status', label: 'الحالة' },
+      { key: 'priority', label: 'الأولوية' },
+      { key: 'cost', label: 'التكلفة' },
+      { key: 'scheduledDate', label: 'التاريخ المقرر' },
+      { key: 'completedDate', label: 'تاريخ الإكمال' },
+      { key: 'technicianName', label: 'الفني' },
+    ])
+  }
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
@@ -163,16 +206,36 @@ export default function MaintenancePage() {
             إدارة طلبات صيانة المعدات
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/maintenance/new">
-            <Plus className="h-4 w-4 ml-2" />
-            طلب صيانة جديد
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filteredMaintenance.length === 0}>
+            <Download className="h-4 w-4 ml-2" />
+            تصدير CSV
+          </Button>
+          <Button asChild>
+            <Link href="/admin/maintenance/new">
+              <Plus className="h-4 w-4 ml-2" />
+              طلب صيانة جديد
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-4 items-center flex-wrap">
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="من تاريخ"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="إلى تاريخ"
+        />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -218,6 +281,8 @@ export default function MaintenancePage() {
               <TableHead>النوع</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead>الأولوية</TableHead>
+              <TableHead>التكلفة</TableHead>
+              <TableHead>المدة (أيام)</TableHead>
               <TableHead>التاريخ المقرر</TableHead>
               <TableHead>الفني</TableHead>
               <TableHead>الإجراءات</TableHead>
@@ -226,7 +291,7 @@ export default function MaintenancePage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={10}>
                   <div className="space-y-2 py-4">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -236,7 +301,7 @@ export default function MaintenancePage() {
               </TableRow>
             ) : filteredMaintenance.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   لا توجد طلبات صيانة
                 </TableCell>
               </TableRow>
@@ -262,6 +327,12 @@ export default function MaintenancePage() {
                     <span className={`px-2 py-1 rounded text-xs ${PRIORITY_LABELS[item.priority]?.color || ''}`}>
                       {getPriorityLabel(item.priority)}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {item.cost != null ? formatCurrency(item.cost) : '—'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {durationDays(item) != null ? `${durationDays(item)} يوم` : '—'}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -294,6 +365,21 @@ export default function MaintenancePage() {
           </TableBody>
         </Table>
       </div>
+
+      {total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          itemLabel="طلب صيانة"
+          dir="rtl"
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 /**
- * Equipment grid/list with toggle (Phase 2.2).
+ * Equipment grid/list with modern toggle and responsive layout.
  */
 
 'use client'
@@ -16,23 +16,21 @@ interface EquipmentGridProps {
   isLoading?: boolean
 }
 
-const PAGE_SIZE = 24
-
 export function EquipmentGrid({ items, isLoading }: EquipmentGridProps) {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid')
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon" disabled>
+          <Button variant="ghost" size="icon" disabled className="rounded-lg">
             <LayoutGrid className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" disabled>
+          <Button variant="ghost" size="icon" disabled className="rounded-lg">
             <List className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <EquipmentCardSkeleton key={i} />
           ))}
@@ -42,13 +40,14 @@ export function EquipmentGrid({ items, isLoading }: EquipmentGridProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex justify-end gap-1">
         <Button
           variant={layout === 'grid' ? 'secondary' : 'ghost'}
           size="icon"
           onClick={() => setLayout('grid')}
           aria-label="Grid view"
+          className="rounded-lg"
         >
           <LayoutGrid className="h-4 w-4" />
         </Button>
@@ -57,6 +56,7 @@ export function EquipmentGrid({ items, isLoading }: EquipmentGridProps) {
           size="icon"
           onClick={() => setLayout('list')}
           aria-label="List view"
+          className="rounded-lg"
         >
           <List className="h-4 w-4" />
         </Button>
@@ -64,8 +64,8 @@ export function EquipmentGrid({ items, isLoading }: EquipmentGridProps) {
       <div
         className={
           layout === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-            : 'flex flex-col gap-2'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'
+            : 'flex flex-col gap-3'
         }
       >
         {items.map((item) => (

@@ -152,6 +152,15 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
+  // Vendor dashboard - require authentication
+  if (pathname.startsWith('/vendor')) {
+    if (!session) {
+      const loginUrl = new URL('/login', req.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   // Dashboard routes - require authentication
   if (pathname.startsWith('/dashboard')) {
     if (!session) {

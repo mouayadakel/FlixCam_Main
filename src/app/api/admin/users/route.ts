@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
+    const status = searchParams.get('status')
     const excludeRoleId = searchParams.get('excludeRoleId') // RBAC role ID - exclude users who have this role
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
@@ -82,6 +83,10 @@ export async function GET(request: NextRequest) {
 
     if (role) {
       where.role = role
+    }
+
+    if (status) {
+      where.status = status
     }
 
     // Exclude users already assigned to this RBAC role (for assign-user-to-role flow)
@@ -113,6 +118,7 @@ export async function GET(request: NextRequest) {
           name: true,
           role: true,
           phone: true,
+          status: true,
           twoFactorEnabled: true,
           createdAt: true,
           updatedAt: true,

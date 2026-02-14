@@ -53,6 +53,10 @@ export default function NewBookingPage() {
   const [users, setUsers] = useState<User[]>([])
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([])
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, { available: boolean; quantityAvailable?: number }>>({})
+  const [availabilityLoading, setAvailabilityLoading] = useState(false)
+  const [costPreview, setCostPreview] = useState<{ subtotal: number; vatAmount: number; depositAmount: number; totalAmount: number } | null>(null)
+  const [costPreviewLoading, setCostPreviewLoading] = useState(false)
 
   const {
     register,
@@ -67,6 +71,11 @@ export default function NewBookingPage() {
   const customerId = watch('customerId')
   const startDate = watch('startDate')
   const endDate = watch('endDate')
+
+  // Clear stale availability data whenever dates change
+  useEffect(() => {
+    setAvailabilityMap({})
+  }, [startDate, endDate])
 
   useEffect(() => {
     loadUsers()
@@ -145,18 +154,104 @@ export default function NewBookingPage() {
   }
 
   const toggleEquipment = (equipmentId: string) => {
-    setSelectedEquipment((prev) =>
-      prev.includes(equipmentId)
-        ? prev.filter((id) => id !== equipmentId)
-        : [...prev, equipmentId]
-    )
+    if (selectedEquipment.includes(equipmentId)) {
+      // Removing: clean up that item's availability entry, keep the rest valid
+      setSelectedEquipment((prev) => prev.filter((id) => id !== equipmentId))
+      setAvailabilityMap((prev) => {
+        const next = { ...prev }
+        delete next[equipmentId]
+        return next
+      })
+    } else {
+      // Adding: invalidate all availability data so a re-check is required
+      setSelectedEquipment((prev) => [...prev, equipmentId])
+      setAvailabilityMap({})
+    }
   }
 
   const removeEquipment = (equipmentId: string) => {
     setSelectedEquipment((prev) => prev.filter((id) => id !== equipmentId))
+    setAvailabilityMap((prev) => {
+      const next = { ...prev }
+      delete next[equipmentId]
+      return next
+    })
   }
 
   const selectedEquipmentList = equipment.filter((eq) => selectedEquipment.includes(eq.id))
+
+  const checkAvailability = async () => {
+    const start = startDate ? new Date(startDate) : null
+    const end = endDate ? new Date(endDate) : null
+    if (!start || !end || selectedEquipment.length === 0) {
+      toast({ title: 'خطأ', description: 'اختر التواريخ والمعدات أولاً', variant: 'destructive' })
+      return
+    }
+    setAvailabilityLoading(true)
+    setAvailabilityMap({})
+    try {
+      const results: Record<string, { available: boolean; quantityAvailable?: number }> = {}
+      await Promise.all(
+        selectedEquipment.map(async (id) => {
+          const res = await fetch(
+            `/api/equipment/${id}/availability?startDate=${encodeURIComponent(start.toISOString())}&endDate=${encodeURIComponent(end.toISOString())}`
+          )
+          const data = res.ok ? await res.json() : { available: false }
+          results[id] = { available: !!data.available, quantityAvailable: data.quantityAvailable }
+        })
+      )
+      setAvailabilityMap(results)
+      const anyUnavailable = Object.values(results).some((r) => !r.available)
+      if (anyUnavailable) {
+        toast({ title: 'تنبيه', description: 'بعض المعدات غير متاحة للتواريخ المحددة', variant: 'destructive' })
+      } else {
+        toast({ title: 'تم', description: 'جميع المعدات متاحة' })
+      }
+    } catch {
+      toast({ title: 'خطأ', description: 'فشل التحقق من التوفر', variant: 'destructive' })
+    } finally {
+      setAvailabilityLoading(false)
+    }
+  }
+
+  const loadCostPreview = async () => {
+    const start = startDate ? new Date(startDate) : null
+    const end = endDate ? new Date(endDate) : null
+    if (!start || !end || selectedEquipment.length === 0) {
+      setCostPreview(null)
+      return
+    }
+    setCostPreviewLoading(true)
+    try {
+      const params = new URLSearchParams({
+        equipmentIds: selectedEquipment.join(','),
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+      })
+      const res = await fetch(`/api/bookings/cost-preview?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        setCostPreview({
+          subtotal: data.subtotal ?? 0,
+          vatAmount: data.vatAmount ?? 0,
+          depositAmount: data.depositAmount ?? 0,
+          totalAmount: data.totalAmount ?? 0,
+        })
+      } else {
+        setCostPreview(null)
+      }
+    } catch {
+      setCostPreview(null)
+    } finally {
+      setCostPreviewLoading(false)
+    }
+  }
+
+  // Block submit unless every selected item has been checked AND is available.
+  // This prevents: (a) submitting without any check, (b) submitting with partial checks
+  // after adding new equipment, and (c) submitting when any item is unavailable.
+  const hasUnavailable = selectedEquipment.length > 0
+    && !selectedEquipment.every((id) => availabilityMap[id]?.available === true)
 
   return (
     <div className="space-y-6">
@@ -258,20 +353,37 @@ export default function NewBookingPage() {
               <div className="space-y-2">
                 <Label>المعدات المختارة ({selectedEquipmentList.length})</Label>
                 <div className="flex flex-wrap gap-2">
-                  {selectedEquipmentList.map((eq) => (
-                    <Badge key={eq.id} variant="secondary" className="gap-2">
-                      {eq.sku}
-                      {eq.model && ` - ${eq.model}`}
-                      <button
-                        type="button"
-                        onClick={() => removeEquipment(eq.id)}
-                        className="ml-1 hover:text-error-500"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                  {selectedEquipmentList.map((eq) => {
+                    const av = availabilityMap[eq.id]
+                    return (
+                      <Badge key={eq.id} variant="secondary" className="gap-2">
+                        {eq.sku}
+                        {eq.model && ` - ${eq.model}`}
+                        {av !== undefined && (
+                          <span className={av.available ? 'text-green-600' : 'text-red-600'}>
+                            {av.available ? ` (متاح${av.quantityAvailable != null ? ` ${av.quantityAvailable}` : ''})` : ' (غير متاح)'}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeEquipment(eq.id)}
+                          className="ml-1 hover:text-error-500"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )
+                  })}
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={checkAvailability}
+                  disabled={availabilityLoading || !startDate || !endDate}
+                >
+                  {availabilityLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'التحقق من التوفر'}
+                </Button>
               </div>
             )}
 
@@ -326,12 +438,52 @@ export default function NewBookingPage() {
           </CardContent>
         </Card>
 
+        {/* Cost preview & availability */}
+        {selectedEquipment.length > 0 && (startDate && endDate) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>معاينة التكلفة والوديعة</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={loadCostPreview}
+                disabled={costPreviewLoading}
+              >
+                {costPreviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'معاينة التكلفة'}
+              </Button>
+              {costPreview && (
+                <dl className="grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt>المجموع الفرعي</dt>
+                    <dd>{costPreview.subtotal.toLocaleString('ar-SA')} ر.س</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>ض.ق.م (15%)</dt>
+                    <dd>{costPreview.vatAmount.toLocaleString('ar-SA')} ر.س</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>الوديعة (تقدير)</dt>
+                    <dd>{costPreview.depositAmount.toLocaleString('ar-SA')} ر.س</dd>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t pt-2">
+                    <dt>الإجمالي</dt>
+                    <dd>{costPreview.totalAmount.toLocaleString('ar-SA')} ر.س</dd>
+                  </div>
+                </dl>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
           <Button type="button" variant="outline" asChild>
             <Link href="/admin/bookings">إلغاء</Link>
           </Button>
-          <Button type="submit" disabled={loading || selectedEquipment.length === 0}>
+          <Button type="submit" disabled={loading || selectedEquipment.length === 0 || hasUnavailable}>
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 ml-2 animate-spin" />

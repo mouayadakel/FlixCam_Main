@@ -20,6 +20,86 @@ import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { BookingState } from '@/lib/types/booking.types'
 import { BookingStatus } from '@prisma/client'
+import { Loader2 } from 'lucide-react'
+
+function ContractSection({
+  bookingId,
+  contracts,
+  onGenerated,
+}: {
+  bookingId: string
+  contracts: Array<{ id: string; status: string }>
+  onGenerated: () => void
+}) {
+  const [generating, setGenerating] = useState(false)
+  const { toast } = useToast()
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'فشل إنشاء العقد')
+      toast({ title: 'تم', description: 'تم إنشاء العقد بنجاح' })
+      onGenerated()
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل إنشاء العقد',
+        variant: 'destructive',
+      })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>العقود</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {contracts.length > 0 ? (
+          <div className="space-y-4">
+            {contracts.map((contract) => (
+              <div
+                key={contract.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
+                <div>
+                  <div className="font-medium">عقد #{contract.id.slice(0, 8)}</div>
+                  <Badge variant={contract.status === 'SIGNED' ? 'default' : 'secondary'} className="mt-1">
+                    {contract.status === 'SIGNED' ? 'موقع' : contract.status === 'PENDING_SIGNATURE' ? 'في انتظار التوقيع' : contract.status}
+                  </Badge>
+                </div>
+                <Button size="sm" asChild>
+                  <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                    <FileText className="h-4 w-4 ml-1" />
+                    تحميل عقد PDF
+                  </a>
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground">لا توجد عقود لهذا الحجز.</p>
+        )}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGenerate}
+          disabled={generating}
+        >
+          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'إنشاء عقد'}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
 
 interface Booking {
   id: string
@@ -280,21 +360,26 @@ export default function BookingDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  المبالغ المالية
+                  تفصيل المبالغ
                 </CardTitle>
+                <CardDescription>ملخص الأسعار والضريبة والعهدة</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <div className="text-sm text-muted-foreground">المبلغ الإجمالي</div>
-                  <div className="font-medium text-lg">{formatAmount(booking.totalAmount)}</div>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">الإجمالي الفرعي</span>
+                  <span>{formatAmount(Number(booking.totalAmount ?? 0) - Number(booking.vatAmount ?? 0))}</span>
                 </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">العهدة</div>
-                  <div className="font-medium">{formatAmount(booking.depositAmount)}</div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">ضريبة القيمة المضافة</span>
+                  <span>{formatAmount(booking.vatAmount)}</span>
                 </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">ضريبة القيمة المضافة</div>
-                  <div className="font-medium">{formatAmount(booking.vatAmount)}</div>
+                <div className="border-t pt-2 flex justify-between font-medium">
+                  <span>الإجمالي النهائي</span>
+                  <span className="text-lg">{formatAmount(booking.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">العهدة (مبلغ محجوز)</span>
+                  <span>{formatAmount(booking.depositAmount)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -389,33 +474,7 @@ export default function BookingDetailPage() {
 
         {/* Contracts Tab */}
         <TabsContent value="contracts">
-          <Card>
-            <CardHeader>
-              <CardTitle>العقود</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {booking.contracts && booking.contracts.length > 0 ? (
-                <div className="space-y-4">
-                  {booking.contracts.map((contract) => (
-                    <div
-                      key={contract.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div>
-                        <div className="font-medium">عقد #{contract.id.slice(0, 8)}</div>
-                        <div className="text-sm text-muted-foreground">{contract.status}</div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        عرض
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">لا توجد عقود</p>
-              )}
-            </CardContent>
-          </Card>
+          <ContractSection bookingId={booking.id} contracts={booking.contracts ?? []} onGenerated={loadBooking} />
         </TabsContent>
 
         {/* Damage Claims Tab */}
@@ -512,13 +571,21 @@ export default function BookingDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>التوصيل</CardTitle>
+              <CardDescription>
+                {booking.delivery_required ? 'هذا الحجز يتطلب توصيلاً' : 'التوصيل غير مطلوب لهذا الحجز'}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-muted-foreground">
                 {booking.delivery_required
-                  ? 'التوصيل مطلوب - سيتم إضافة تفاصيل التوصيل قريباً'
+                  ? 'تم طلب التوصيل. يمكنك إدارة المواعيد وتعيين السائق من جدول التوصيل.'
                   : 'التوصيل غير مطلوب'}
               </p>
+              {booking.delivery_required && (
+                <Button variant="outline" asChild>
+                  <Link href="/admin/ops/delivery/schedule">فتح جدول التوصيل</Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

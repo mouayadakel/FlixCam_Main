@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Eye, Mail, Phone, Calendar } from 'lucide-react'
+import { Plus, Eye, Mail, Phone, Calendar, Download } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -22,6 +22,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { exportToCSV } from '@/lib/utils/export.utils'
+import { TablePagination } from '@/components/tables/table-pagination'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ClientStatus } from '@/lib/types/client.types'
@@ -34,11 +36,20 @@ interface Client {
   phone: string | null
   role: UserRole
   status: ClientStatus
+  verificationStatus?: string
+  segmentName?: string | null
   totalBookings?: number
   totalSpent?: number
   lastBookingDate?: Date | null
   createdAt: Date
   updatedAt: Date
+}
+
+const VERIFICATION_LABELS: Record<string, string> = {
+  UNVERIFIED: 'غير موثق',
+  PENDING: 'قيد المراجعة',
+  VERIFIED: 'موثق',
+  REJECTED: 'مرفوض',
 }
 
 const STATUS_LABELS: Record<ClientStatus, { ar: string; en: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -53,6 +64,9 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
 
   const statuses: Array<ClientStatus | 'all'> = [
     'all',
@@ -63,7 +77,7 @@ export default function ClientsPage() {
 
   useEffect(() => {
     loadClients()
-  }, [statusFilter, searchQuery])
+  }, [statusFilter, searchQuery, page, pageSize])
 
   const loadClients = async () => {
     setLoading(true)
@@ -71,8 +85,8 @@ export default function ClientsPage() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (searchQuery) params.set('search', searchQuery)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
 
       const response = await fetch(`/api/clients?${params.toString()}`)
       if (!response.ok) {
@@ -81,6 +95,7 @@ export default function ClientsPage() {
 
       const data = await response.json()
       setClients(data.data || [])
+      setTotal(data.total ?? 0)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -104,6 +119,33 @@ export default function ClientsPage() {
     return STATUS_LABELS[status]?.variant || 'default'
   }
 
+  const handleExportCSV = () => {
+    const rows = filteredClients.map((c) => ({
+      name: c.name ?? '',
+      email: c.email,
+      phone: c.phone ?? '',
+      status: getStatusLabel(c.status),
+      verificationStatus: c.verificationStatus ? VERIFICATION_LABELS[c.verificationStatus] ?? c.verificationStatus : '',
+      segmentName: c.segmentName ?? '',
+      totalBookings: c.totalBookings ?? '',
+      totalSpent: c.totalSpent != null ? formatCurrency(c.totalSpent) : '',
+      lastBookingDate: c.lastBookingDate ? formatDate(c.lastBookingDate) : '',
+      createdAt: formatDate(c.createdAt),
+    }))
+    exportToCSV(rows, `clients-${new Date().toISOString().slice(0, 10)}`, [
+      { key: 'name', label: 'الاسم' },
+      { key: 'email', label: 'البريد' },
+      { key: 'phone', label: 'الهاتف' },
+      { key: 'status', label: 'الحالة' },
+      { key: 'verificationStatus', label: 'التوثيق' },
+      { key: 'segmentName', label: 'الشرائح' },
+      { key: 'totalBookings', label: 'عدد الحجوزات' },
+      { key: 'totalSpent', label: 'إجمالي الإنفاق' },
+      { key: 'lastBookingDate', label: 'آخر حجز' },
+      { key: 'createdAt', label: 'تاريخ التسجيل' },
+    ])
+  }
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
@@ -113,12 +155,18 @@ export default function ClientsPage() {
             إدارة العملاء والمستخدمين
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/clients/new">
-            <Plus className="h-4 w-4 ml-2" />
-            عميل جديد
-          </Link>
-        </Button>
+<div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filteredClients.length === 0}>
+              <Download className="h-4 w-4 ml-2" />
+              تصدير CSV
+            </Button>
+            <Button asChild>
+              <Link href="/admin/clients/new">
+                <Plus className="h-4 w-4 ml-2" />
+                عميل جديد
+              </Link>
+            </Button>
+          </div>
       </div>
 
       {/* Filters */}
@@ -151,7 +199,10 @@ export default function ClientsPage() {
               <TableHead>الاسم</TableHead>
               <TableHead>البريد الإلكتروني</TableHead>
               <TableHead>الهاتف</TableHead>
+              <TableHead>الدور</TableHead>
               <TableHead>الحالة</TableHead>
+              <TableHead>حالة التوثيق</TableHead>
+              <TableHead>الشرائح</TableHead>
               <TableHead>عدد الحجوزات</TableHead>
               <TableHead>إجمالي الإنفاق</TableHead>
               <TableHead>آخر حجز</TableHead>
@@ -162,7 +213,7 @@ export default function ClientsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell colSpan={12}>
                   <div className="space-y-2 py-4">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -172,7 +223,7 @@ export default function ClientsPage() {
               </TableRow>
             ) : filteredClients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                   لا يوجد عملاء
                 </TableCell>
               </TableRow>
@@ -199,9 +250,20 @@ export default function ClientsPage() {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Badge variant="outline">{client.role}</Badge>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={getStatusVariant(client.status)}>
                       {getStatusLabel(client.status)}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">
+                      {client.verificationStatus ? VERIFICATION_LABELS[client.verificationStatus] ?? client.verificationStatus : '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {client.segmentName ?? '—'}
                   </TableCell>
                   <TableCell>
                     {client.totalBookings || 0}
@@ -236,6 +298,21 @@ export default function ClientsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          itemLabel="عميل"
+          dir="rtl"
+        />
+      )}
     </div>
   )
 }

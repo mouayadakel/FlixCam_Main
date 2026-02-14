@@ -194,6 +194,9 @@ export class ClientService {
         },
         skip,
         take: pageSize,
+        include: {
+          segment: { select: { id: true, name: true } },
+        },
       }),
       prisma.user.count({ where }),
     ])
@@ -389,6 +392,9 @@ export class ClientService {
       role: user.role,
       status: user.status as ClientStatus,
       twoFactorEnabled: user.twoFactorEnabled,
+      verificationStatus: user.verificationStatus ?? undefined,
+      segmentId: user.segmentId ?? undefined,
+      segmentName: user.segment?.name ?? undefined,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }

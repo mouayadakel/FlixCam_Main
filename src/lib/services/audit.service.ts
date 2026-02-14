@@ -43,16 +43,24 @@ export class AuditService {
     resourceType?: string
     resourceId?: string
     action?: string
+    dateFrom?: Date
+    dateTo?: Date
     limit?: number
     offset?: number
   }) {
+    const where: Record<string, unknown> = {}
+    if (filters.userId) where.userId = filters.userId
+    if (filters.resourceType) where.resourceType = filters.resourceType
+    if (filters.resourceId) where.resourceId = filters.resourceId
+    if (filters.action) where.action = filters.action
+    if (filters.dateFrom ?? filters.dateTo) {
+      where.timestamp = {}
+      if (filters.dateFrom) (where.timestamp as Record<string, Date>).gte = filters.dateFrom
+      if (filters.dateTo) (where.timestamp as Record<string, Date>).lte = filters.dateTo
+    }
+
     return prisma.auditLog.findMany({
-      where: {
-        userId: filters.userId,
-        resourceType: filters.resourceType,
-        resourceId: filters.resourceId,
-        action: filters.action,
-      },
+      where,
       orderBy: {
         timestamp: 'desc',
       },

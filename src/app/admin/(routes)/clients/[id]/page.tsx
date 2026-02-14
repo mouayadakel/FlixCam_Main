@@ -69,6 +69,8 @@ interface Client {
   companyName?: string | null
   taxNumber?: string | null
   notes?: string | null
+  segmentName?: string | null
+  verificationStatus?: string | null
   createdAt: string
   updatedAt: string
   _count?: {
@@ -500,6 +502,15 @@ export default function ClientDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">الرقم الضريبي</p>
                       <p className="font-medium">{client.taxNumber}</p>
+                    </div>
+                  </div>
+                )}
+                {(client.segmentName ?? (client as any).segment?.name) && (
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">شريحة العملاء</p>
+                      <p className="font-medium">{client.segmentName ?? (client as any).segment?.name}</p>
                     </div>
                   </div>
                 )}

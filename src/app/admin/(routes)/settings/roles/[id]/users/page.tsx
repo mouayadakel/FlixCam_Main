@@ -193,8 +193,9 @@ export default function RoleUsersPage() {
                               size="sm"
                               onClick={() => setRemoveTarget(u)}
                               className="text-destructive hover:text-destructive"
+                              aria-label="إزالة من الدور"
                             >
-                              <Trash2 className="h-4 w-4" title="إزالة من الدور" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

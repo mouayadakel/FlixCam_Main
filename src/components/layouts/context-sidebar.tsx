@@ -75,8 +75,8 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
   ],
   sales: [
     {
-      label: 'Orders',
-      href: '/admin/orders',
+      label: 'Bookings',
+      href: '/admin/bookings',
       icon: ShoppingCart,
       permission: 'booking.read',
     },
@@ -230,7 +230,6 @@ export function ContextSidebar() {
   const getContextSection = (): string | null => {
     if (pathname === '/admin/dashboard' || pathname?.startsWith('/admin/dashboard')) return 'dashboard'
     if (
-      pathname?.startsWith('/admin/orders') ||
       pathname?.startsWith('/admin/users') ||
       pathname?.startsWith('/admin/invoices') ||
       pathname?.startsWith('/admin/wallet') ||

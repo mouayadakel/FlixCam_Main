@@ -4,8 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { deferredRegisterSchema } from '@/lib/validators/auth.validator'
 import { prisma } from '@/lib/db/prisma'
+import { EmailService } from '@/lib/services/email.service'
 import * as bcrypt from 'bcryptjs'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 
@@ -51,6 +53,16 @@ export async function POST(request: NextRequest) {
       status: 'active',
     },
   })
+
+  const verificationToken = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  await prisma.authToken.create({
+    data: { userId: user.id, token: verificationToken, type: 'email_verification', expiresAt },
+  })
+  const emailResult = await EmailService.sendVerificationEmail(email, verificationToken)
+  if (!emailResult.ok && emailResult.error) {
+    console.error('[register] Verification email send failed:', emailResult.error)
+  }
 
   return NextResponse.json({
     user: {

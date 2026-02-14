@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Eye, RefreshCw, DollarSign } from 'lucide-react'
+import { Eye, RefreshCw, DollarSign, Clock, XCircle, RotateCcw, Download } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -22,9 +22,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { exportToCSV } from '@/lib/utils/export.utils'
 import { useToast } from '@/hooks/use-toast'
+import { TablePagination } from '@/components/tables/table-pagination'
 import { TableSkeleton } from '@/components/admin/table-skeleton'
 import { EmptyState } from '@/components/states/empty-state'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PaymentStatus } from '@prisma/client'
 
 interface Payment {
@@ -51,6 +54,13 @@ interface Payment {
   updatedAt: string
 }
 
+interface PaymentsSummary {
+  totalCollected: number
+  pendingAmount: number
+  failedCount: number
+  refundedTotal: number
+}
+
 const STATUS_LABELS: Record<PaymentStatus, { ar: string; en: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   PENDING: { ar: 'قيد الانتظار', en: 'Pending', variant: 'outline' },
   PROCESSING: { ar: 'قيد المعالجة', en: 'Processing', variant: 'secondary' },
@@ -65,6 +75,12 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [total, setTotal] = useState(0)
+  const [summary, setSummary] = useState<PaymentsSummary | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const statuses: Array<PaymentStatus | 'all'> = [
     'all',
@@ -78,15 +94,17 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     loadPayments()
-  }, [statusFilter])
+  }, [statusFilter, page, pageSize, dateFrom, dateTo])
 
   const loadPayments = async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      if (dateFrom) params.set('dateFrom', dateFrom)
+      if (dateTo) params.set('dateTo', dateTo)
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
 
       const response = await fetch(`/api/payments?${params.toString()}`)
       if (!response.ok) {
@@ -95,6 +113,8 @@ export default function PaymentsPage() {
 
       const data = await response.json()
       setPayments(data.data || [])
+      setTotal(data.total ?? 0)
+      if (data.summary) setSummary(data.summary)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -118,6 +138,27 @@ export default function PaymentsPage() {
     return STATUS_LABELS[status]?.variant || 'default'
   }
 
+  const handleExportCSV = () => {
+    const rows = filteredPayments.map((p) => ({
+      id: p.id,
+      bookingNumber: p.booking?.bookingNumber ?? '',
+      customerName: p.booking?.customer?.name ?? '',
+      amount: formatCurrency(p.amount),
+      status: getStatusLabel(p.status),
+      refundAmount: p.refundAmount != null ? formatCurrency(p.refundAmount) : '',
+      createdAt: formatDate(p.createdAt),
+    }))
+    exportToCSV(rows, `payments-${new Date().toISOString().slice(0, 10)}`, [
+      { key: 'id', label: 'المعرف' },
+      { key: 'bookingNumber', label: 'رقم الحجز' },
+      { key: 'customerName', label: 'العميل' },
+      { key: 'amount', label: 'المبلغ' },
+      { key: 'status', label: 'الحالة' },
+      { key: 'refundAmount', label: 'المسترد' },
+      { key: 'createdAt', label: 'تاريخ الإنشاء' },
+    ])
+  }
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
@@ -127,14 +168,75 @@ export default function PaymentsPage() {
             إدارة المدفوعات والاستردادات
           </p>
         </div>
-        <Button onClick={loadPayments} variant="outline">
-          <RefreshCw className="h-4 w-4 ml-2" />
-          تحديث
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filteredPayments.length === 0}>
+            <Download className="h-4 w-4 ml-2" />
+            تصدير CSV
+          </Button>
+          <Button onClick={loadPayments} variant="outline">
+            <RefreshCw className="h-4 w-4 ml-2" />
+            تحديث
+          </Button>
+        </div>
       </div>
+
+      {summary && (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">إجمالي المحصل</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalCollected)}</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">مبلغ قيد الانتظار</CardTitle>
+              <Clock className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold text-amber-600">{formatCurrency(summary.pendingAmount)}</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">فاشلة</CardTitle>
+              <XCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold text-red-600">{summary.failedCount}</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">إجمالي المسترد</CardTitle>
+              <RotateCcw className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold">{formatCurrency(summary.refundedTotal)}</span>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-4 items-center flex-wrap">
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="من تاريخ"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="إلى تاريخ"
+        />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -153,7 +255,7 @@ export default function PaymentsPage() {
         {loading ? (
           <TableSkeleton
             rowCount={5}
-            headers={['رقم الحجز', 'العميل', 'المبلغ', 'الحالة', 'مبلغ الاسترداد', 'معرف المعاملة', 'تاريخ الإنشاء', 'الإجراءات']}
+            headers={['رقم الحجز', 'العميل', 'المبلغ', 'طريقة الدفع', 'الحالة', 'مبلغ الاسترداد', 'معرف المعاملة', 'تاريخ الإنشاء', 'الإجراءات']}
           />
         ) : filteredPayments.length === 0 ? (
           <EmptyState
@@ -168,6 +270,7 @@ export default function PaymentsPage() {
                 <TableHead>رقم الحجز</TableHead>
                 <TableHead>العميل</TableHead>
                 <TableHead>المبلغ</TableHead>
+                <TableHead>طريقة الدفع</TableHead>
                 <TableHead>الحالة</TableHead>
                 <TableHead>مبلغ الاسترداد</TableHead>
                 <TableHead>معرف المعاملة</TableHead>
@@ -185,6 +288,9 @@ export default function PaymentsPage() {
                     {payment.booking?.customer?.name || payment.booking?.customer?.email || '-'}
                   </TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {payment.tapTransactionId || payment.tapChargeId ? 'Tap / بطاقة' : '—'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(payment.status)}>
                       {getStatusLabel(payment.status)}
@@ -232,6 +338,21 @@ export default function PaymentsPage() {
           </Table>
         )}
       </div>
+
+      {!loading && total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          itemLabel="مدفوعة"
+          dir="rtl"
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 /**
- * Public site container: max-width 1280px, centered, horizontal padding.
+ * Public site container: max-width 1320px, centered, horizontal padding.
  * Use for section content to match design token container_max_width.
  */
 
@@ -14,7 +14,7 @@ interface PublicContainerProps {
 export function PublicContainer({ children, className }: PublicContainerProps) {
   return (
     <div
-      className={cn('mx-auto w-full max-w-public-container px-4', className)}
+      className={cn('mx-auto w-full max-w-public-container px-4 sm:px-6 lg:px-8', className)}
     >
       {children}
     </div>

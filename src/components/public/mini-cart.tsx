@@ -1,10 +1,10 @@
 /**
- * Mini cart icon with count from cart store, links to /cart (Phase 3.1).
+ * Mini cart icon with animated count badge from cart store, links to /cart.
  */
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,18 +15,38 @@ export function MiniCart() {
   const { t } = useLocale()
   const { items, fetchCart } = useCartStore()
   const count = items.reduce((sum, i) => sum + i.quantity, 0)
+  const [bouncing, setBouncing] = useState(false)
+  const prevCount = useRef(count)
 
   useEffect(() => {
     fetchCart()
   }, [fetchCart])
 
+  useEffect(() => {
+    if (count !== prevCount.current && count > 0) {
+      setBouncing(true)
+      const timer = setTimeout(() => setBouncing(false), 300)
+      prevCount.current = count
+      return () => clearTimeout(timer)
+    }
+    prevCount.current = count
+  }, [count])
+
   return (
-    <Button variant="ghost" size="icon" asChild aria-label={t('nav.cart')}>
-      <Link href="/cart" className="relative">
+    <Button
+      variant="ghost"
+      size="icon"
+      asChild
+      aria-label={t('nav.cart')}
+      className="relative hover:bg-brand-primary/5 hover:text-brand-primary rounded-full transition-colors"
+    >
+      <Link href="/cart">
         <ShoppingCart className="h-5 w-5" />
         {count > 0 && (
           <span
-            className="absolute -top-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground"
+            className={`absolute -top-0.5 -end-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold text-white shadow-sm ${
+              bouncing ? 'animate-badge-bounce' : ''
+            }`}
             aria-hidden
           >
             {count > 99 ? '99+' : count}

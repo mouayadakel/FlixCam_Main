@@ -1,6 +1,6 @@
 /**
- * Homepage Top Brands – grid of brands with logo, name, product count.
- * Data from GET /api/public/brands.
+ * Homepage Top Brands – modern grid of brands with logo, name, product count.
+ * Hover effects and clean card design.
  */
 
 'use client'
@@ -35,48 +35,54 @@ export function HomeTopBrands() {
   }, [])
 
   return (
-    <section className="py-12 md:py-16 lg:py-20 border-t border-border-light">
+    <section className="py-16 md:py-20 lg:py-24 bg-white border-t border-border-light/50">
       <PublicContainer>
-        <h2 className="mb-8 text-section-title text-text-heading">
-          {t('home.topBrandsTitle')}
-        </h2>
+        <div className="mb-10 text-center">
+          <h2 className="text-section-title text-text-heading">
+            {t('home.topBrandsTitle')}
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-body-main text-text-body">
+            {t('home.heroSubtitle')}
+          </p>
+        </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="flex flex-col items-center rounded-public-card border border-border-light bg-surface-light p-4"
+                className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-surface-light p-6"
               >
-                <div className="h-12 w-12 animate-pulse rounded bg-border-light" />
-                <div className="mt-2 h-4 w-16 animate-pulse rounded bg-border-light" />
-                <div className="mt-1 h-3 w-12 animate-pulse rounded bg-border-light" />
+                <div className="h-12 w-12 animate-pulse rounded-xl bg-border-light" />
+                <div className="mt-3 h-4 w-16 animate-pulse rounded-md bg-border-light" />
+                <div className="mt-1.5 h-3 w-12 animate-pulse rounded-md bg-border-light" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:grid-cols-6">
-            {brands.slice(0, 12).map((brand) => (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 lg:grid-cols-6">
+            {brands.slice(0, 12).map((brand, index) => (
               <Link
                 key={brand.id}
                 href={`/equipment?brandId=${brand.id}`}
-                className="flex flex-col items-center rounded-public-card border border-border-light bg-white p-4 transition-[box-shadow,transform] hover:shadow-card-hover motion-reduce:transition-none [@media(pointer:fine)]:hover:-translate-y-0.5"
+                className="group flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:border-brand-primary/10 opacity-0 animate-fade-in-up"
+                style={{ animationDelay: `${0.05 * index}s` }}
               >
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-surface-light">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-light transition-transform duration-300 group-hover:scale-110">
                   {brand.logo ? (
                     <Image
                       src={brand.logo}
                       alt=""
                       fill
-                      className="object-contain"
-                      sizes="48px"
+                      className="object-contain p-1"
+                      sizes="56px"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-label-small font-semibold text-brand-primary">
+                    <div className="flex h-full w-full items-center justify-center text-base font-bold text-brand-primary">
                       {brand.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
                 </div>
-                <p className="mt-2 text-center text-card-title text-brand-primary">
+                <p className="mt-3 text-center text-sm font-semibold text-text-heading group-hover:text-brand-primary transition-colors">
                   {brand.name}
                 </p>
                 <p className="mt-0.5 text-label-small text-text-muted">

@@ -111,51 +111,62 @@ const config: Config = {
   			brand: {
   				primary: '#C92C37',
   				'primary-hover': '#A8242D',
+  				'primary-light': '#FEF2F2',
   				'secondary-accent': '#25D366',
   			},
   			surface: {
   				light: '#F9F9F9',
   				modal: '#F2F2F2',
+  				warm: '#FAFAF8',
   			},
   			footer: {
-  				dark: '#3E3735',
-  				darker: '#2C2826',
+  				dark: '#1A1A2E',
+  				darker: '#12121F',
   			},
-  			'text-heading': '#1A1A1A',
-  			'text-body': '#666666',
-  			'text-muted': '#999999',
+  			'text-heading': '#111827',
+  			'text-body': '#4B5563',
+  			'text-muted': '#9CA3AF',
   			'inverse-heading': '#FFFFFF',
-  			'inverse-body': '#CCCCCC',
-  			'border-light': '#E5E5E5',
-  			'border-input': '#E0E0E0',
-  			'sold-out': '#666666',
+  			'inverse-body': '#D1D5DB',
+  			'border-light': '#E5E7EB',
+  			'border-input': '#D1D5DB',
+  			'sold-out': '#6B7280',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)',
-  			'public-button': '6px',
-  			'public-card': '8px',
-  			'public-input': '4px',
-  			'hero-banner': '20px',
+  			'public-button': '8px',
+  			'public-card': '12px',
+  			'public-input': '8px',
+  			'hero-banner': '24px',
   			'pill': '50px',
   		},
   		boxShadow: {
+  			'card': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
   			'card-hover':
-  				'0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  				'0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
+  			'card-elevated':
+  				'0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
   			'modal':
-  				'0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  				'0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+  			'header':
+  				'0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02)',
+  			'header-scrolled':
+  				'0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
+  			'glow': '0 0 20px rgba(201, 44, 55, 0.15)',
+  			'inner-glow': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
   		},
   		maxWidth: {
-  			'public-container': '1280px',
+  			'public-container': '1320px',
   		},
   		fontSize: {
-  			'hero-title': ['36px', { lineHeight: '1.2', fontWeight: '700' }],
-  			'section-title': ['28px', { lineHeight: '1.2', fontWeight: '600' }],
+  			'hero-title': ['42px', { lineHeight: '1.15', fontWeight: '800', letterSpacing: '-0.02em' }],
+  			'section-title': ['32px', { lineHeight: '1.2', fontWeight: '700', letterSpacing: '-0.01em' }],
   			'card-title': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
-  			'body-main': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
+  			'body-main': ['15px', { lineHeight: '1.65', fontWeight: '400' }],
   			'label-small': ['12px', { lineHeight: '1.4', fontWeight: '500', letterSpacing: '0.5px' }],
-  			'price-tag': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+  			'price-tag': ['18px', { lineHeight: '1.4', fontWeight: '700' }],
   		},
   		fontFamily: {
   			arabic: ['"Cairo"', 'system-ui', 'sans-serif'],
@@ -164,26 +175,70 @@ const config: Config = {
   		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' },
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' },
+  			},
+  			'fade-in': {
+  				from: { opacity: '0', transform: 'translateY(8px)' },
+  				to: { opacity: '1', transform: 'translateY(0)' },
+  			},
+  			'fade-in-up': {
+  				from: { opacity: '0', transform: 'translateY(20px)' },
+  				to: { opacity: '1', transform: 'translateY(0)' },
+  			},
+  			'slide-in-right': {
+  				from: { opacity: '0', transform: 'translateX(20px)' },
+  				to: { opacity: '1', transform: 'translateX(0)' },
+  			},
+  			'scale-in': {
+  				from: { opacity: '0', transform: 'scale(0.95)' },
+  				to: { opacity: '1', transform: 'scale(1)' },
+  			},
+  			'badge-bounce': {
+  				'0%, 100%': { transform: 'scale(1)' },
+  				'50%': { transform: 'scale(1.2)' },
+  			},
+  			'shimmer': {
+  				from: { backgroundPosition: '-200% 0' },
+  				to: { backgroundPosition: '200% 0' },
+  			},
+  			'float': {
+  				'0%, 100%': { transform: 'translateY(0)' },
+  				'50%': { transform: 'translateY(-6px)' },
+  			},
+  			'pulse-subtle': {
+  				'0%, 100%': { opacity: '1' },
+  				'50%': { opacity: '0.85' },
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'fade-in': 'fade-in 0.5s ease-out forwards',
+  			'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+  			'slide-in-right': 'slide-in-right 0.5s ease-out forwards',
+  			'scale-in': 'scale-in 0.3s ease-out forwards',
+  			'badge-bounce': 'badge-bounce 0.3s ease-in-out',
+  			'shimmer': 'shimmer 2s linear infinite',
+  			'float': 'float 3s ease-in-out infinite',
+  			'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+  		},
+  		transitionDuration: {
+  			'250': '250ms',
+  			'350': '350ms',
+  		},
+  		backgroundImage: {
+  			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+  			'hero-gradient': 'linear-gradient(135deg, #C92C37 0%, #8B1A23 50%, #5C1118 100%)',
+  			'hero-gradient-overlay': 'linear-gradient(to right, rgba(201,44,55,0.95) 0%, rgba(139,26,35,0.85) 100%)',
+  			'cta-gradient': 'linear-gradient(135deg, #C92C37 0%, #A8242D 100%)',
+  			'footer-gradient': 'linear-gradient(180deg, #1A1A2E 0%, #12121F 100%)',
+  			'card-shine': 'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.05) 50%, transparent 75%)',
+  		},
   	}
   },
   plugins: [

@@ -30,6 +30,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { TablePagination } from '@/components/tables/table-pagination'
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -57,6 +58,8 @@ interface Claim {
   estimatedCost: string
   actualCost: string | null
   status: string
+  insuranceClaim?: boolean
+  photos?: string[] | null
   createdAt: string
   booking?: { id: string; bookingNumber: string; status: string }
   equipment?: { id: string; sku: string; model: string | null } | null
@@ -70,18 +73,20 @@ export default function DamageClaimsPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
 
   useEffect(() => {
     loadClaims()
-  }, [statusFilter])
+  }, [statusFilter, page, pageSize])
 
   const loadClaims = async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
       const res = await fetch(`/api/damage-claims?${params.toString()}`)
       if (!res.ok) throw new Error('Failed to load claims')
       const data = await res.json()
@@ -137,6 +142,8 @@ export default function DamageClaimsPage() {
                   <TableHead>Resource</TableHead>
                   <TableHead>Type / Severity</TableHead>
                   <TableHead>Estimated</TableHead>
+                  <TableHead>Insurance</TableHead>
+                  <TableHead>Photos</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Reported</TableHead>
                   <TableHead className="w-[80px]">Actions</TableHead>
@@ -145,7 +152,7 @@ export default function DamageClaimsPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={9}>
                       <div className="space-y-2 py-4">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-full" />
@@ -155,7 +162,7 @@ export default function DamageClaimsPage() {
                   </TableRow>
                 ) : claims.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No damage claims. Report one from a booking detail page.
                     </TableCell>
                   </TableRow>
@@ -189,6 +196,14 @@ export default function DamageClaimsPage() {
                       </TableCell>
                       <TableCell>{formatCurrency(Number(c.estimatedCost))}</TableCell>
                       <TableCell>
+                        <Badge variant={c.insuranceClaim ? 'default' : 'outline'}>
+                          {c.insuranceClaim ? 'نعم' : 'لا'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {Array.isArray(c.photos) ? c.photos.length : 0}
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={c.status === 'PENDING' || c.status === 'INVESTIGATING' ? 'secondary' : 'default'}>
                           {c.status}
                         </Badge>
@@ -214,6 +229,19 @@ export default function DamageClaimsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

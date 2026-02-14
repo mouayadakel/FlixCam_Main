@@ -23,7 +23,9 @@ import {
   Camera,
   Video,
   Lightbulb,
-  Mic
+  Mic,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -101,6 +103,7 @@ export default function KitBuilderPage() {
   const [kits, setKits] = useState<Kit[]>([])
   const [equipment, setEquipment] = useState<AvailableEquipment[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   
@@ -124,80 +127,50 @@ export default function KitBuilderPage() {
 
   const loadData = async () => {
     setLoading(true)
+    setLoadError(null)
     try {
-      // Load equipment for kit building
-      const equipmentRes = await fetch('/api/equipment?isActive=true&limit=100').catch(() => null)
-      
+      const [equipmentRes, kitsRes] = await Promise.all([
+        fetch('/api/equipment?isActive=true&limit=100'),
+        fetch('/api/kits'),
+      ])
+
       if (equipmentRes?.ok) {
         const data = await equipmentRes.json()
         setEquipment(data.items || [])
       }
 
-      // Sample kits data (in production, this would come from /api/kits)
-      const sampleKits: Kit[] = [
-        {
-          id: 'kit-1',
-          name: 'Basic Video Kit',
-          nameAr: 'طقم فيديو أساسي',
-          description: 'كاميرا + عدسة + ترايبود للتصوير الأساسي',
-          category: 'video',
-          items: [
-            { equipmentId: '1', sku: 'CAM-001', name: 'Sony A7III', quantity: 1, dailyRate: 200 },
-            { equipmentId: '2', sku: 'LENS-001', name: 'Sony 24-70mm', quantity: 1, dailyRate: 100 },
-            { equipmentId: '3', sku: 'TRI-001', name: 'Manfrotto Tripod', quantity: 1, dailyRate: 50 },
-          ],
-          totalDailyRate: 350,
-          discountPercent: 15,
-          finalDailyRate: 297.5,
-          isActive: true,
-          usageCount: 45,
-          createdAt: '2024-01-15',
-        },
-        {
-          id: 'kit-2',
-          name: 'Interview Kit',
-          nameAr: 'طقم المقابلات',
-          description: 'معدات كاملة للمقابلات مع إضاءة وصوت',
-          category: 'complete',
-          items: [
-            { equipmentId: '1', sku: 'CAM-002', name: 'Canon C70', quantity: 1, dailyRate: 400 },
-            { equipmentId: '4', sku: 'MIC-001', name: 'Rode NTG5', quantity: 2, dailyRate: 75 },
-            { equipmentId: '5', sku: 'LIGHT-001', name: 'Aputure 300D', quantity: 2, dailyRate: 150 },
-          ],
-          totalDailyRate: 850,
-          discountPercent: 20,
-          finalDailyRate: 680,
-          isActive: true,
-          usageCount: 28,
-          createdAt: '2024-02-01',
-        },
-        {
-          id: 'kit-3',
-          name: 'Podcast Kit',
-          nameAr: 'طقم البودكاست',
-          description: 'معدات صوتية للبودكاست والتسجيل',
-          category: 'audio',
-          items: [
-            { equipmentId: '6', sku: 'MIC-002', name: 'Shure SM7B', quantity: 2, dailyRate: 50 },
-            { equipmentId: '7', sku: 'REC-001', name: 'Rodecaster Pro', quantity: 1, dailyRate: 100 },
-          ],
-          totalDailyRate: 200,
-          discountPercent: 10,
-          finalDailyRate: 180,
-          isActive: true,
-          usageCount: 62,
-          createdAt: '2024-01-20',
-        },
-      ]
-
-      setKits(sampleKits)
+      if (kitsRes?.ok) {
+        const kitsData = await kitsRes.json()
+        const list = Array.isArray(kitsData.kits) ? kitsData.kits : []
+        setKits(
+          list.map((k: any) => ({
+            id: k.id,
+            name: k.name ?? '',
+            nameAr: k.nameAr ?? k.name ?? '',
+            description: k.description ?? '',
+            category: (k.category ?? 'complete') as Kit['category'],
+            items: (k.items ?? []).map((i: any) => ({
+              equipmentId: i.equipmentId,
+              sku: i.equipment?.sku ?? '',
+              name: i.equipment?.model ?? i.equipment?.sku ?? '',
+              quantity: i.quantity ?? 1,
+              dailyRate: Number(i.dailyPrice ?? i.equipment?.dailyPrice ?? 0),
+            })),
+            totalDailyRate: k.totalDailyRate ?? 0,
+            discountPercent: Number(k.discountPercent ?? 0),
+            finalDailyRate: k.finalDailyRate ?? 0,
+            isActive: k.isActive !== false,
+            usageCount: 0,
+            createdAt: k.createdAt ?? new Date().toISOString(),
+          }))
+        )
+      } else {
+        setKits([])
+      }
     } catch (error) {
       console.error('Failed to load data:', error)
-      toast({
-        title: 'خطأ',
-        description: 'فشل تحميل البيانات',
-        variant: 'destructive',
-      })
+      setLoadError(error instanceof Error ? error.message : 'فشل تحميل البيانات')
+      setKits([])
     } finally {
       setLoading(false)
     }
@@ -249,8 +222,12 @@ export default function KitBuilderPage() {
     if (!confirm('هل أنت متأكد من حذف هذا الطقم؟')) return
 
     try {
-      // In production: await fetch(`/api/kits/${kitId}`, { method: 'DELETE' })
-      setKits(prev => prev.filter(k => k.id !== kitId))
+      const res = await fetch(`/api/kits/${kitId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to delete kit')
+      }
+      await loadData()
       toast({
         title: 'تم الحذف',
         description: 'تم حذف الطقم بنجاح',
@@ -258,7 +235,7 @@ export default function KitBuilderPage() {
     } catch (error) {
       toast({
         title: 'خطأ',
-        description: 'فشل حذف الطقم',
+        description: error instanceof Error ? error.message : 'فشل حذف الطقم',
         variant: 'destructive',
       })
     }
@@ -315,10 +292,10 @@ export default function KitBuilderPage() {
   }
 
   const handleSaveKit = async () => {
-    if (!formData.name || !formData.nameAr || formData.items.length === 0) {
+    if (!formData.name || formData.items.length === 0) {
       toast({
         title: 'خطأ',
-        description: 'يرجى ملء جميع الحقول المطلوبة وإضافة معدات',
+        description: 'يرجى ملء الاسم وإضافة معدات على الأقل',
         variant: 'destructive',
       })
       return
@@ -326,35 +303,61 @@ export default function KitBuilderPage() {
 
     setSaving(true)
     try {
-      const { totalDailyRate, finalDailyRate } = calculateTotals()
-      
-      const kitData: Kit = {
-        id: editingKit?.id || `kit-${Date.now()}`,
-        ...formData,
-        totalDailyRate,
-        finalDailyRate,
-        usageCount: editingKit?.usageCount || 0,
-        createdAt: editingKit?.createdAt || new Date().toISOString(),
-      }
+      const slug =
+        formData.name
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9_-]/g, '') || `kit-${Date.now()}`
+      const itemsPayload = formData.items.map((i) => ({
+        equipmentId: i.equipmentId,
+        quantity: i.quantity,
+      }))
 
-      // In production: await fetch('/api/kits', { method: 'POST', body: JSON.stringify(kitData) })
-      
       if (editingKit) {
-        setKits(prev => prev.map(k => k.id === editingKit.id ? kitData : k))
+        const res = await fetch(`/api/kits/${editingKit.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            description: formData.description || null,
+            discountPercent: formData.discountPercent ?? 0,
+            isActive: formData.isActive,
+            items: itemsPayload,
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || 'Failed to update kit')
+        }
       } else {
-        setKits(prev => [...prev, kitData])
+        const res = await fetch('/api/kits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            slug,
+            description: formData.description || null,
+            discountPercent: formData.discountPercent ?? 0,
+            isActive: formData.isActive,
+            items: itemsPayload,
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || 'Failed to create kit')
+        }
       }
 
+      await loadData()
       toast({
         title: 'تم الحفظ',
         description: editingKit ? 'تم تحديث الطقم بنجاح' : 'تم إنشاء الطقم بنجاح',
       })
-      
       setIsDialogOpen(false)
     } catch (error) {
       toast({
         title: 'خطأ',
-        description: 'فشل حفظ الطقم',
+        description: error instanceof Error ? error.message : 'فشل حفظ الطقم',
         variant: 'destructive',
       })
     } finally {
@@ -425,6 +428,18 @@ export default function KitBuilderPage() {
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
+      ) : loadError ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+            <p className="text-lg font-medium">فشل تحميل البيانات</p>
+            <p className="text-sm mb-4">{loadError}</p>
+            <Button variant="outline" onClick={() => loadData()}>
+              <RefreshCw className="h-4 w-4 ml-2" />
+              إعادة المحاولة
+            </Button>
+          </CardContent>
+        </Card>
       ) : filteredKits.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">

@@ -11,7 +11,7 @@ import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, FileText, Calendar, MessageCircle } from 'lucide-react'
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '966500000000'
+import { siteConfig } from '@/config/site.config'
 
 export default function BookingConfirmationPage() {
   const params = useParams()
@@ -79,7 +79,7 @@ export default function BookingConfirmationPage() {
     URL.revokeObjectURL(url)
   }
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(
     `مرحباً، لدي استفسار عن الحجز ${booking?.bookingNumber ?? id}`
   )}`
 

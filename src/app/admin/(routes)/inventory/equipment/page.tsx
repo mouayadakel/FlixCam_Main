@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatDate } from '@/lib/utils/format.utils'
 import Image from 'next/image'
 import type { Equipment, EquipmentCondition } from '@prisma/client'
 
@@ -24,6 +25,7 @@ interface EquipmentWithRelations extends Equipment {
   category: { id: string; name: string; slug: string }
   brand: { id: string; name: string; slug: string } | null
   media: Array<{ id: string; url: string }>
+  maintenance?: Array<{ completedDate: string }>
 }
 
 const CONDITION_COLORS: Record<EquipmentCondition, string> = {
@@ -246,7 +248,8 @@ export default function EquipmentPage() {
                   <TableHead>الفئة</TableHead>
                   <TableHead>العلامة التجارية</TableHead>
                   <TableHead>الحالة</TableHead>
-                  <TableHead>الكمية</TableHead>
+                  <TableHead>المتاح / الإجمالي</TableHead>
+                  <TableHead>آخر صيانة</TableHead>
                   <TableHead>السعر اليومي</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>الإجراءات</TableHead>
@@ -290,6 +293,11 @@ export default function EquipmentPage() {
                       </TableCell>
                       <TableCell>
                         {item.quantityAvailable} / {item.quantityTotal}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.maintenance?.[0]?.completedDate
+                          ? formatDate(item.maintenance[0].completedDate)
+                          : '—'}
                       </TableCell>
                       <TableCell className="font-medium">
                         {Number(item.dailyPrice).toLocaleString('ar-SA')} ر.س

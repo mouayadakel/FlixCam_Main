@@ -24,10 +24,10 @@ export function CategoryBar() {
 
   return (
     <nav
-      className="hidden border-t border-border-light bg-white md:block"
+      className="hidden border-t border-border-light/50 bg-white/80 md:block"
       aria-label="Categories"
     >
-      <div className="mx-auto flex w-full max-w-public-container items-center gap-6 overflow-x-auto px-4 py-2">
+      <div className="mx-auto flex w-full max-w-public-container items-center gap-1 overflow-x-auto px-4 py-1">
         {CATEGORY_LINKS.map(({ href, key }) => {
           const isActive = pathname ? (pathname === href || pathname.startsWith(href + '/')) : false
           return (
@@ -35,13 +35,16 @@ export function CategoryBar() {
               key={href}
               href={href}
               className={cn(
-                'whitespace-nowrap text-sm font-medium transition-colors',
+                'relative whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'text-brand-primary'
-                  : 'text-text-body hover:text-text-heading'
+                  ? 'text-brand-primary bg-brand-primary/5'
+                  : 'text-text-body hover:text-brand-primary hover:bg-brand-primary/5'
               )}
             >
               {t(key)}
+              {isActive && (
+                <span className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-brand-primary" />
+              )}
             </Link>
           )
         })}

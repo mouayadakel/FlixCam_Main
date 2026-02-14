@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Eye, FileText, Download, AlertCircle } from 'lucide-react'
+import { Plus, Eye, Download } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -21,7 +21,10 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { exportToCSV } from '@/lib/utils/export.utils'
+import { TablePagination } from '@/components/tables/table-pagination'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { InvoiceStatus, InvoiceType } from '@/lib/types/invoice.types'
@@ -75,6 +78,12 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const statuses: Array<InvoiceStatus | 'all'> = [
     'all',
@@ -96,7 +105,7 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     loadInvoices()
-  }, [statusFilter, typeFilter])
+  }, [statusFilter, typeFilter, page, pageSize, dateFrom, dateTo])
 
   const loadInvoices = async () => {
     setLoading(true)
@@ -104,8 +113,10 @@ export default function InvoicesPage() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (typeFilter !== 'all') params.set('type', typeFilter)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      if (dateFrom) params.set('dateFrom', dateFrom)
+      if (dateTo) params.set('dateTo', dateTo)
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
 
       const response = await fetch(`/api/invoices?${params.toString()}`)
       if (!response.ok) {
@@ -114,6 +125,7 @@ export default function InvoicesPage() {
 
       const data = await response.json()
       setInvoices(data.data || [])
+      setTotal(data.total ?? 0)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -138,7 +150,65 @@ export default function InvoicesPage() {
   }
 
   const isOverdue = (invoice: Invoice) => {
-    return invoice.status !== 'paid' && new Date(invoice.dueDate) < new Date()
+    return invoice.status !== 'paid' && invoice.status !== 'cancelled' && new Date(invoice.dueDate) < new Date()
+  }
+
+  const daysOverdue = (invoice: Invoice): number | null => {
+    if (!isOverdue(invoice)) return null
+    const due = new Date(invoice.dueDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    due.setHours(0, 0, 0, 0)
+    return Math.floor((today.getTime() - due.getTime()) / 86400000)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredInvoices.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredInvoices.map((inv) => inv.id)))
+    }
+  }
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const CSV_COLUMNS = [
+    { key: 'invoiceNumber', label: 'رقم الفاتورة' },
+    { key: 'customerName', label: 'العميل' },
+    { key: 'type', label: 'النوع' },
+    { key: 'status', label: 'الحالة' },
+    { key: 'issueDate', label: 'تاريخ الإصدار' },
+    { key: 'dueDate', label: 'تاريخ الاستحقاق' },
+    { key: 'totalAmount', label: 'الإجمالي' },
+    { key: 'paidAmount', label: 'المدفوع' },
+    { key: 'remainingAmount', label: 'المتبقي' },
+  ] as const
+
+  const toCSVRows = (invoiceList: Invoice[]) =>
+    invoiceList.map((inv) => ({
+      invoiceNumber: inv.invoiceNumber,
+      customerName: inv.customer.name ?? '',
+      type: getTypeLabel(inv.type),
+      status: getStatusLabel(inv.status),
+      issueDate: formatDate(inv.issueDate),
+      dueDate: formatDate(inv.dueDate),
+      totalAmount: formatCurrency(inv.totalAmount),
+      paidAmount: formatCurrency(inv.paidAmount),
+      remainingAmount: formatCurrency(inv.remainingAmount),
+    }))
+
+  const exportSelected = () => {
+    const toExport = filteredInvoices.filter((inv) => selectedIds.has(inv.id))
+    exportToCSV(toCSVRows(toExport), `invoices-selected-${new Date().toISOString().slice(0, 10)}`, [...CSV_COLUMNS])
+  }
+
+  const handleExportCSV = () => {
+    exportToCSV(toCSVRows(filteredInvoices), `invoices-${new Date().toISOString().slice(0, 10)}`, [...CSV_COLUMNS])
   }
 
   return (
@@ -150,16 +220,48 @@ export default function InvoicesPage() {
             إدارة الفواتير والمدفوعات
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/invoices/new">
-            <Plus className="h-4 w-4 ml-2" />
-            فاتورة جديدة
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          {selectedIds.size > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground self-center">{selectedIds.size} محدد</span>
+              <Button variant="outline" size="sm" onClick={() => exportSelected()}>
+                <Download className="h-4 w-4 ml-2" />
+                تصدير المحدد
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                إلغاء التحديد
+              </Button>
+            </>
+          )}
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filteredInvoices.length === 0}>
+            <Download className="h-4 w-4 ml-2" />
+            تصدير CSV
+          </Button>
+          <Button asChild>
+            <Link href="/admin/invoices/new">
+              <Plus className="h-4 w-4 ml-2" />
+              فاتورة جديدة
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-4 items-center flex-wrap">
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="من تاريخ"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="rounded-lg border px-4 py-2 text-sm"
+          placeholder="إلى تاريخ"
+        />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -189,10 +291,18 @@ export default function InvoicesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={filteredInvoices.length > 0 && selectedIds.size === filteredInvoices.length}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="تحديد الكل"
+                />
+              </TableHead>
               <TableHead>رقم الفاتورة</TableHead>
               <TableHead>العميل</TableHead>
               <TableHead>النوع</TableHead>
               <TableHead>الحالة</TableHead>
+              <TableHead>أيام التأخر</TableHead>
               <TableHead>المبلغ الإجمالي</TableHead>
               <TableHead>المدفوع</TableHead>
               <TableHead>المتبقي</TableHead>
@@ -203,7 +313,7 @@ export default function InvoicesPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell colSpan={11}>
                   <div className="space-y-2 py-4">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -213,13 +323,20 @@ export default function InvoicesPage() {
               </TableRow>
             ) : filteredInvoices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                   لا توجد فواتير
                 </TableCell>
               </TableRow>
             ) : (
               filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(invoice.id)}
+                      onCheckedChange={() => toggleSelectOne(invoice.id)}
+                      aria-label={`تحديد ${invoice.invoiceNumber}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                   <TableCell>
                     <div>
@@ -235,9 +352,21 @@ export default function InvoicesPage() {
                   </TableCell>
                   <TableCell>{getTypeLabel(invoice.type)}</TableCell>
                   <TableCell>
-                    <Badge variant={STATUS_LABELS[invoice.status]?.variant || 'default'}>
-                      {getStatusLabel(invoice.status)}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge variant={STATUS_LABELS[invoice.status]?.variant || 'default'}>
+                        {getStatusLabel(invoice.status)}
+                      </Badge>
+                      {isOverdue(invoice) && (
+                        <Badge variant="destructive" className="bg-red-600">متأخر</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {daysOverdue(invoice) !== null ? (
+                      <span className="text-destructive font-medium">{daysOverdue(invoice)} يوم</span>
+                    ) : (
+                      '—'
+                    )}
                   </TableCell>
                   <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
                   <TableCell>
@@ -250,14 +379,7 @@ export default function InvoicesPage() {
                       {formatCurrency(invoice.remainingAmount)}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {formatDate(invoice.dueDate)}
-                      {isOverdue(invoice) && (
-                        <AlertCircle className="h-3 w-3 inline-block ml-1 text-destructive" />
-                      )}
-                    </div>
-                  </TableCell>
+                  <TableCell className="text-sm">{formatDate(invoice.dueDate)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Link href={`/admin/invoices/${invoice.id}`}>
@@ -274,6 +396,21 @@ export default function InvoicesPage() {
           </TableBody>
         </Table>
       </div>
+
+      {total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          itemLabel="فاتورة"
+          dir="rtl"
+        />
+      )}
     </div>
   )
 }

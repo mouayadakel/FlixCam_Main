@@ -28,15 +28,38 @@ export function usePermissions() {
     async function loadPermissions() {
       try {
         const response = await fetch('/api/user/permissions')
-        if (!response.ok) throw new Error('Failed to load permissions')
-
         const data = await response.json()
+
+        if (!response.ok) {
+          setError(new Error(data.reason === 'SERVER_ERROR' ? 'فشل تحميل الصلاحيات' : 'Failed to load permissions'))
+          setPermissions([])
+          setIsSuperAdmin(false)
+          setLoading(false)
+          return
+        }
+
+        if (data.ok === false) {
+          setPermissions(Array.isArray(data.permissions) ? data.permissions : [])
+          setIsSuperAdmin(Boolean(data.isSuperAdmin))
+          setError(data.reason === 'SERVER_ERROR' ? new Error('فشل تحميل الصلاحيات') : null)
+          setLoading(false)
+          return
+        }
+
+        if (data.ok !== true) {
+          setPermissions([])
+          setIsSuperAdmin(false)
+          setError(null)
+          setLoading(false)
+          return
+        }
+
         const perms = Array.isArray(data.permissions) ? data.permissions : []
         setPermissions(perms)
         setIsSuperAdmin(Boolean(data.isSuperAdmin ?? perms.includes('*')))
         setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load permissions'))
+        setError(err instanceof Error ? err : new Error('فشل تحميل الصلاحيات'))
         setPermissions([])
         setIsSuperAdmin(false)
       } finally {

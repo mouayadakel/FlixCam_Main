@@ -19,11 +19,14 @@ export interface EquipmentTranslationInput {
   seoKeywords?: string
 }
 
+export type VendorSubmissionStatus = 'pending_review' | 'approved' | 'rejected'
+
 export interface CreateEquipmentInput {
   sku: string
   model?: string
   categoryId: string
   brandId?: string
+  vendorId?: string
   condition?: EquipmentCondition
   quantityTotal?: number
   quantityAvailable?: number
@@ -46,6 +49,7 @@ export interface CreateEquipmentInput {
   boxContents?: string
   bufferTime?: number
   bufferTimeUnit?: 'hours' | 'days'
+  vendorSubmissionStatus?: VendorSubmissionStatus
 }
 
 export interface UpdateEquipmentInput extends Partial<CreateEquipmentInput> {
@@ -57,6 +61,7 @@ export interface EquipmentFilters {
   search?: string
   categoryId?: string
   brandId?: string
+  vendorId?: string
   condition?: EquipmentCondition
   isActive?: boolean
   featured?: boolean
@@ -73,6 +78,7 @@ export class EquipmentService {
       search,
       categoryId,
       brandId,
+      vendorId,
       condition,
       isActive,
       featured,
@@ -80,8 +86,12 @@ export class EquipmentService {
       take = 50,
     } = filters
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       deletedAt: null,
+    }
+
+    if (vendorId) {
+      where.vendorId = vendorId
     }
 
     if (search) {
@@ -113,8 +123,11 @@ export class EquipmentService {
 
     const [items, total] = await Promise.all([
       prisma.equipment.findMany({
-        where,
+        where: where as Parameters<typeof prisma.equipment.findMany>[0]['where'],
         include: {
+          vendor: {
+            select: { id: true, companyName: true, isNameVisible: true },
+          },
           category: {
             select: {
               id: true,
@@ -137,6 +150,12 @@ export class EquipmentService {
             orderBy: {
               createdAt: 'asc',
             },
+          },
+          maintenance: {
+            where: { completedDate: { not: null } },
+            orderBy: { completedDate: 'desc' },
+            take: 1,
+            select: { completedDate: true },
           },
         },
         orderBy: {
@@ -169,6 +188,9 @@ export class EquipmentService {
         include: {
           category: true,
           brand: true,
+          vendor: {
+            select: { id: true, companyName: true, isNameVisible: true },
+          },
           media: {
             where: {
               deletedAt: null,
@@ -282,6 +304,12 @@ export class EquipmentService {
       customFields.bufferTimeUnit = input.bufferTimeUnit || 'hours'
     }
 
+    if (input.vendorSubmissionStatus) {
+      customFields.vendorSubmissionStatus = input.vendorSubmissionStatus
+    } else if (input.vendorId) {
+      customFields.vendorSubmissionStatus = 'pending_review'
+    }
+
     // Create equipment in transaction
     const equipment = await prisma.$transaction(async (tx) => {
       // Create equipment record
@@ -291,6 +319,7 @@ export class EquipmentService {
           model: input.model,
           categoryId: input.categoryId,
           brandId: input.brandId,
+          vendorId: input.vendorId ?? null,
           condition: input.condition || 'GOOD',
           quantityTotal: input.quantityTotal || 1,
           quantityAvailable: input.quantityAvailable ?? input.quantityTotal ?? 1,
@@ -380,8 +409,9 @@ export class EquipmentService {
     boxContents?: string
     bufferTime?: number
     bufferTimeUnit?: 'hours' | 'days'
+    vendorSubmissionStatus?: VendorSubmissionStatus
   }) {
-    const { id, updatedBy, translations, featuredImageUrl, galleryImageUrls, videoUrl, relatedEquipmentIds, boxContents, bufferTime, bufferTimeUnit, ...data } = input
+    const { id, updatedBy, translations, featuredImageUrl, galleryImageUrls, videoUrl, relatedEquipmentIds, boxContents, bufferTime, bufferTimeUnit, vendorSubmissionStatus, ...data } = input
 
     // Check if equipment exists
     const existing = await prisma.equipment.findFirst({
@@ -428,6 +458,10 @@ export class EquipmentService {
     if (bufferTime !== undefined) {
       customFields.bufferTime = bufferTime
       customFields.bufferTimeUnit = bufferTimeUnit || 'hours'
+    }
+
+    if (vendorSubmissionStatus !== undefined) {
+      customFields.vendorSubmissionStatus = vendorSubmissionStatus
     }
 
     // Update in transaction

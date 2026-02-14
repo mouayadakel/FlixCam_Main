@@ -43,7 +43,7 @@ export const chatbotMessageSchema = z.object({
 })
 
 export const equipmentRecommendationInputSchema = z.object({
-  unavailableEquipmentId: z.string().uuid(),
+  unavailableEquipmentId: z.string().min(1),
   projectType: z.string().optional(),
   budget: z.number().positive().optional(),
   requirements: z.array(z.string()).optional(),

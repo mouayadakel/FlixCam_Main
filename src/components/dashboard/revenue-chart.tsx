@@ -18,9 +18,10 @@ interface RevenueData {
 
 interface RevenueChartProps {
   data?: RevenueData[]
+  title?: string
 }
 
-export function RevenueChart({ data = [] }: RevenueChartProps) {
+export function RevenueChart({ data = [], title = 'الإيرادات (آخر 30 يوم)' }: RevenueChartProps) {
   // Format data for chart
   const chartData = data.map((item) => ({
     date: format(new Date(item.date), 'dd/MM', { locale: arSA }),
@@ -30,7 +31,7 @@ export function RevenueChart({ data = [] }: RevenueChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>الإيرادات (آخر 30 يوم)</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
         {chartData.length === 0 ? (

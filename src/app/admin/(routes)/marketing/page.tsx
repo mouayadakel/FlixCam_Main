@@ -22,6 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils/format.utils'
+import { TablePagination } from '@/components/tables/table-pagination'
 import { useToast } from '@/hooks/use-toast'
 import { TableSkeleton } from '@/components/admin/table-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -67,6 +68,9 @@ export default function MarketingPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
 
   const statuses: Array<CampaignStatus | 'all'> = [
     'all',
@@ -88,7 +92,7 @@ export default function MarketingPage() {
 
   useEffect(() => {
     loadCampaigns()
-  }, [statusFilter, typeFilter, searchQuery])
+  }, [statusFilter, typeFilter, searchQuery, page, pageSize])
 
   const loadCampaigns = async () => {
     setLoading(true)
@@ -97,8 +101,8 @@ export default function MarketingPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (typeFilter !== 'all') params.set('type', typeFilter)
       if (searchQuery) params.set('search', searchQuery)
-      params.set('page', '1')
-      params.set('pageSize', '50')
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
 
       const response = await fetch(`/api/marketing/campaigns?${params.toString()}`)
       if (!response.ok) {
@@ -107,6 +111,7 @@ export default function MarketingPage() {
 
       const data = await response.json()
       setCampaigns(data.data || [])
+      setTotal(data.total ?? 0)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -200,6 +205,8 @@ export default function MarketingPage() {
               <TableHead>الموضوع</TableHead>
               <TableHead>المستلمون</TableHead>
               <TableHead>المُرسل</TableHead>
+              <TableHead>معدل الفتح %</TableHead>
+              <TableHead>معدل النقر %</TableHead>
               <TableHead>تاريخ الإرسال</TableHead>
               <TableHead>الإجراءات</TableHead>
             </TableRow>
@@ -207,7 +214,7 @@ export default function MarketingPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={10}>
                   <div className="space-y-2 py-4">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
@@ -217,7 +224,7 @@ export default function MarketingPage() {
               </TableRow>
             ) : filteredCampaigns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   لا توجد حملات
                 </TableCell>
               </TableRow>
@@ -255,6 +262,16 @@ export default function MarketingPage() {
                       '-'
                     )}
                   </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {campaign.sentCount > 0 && typeof campaign.openedCount === 'number'
+                      ? `${((campaign.openedCount / campaign.sentCount) * 100).toFixed(1)}%`
+                      : '—'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {campaign.sentCount > 0 && typeof campaign.clickedCount === 'number'
+                      ? `${((campaign.clickedCount / campaign.sentCount) * 100).toFixed(1)}%`
+                      : '—'}
+                  </TableCell>
                   <TableCell>
                     {campaign.sentAt ? (
                       <div className="flex items-center gap-2">
@@ -285,6 +302,21 @@ export default function MarketingPage() {
             </TableBody>
           </Table>
       </div>
+
+      {total > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+          itemLabel="حملة"
+          dir="rtl"
+        />
+      )}
     </div>
   )
 }

@@ -84,10 +84,12 @@ export interface MockStudio {
 export interface MockTechnician {
   id: string
   name: string
+  email?: string
   phone: string
   specialty: string
   status: string
   jobs: number
+  currentAssignment?: string | null
 }
 
 export interface MockCoupon {
@@ -436,9 +438,9 @@ export const mockStudios: MockStudio[] = [
 ]
 
 export const mockTechnicians: MockTechnician[] = [
-  { id: '1', name: 'Omar Khalid', phone: '+96650000001', specialty: 'Lighting', status: 'active', jobs: 34 },
-  { id: '2', name: 'Maha Ali', phone: '+96650000002', specialty: 'Camera', status: 'on-leave', jobs: 18 },
-  { id: '3', name: 'Abdulaziz Fahad', phone: '+96650000003', specialty: 'Audio', status: 'active', jobs: 25 },
+  { id: '1', name: 'Omar Khalid', email: 'omar.k@example.com', phone: '+96650000001', specialty: 'Lighting', status: 'active', jobs: 34 },
+  { id: '2', name: 'Maha Ali', email: 'maha.ali@example.com', phone: '+96650000002', specialty: 'Camera', status: 'on-leave', jobs: 18 },
+  { id: '3', name: 'Abdulaziz Fahad', email: 'abdulaziz@example.com', phone: '+96650000003', specialty: 'Audio', status: 'active', jobs: 25 },
 ]
 
 export const mockCoupons: MockCoupon[] = [

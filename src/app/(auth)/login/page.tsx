@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
@@ -53,11 +53,12 @@ export default function LoginPage() {
       window.history.replaceState(null, '', newUrl)
     }
     // Check for error in URL params
-    const errorParam = searchParams.get('error')
+      const errorParam = searchParams.get('error')
     if (errorParam) {
       const errorMessages: Record<string, string> = {
         Configuration: 'الإعدادات غير صحيحة. يرجى التحقق من إعدادات الخادم.',
         CredentialsSignin: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+        VendorAccessDenied: 'ليس لديك صلاحية للوصول إلى لوحة الموردين. يرجى التواصل مع الإدارة.',
         Default: 'حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.',
       }
       toast({
@@ -109,12 +110,18 @@ export default function LoginPage() {
           description: 'جاري التوجيه إلى لوحة التحكم...',
         })
         // Full page redirect so the session cookie is sent on the next request.
-        // router.push() can run before the cookie is attached, causing middleware to see no session.
         const callbackUrl = searchParams?.get('callbackUrl')
-        const destination =
+        let destination =
           callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('//')
             ? callbackUrl
-            : '/admin/dashboard'
+            : null
+        if (!destination) {
+          const session = await getSession()
+          const role = session?.user?.role as string | undefined
+          if (role === 'DATA_ENTRY') destination = '/portal/dashboard'
+          else if (role === 'VENDOR') destination = '/vendor/dashboard'
+          else destination = '/admin/dashboard'
+        }
         window.location.href = destination
         return
       }

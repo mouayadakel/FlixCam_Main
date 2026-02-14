@@ -37,6 +37,7 @@ const PERMISSION_CATEGORIES = [
   { name: 'user', nameAr: 'المستخدمين', sortOrder: 25 },
   { name: 'system', nameAr: 'النظام', sortOrder: 26 },
   { name: 'ai', nameAr: 'الذكاء الاصطناعي', sortOrder: 27 },
+  { name: 'vendor', nameAr: 'الموردون', sortOrder: 28 },
 ]
 
 const PERMISSIONS: Array<{ name: string; description?: string; categoryName: string; sortOrder: number }> = [
@@ -132,6 +133,14 @@ const PERMISSIONS: Array<{ name: string; description?: string; categoryName: str
   { name: 'category.read', categoryName: 'category', sortOrder: 2 },
   { name: 'category.update', categoryName: 'category', sortOrder: 3 },
   { name: 'category.delete', categoryName: 'category', sortOrder: 4 },
+  // vendor (multi-vendor marketplace)
+  { name: 'vendor.read', categoryName: 'vendor', sortOrder: 1 },
+  { name: 'vendor.create', categoryName: 'vendor', sortOrder: 2 },
+  { name: 'vendor.update', categoryName: 'vendor', sortOrder: 3 },
+  { name: 'vendor.approve', categoryName: 'vendor', sortOrder: 4 },
+  { name: 'vendor.suspend', categoryName: 'vendor', sortOrder: 5 },
+  { name: 'vendor.manage_payouts', categoryName: 'vendor', sortOrder: 6 },
+  { name: 'vendor.toggle_visibility', categoryName: 'vendor', sortOrder: 7 },
   // brand
   { name: 'brand.create', categoryName: 'brand', sortOrder: 1 },
   { name: 'brand.read', categoryName: 'brand', sortOrder: 2 },
@@ -214,6 +223,7 @@ const PERMISSIONS: Array<{ name: string; description?: string; categoryName: str
   { name: 'marketing.*', categoryName: 'marketing', sortOrder: 0, description: 'All marketing permissions' },
   { name: 'coupon.*', categoryName: 'coupon', sortOrder: 0, description: 'All coupon permissions' },
   { name: 'approval.*', categoryName: 'approval', sortOrder: 0, description: 'All approval permissions' },
+  { name: 'vendor.*', categoryName: 'vendor', sortOrder: 0, description: 'All vendor permissions' },
 ]
 
 const SYSTEM_ROLES = [
@@ -227,6 +237,7 @@ const SYSTEM_ROLES = [
     color: '#2563eb',
     permissions: [
       'booking.*', 'equipment.*', 'client.*', 'invoice.*', 'payment.*', 'contract.*', 'quote.*', 'reports.*',
+      'vendor.*',
       'user.read', 'user.create', 'user.update', 'settings.read', 'settings.update', 'warehouse.read', 'maintenance.read', 'delivery.read', 'approval.read', 'dashboard.read',
     ],
   },

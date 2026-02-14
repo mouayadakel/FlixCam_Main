@@ -1,238 +1,144 @@
 /**
- * Build Your Kit wizard (Phase 2.6). Steps: Category → Equipment → Duration → Summary.
+ * Build Your Kit wizard. Steps: Category → Equipment → Duration → Summary.
+ * Two-column layout (wizard + sticky sidebar) on desktop; floating bar on mobile.
  */
 
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
+import { useKitWizardStore, getKitWizardTotalAmount, getKitWizardSelectedCount } from '@/lib/stores/kit-wizard.store'
+import { Stepper } from '@/components/ui/stepper'
 import { Button } from '@/components/ui/button'
+import { KitSummarySidebar } from './kit-summary-sidebar'
+import { StepCategory } from './steps/step-category'
+import { StepEquipment } from './steps/step-equipment'
+import { StepDuration } from './steps/step-duration'
+import { StepSummary } from './steps/step-summary'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const STEPS = 4
 
-interface Category {
-  id: string
-  name: string
-  slug: string
-}
-
-interface EquipmentItem {
-  id: string
-  model: string | null
-  sku: string
-  dailyPrice: number
+function formatSar(value: number): string {
+  return new Intl.NumberFormat('en-SA', {
+    style: 'currency',
+    currency: 'SAR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export function KitWizard() {
   const { t } = useLocale()
-  const [step, setStep] = useState(1)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [equipment, setEquipment] = useState<EquipmentItem[]>([])
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
-  const [selectedEquipment, setSelectedEquipment] = useState<{ id: string; qty: number }[]>([])
-  const [durationDays, setDurationDays] = useState(1)
-  const [loading, setLoading] = useState(true)
+  const step = useKitWizardStore((s) => s.step)
+  const setStep = useKitWizardStore((s) => s.setStep)
+  const selectedCategoryId = useKitWizardStore((s) => s.selectedCategoryId)
+  const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
+  const durationDays = useKitWizardStore((s) => s.durationDays)
 
-  useEffect(() => {
-    fetch('/api/public/categories')
-      .then((r) => r.json())
-      .then((res) => setCategories(Array.isArray(res?.data) ? res.data : []))
-      .finally(() => setLoading(false))
-  }, [])
+  const stepLabels = [
+    t('kit.stepCategory'),
+    t('kit.stepEquipment'),
+    t('kit.stepDuration'),
+    t('kit.stepSummary'),
+  ]
 
-  useEffect(() => {
-    if (!selectedCategoryId) {
-      setEquipment([])
-      return
-    }
-    fetch(`/api/public/equipment?categoryId=${selectedCategoryId}&take=50`)
-      .then((r) => r.json())
-      .then((res) => {
-        const data = Array.isArray(res?.data) ? res.data : []
-        setEquipment(data.map((e: { id: string; model: string | null; sku: string; dailyPrice: number }) => ({
-          id: e.id,
-          model: e.model,
-          sku: e.sku,
-          dailyPrice: e.dailyPrice ?? 0,
-        })))
-      })
-  }, [selectedCategoryId])
+  const steps = stepLabels.map((label, i) => ({ id: `step-${i}`, label }))
 
-  const toggleEquipment = (id: string) => {
-    setSelectedEquipment((prev) => {
-      const i = prev.findIndex((e) => e.id === id)
-      if (i >= 0) {
-        const next = [...prev]
-        next.splice(i, 1)
-        return next
-      }
-      return [...prev, { id, qty: 1 }]
-    })
+  const canNextStep0 = !!selectedCategoryId
+  const canNextStep1 = Object.keys(selectedEquipment).length > 0
+  const canNextStep2 = durationDays >= 1
+
+  const goNext = () => {
+    if (step === 0 && !canNextStep0) return
+    if (step === 1 && !canNextStep1) return
+    if (step === 2 && !canNextStep2) return
+    if (step < STEPS - 1) setStep((step + 1) as 0 | 1 | 2 | 3)
   }
 
-  const setQty = (id: string, qty: number) => {
-    if (qty < 1) {
-      setSelectedEquipment((prev) => prev.filter((e) => e.id !== id))
-      return
-    }
-    setSelectedEquipment((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, qty } : e))
-    )
+  const goBack = () => {
+    if (step > 0) setStep((step - 1) as 0 | 1 | 2 | 3)
   }
 
-  const totalDaily = selectedEquipment.reduce((sum, se) => {
-    const eq = equipment.find((e) => e.id === se.id)
-    return sum + (eq?.dailyPrice ?? 0) * se.qty
-  }, 0)
-  const total = totalDaily * durationDays
-
-  const canNextStep1 = selectedCategoryId
-  const canNextStep2 = selectedEquipment.length > 0
-  const canNextStep3 = durationDays >= 1
+  const totalAmount = getKitWizardTotalAmount({ selectedEquipment, durationDays })
+  const vatAmount = Math.round(totalAmount * 0.15 * 100) / 100
+  const totalWithVat = totalAmount + vatAmount
+  const selectedCount = getKitWizardSelectedCount({ selectedEquipment })
+  const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex gap-2">
-        {Array.from({ length: STEPS }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-2 flex-1 rounded ${
-              i + 1 <= step ? 'bg-primary' : 'bg-muted'
-            }`}
-            aria-hidden
-          />
-        ))}
+    <div className="flex flex-col gap-8 lg:grid lg:grid-cols-12 lg:gap-8">
+      {/* Left column: Stepper + step content */}
+      <div className="lg:col-span-8 space-y-8">
+        <Stepper
+          steps={steps}
+          currentStep={step}
+          onStepClick={(index) => setStep(index as 0 | 1 | 2 | 3)}
+        />
+
+        <div className="min-h-[320px]">
+          {step === 0 && <StepCategory />}
+          {step === 1 && <StepEquipment />}
+          {step === 2 && <StepDuration />}
+          {step === 3 && <StepSummary />}
+        </div>
+
+        {/* Back / Next */}
+        {step < 3 && (
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border-light">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goBack}
+              disabled={step === 0}
+              className="gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {t('common.back')}
+            </Button>
+            <Button
+              type="button"
+              onClick={goNext}
+              disabled={
+                (step === 0 && !canNextStep0) ||
+                (step === 1 && !canNextStep1) ||
+                (step === 2 && !canNextStep2)
+              }
+              className="bg-brand-primary hover:bg-brand-primary-hover gap-2"
+            >
+              {t('common.next')}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
-      {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Choose category</h2>
-          {loading ? (
-            <p className="text-muted-foreground">{t('common.loading')}</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map((c) => (
-                <Button
-                  key={c.id}
-                  type="button"
-                  variant={selectedCategoryId === c.id ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategoryId(c.id)}
-                >
-                  {c.name}
-                </Button>
-              ))}
+      {/* Right column: Sticky summary (desktop only) */}
+      <aside className="hidden lg:block lg:col-span-4">
+        <KitSummarySidebar />
+      </aside>
+
+      {/* Mobile floating bar – only when kit has items */}
+      {selectedCount > 0 && (
+        <>
+          <div className="fixed bottom-0 start-0 end-0 z-40 flex items-center justify-between gap-4 border-t border-border-light bg-white/95 p-4 shadow-card-elevated backdrop-blur-sm lg:hidden">
+            <div>
+              <p className="text-sm font-medium text-text-heading">
+                {totalUnits} {t('kit.items')} · {formatSar(totalWithVat)}
+              </p>
+              <p className="text-xs text-text-muted">
+                {t('kit.duration')}: {durationDays} {durationDays === 1 ? t('kit.day') : t('kit.days')}
+              </p>
             </div>
-          )}
-          <Button onClick={() => setStep(2)} disabled={!canNextStep1}>
-            {t('common.next')}
-          </Button>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Choose equipment</h2>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {equipment.map((eq) => {
-              const sel = selectedEquipment.find((e) => e.id === eq.id)
-              return (
-                <div
-                  key={eq.id}
-                  className="flex items-center justify-between rounded border p-3"
-                >
-                  <div>
-                    <p className="font-medium">{eq.model ?? eq.sku}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {eq.dailyPrice.toLocaleString()} SAR / {t('common.pricePerDay')}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {sel ? (
-                      <>
-                        <input
-                          type="number"
-                          min={1}
-                          value={sel.qty}
-                          onChange={(e) => setQty(eq.id, parseInt(e.target.value, 10) || 1)}
-                          className="w-14 rounded border px-2 py-1 text-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleEquipment(eq.id)}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => toggleEquipment(eq.id)}
-                      >
-                        {t('common.addToCart')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(1)}>
-              {t('common.back')}
-            </Button>
-            <Button onClick={() => setStep(3)} disabled={!canNextStep2}>
-              {t('common.next')}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Rental duration (days)</h2>
-          <input
-            type="number"
-            min={1}
-            max={365}
-            value={durationDays}
-            onChange={(e) => setDurationDays(parseInt(e.target.value, 10) || 1)}
-            className="w-full rounded border px-3 py-2"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(2)}>
-              {t('common.back')}
-            </Button>
-            <Button onClick={() => setStep(4)} disabled={!canNextStep3}>
-              {t('common.next')}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Summary</h2>
-          <p className="text-muted-foreground">
-            {selectedEquipment.length} item(s) × {durationDays} days
-          </p>
-          <p className="text-xl font-semibold">
-            Total: {total.toLocaleString()} SAR
-          </p>
-          <Button asChild size="lg">
-            <Link
-              href={`/cart?kitCustom=1&items=${selectedEquipment.map((e) => `${e.id}:${e.qty}`).join(',')}&days=${durationDays}`}
+            <Button
+              size="sm"
+              className="shrink-0 bg-brand-primary hover:bg-brand-primary-hover"
+              onClick={() => setStep(3)}
             >
-              {t('common.addToCart')}
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={() => setStep(3)}>
-            {t('common.back')}
-          </Button>
-        </div>
+              {t('kit.stepSummary')}
+            </Button>
+          </div>
+          <div className="h-20 lg:hidden" aria-hidden />
+        </>
       )}
     </div>
   )

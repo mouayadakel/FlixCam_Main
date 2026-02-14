@@ -26,6 +26,9 @@ export async function GET(
       category: { select: { id: true, name: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },
       media: { select: { id: true, url: true, type: true } },
+      vendor: {
+        select: { id: true, companyName: true, logo: true, isNameVisible: true },
+      },
     },
   })
 
@@ -33,8 +36,12 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  const v = equipment.vendor as { companyName: string; logo: string | null; isNameVisible: boolean } | null
+  const vendor = v?.isNameVisible ? { companyName: v.companyName, logo: v.logo } : null
+
   const out = {
     ...equipment,
+    vendor,
     dailyPrice: equipment.dailyPrice ? Number(equipment.dailyPrice) : 0,
     weeklyPrice: equipment.weeklyPrice ? Number(equipment.weeklyPrice) : null,
     monthlyPrice: equipment.monthlyPrice ? Number(equipment.monthlyPrice) : null,

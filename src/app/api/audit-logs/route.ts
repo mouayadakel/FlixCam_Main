@@ -43,13 +43,19 @@ export async function GET(request: Request) {
     const resourceType = searchParams.get('resourceType')
     const resourceId = searchParams.get('resourceId')
     const action = searchParams.get('action')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const userId = searchParams.get('userId')
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200)
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
 
     const logs = await AuditService.getLogs({
       resourceType: resourceType || undefined,
       resourceId: resourceId || undefined,
       action: action || undefined,
+      userId: userId || undefined,
+      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+      dateTo: dateTo ? new Date(dateTo) : undefined,
       limit,
       offset,
     })

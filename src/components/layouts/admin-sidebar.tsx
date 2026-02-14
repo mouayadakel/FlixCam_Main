@@ -17,6 +17,7 @@ import {
   Calendar,
   Brain,
   Package,
+  Store,
   Wrench,
   DollarSign,
   Users,
@@ -59,6 +60,8 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: { ar: 'عروض الأسعار', en: 'Quotes' }, href: '/admin/quotes', permission: 'quote.read' },
       { label: { ar: 'الحجوزات', en: 'Bookings' }, href: '/admin/bookings', permission: 'booking.read' },
+      { label: { ar: 'تعارضات الحجوزات', en: 'Booking Conflicts' }, href: '/admin/bookings/conflicts', permission: 'booking.read' },
+      { label: { ar: 'الاحتياط والتوفر', en: 'Availability & Holds' }, href: '/admin/holds', permission: 'booking.read' },
       { label: { ar: 'الحجوزات المتكررة', en: 'Recurring Bookings' }, href: '/admin/recurring-bookings', permission: 'booking.read' },
       { label: { ar: 'التقويم', en: 'Calendar' }, href: '/admin/calendar', permission: 'booking.read' },
     ],
@@ -91,6 +94,7 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: { ar: 'المستودع', en: 'Warehouse' }, href: '/admin/ops/warehouse', permission: 'warehouse.read' },
       { label: { ar: 'التوصيل', en: 'Delivery' }, href: '/admin/ops/delivery', permission: 'delivery.read' },
+      { label: { ar: 'جدولة التوصيل', en: 'Delivery Schedule' }, href: '/admin/ops/delivery/schedule', permission: 'delivery.read' },
       { label: { ar: 'الفنيون', en: 'Technicians' }, href: '/admin/technicians', permission: 'user.read' },
       { label: { ar: 'الصيانة', en: 'Maintenance' }, href: '/admin/maintenance', permission: 'maintenance.read' },
       { label: { ar: 'مطالبات الأضرار', en: 'Damage Claims' }, href: '/admin/damage-claims', permission: 'booking.read' },
@@ -102,9 +106,19 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: { ar: 'الفواتير', en: 'Invoices' }, href: '/admin/invoices', permission: 'invoice.read' },
       { label: { ar: 'المدفوعات', en: 'Payments' }, href: '/admin/payments', permission: 'payment.read' },
+      { label: { ar: 'العربون', en: 'Deposits' }, href: '/admin/finance/deposits', permission: 'payment.read' },
+      { label: { ar: 'الاستردادات', en: 'Refunds' }, href: '/admin/finance/refunds', permission: 'payment.read' },
       { label: { ar: 'العقود', en: 'Contracts' }, href: '/admin/contracts', permission: 'contract.read' },
       { label: { ar: 'التقارير المالية', en: 'Financial Reports' }, href: '/admin/finance/reports', permission: 'reports.read_financial' },
       { label: { ar: 'التحليلات والإشغال', en: 'Analytics & Utilization' }, href: '/admin/analytics', permission: 'dashboard.analytics' },
+    ],
+  },
+  {
+    title: { ar: 'الموردون', en: 'Vendors' },
+    icon: Store,
+    items: [
+      { label: { ar: 'الموردون', en: 'Vendors' }, href: '/admin/vendors', permission: 'vendor.read' },
+      { label: { ar: 'المدفوعات للموردين', en: 'Vendor Payouts' }, href: '/admin/vendors/payouts', permission: 'vendor.manage_payouts' },
     ],
   },
   {
@@ -114,7 +128,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'العملاء', en: 'Clients' }, href: '/admin/clients', permission: 'client.read' },
       { label: { ar: 'التقييمات', en: 'Reviews' }, href: '/admin/reviews', permission: 'client.read' },
       { label: { ar: 'شرائح العملاء', en: 'Customer Segments' }, href: '/admin/settings/customer-segments', permission: 'client.read' },
-      { label: { ar: 'الكوبونات', en: 'Coupons' }, href: '/admin/coupons', permission: 'coupon.read' },
+      { label: { ar: 'الكوبونات والخصومات', en: 'Coupons & Discounts' }, href: '/admin/coupons', permission: 'coupon.read' },
       { label: { ar: 'التسويق', en: 'Marketing' }, href: '/admin/marketing', permission: 'marketing.read' },
     ],
   },
@@ -123,11 +137,16 @@ const sidebarSections: SidebarSection[] = [
     icon: Settings,
     items: [
       { label: { ar: 'الإعدادات العامة', en: 'General Settings' }, href: '/admin/settings', permission: 'settings.read' },
+      { label: { ar: 'المستخدمون', en: 'Users' }, href: '/admin/users', permission: 'user.read' },
       { label: { ar: 'قوالب الإشعارات', en: 'Notification Templates' }, href: '/admin/settings/notification-templates', permission: 'settings.read' },
       { label: { ar: 'التكاملات', en: 'Integrations' }, href: '/admin/settings/integrations', permission: 'settings.read' },
       { label: { ar: 'الميزات', en: 'Features' }, href: '/admin/settings/features', permission: 'settings.update' },
       { label: { ar: 'الأدوار', en: 'Roles' }, href: '/admin/settings/roles', permission: 'settings.manage_roles' },
       { label: { ar: 'التحكم بالذكاء الاصطناعي', en: 'AI Control' }, href: '/admin/settings/ai-control', permission: 'settings.update' },
+      { label: { ar: 'سجل التدقيق', en: 'Audit Log' }, href: '/admin/settings/audit-log', permission: 'audit.read' },
+      { label: { ar: 'الفروع', en: 'Branches' }, href: '/admin/settings/branches', permission: 'settings.read' },
+      { label: { ar: 'مناطق التوصيل', en: 'Delivery Zones' }, href: '/admin/settings/delivery-zones', permission: 'settings.read' },
+      { label: { ar: 'الضريبة / ض.ق.م', en: 'Tax / VAT' }, href: '/admin/settings/tax', permission: 'settings.read' },
     ],
   },
 ]

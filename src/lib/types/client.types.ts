@@ -18,6 +18,9 @@ export interface Client {
   role: UserRole
   status: ClientStatus
   twoFactorEnabled: boolean
+  verificationStatus?: string
+  segmentId?: string | null
+  segmentName?: string | null
   createdAt: Date
   updatedAt: Date
   // Statistics

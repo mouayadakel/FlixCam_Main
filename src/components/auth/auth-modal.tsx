@@ -126,7 +126,11 @@ export function AuthModal() {
     const session = await getSession()
     const role = session?.user?.role as string | undefined
     const destination =
-      role === CLIENT_ROLE ? '/portal/dashboard' : '/admin/dashboard'
+      role === CLIENT_ROLE
+        ? '/portal/dashboard'
+        : role === 'VENDOR'
+          ? '/vendor/dashboard'
+          : '/admin/dashboard'
     router.push(destination)
   }
 

@@ -501,7 +501,7 @@ export class PaymentService {
       }
     }
 
-    const [payments, total] = await Promise.all([
+    const [payments, total, aggSuccess, aggPending, aggFailed, aggRefunded] = await Promise.all([
       prisma.payment.findMany({
         where,
         include: {
@@ -524,7 +524,29 @@ export class PaymentService {
         take: pageSize,
       }),
       prisma.payment.count({ where }),
+      prisma.payment.aggregate({
+        where: { ...where, status: PaymentStatus.SUCCESS },
+        _sum: { amount: true },
+      }),
+      prisma.payment.aggregate({
+        where: { ...where, status: PaymentStatus.PENDING },
+        _sum: { amount: true },
+      }),
+      prisma.payment.count({
+        where: { ...where, status: PaymentStatus.FAILED },
+      }),
+      prisma.payment.aggregate({
+        where: { ...where, refundAmount: { not: null } },
+        _sum: { refundAmount: true },
+      }),
     ])
+
+    const summary = {
+      totalCollected: Number(aggSuccess._sum.amount ?? 0),
+      pendingAmount: Number(aggPending._sum.amount ?? 0),
+      failedCount: aggFailed,
+      refundedTotal: Number(aggRefunded._sum.refundAmount ?? 0),
+    }
 
     return {
       payments: payments.map((p) => ({
@@ -553,6 +575,7 @@ export class PaymentService {
       total,
       page,
       pageSize,
+      summary,
     }
   }
 

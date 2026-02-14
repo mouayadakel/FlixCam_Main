@@ -1,5 +1,6 @@
 /**
- * Equipment catalog: filters, grid, pagination (Phase 2.2).
+ * Equipment catalog: filter panel (sticky sidebar), grid, pagination.
+ * Clean layout with proper spacing and modern pagination.
  */
 
 'use client'
@@ -8,9 +9,10 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
-import { EquipmentFilters } from './equipment-filters'
+import { FilterPanel } from './filter-panel'
 import { EquipmentGrid } from './equipment-grid'
 import { Button } from '@/components/ui/button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { EquipmentCardItem } from './equipment-card'
 
 const PAGE_SIZE = 24
@@ -28,11 +30,21 @@ export function EquipmentCatalog() {
   const skip = Math.max(0, parseInt(searchParams?.get('skip') ?? '0', 10))
   const categoryId = searchParams?.get('categoryId') ?? ''
   const brandId = searchParams?.get('brandId') ?? ''
+  const brandIds = searchParams?.get('brandIds') ?? ''
+  const q = searchParams?.get('q') ?? ''
+  const sort = searchParams?.get('sort') ?? ''
+  const priceMin = searchParams?.get('priceMin') ?? ''
+  const priceMax = searchParams?.get('priceMax') ?? ''
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (categoryId) params.set('categoryId', categoryId)
-    if (brandId) params.set('brandId', brandId)
+    if (brandIds) params.set('brandIds', brandIds)
+    else if (brandId) params.set('brandId', brandId)
+    if (q) params.set('q', q)
+    if (sort) params.set('sort', sort)
+    if (priceMin) params.set('priceMin', priceMin)
+    if (priceMax) params.set('priceMax', priceMax)
     params.set('skip', String(skip))
     params.set('take', String(PAGE_SIZE))
 
@@ -53,7 +65,7 @@ export function EquipmentCatalog() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : t('common.error')))
       .finally(() => setIsLoading(false))
-  }, [skip, categoryId, brandId, t])
+  }, [skip, categoryId, brandId, brandIds, q, sort, priceMin, priceMax, t])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(skip / PAGE_SIZE) + 1
@@ -61,66 +73,100 @@ export function EquipmentCatalog() {
   const hasNext = skip + PAGE_SIZE < total
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <EquipmentFilters categories={categories} brands={brands} />
+    <div className="flex flex-col lg:flex-row gap-8">
+      <div className="w-full lg:w-72 shrink-0">
+        <FilterPanel
+          categories={categories}
+          brands={brands}
+          total={total}
+        />
       </div>
+      <div className="min-w-0 flex-1 space-y-6">
+        {q && (
+          <p className="text-body-main text-text-muted">
+            {t('common.resultsFor').replace('{query}', q)}
+          </p>
+        )}
 
-      {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive text-sm">
-          {error}
-          <Button variant="link" className="ms-2" onClick={() => window.location.reload()}>
-            {t('common.retry')}
-          </Button>
-        </div>
-      )}
+        {error && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-destructive text-sm">
+            {error}
+            <Button variant="link" className="ms-2 text-destructive" onClick={() => window.location.reload()}>
+              {t('common.retry')}
+            </Button>
+          </div>
+        )}
 
-      {!error && (
-        <>
-          <EquipmentGrid items={equipment} isLoading={isLoading} />
+        {!error && (
+          <>
+            <EquipmentGrid items={equipment} isLoading={isLoading} />
 
-          {!isLoading && equipment.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>{t('common.noResults')}</p>
-              <Button variant="link" asChild className="mt-2">
-                <Link href="/equipment">{t('common.viewAll')}</Link>
-              </Button>
-            </div>
-          )}
-
-          {totalPages > 1 && !isLoading && (
-            <nav className="flex items-center justify-center gap-2 pt-4" aria-label="Pagination">
-              {hasPrev && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link
-                    href={`/equipment?${new URLSearchParams({
-                      ...Object.fromEntries(searchParams?.entries() ?? []),
-                      skip: String(Math.max(0, skip - PAGE_SIZE)),
-                    }).toString()}`}
-                  >
-                    {t('common.back')}
-                  </Link>
+            {!isLoading && equipment.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-light">
+                  <span className="text-3xl">🔍</span>
+                </div>
+                <p className="text-lg font-medium text-text-heading">{t('common.noResults')}</p>
+                <p className="mt-1 text-sm text-text-muted">Try adjusting your filters</p>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="mt-4 rounded-xl border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5"
+                >
+                  <Link href="/equipment">{t('common.viewAll')}</Link>
                 </Button>
-              )}
-              <span className="text-sm text-muted-foreground px-2">
-                {currentPage} / {totalPages}
-              </span>
-              {hasNext && (
-                <Button variant="outline" size="sm" asChild>
-                  <Link
-                    href={`/equipment?${new URLSearchParams({
-                      ...Object.fromEntries(searchParams?.entries() ?? []),
-                      skip: String(skip + PAGE_SIZE),
-                    }).toString()}`}
+              </div>
+            )}
+
+            {totalPages > 1 && !isLoading && (
+              <nav
+                className="flex items-center justify-center gap-2 pt-6"
+                aria-label="Pagination"
+              >
+                {hasPrev && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="rounded-xl"
                   >
-                    {t('common.next')}
-                  </Link>
-                </Button>
-              )}
-            </nav>
-          )}
-        </>
-      )}
+                    <Link
+                      href={`/equipment?${new URLSearchParams({
+                        ...Object.fromEntries(searchParams?.entries() ?? []),
+                        skip: String(Math.max(0, skip - PAGE_SIZE)),
+                      }).toString()}`}
+                    >
+                      <ChevronLeft className="me-1 h-4 w-4" />
+                      {t('common.back')}
+                    </Link>
+                  </Button>
+                )}
+                <span className="rounded-xl bg-surface-light px-4 py-2 text-sm font-medium text-text-heading">
+                  {currentPage} / {totalPages}
+                </span>
+                {hasNext && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="rounded-xl"
+                  >
+                    <Link
+                      href={`/equipment?${new URLSearchParams({
+                        ...Object.fromEntries(searchParams?.entries() ?? []),
+                        skip: String(skip + PAGE_SIZE),
+                      }).toString()}`}
+                    >
+                      {t('common.next')}
+                      <ChevronRight className="ms-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
+              </nav>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

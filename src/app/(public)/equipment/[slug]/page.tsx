@@ -1,5 +1,6 @@
 /**
- * Equipment detail page (Phase 2.3): Gallery, Price Block, Availability, Recommendations.
+ * Equipment detail page: Gallery, Price Block, Availability, Recommendations.
+ * Uses PublicContainer for consistent max-width and padding.
  */
 
 import { notFound } from 'next/navigation'
@@ -13,14 +14,22 @@ async function getEquipment(id: string) {
       category: { select: { id: true, name: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },
       media: { select: { id: true, url: true, type: true } },
+      vendor: {
+        select: { companyName: true, logo: true, isNameVisible: true },
+      },
     },
   })
   if (!e) return null
+  const v = e.vendor as { companyName: string; logo: string | null; isNameVisible: boolean } | null
+  const vendor = v?.isNameVisible ? { companyName: v.companyName, logo: v.logo } : null
   return {
     ...e,
+    vendor,
     dailyPrice: e.dailyPrice ? Number(e.dailyPrice) : 0,
     weeklyPrice: e.weeklyPrice ? Number(e.weeklyPrice) : null,
     monthlyPrice: e.monthlyPrice ? Number(e.monthlyPrice) : null,
+    specifications: e.specifications as Record<string, unknown> | null,
+    customFields: e.customFields as Record<string, unknown> | null,
   }
 }
 
@@ -67,7 +76,7 @@ export default async function EquipmentDetailPage({
     : []
 
   return (
-    <main className="container py-8 px-4">
+    <main className="mx-auto w-full max-w-public-container px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <EquipmentDetail equipment={equipment} recommendations={recommendations} />
     </main>
   )

@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
       total: result.total,
       page: result.page,
       pageSize: result.pageSize,
+      summary: result.summary,
     })
   } catch (error: any) {
     if (error instanceof ForbiddenError) {

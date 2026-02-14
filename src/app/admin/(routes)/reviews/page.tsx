@@ -8,10 +8,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Star, Eye, RefreshCw, MessageSquare } from 'lucide-react'
+import { Star, Eye, RefreshCw, MessageSquare, Download } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { formatDate } from '@/lib/utils/format.utils'
+import { exportToCSV } from '@/lib/utils/export.utils'
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All statuses' },
@@ -45,6 +47,7 @@ interface Review {
   rating: number
   comment: string | null
   status: string
+  equipmentNames?: string | null
   adminResponse: string | null
   respondedAt: string | null
   createdAt: string
@@ -55,8 +58,11 @@ interface Review {
 export default function ReviewsPage() {
   const { toast } = useToast()
   const [reviews, setReviews] = useState<Review[]>([])
+  const [averageRating, setAverageRating] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
 
   useEffect(() => {
     loadReviews()
@@ -71,6 +77,7 @@ export default function ReviewsPage() {
       if (!res.ok) throw new Error('Failed to load reviews')
       const data = await res.json()
       setReviews(data.reviews ?? [])
+      setAverageRating(typeof data.averageRating === 'number' ? data.averageRating : null)
     } catch {
       toast({ title: 'Error', description: 'Failed to load reviews', variant: 'destructive' })
     } finally {
@@ -84,6 +91,72 @@ export default function ReviewsPage() {
     REJECTED: 'bg-red-100 text-red-800',
   }
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === reviews.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(reviews.map((r) => r.id)))
+    }
+  }
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const exportSelected = () => {
+    const toExport = selectedIds.size ? reviews.filter((r) => selectedIds.has(r.id)) : reviews
+    const rows = toExport.map((r) => ({
+      id: r.id,
+      bookingNumber: r.booking?.bookingNumber ?? '',
+      rating: r.rating,
+      comment: (r.comment ?? '').slice(0, 200),
+      status: r.status,
+      equipmentNames: r.equipmentNames ?? '',
+      createdAt: formatDate(r.createdAt),
+      userEmail: r.user?.email ?? '',
+    }))
+    exportToCSV(rows, selectedIds.size ? `reviews-selected-${new Date().toISOString().slice(0, 10)}` : `reviews-${new Date().toISOString().slice(0, 10)}`, [
+      { key: 'id', label: 'المعرف' },
+      { key: 'bookingNumber', label: 'رقم الحجز' },
+      { key: 'rating', label: 'التقييم' },
+      { key: 'comment', label: 'التعليق' },
+      { key: 'status', label: 'الحالة' },
+      { key: 'equipmentNames', label: 'المعدات' },
+      { key: 'createdAt', label: 'التاريخ' },
+      { key: 'userEmail', label: 'البريد' },
+    ])
+  }
+  const bulkSetStatus = async (status: 'APPROVED' | 'REJECTED') => {
+    if (selectedIds.size === 0) return
+    setBulkUpdating(true)
+    try {
+      const results = await Promise.allSettled(
+        Array.from(selectedIds).map((id) =>
+          fetch(`/api/reviews/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+          })
+        )
+      )
+      const failed = results.filter((r) => r.status === 'rejected').length
+      if (failed > 0) {
+        toast({ title: 'تنبيه', description: `تم تحديث ${selectedIds.size - failed}، فشل ${failed}`, variant: 'destructive' })
+      } else {
+        toast({ title: 'تم', description: `تم تحديث ${selectedIds.size} تقييماً` })
+      }
+      setSelectedIds(new Set())
+      loadReviews()
+    } catch {
+      toast({ title: 'خطأ', description: 'فشل التحديث', variant: 'destructive' })
+    } finally {
+      setBulkUpdating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -94,11 +167,48 @@ export default function ReviewsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Customer reviews and ratings; moderate and respond</p>
         </div>
+        {selectedIds.size > 0 && (
+          <>
+            <span className="text-sm text-muted-foreground self-center">{selectedIds.size} محدد</span>
+            <Button variant="outline" size="sm" onClick={() => exportSelected()} disabled={reviews.length === 0}>
+              <Download className="h-4 w-4 ml-2" />
+              تصدير المحدد
+            </Button>
+            <Button size="sm" onClick={() => bulkSetStatus('APPROVED')} disabled={bulkUpdating}>
+              الموافقة على المحدد
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => bulkSetStatus('REJECTED')} disabled={bulkUpdating}>
+              رفض المحدد
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              إلغاء التحديد
+            </Button>
+          </>
+        )}
+        <Button variant="outline" size="sm" onClick={exportSelected} disabled={reviews.length === 0}>
+          <Download className="h-4 w-4 ml-2" />
+          تصدير CSV
+        </Button>
         <Button variant="outline" onClick={loadReviews}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
+
+      {averageRating != null && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">متوسط التقييم</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Star className="h-8 w-8 fill-amber-400 text-amber-400" />
+              <span className="text-3xl font-bold">{averageRating.toFixed(1)}</span>
+              <span className="text-muted-foreground">/ 5</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -122,7 +232,15 @@ export default function ReviewsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={reviews.length > 0 && selectedIds.size === reviews.length}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
                   <TableHead>Booking</TableHead>
+                  <TableHead>Equipment</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Rating</TableHead>
                   <TableHead>Comment</TableHead>
@@ -134,21 +252,31 @@ export default function ReviewsPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell>
+                    <TableCell colSpan={8}><Skeleton className="h-8 w-full" /></TableCell>
                   </TableRow>
                 ) : reviews.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">No reviews found</TableCell>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No reviews found</TableCell>
                   </TableRow>
                 ) : (
-                  reviews.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>
+reviews.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(r.id)}
+                      onCheckedChange={() => toggleSelectOne(r.id)}
+                      aria-label={`Select ${r.id}`}
+                    />
+                  </TableCell>
+                  <TableCell>
                         {r.booking ? (
                           <Link href={`/admin/bookings/${r.bookingId}`} className="text-primary hover:underline">
                             {r.booking.bookingNumber}
                           </Link>
                         ) : r.bookingId}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm max-w-[140px] truncate">
+                        {r.equipmentNames || '—'}
                       </TableCell>
                       <TableCell>
                         {r.user ? (

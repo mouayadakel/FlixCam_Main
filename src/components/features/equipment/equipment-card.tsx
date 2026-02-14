@@ -1,6 +1,6 @@
 /**
- * Equipment card for catalog – design cards.product:
- * image, vendor_label, title, price; sold_out badge; hover lift.
+ * Equipment card for catalog – modern product card with hover overlay,
+ * quick view hint, brand labels, availability badges, and polished pricing.
  */
 
 'use client'
@@ -9,6 +9,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
 import { cn } from '@/lib/utils'
+import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
+import { SaveEquipmentButton } from './save-equipment-button'
+import { Eye } from 'lucide-react'
+
+const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/placeholder.jpg'
 
 export interface EquipmentCardItem {
   id: string
@@ -19,6 +24,7 @@ export interface EquipmentCardItem {
   category: { name: string; slug: string } | null
   brand: { name: string; slug: string } | null
   media: { url: string; type: string }[]
+  vendor?: { companyName: string } | null
 }
 
 interface EquipmentCardProps {
@@ -28,52 +34,50 @@ interface EquipmentCardProps {
 
 export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   const { t } = useLocale()
-  const soldOut = (item.quantityAvailable ?? 0) <= 0
+  const availabilityStatus = getAvailabilityStatus(item.quantityAvailable, true)
 
   if (layout === 'list') {
     return (
       <Link
         href={`/equipment/${item.id}`}
-        className="flex gap-4 rounded-public-card border border-border-light bg-white p-3 transition-[box-shadow,transform] hover:shadow-card-hover motion-reduce:transition-none [@media(pointer:fine)]:hover:-translate-y-0.5"
+        className="group flex gap-4 rounded-2xl border border-border-light/60 bg-white p-4 shadow-card transition-all duration-300 hover:shadow-card-hover hover:border-brand-primary/10 hover:-translate-y-0.5"
       >
-        <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-public-card bg-surface-light">
-          {item.media[0]?.url ? (
-            <Image
-              src={item.media[0].url}
-              alt={item.model ?? item.sku ?? item.id}
-              fill
-              className="object-cover"
-              sizes="128px"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-text-muted text-xs">
-              No image
-            </div>
-          )}
+        <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-surface-light">
+          <Image
+            src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+            alt={item.model ?? item.sku ?? item.id}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="144px"
+            unoptimized={!item.media[0]?.url}
+          />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-label-small uppercase tracking-wide text-text-muted">
+        <div className="min-w-0 flex-1 flex flex-col justify-center">
+          <p className="text-label-small uppercase tracking-wider text-text-muted">
             {item.brand?.name ?? item.category?.name ?? '—'}
           </p>
-          <p className="font-medium truncate text-text-heading">
+          <p className="mt-1 font-semibold truncate text-text-heading group-hover:text-brand-primary transition-colors">
             {item.model ?? item.sku}
           </p>
-          <p className="text-price-tag text-text-heading">
-            {item.dailyPrice > 0
-              ? `${Number(item.dailyPrice).toLocaleString()} SAR / ${t('common.pricePerDay')}`
-              : '—'}
-          </p>
-        </div>
-        <span
-          className={cn(
-            'shrink-0 rounded px-2 py-1 text-label-small uppercase',
-            soldOut
-              ? 'bg-sold-out text-white'
-              : 'bg-surface-light text-text-body'
+          {item.vendor && (
+            <p className="mt-0.5 text-xs text-muted-foreground">by {item.vendor.companyName}</p>
           )}
-        >
-          {soldOut ? t('common.unavailable') : t('common.available')}
-        </span>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-price-tag text-brand-primary">
+              {item.dailyPrice > 0
+                ? `${Number(item.dailyPrice).toLocaleString()} SAR`
+                : '—'}
+            </span>
+            {item.dailyPrice > 0 && (
+              <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+            )}
+          </div>
+        </div>
+        <AvailabilityBadge
+          status={availabilityStatus}
+          quantityAvailable={item.quantityAvailable ?? 0}
+          className="shrink-0 self-start"
+        />
       </Link>
     )
   }
@@ -81,40 +85,56 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   return (
     <Link
       href={`/equipment/${item.id}`}
-      className="group flex flex-col overflow-hidden rounded-public-card border border-border-light bg-white transition-[box-shadow,transform] hover:shadow-card-hover motion-reduce:transition-none [@media(pointer:fine)]:hover:-translate-y-0.5"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border-light/60 bg-white shadow-card transition-all duration-350 hover:-translate-y-1.5 hover:shadow-card-hover hover:border-brand-primary/10"
     >
-      <div className="relative aspect-[4/3] shrink-0 bg-surface-light">
-        {item.media[0]?.url ? (
-          <Image
-            src={item.media[0].url}
-            alt={item.model ?? item.sku ?? item.id}
-            fill
-            className="object-cover transition-transform duration-200 group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-text-muted text-sm">
-            No image
-          </div>
-        )}
-        {soldOut && (
-          <span className="absolute top-2 end-2 rounded bg-sold-out px-2 py-1 text-label-small uppercase text-white">
-            {t('common.unavailable')}
+      <div className="relative aspect-[4/3] shrink-0 overflow-hidden bg-surface-light">
+        {/* Save button */}
+        <div className="absolute top-3 right-3 z-10">
+          <SaveEquipmentButton equipmentId={item.id} />
+        </div>
+        <Image
+          src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+          alt={item.model ?? item.sku ?? item.id}
+          fill
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          unoptimized={!item.media[0]?.url}
+        />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/25">
+          <span className="flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-text-heading opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 shadow-lg backdrop-blur-sm">
+            <Eye className="h-4 w-4" />
+            {t('common.viewDetails') ?? 'View'}
           </span>
-        )}
+        </div>
+        {/* Availability badge */}
+        <span className="absolute top-3 end-3">
+          <AvailabilityBadge
+            status={availabilityStatus}
+            quantityAvailable={item.quantityAvailable ?? 0}
+          />
+        </span>
       </div>
-      <div className="flex min-w-0 flex-1 flex-col p-3">
-        <p className="text-label-small uppercase tracking-wide text-text-muted">
+      <div className="flex min-w-0 flex-1 flex-col p-4">
+        <p className="text-label-small uppercase tracking-wider text-text-muted">
           {item.brand?.name ?? item.category?.name ?? '—'}
         </p>
-        <p className="mt-1 truncate text-card-title text-text-heading">
+        <p className="mt-1.5 truncate text-card-title text-text-heading group-hover:text-brand-primary transition-colors">
           {item.model ?? item.sku ?? item.id}
         </p>
-        <p className="mt-1 text-price-tag text-text-heading">
-          {item.dailyPrice > 0
-            ? `${Number(item.dailyPrice).toLocaleString()} SAR / ${t('common.pricePerDay')}`
-            : '—'}
-        </p>
+        {item.vendor && (
+          <p className="mt-0.5 text-xs text-muted-foreground">by {item.vendor.companyName}</p>
+        )}
+        <div className="mt-3 flex items-baseline gap-1.5 pt-3 border-t border-border-light/60">
+          <span className="text-price-tag text-brand-primary">
+            {item.dailyPrice > 0
+              ? `${Number(item.dailyPrice).toLocaleString()} SAR`
+              : '—'}
+          </span>
+          {item.dailyPrice > 0 && (
+            <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+          )}
+        </div>
       </div>
     </Link>
   )
