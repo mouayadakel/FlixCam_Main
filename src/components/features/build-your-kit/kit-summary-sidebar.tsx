@@ -1,6 +1,6 @@
 /**
- * Sticky sidebar for kit wizard – live item count, daily rate, duration, subtotal, VAT, total.
- * Desktop only; hidden on mobile (use floating bar in main wizard).
+ * Sticky sidebar for kit wizard – category grouping, daily rate, duration,
+ * subtotal, VAT, total, and "still to choose" when in category flow.
  */
 
 'use client'
@@ -29,6 +29,12 @@ export function KitSummarySidebar({ className }: { className?: string }) {
   const { t } = useLocale()
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
   const durationDays = useKitWizardStore((s) => s.durationDays)
+  const shootTypeData = useKitWizardStore((s) => s.shootTypeData)
+  const budgetTier = useKitWizardStore((s) => s.budgetTier)
+  const categorySteps = useKitWizardStore((s) => s.categorySteps)
+  const currentCategoryIndex = useKitWizardStore((s) => s.currentCategoryIndex)
+  const skippedCategories = useKitWizardStore((s) => s.skippedCategories)
+  const phase = useKitWizardStore((s) => s.phase)
 
   const itemCount = getKitWizardSelectedCount({ selectedEquipment })
   const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
@@ -36,6 +42,33 @@ export function KitSummarySidebar({ className }: { className?: string }) {
   const subtotal = getKitWizardTotalAmount({ selectedEquipment, durationDays })
   const vatAmount = Math.round(subtotal * VAT_RATE * 100) / 100
   const total = subtotal + vatAmount
+
+  const categoryIdToName = new Map(
+    categorySteps.map((s) => [s.categoryId, s.stepTitle || s.categoryName])
+  )
+  const byCategory = new Map<string, { name: string; daily: number; count: number }>()
+  for (const [id, item] of Object.entries(selectedEquipment)) {
+    const catId = item.categoryId ?? 'other'
+    const name = categoryIdToName.get(catId) ?? 'Other'
+    const daily = item.qty * item.dailyPrice
+    const existing = byCategory.get(catId)
+    if (existing) {
+      existing.daily += daily
+      existing.count += item.qty
+    } else {
+      byCategory.set(catId, { name, daily, count: item.qty })
+    }
+  }
+
+  const remainingSteps =
+    phase === 'categories'
+      ? categorySteps
+          .slice(currentCategoryIndex + 1)
+          .filter((s) => !skippedCategories.includes(s.categoryId))
+      : []
+  const stillToChooseNames = remainingSteps.map(
+    (s) => s.stepTitle || s.categoryName
+  )
 
   if (itemCount === 0) {
     return (
@@ -46,9 +79,14 @@ export function KitSummarySidebar({ className }: { className?: string }) {
         )}
       >
         <h3 className="mb-2 text-lg font-semibold text-text-heading">
-          {t('kit.summaryTitle')}
+          {shootTypeData?.name ? `${shootTypeData.name} – ${t('kit.summaryTitle')}` : t('kit.summaryTitle')}
         </h3>
         <p className="text-sm text-text-muted">{t('kit.emptyKit')}</p>
+        {stillToChooseNames.length > 0 && (
+          <p className="mt-3 text-sm text-text-muted">
+            {t('kit.stillToChoose')}: {stillToChooseNames.join(', ')}
+          </p>
+        )}
       </div>
     )
   }
@@ -61,8 +99,33 @@ export function KitSummarySidebar({ className }: { className?: string }) {
       )}
     >
       <h3 className="mb-4 text-lg font-semibold text-text-heading">
-        {t('kit.summaryTitle')}
+        {shootTypeData?.name ? `${shootTypeData.name} – ${t('kit.summaryTitle')}` : t('kit.summaryTitle')}
       </h3>
+
+      {byCategory.size > 0 && (
+        <dl className="mb-4 space-y-2 border-b border-border-light pb-3 text-sm">
+          {Array.from(byCategory.entries()).map(([catId, { name, daily, count }]) => (
+            <div key={catId} className="flex justify-between">
+              <dt className="text-text-muted">
+                {name} ({count})
+              </dt>
+              <dd>{formatSar(daily)}/day</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {stillToChooseNames.length > 0 && (
+        <p className="mb-3 text-sm text-text-muted">
+          {t('kit.stillToChoose')}: {stillToChooseNames.join(', ')}
+        </p>
+      )}
+
+      {phase === 'categories' && budgetTier && budgetTier !== 'PREMIUM' && (
+        <p className="mb-3 text-xs text-brand-primary">
+          {t('kit.upgradeToTier')}
+        </p>
+      )}
 
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between">

@@ -22,8 +22,17 @@ async function getEquipment(id: string) {
   if (!e) return null
   const v = e.vendor as { companyName: string; logo: string | null; isNameVisible: boolean } | null
   const vendor = v?.isNameVisible ? { companyName: v.companyName, logo: v.logo } : null
+  // Return plain serializable object (no Prisma Decimal/Date that could break RSC)
   return {
-    ...e,
+    id: e.id,
+    sku: e.sku,
+    model: e.model,
+    categoryId: e.categoryId,
+    brandId: e.brandId,
+    quantityAvailable: e.quantityAvailable,
+    category: e.category,
+    brand: e.brand,
+    media: e.media,
     vendor,
     dailyPrice: e.dailyPrice ? Number(e.dailyPrice) : 0,
     weeklyPrice: e.weeklyPrice ? Number(e.weeklyPrice) : null,
@@ -55,9 +64,13 @@ async function getRecommendations(equipmentId: string, categoryId: string) {
     orderBy: { createdAt: 'desc' },
   })
   return list.map((e) => ({
-    ...e,
+    id: e.id,
+    sku: e.sku,
+    model: e.model,
     dailyPrice: e.dailyPrice ? Number(e.dailyPrice) : 0,
     quantityAvailable: e.quantityAvailable,
+    category: e.category,
+    brand: e.brand,
     media: e.media,
   }))
 }
@@ -67,17 +80,24 @@ export default async function EquipmentDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const { slug: id } = await params
-  const equipment = await getEquipment(id)
-  if (!equipment) notFound()
+  try {
+    const { slug: id } = await params
+    const equipment = await getEquipment(id)
+    if (!equipment) notFound()
 
-  const recommendations = equipment.categoryId
-    ? await getRecommendations(equipment.id, equipment.categoryId)
-    : []
+    const recommendations = equipment.categoryId
+      ? await getRecommendations(equipment.id, equipment.categoryId)
+      : []
 
-  return (
-    <main className="mx-auto w-full max-w-public-container px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <EquipmentDetail equipment={equipment} recommendations={recommendations} />
-    </main>
-  )
+    return (
+      <main className="mx-auto w-full max-w-public-container px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <EquipmentDetail equipment={equipment} recommendations={recommendations} />
+      </main>
+    )
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[EquipmentDetailPage]', err)
+    }
+    throw err
+  }
 }

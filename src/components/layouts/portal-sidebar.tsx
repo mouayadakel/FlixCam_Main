@@ -65,7 +65,7 @@ export function PortalSidebar() {
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  (item.href !== '/equipment' && item.href !== '/cart' && item.href !== '/packages' && item.href !== '/support' && pathname.startsWith(item.href))
+                  (item.href !== '/equipment' && item.href !== '/cart' && item.href !== '/packages' && item.href !== '/support' && (pathname?.startsWith(item.href) ?? false))
                 const Icon = item.icon
                 return (
                   <li key={item.href}>

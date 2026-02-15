@@ -78,7 +78,20 @@ export async function PATCH(
     return NextResponse.json(vendor)
   }
 
-  const { action: _action, ...updateData } = parsed.data
+  const { action: _action, ...raw } = parsed.data
+  const updateData = {
+    ...(raw.companyName !== undefined && { companyName: raw.companyName }),
+    ...(raw.companyNameAr != null && { companyNameAr: raw.companyNameAr ?? undefined }),
+    ...(raw.description != null && { description: raw.description ?? undefined }),
+    ...(raw.phone != null && { phone: raw.phone ?? undefined }),
+    ...(raw.email != null && { email: raw.email ?? undefined }),
+    ...(raw.commercialReg != null && { commercialReg: raw.commercialReg ?? undefined }),
+    ...(raw.vatNumber != null && { vatNumber: raw.vatNumber ?? undefined }),
+    ...(raw.bankName != null && { bankName: raw.bankName ?? undefined }),
+    ...(raw.iban != null && { iban: raw.iban ?? undefined }),
+    ...(raw.commissionRate !== undefined && { commissionRate: raw.commissionRate }),
+    ...(raw.isNameVisible !== undefined && { isNameVisible: raw.isNameVisible }),
+  } as Parameters<typeof VendorService.updateVendor>[1]
   const vendor = await VendorService.updateVendor(id, updateData, session.user.id)
   return NextResponse.json(vendor)
 }

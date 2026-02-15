@@ -18,13 +18,13 @@ export async function GET() {
     where: { userId: session.user.id },
     include: {
       equipment: {
-        where: { deletedAt: null },
         select: {
           id: true,
           sku: true,
           model: true,
           dailyPrice: true,
           quantityAvailable: true,
+          deletedAt: true,
           category: { select: { id: true, name: true, slug: true } },
           brand: { select: { id: true, name: true, slug: true } },
           media: { take: 1, select: { id: true, url: true, type: true } },
@@ -35,16 +35,20 @@ export async function GET() {
   })
 
   const items = saved
-    .filter((s) => s.equipment != null)
-    .map((s) => ({
-      id: s.id,
-      savedAt: s.createdAt.toISOString(),
-      equipment: {
-        ...s.equipment!,
-        dailyPrice: s.equipment!.dailyPrice ? Number(s.equipment!.dailyPrice) : 0,
-        quantityAvailable: s.equipment!.quantityAvailable ?? 0,
-      },
-    }))
+    .filter((s) => s.equipment != null && s.equipment.deletedAt == null)
+    .map((s) => {
+      const eq = s.equipment!
+      const { deletedAt: _d, ...rest } = eq
+      return {
+        id: s.id,
+        savedAt: s.createdAt.toISOString(),
+        equipment: {
+          ...rest,
+          dailyPrice: eq.dailyPrice ? Number(eq.dailyPrice) : 0,
+          quantityAvailable: eq.quantityAvailable ?? 0,
+        },
+      }
+    })
 
   return NextResponse.json({ data: items })
 }

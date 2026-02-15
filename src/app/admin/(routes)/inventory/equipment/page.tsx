@@ -8,7 +8,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Package } from 'lucide-react'
+import { Plus, Search, Package, RefreshCw, Loader2 } from 'lucide-react'
+import { SpecificationsAuditDialog } from '@/components/admin/specifications/SpecificationsAuditDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -55,6 +56,7 @@ export default function EquipmentPage() {
   const [conditionFilter, setConditionFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
+  const [migratingSpecs, setMigratingSpecs] = useState(false)
 
   useEffect(() => {
     loadEquipment()
@@ -96,6 +98,39 @@ export default function EquipmentPage() {
       }
     } catch (error) {
       console.error('Failed to load categories:', error)
+    }
+  }
+
+  const handleMigrateSpecs = async () => {
+    if (
+      !confirm(
+        'تحويل كل المعدات ذات المواصفات المسطحة إلى الصيغة المنظمة (حسب قالب الفئة). هل تريد المتابعة؟'
+      )
+    )
+      return
+    setMigratingSpecs(true)
+    try {
+      const res = await fetch('/api/admin/equipment/migrate-specs', {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'فشل التحديث')
+      }
+      const s = data.summary
+      toast({
+        title: 'تم التحديث',
+        description: `تم تحويل ${s.updated} معدّة إلى المواصفات المنظمة. تم تخطي ${s.skippedStructured} (منظمة مسبقاً) و ${s.skippedEmpty} (بدون مواصفات).${data.failed?.length ? ` فشل: ${data.failed.length}` : ''}`,
+      })
+      loadEquipment()
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تحديث المواصفات',
+        variant: 'destructive',
+      })
+    } finally {
+      setMigratingSpecs(false)
     }
   }
 
@@ -150,10 +185,24 @@ export default function EquipmentPage() {
           <p className="mt-1 text-sm text-neutral-600">إدارة جميع المعدات والمعدات</p>
         </div>
         <div className="flex gap-3">
+          <SpecificationsAuditDialog />
           <Button variant="outline" asChild>
             <Link href="/admin/inventory/import">
               استيراد Excel
             </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleMigrateSpecs}
+            disabled={migratingSpecs}
+          >
+            {migratingSpecs ? (
+              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="ml-2 h-4 w-4" />
+            )}
+            تحديث كل المواصفات
           </Button>
           <Button asChild>
             <Link href="/admin/inventory/equipment/new">

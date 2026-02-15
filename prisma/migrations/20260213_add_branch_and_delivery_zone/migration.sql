@@ -1,5 +1,5 @@
--- CreateTable
-CREATE TABLE "Branch" (
+-- CreateTable (IF NOT EXISTS: baseline may already have created these)
+CREATE TABLE IF NOT EXISTS "Branch" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "nameAr" TEXT,
@@ -17,8 +17,7 @@ CREATE TABLE "Branch" (
     CONSTRAINT "Branch_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "DeliveryZone" (
+CREATE TABLE IF NOT EXISTS "DeliveryZone" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "nameAr" TEXT,
@@ -34,8 +33,6 @@ CREATE TABLE "DeliveryZone" (
     CONSTRAINT "DeliveryZone_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE INDEX "Branch_isActive_idx" ON "Branch"("isActive");
-
--- CreateIndex
-CREATE INDEX "DeliveryZone_isActive_idx" ON "DeliveryZone"("isActive");
+-- CreateIndex (ignore errors if already exist)
+CREATE INDEX IF NOT EXISTS "Branch_isActive_idx" ON "Branch"("isActive");
+CREATE INDEX IF NOT EXISTS "DeliveryZone_isActive_idx" ON "DeliveryZone"("isActive");

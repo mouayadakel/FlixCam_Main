@@ -65,6 +65,9 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const updated = await VendorService.updateVendor(vendor.id, parsed.data, session.user.id)
+  const data = Object.fromEntries(
+    Object.entries(parsed.data).map(([k, v]) => [k, v === null ? undefined : v])
+  ) as Parameters<typeof VendorService.updateVendor>[1]
+  const updated = await VendorService.updateVendor(vendor.id, data, session.user.id)
   return NextResponse.json(updated)
 }

@@ -56,12 +56,17 @@ cp .env.example .env
 # Start PostgreSQL (Docker)
 docker-compose up -d
 
-# Run migrations
+# Run migrations (development – interactive)
 npx prisma migrate dev
 
+# Or apply migrations only (CI/deploy – non-interactive)
+npm run db:deploy
+
 # Seed the database
-npx prisma db seed
+npm run db:seed
 ```
+
+**Deploy (production/CI):** Run `npm run db:deploy` to apply pending migrations, then optionally `npm run db:seed`. To run both: `npm run deploy:db`.
 
 5. Run the development server:
 ```bash

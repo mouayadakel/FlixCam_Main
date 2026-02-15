@@ -12,6 +12,8 @@ import { WarehouseService } from '@/lib/services/warehouse.service'
 import { WarehousePolicy } from '@/lib/policies/warehouse.policy'
 import { ForbiddenError } from '@/lib/errors'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()

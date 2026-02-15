@@ -32,6 +32,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/calendar': 'booking.read',
   '/admin/ai': 'ai.use',
   '/admin/kit-builder': 'kit.read',
+  '/admin/shoot-types': 'equipment.read',
   '/admin/dynamic-pricing': 'pricing.read',
   '/admin/ai-recommendations': 'ai.use',
   '/admin/inventory/equipment': 'equipment.read',

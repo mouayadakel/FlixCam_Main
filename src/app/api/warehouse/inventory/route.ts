@@ -13,6 +13,8 @@ import { WarehousePolicy } from '@/lib/policies/warehouse.policy'
 import { inventoryFilterSchema } from '@/lib/validators/warehouse.validator'
 import { ForbiddenError } from '@/lib/errors'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()

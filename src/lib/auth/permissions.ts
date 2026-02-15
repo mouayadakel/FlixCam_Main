@@ -380,6 +380,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.AI_DEMAND_FORECAST,
   ],
   warehouse: [
+    PERMISSIONS.DASHBOARD_READ,
     PERMISSIONS.BOOKING_READ,
     PERMISSIONS.BOOKING_UPDATE,
     PERMISSIONS.EQUIPMENT_READ,
@@ -391,6 +392,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.WAREHOUSE_INVENTORY,
   ],
   driver: [
+    PERMISSIONS.DASHBOARD_READ,
     PERMISSIONS.BOOKING_READ,
     PERMISSIONS.DELIVERY_READ,
     PERMISSIONS.DELIVERY_UPDATE_STATUS,
@@ -417,8 +419,26 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 }
 
 /**
+ * Super admin has all permissions. Check DB so server-side matches API/frontend.
+ */
+async function isSuperAdmin(userId: string): Promise<boolean> {
+  const [user, assigned] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+    prisma.assignedUserRole.findFirst({
+      where: {
+        userId,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        role: { name: 'super_admin' },
+      },
+    }),
+  ])
+  return !!assigned || user?.role === 'ADMIN'
+}
+
+/**
  * Check if user has a specific permission (with wildcard support)
  * When USE_NEW_RBAC=true, delegates to permission-service (DB + cache).
+ * Super admin (ADMIN or RBAC role super_admin) always has permission.
  */
 export async function hasPermission(
   userId: string,
@@ -429,6 +449,8 @@ export async function hasPermission(
     return hasPermissionNew(userId, permission)
   }
   try {
+    if (await isSuperAdmin(userId)) return true
+
     // Check database for explicit permission (exact or wildcard)
     const userPermissions = await prisma.userPermission.findMany({
       where: {

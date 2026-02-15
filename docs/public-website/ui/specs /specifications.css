@@ -1,0 +1,485 @@
+/**
+ * ============================================================================
+ * Specifications Component - Additional Styles & Animations
+ * ============================================================================
+ * 
+ * Add these to your global CSS or create a separate specifications.css
+ */
+
+/* ============================================================================
+   SMOOTH TRANSITIONS
+   ============================================================================ */
+
+.spec-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.spec-card:hover {
+  transform: translateY(-2px);
+}
+
+.spec-row {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.spec-row:hover {
+  background-color: rgba(var(--surface-light-rgb), 0.5);
+}
+
+/* ============================================================================
+   RANGE BAR ANIMATIONS
+   ============================================================================ */
+
+@keyframes rangeBarGrow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--range-percent);
+  }
+}
+
+.range-bar {
+  animation: rangeBarGrow 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+  width: 0;
+}
+
+.range-bar-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.range-bar-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ============================================================================
+   HERO HIGHLIGHTS ANIMATIONS
+   ============================================================================ */
+
+.hero-highlight {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.hero-highlight:nth-child(1) { animation-delay: 0.1s; }
+.hero-highlight:nth-child(2) { animation-delay: 0.2s; }
+.hero-highlight:nth-child(3) { animation-delay: 0.3s; }
+.hero-highlight:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-highlight:hover .hero-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* ============================================================================
+   QUICK SPEC PILLS ANIMATIONS
+   ============================================================================ */
+
+.quick-spec-pill {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  transition: all 0.2s ease;
+}
+
+.quick-spec-pill:nth-child(1) { animation-delay: 0.05s; }
+.quick-spec-pill:nth-child(2) { animation-delay: 0.1s; }
+.quick-spec-pill:nth-child(3) { animation-delay: 0.15s; }
+.quick-spec-pill:nth-child(4) { animation-delay: 0.2s; }
+.quick-spec-pill:nth-child(5) { animation-delay: 0.25s; }
+.quick-spec-pill:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quick-spec-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   GROUP CARD ANIMATIONS
+   ============================================================================ */
+
+.spec-group-card {
+  animation: slideInFromBottom 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.spec-group-card:nth-child(1) { animation-delay: 0.1s; }
+.spec-group-card:nth-child(2) { animation-delay: 0.2s; }
+.spec-group-card:nth-child(3) { animation-delay: 0.3s; }
+.spec-group-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   HIGHLIGHT BADGE PULSE
+   ============================================================================ */
+
+.highlight-badge {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ============================================================================
+   BOOLEAN CHECK/X ANIMATIONS
+   ============================================================================ */
+
+.boolean-icon-enter {
+  animation: iconPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes iconPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   COLOR TEMP GRADIENT SHIMMER
+   ============================================================================ */
+
+.color-temp-gradient {
+  position: relative;
+  overflow: hidden;
+}
+
+.color-temp-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: gradientShimmer 3s ease-in-out infinite;
+}
+
+@keyframes gradientShimmer {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ============================================================================
+   ACCORDION ANIMATIONS (MOBILE)
+   ============================================================================ */
+
+.accordion-content-enter {
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordion-content-exit {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 1000px;
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    max-height: 1000px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   LOADING SKELETON (OPTIONAL)
+   ============================================================================ */
+
+.spec-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .spec-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .hero-highlight {
+    animation: none !important;
+  }
+
+  .quick-spec-pill {
+    animation: none !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .spec-group-card {
+    animation: none !important;
+    page-break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  .accordion-trigger,
+  button {
+    display: none !important;
+  }
+
+  /* Show all accordion content */
+  .accordion-content {
+    display: block !important;
+    max-height: none !important;
+  }
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT (OPTIONAL)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .spec-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .spec-row:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .quick-spec-pill {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .hero-highlight {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.02)
+    );
+  }
+
+  .spec-skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================================================ */
+
+/* Focus styles */
+.spec-card:focus-visible,
+.quick-spec-pill:focus-visible,
+.accordion-trigger:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .range-bar {
+    animation: none;
+    width: var(--range-percent);
+  }
+
+  .hero-highlight,
+  .quick-spec-pill,
+  .spec-group-card {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .spec-card {
+    border-width: 2px;
+  }
+
+  .quick-spec-pill {
+    border-width: 2px;
+  }
+
+  .range-bar {
+    background: currentColor !important;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.spec-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-primary-rgb), 0.03) 0%,
+    transparent 100%
+  );
+}
+
+.spec-highlight-border {
+  border-left: 3px solid var(--brand-primary);
+  padding-left: 1rem;
+}
+
+.spec-icon-spin {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE UTILITIES
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .spec-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-highlights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-spec-pills-container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spec-label {
+    font-size: 0.875rem;
+  }
+
+  .spec-value {
+    font-size: 0.875rem;
+  }
+}

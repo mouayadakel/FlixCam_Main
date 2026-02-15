@@ -218,6 +218,10 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
 
   const watchedTranslations = watch('translations') || []
   const watchedSpecifications = watch('specifications')
+  const watchedCategoryId = watch('categoryId')
+  const categoryHint = watchedCategoryId
+    ? categories.find((c) => c.id === watchedCategoryId)?.name
+    : undefined
 
   if (loading) {
     return (
@@ -664,6 +668,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                 <SpecificationsEditor
                   value={watchedSpecifications as Record<string, unknown>}
                   onChange={(specs) => setValue('specifications', specs)}
+                  categoryHint={categoryHint}
                 />
               </CardContent>
             </Card>

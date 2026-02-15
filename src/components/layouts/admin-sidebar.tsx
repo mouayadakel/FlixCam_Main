@@ -72,6 +72,7 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: { ar: 'ميزات الذكاء الاصطناعي', en: 'AI Features' }, href: '/admin/ai', permission: 'ai.use' },
       { label: { ar: 'منشئ الحزم', en: 'Kit Builder' }, href: '/admin/kit-builder', permission: 'kit.read' },
+      { label: { ar: 'أنواع التصوير', en: 'Shoot Types' }, href: '/admin/shoot-types', permission: 'equipment.read' },
       { label: { ar: 'التسعير الديناميكي', en: 'Dynamic Pricing' }, href: '/admin/dynamic-pricing', permission: 'pricing.read' },
       { label: { ar: 'التوصيات الذكية', en: 'AI Recommendations' }, href: '/admin/ai-recommendations', permission: 'ai.use' },
     ],

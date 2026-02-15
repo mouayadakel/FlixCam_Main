@@ -107,3 +107,150 @@
     background: rgba(255, 255, 255, 0.92);
   }
 }
+
+/* ============================================================================
+   Specifications component – transitions & animations
+   ============================================================================ */
+
+.spec-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.spec-card:hover {
+  transform: translateY(-2px);
+}
+
+.spec-row {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.spec-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@keyframes spec-rangeBarGrow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--range-percent, 0);
+  }
+}
+
+.spec-range-bar {
+  animation: spec-rangeBarGrow 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+  width: 0;
+}
+
+.hero-highlight {
+  animation: spec-fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.hero-highlight:nth-child(1) { animation-delay: 0.1s; }
+.hero-highlight:nth-child(2) { animation-delay: 0.2s; }
+.hero-highlight:nth-child(3) { animation-delay: 0.3s; }
+.hero-highlight:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes spec-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-highlight:hover .hero-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.quick-spec-pill {
+  animation: spec-fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  transition: all 0.2s ease;
+}
+
+.quick-spec-pill:nth-child(1) { animation-delay: 0.05s; }
+.quick-spec-pill:nth-child(2) { animation-delay: 0.1s; }
+.quick-spec-pill:nth-child(3) { animation-delay: 0.15s; }
+.quick-spec-pill:nth-child(4) { animation-delay: 0.2s; }
+.quick-spec-pill:nth-child(5) { animation-delay: 0.25s; }
+.quick-spec-pill:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes spec-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quick-spec-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.spec-group-card {
+  animation: spec-slideInFromBottom 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.spec-group-card:nth-child(1) { animation-delay: 0.1s; }
+.spec-group-card:nth-child(2) { animation-delay: 0.2s; }
+.spec-group-card:nth-child(3) { animation-delay: 0.3s; }
+.spec-group-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes spec-slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion: disable spec animations */
+@media (prefers-reduced-motion: reduce) {
+  .spec-range-bar {
+    animation: none;
+    width: var(--range-percent, 0);
+  }
+
+  .hero-highlight,
+  .quick-spec-pill,
+  .spec-group-card {
+    animation: none;
+  }
+}
+
+/* Print: avoid breaking and hide interactive spec controls */
+@media print {
+  .spec-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .hero-highlight,
+  .quick-spec-pill,
+  .spec-group-card {
+    animation: none !important;
+  }
+
+  .quick-spec-pill {
+    border: 1px solid #ccc !important;
+  }
+
+  .spec-group-card {
+    page-break-inside: avoid;
+  }
+}

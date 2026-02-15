@@ -46,7 +46,7 @@ export function VendorEquipmentForm({
     model: '',
     categoryId: '',
     brandId: '',
-    condition: 'GOOD' as const,
+    condition: 'GOOD' as 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR',
     quantityTotal: 1,
     specifications: {} as Record<string, unknown>,
     boxContents: '',

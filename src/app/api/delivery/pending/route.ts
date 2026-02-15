@@ -13,6 +13,8 @@ import { DeliveryPolicy } from '@/lib/policies/delivery.policy'
 import { deliveryFilterSchema } from '@/lib/validators/delivery.validator'
 import { ForbiddenError } from '@/lib/errors'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()

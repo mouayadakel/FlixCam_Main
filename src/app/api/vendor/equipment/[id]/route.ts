@@ -120,11 +120,14 @@ export async function PATCH(
     )
   }
 
-  const updateData: Parameters<typeof EquipmentService.updateEquipment>[0] = {
+  const sanitized = Object.fromEntries(
+    Object.entries(parsed.data).map(([k, v]) => [k, v === null ? undefined : v])
+  ) as Record<string, unknown>
+  const updateData = {
     id,
     updatedBy: session.user.id,
-    ...parsed.data,
-  }
+    ...sanitized,
+  } as Parameters<typeof EquipmentService.updateEquipment>[0]
 
   const updated = await EquipmentService.updateEquipment(updateData)
   return NextResponse.json(updated)

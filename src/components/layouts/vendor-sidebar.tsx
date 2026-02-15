@@ -60,7 +60,7 @@ export function VendorSidebar() {
             <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const isActive =
-                  pathname === item.href || pathname.startsWith(item.href + '/')
+                  pathname === item.href || (pathname?.startsWith(item.href + '/') ?? false)
                 const Icon = item.icon
                 return (
                   <li key={item.href}>

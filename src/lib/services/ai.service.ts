@@ -7,6 +7,8 @@
 import { prisma } from '@/lib/db/prisma'
 import { EventBus } from '@/lib/events/event-bus'
 import { AuditService } from './audit.service'
+import { ShootTypeService } from './shoot-type.service'
+import { getSpecValue, getSpecArray } from '@/lib/utils/specifications.utils'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import type {
   RiskAssessment,
@@ -21,6 +23,7 @@ import type {
   AIConfig,
 } from '@/lib/types/ai.types'
 import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export class AIService {
   private static openaiClient: OpenAI | null = null
@@ -37,6 +40,11 @@ export class AIService {
       this.openaiClient = new OpenAI({ apiKey })
     }
     return this.openaiClient
+  }
+
+  /** Gemini API key (GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY). */
+  private static getGeminiApiKey(): string | null {
+    return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? null
   }
 
   /**
@@ -359,7 +367,175 @@ export class AIService {
   }
 
   /**
-   * Build equipment kit using AI
+   * Get equipment in target category that is compatible with selected equipment (e.g. lenses matching camera mount).
+   * Uses specifications.lensMount on cameras and specifications.lensMount / compatibleMounts on lenses.
+   */
+  static async getCompatibleEquipment(input: {
+    selectedEquipmentIds: string[]
+    targetCategoryId: string
+  }): Promise<{ id: string; sku: string; model: string | null; dailyPrice: number; categoryId: string; category: { name: string; slug: string }; brand: { name: string; slug: string } | null; media: { url: string; type: string }[]; matchingCameraModels?: string[] }[]> {
+    if (input.selectedEquipmentIds.length === 0) {
+      const allInCategory = await prisma.equipment.findMany({
+        where: {
+          categoryId: input.targetCategoryId,
+          isActive: true,
+          deletedAt: null,
+          quantityAvailable: { gt: 0 },
+        },
+        select: {
+          id: true,
+          sku: true,
+          model: true,
+          dailyPrice: true,
+          categoryId: true,
+          specifications: true,
+          category: { select: { name: true, slug: true } },
+          brand: { select: { name: true, slug: true } },
+          media: { select: { url: true, type: true } },
+        },
+      })
+      return allInCategory.map((e) => ({
+        id: e.id,
+        sku: e.sku,
+        model: e.model,
+        dailyPrice: Number(e.dailyPrice),
+        categoryId: e.categoryId,
+        category: e.category,
+        brand: e.brand,
+        media: e.media,
+      }))
+    }
+
+    const targetCategory = await prisma.category.findUnique({
+      where: { id: input.targetCategoryId },
+      select: { slug: true },
+    })
+    if (!targetCategory) return []
+
+    const selected = await prisma.equipment.findMany({
+      where: { id: { in: input.selectedEquipmentIds }, deletedAt: null },
+      select: { id: true, model: true, categoryId: true, category: { select: { slug: true } }, specifications: true },
+    })
+
+    const mounts = new Set<string>()
+    const mountToModels: Map<string, string[]> = new Map()
+    for (const eq of selected) {
+      const spec = eq.specifications
+      const modelName = eq.model ?? eq.id
+      const lensMount = getSpecValue(spec, 'lensMount') ?? getSpecValue(spec, 'mount')
+      if (lensMount) {
+        const m = String(lensMount).trim()
+        mounts.add(m)
+        if (!mountToModels.has(m)) mountToModels.set(m, [])
+        if (!mountToModels.get(m)!.includes(modelName)) mountToModels.get(m)!.push(modelName)
+      }
+      const compatibleMounts = getSpecArray(spec, 'compatibleMounts')
+      for (const m of compatibleMounts) {
+        const key = m.trim()
+        if (key) {
+          mounts.add(key)
+          if (!mountToModels.has(key)) mountToModels.set(key, [])
+          if (!mountToModels.get(key)!.includes(modelName)) mountToModels.get(key)!.push(modelName)
+        }
+      }
+    }
+
+    if (targetCategory.slug !== 'lenses' || mounts.size === 0) {
+      const allInCategory = await prisma.equipment.findMany({
+        where: {
+          categoryId: input.targetCategoryId,
+          isActive: true,
+          deletedAt: null,
+          quantityAvailable: { gt: 0 },
+        },
+        select: {
+          id: true,
+          sku: true,
+          model: true,
+          dailyPrice: true,
+          categoryId: true,
+          category: { select: { name: true, slug: true } },
+          brand: { select: { name: true, slug: true } },
+          media: { select: { url: true, type: true } },
+        },
+      })
+      return allInCategory.map((e) => ({
+        id: e.id,
+        sku: e.sku,
+        model: e.model,
+        dailyPrice: Number(e.dailyPrice),
+        categoryId: e.categoryId,
+        category: e.category,
+        brand: e.brand,
+        media: e.media,
+      }))
+    }
+
+    const candidates = await prisma.equipment.findMany({
+      where: {
+        categoryId: input.targetCategoryId,
+        isActive: true,
+        deletedAt: null,
+        quantityAvailable: { gt: 0 },
+      },
+      select: {
+        id: true,
+        sku: true,
+        model: true,
+        dailyPrice: true,
+        categoryId: true,
+        specifications: true,
+        category: { select: { name: true, slug: true } },
+        brand: { select: { name: true, slug: true } },
+        media: { select: { url: true, type: true } },
+      },
+    })
+
+    const matchingModelsForLens = (e: (typeof candidates)[0]): string[] => {
+      const spec = e.specifications
+      const lensMount = (getSpecValue(spec, 'lensMount') ?? getSpecValue(spec, 'mount'))?.trim() ?? null
+      const compatibleMounts = getSpecArray(spec, 'compatibleMounts').map((m) => m.trim())
+      const models: string[] = []
+      if (lensMount && mountToModels.has(lensMount)) models.push(...mountToModels.get(lensMount)!)
+      for (const m of compatibleMounts) {
+        if (mountToModels.has(m)) {
+          for (const name of mountToModels.get(m)!) {
+            if (!models.includes(name)) models.push(name)
+          }
+        }
+      }
+      return models
+    }
+
+    const compatible = candidates.filter((e) => {
+      const spec = e.specifications
+      const lensMount = (getSpecValue(spec, 'lensMount') ?? getSpecValue(spec, 'mount'))?.trim() ?? null
+      const compatibleMounts = getSpecArray(spec, 'compatibleMounts').map((m) => m.trim())
+      if (lensMount && mounts.has(lensMount)) return true
+      return compatibleMounts.some((m) => mounts.has(m))
+    })
+
+    return compatible.map((e) => {
+      const matchingCameraModels = matchingModelsForLens(e)
+      return {
+        id: e.id,
+        sku: e.sku,
+        model: e.model,
+        dailyPrice: Number(e.dailyPrice),
+        categoryId: e.categoryId,
+        category: e.category,
+        brand: e.brand,
+        media: e.media,
+        ...(matchingCameraModels.length > 0 && { matchingCameraModels }),
+      }
+    })
+  }
+
+  /**
+   * Build equipment kit / suggestions using shoot type recommendations, optional OpenAI.
+   * When shootTypeId or shootTypeSlug is provided, uses ShootTypeRecommendation data as primary
+   * source and filters by budgetTier; questionnaireAnswers can refine (e.g. outdoor = boost portable).
+   * Falls back to rule-based first-N equipment when no shoot type or no OpenAI.
    */
   static async buildKit(input: {
     projectType: string
@@ -368,24 +544,164 @@ export class AIService {
     duration: number
     requirements?: string[]
     excludeEquipmentIds?: string[]
+    shootTypeId?: string
+    shootTypeSlug?: string
+    budgetTier?: 'ESSENTIAL' | 'PROFESSIONAL' | 'PREMIUM'
+    questionnaireAnswers?: Record<string, string | string[]>
   }): Promise<KitBundle[]> {
-    // Get all active equipment
+    const excludeSet =
+      input.excludeEquipmentIds && input.excludeEquipmentIds.length > 0
+        ? new Set(input.excludeEquipmentIds)
+        : new Set<string>()
+
+    // Prefer shoot-type-based suggestions when we have a shoot type
+    const slug = input.shootTypeSlug ?? (input.shootTypeId ? undefined : null)
+    const id = input.shootTypeId ?? null
+    let shootTypeConfig: Awaited<ReturnType<typeof ShootTypeService.getBySlug>> = null
+    if (slug) {
+      shootTypeConfig = await ShootTypeService.getBySlug(slug)
+    } else if (id) {
+      try {
+        shootTypeConfig = await ShootTypeService.getById(id)
+      } catch {
+        shootTypeConfig = null
+      }
+    }
+
+    if (shootTypeConfig?.recommendations && Array.isArray(shootTypeConfig.recommendations)) {
+      const tier = input.budgetTier ?? 'PROFESSIONAL'
+      const recs = (shootTypeConfig.recommendations as Array<{
+        equipmentId: string
+        budgetTier: string
+        reason: string | null
+        defaultQuantity: number
+        sortOrder: number
+        equipment: {
+          id: string
+          sku: string
+          model: string | null
+          dailyPrice: number | { toNumber?: () => number }
+        }
+      }>)
+        .filter((r) => !excludeSet.has(r.equipmentId))
+        .filter((r) => !input.budgetTier || r.budgetTier === tier)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .slice(0, 15)
+
+      const questionnaire = input.questionnaireAnswers ?? {}
+      const isOutdoor =
+        questionnaire['environment'] === 'outdoor' || questionnaire['environment'] === 'both'
+      const isLargeCrew =
+        questionnaire['crew_size'] === 'large' || questionnaire['crew_size'] === '4+'
+
+      let equipment: KitEquipment[] = recs.map((r) => {
+        const raw = r.equipment.dailyPrice
+        const dailyPrice =
+          typeof raw === 'object' && raw != null && 'toNumber' in raw
+            ? (raw as { toNumber: () => number }).toNumber()
+            : Number(raw)
+        let reason = r.reason ?? `Recommended for ${shootTypeConfig!.name}`
+        if (isOutdoor && reason.toLowerCase().includes('light')) {
+          reason = `${reason} Portable and ideal for outdoor use.`
+        }
+        if (isLargeCrew && reason.toLowerCase().includes('audio')) {
+          reason = `${reason} Suitable for larger crew setups.`
+        }
+        return {
+          equipmentId: r.equipmentId,
+          equipmentName: r.equipment.model ?? r.equipment.sku ?? 'Unknown',
+          sku: r.equipment.sku,
+          quantity: Math.max(1, r.defaultQuantity),
+          dailyPrice,
+          role: 'optional' as const,
+          reason,
+        }
+      })
+
+      if (equipment.length > 0) {
+        const names = equipment.map((e) => e.equipmentName).join(', ')
+        const prompt = `Shoot type: ${shootTypeConfig!.name}. Budget: ${input.budgetTier ?? 'any'}. In one short sentence per item, why add this to the kit. Reply with a JSON array of strings only, one per item in this exact order: ${names}. Example: ["Great for ceremony coverage", "Essential for b-roll"]`
+
+        const parseReasons = (text: string): string[] | null => {
+          const match = text.replace(/```json?\s*|\s*```/g, '').match(/\[[\s\S]*\]/)
+          const arr = match ? (JSON.parse(match[0]) as string[]) : null
+          return Array.isArray(arr) && arr.length === equipment.length ? arr : null
+        }
+
+        let enhanced = false
+
+        const geminiKey = this.getGeminiApiKey()
+        if (geminiKey) {
+          try {
+            const genAI = new GoogleGenerativeAI(geminiKey)
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+            const result = await model.generateContent(prompt)
+            const text = result.response.text()?.trim()
+            const arr = text ? parseReasons(text) : null
+            if (arr) {
+              equipment = equipment.map((e, i) => ({ ...e, reason: arr[i] ?? e.reason }))
+              enhanced = true
+            }
+          } catch {
+            // fall through to OpenAI or rule-based
+          }
+        }
+
+        if (!enhanced) {
+          const openai = this.getOpenAIClient()
+          if (openai) {
+            try {
+              const res = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 300,
+              })
+              const text = res.choices[0]?.message?.content?.trim()
+              const arr = text ? parseReasons(text) : null
+              if (arr) {
+                equipment = equipment.map((e, i) => ({ ...e, reason: arr[i] ?? e.reason }))
+              }
+            } catch {
+              // keep rule-based reasons
+            }
+          }
+        }
+      }
+
+      const totalPrice = equipment.reduce(
+        (sum, e) => sum + e.dailyPrice * e.quantity * input.duration,
+        0
+      )
+      const reasoning = input.questionnaireAnswers
+        ? 'Personalized suggestions based on your shoot type and answers.'
+        : `Based on ${shootTypeConfig.name} recommendations.`
+
+      return [
+        {
+          id: 'suggestions',
+          name: `Suggested additions for ${shootTypeConfig.name}`,
+          description: reasoning,
+          equipment,
+          totalPrice,
+          projectType: [input.projectType],
+          useCase: input.useCase,
+          reasoning,
+        },
+      ]
+    }
+
+    // Fallback: rule-based kit from all equipment
     const allEquipment = await prisma.equipment.findMany({
       where: {
         isActive: true,
         quantityAvailable: { gt: 0 },
-        ...(input.excludeEquipmentIds && input.excludeEquipmentIds.length > 0
-          ? { id: { notIn: input.excludeEquipmentIds } }
-          : {}),
+        ...(excludeSet.size > 0 ? { id: { notIn: Array.from(excludeSet) } } : {}),
       },
       include: { category: true, brand: true },
-      take: 100, // Limit for performance
+      take: 100,
     })
 
-    // Simple kit building logic (can be enhanced with AI)
     const kits: KitBundle[] = []
-
-    // Kit 1: Basic Kit
     const basicKit: KitBundle = {
       id: 'kit-1',
       name: `Basic ${input.projectType} Kit`,
@@ -397,7 +713,6 @@ export class AIService {
       reasoning: 'Curated based on project type and common requirements',
     }
 
-    // Select equipment based on project type
     const selectedEquipment = allEquipment.slice(0, 5).map((eq, index) => {
       const dailyPrice = Number(eq.dailyPrice || 0)
       basicKit.totalPrice += dailyPrice * input.duration
@@ -407,7 +722,7 @@ export class AIService {
         sku: eq.sku,
         quantity: 1,
         dailyPrice,
-        role: index === 0 ? 'primary' : index < 3 ? 'support' : 'optional',
+        role: (index === 0 ? 'primary' : index < 3 ? 'support' : 'optional') as KitEquipment['role'],
         reason: `Essential for ${input.projectType} projects`,
       }
     })
@@ -415,7 +730,6 @@ export class AIService {
     basicKit.equipment = selectedEquipment as KitEquipment[]
     kits.push(basicKit)
 
-    // Kit 2: Professional Kit (if budget allows)
     if (input.budget && basicKit.totalPrice * 1.5 <= input.budget) {
       const professionalKit: KitBundle = {
         id: 'kit-2',
@@ -438,7 +752,7 @@ export class AIService {
           sku: eq.sku,
           quantity: 1,
           dailyPrice,
-          role: index < 3 ? 'primary' : index < 6 ? 'support' : 'optional',
+          role: (index < 3 ? 'primary' : index < 6 ? 'support' : 'optional') as KitEquipment['role'],
           reason: `Professional-grade equipment for ${input.projectType}`,
         }
       })
@@ -725,6 +1039,104 @@ export class AIService {
       requiresHuman,
       confidence,
     }
+  }
+
+  /**
+   * Extract product specifications from a product page text (e.g. from a URL).
+   * Returns structured specs (groups, optional highlights, quickSpecs) for our equipment UI.
+   */
+  static async extractSpecificationsFromProductPage(
+    pageText: string,
+    categoryHint?: string
+  ): Promise<{ groups: import('@/lib/types/specifications.types').SpecGroup[]; highlights?: import('@/lib/types/specifications.types').SpecHighlight[]; quickSpecs?: import('@/lib/types/specifications.types').QuickSpec[] }> {
+    const categoryNote = categoryHint
+      ? `Product category hint: ${categoryHint}. Use relevant group names (e.g. for lighting: Key Specs, Photometrics, Connectivity, Power & I/O, Mounting, Physical & General).`
+      : 'Infer product type from the text and use appropriate group names (e.g. Key Specs, Body & Display, Connectivity, etc.).'
+
+    const prompt = `You are extracting product specifications from a web page. Output valid JSON only, no markdown code fence.
+
+${categoryNote}
+
+Required output shape (strict):
+{
+  "highlights": [ { "icon": "star", "label": "Label", "value": "Value", "sublabel": "optional" } ],
+  "quickSpecs": [ { "icon": "zap", "label": "Label", "value": "Value" } ],
+  "groups": [
+    {
+      "label": "Group Name (English)",
+      "labelAr": "اسم المجموعة (Arabic)",
+      "icon": "star",
+      "priority": 1,
+      "specs": [
+        { "key": "camelCaseKey", "label": "Spec Label", "labelAr": "التسمية", "value": "value text", "type": "text", "highlight": false }
+      ]
+    }
+  ]
+}
+
+Rules:
+- "groups" is required and must have at least one group. Each group has label, labelAr (optional), icon, priority (number), specs (array).
+- Each spec has key (camelCase), label, value (required). Optional: labelAr, type ("text"|"boolean"|"range"|"colorTemp"), highlight (boolean).
+- Icons: use only star, zap, sun, camera, video, monitor, wifi, ruler, hard-drive, gauge, info.
+- Extract ALL specifications from the page. Use multiple groups (Key Specs, Photometrics, Connectivity, Power & I/O, Mounting, Physical/General, etc.) so nothing is missing.
+- highlights: pick 3-4 most important specs for hero. quickSpecs: pick 4-6 for pills.
+- Output only the JSON object, no other text.
+
+Page text:
+---
+${pageText.slice(0, 18_000)}
+---`
+
+    const parseJson = (raw: string): unknown => {
+      const cleaned = raw.replace(/```json?\s*|\s*```/g, '').trim()
+      const match = cleaned.match(/\{[\s\S]*\}/)
+      if (!match) throw new Error('No JSON object in response')
+      return JSON.parse(match[0]) as unknown
+    }
+
+    const geminiKey = this.getGeminiApiKey()
+    if (geminiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey)
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        const result = await model.generateContent(prompt)
+        const text = result.response.text()?.trim()
+        if (text) {
+          const obj = parseJson(text) as { groups?: unknown[]; highlights?: unknown[]; quickSpecs?: unknown[] }
+          if (Array.isArray(obj.groups) && obj.groups.length > 0) {
+            return {
+              groups: obj.groups as import('@/lib/types/specifications.types').SpecGroup[],
+              highlights: Array.isArray(obj.highlights) ? (obj.highlights as import('@/lib/types/specifications.types').SpecHighlight[]) : undefined,
+              quickSpecs: Array.isArray(obj.quickSpecs) ? (obj.quickSpecs as import('@/lib/types/specifications.types').QuickSpec[]) : undefined,
+            }
+          }
+        }
+      } catch {
+        // fall through to OpenAI
+      }
+    }
+
+    const openai = this.getOpenAIClient()
+    if (openai) {
+      const res = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 4096,
+      })
+      const text = res.choices[0]?.message?.content?.trim()
+      if (text) {
+        const obj = parseJson(text) as { groups?: unknown[]; highlights?: unknown[]; quickSpecs?: unknown[] }
+        if (Array.isArray(obj.groups) && obj.groups.length > 0) {
+          return {
+            groups: obj.groups as import('@/lib/types/specifications.types').SpecGroup[],
+            highlights: Array.isArray(obj.highlights) ? (obj.highlights as import('@/lib/types/specifications.types').SpecHighlight[]) : undefined,
+            quickSpecs: Array.isArray(obj.quickSpecs) ? (obj.quickSpecs as import('@/lib/types/specifications.types').QuickSpec[]) : undefined,
+          }
+        }
+      }
+    }
+
+    throw new ValidationError('AI could not extract specifications. Enable GEMINI_API_KEY or OPENAI_API_KEY and try again.')
   }
 
   /**

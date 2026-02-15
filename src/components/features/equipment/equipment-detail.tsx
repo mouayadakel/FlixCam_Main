@@ -19,7 +19,9 @@ import { EquipmentCard } from './equipment-card'
 import { useCartStore } from '@/lib/stores/cart.store'
 import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
 import { SaveEquipmentButton } from './save-equipment-button'
+import { SpecificationsDisplay, QuickSpecPills } from './specifications-display'
 import type { EquipmentCardItem } from './equipment-card'
+import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 import {
   ChevronRight,
   ShoppingCart,
@@ -54,7 +56,7 @@ interface EquipmentDetailProps {
     category: { name: string; slug: string } | null
     brand: { name: string; slug: string } | null
     media: { id: string; url: string; type: string }[]
-    specifications?: Record<string, unknown> | null
+    specifications?: Record<string, unknown> | import('@/lib/types/specifications.types').StructuredSpecifications | null
     customFields?: Record<string, unknown> | null
     vendor?: { companyName: string; logo?: string | null } | null
   }
@@ -62,7 +64,7 @@ interface EquipmentDetailProps {
 }
 
 export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { toast } = useToast()
   const addItem = useCartStore((s) => s.addItem)
   const defaultDates = useMemo(getDefaultDates, [])
@@ -148,6 +150,14 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
             alt={title}
           />
 
+          {/* Quick spec pills (between gallery and tabs, structured specs only) */}
+          {equipment.specifications &&
+            isStructuredSpecifications(equipment.specifications) &&
+            equipment.specifications.quickSpecs &&
+            equipment.specifications.quickSpecs.length > 0 && (
+              <QuickSpecPills specs={equipment.specifications.quickSpecs} />
+            )}
+
           {/* Product info tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="w-full justify-start gap-0 rounded-2xl border border-border-light/60 bg-surface-light p-1 h-auto">
@@ -188,35 +198,13 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
             </TabsContent>
 
             <TabsContent value="specs" className="pt-6">
-              <div className="rounded-2xl border border-border-light/60 bg-white shadow-card overflow-hidden">
-                {equipment.specifications && Object.keys(equipment.specifications).length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <tbody>
-                        {Object.entries(equipment.specifications).map(([key, value], idx) => (
-                          <tr
-                            key={key}
-                            className={idx % 2 === 0 ? 'bg-white' : 'bg-surface-light/50'}
-                          >
-                            <td className="px-5 py-3.5 font-medium text-text-heading capitalize whitespace-nowrap">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </td>
-                            <td className="px-5 py-3.5 text-text-body">
-                              {String(value ?? '—')}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-6 text-center">
-                    <p className="text-sm text-text-muted">
-                      {t('equipment.noSpecs') ?? 'No specifications listed.'}
-                    </p>
-                  </div>
-                )}
-              </div>
+              <SpecificationsDisplay
+                specifications={equipment.specifications ?? null}
+                locale={locale === 'ar' ? 'ar' : 'en'}
+                showQuickSpecPills={false}
+                showAllLabel={t('equipment.specShowAll')}
+                showLessLabel={t('equipment.specShowLess')}
+              />
             </TabsContent>
 
             <TabsContent value="included" className="pt-6">

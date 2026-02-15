@@ -12,6 +12,8 @@ import { ReportsService } from '@/lib/services/reports.service'
 import { ReportsPolicy } from '@/lib/policies/reports.policy'
 import { ForbiddenError } from '@/lib/errors'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()

@@ -9,6 +9,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { startOfMonth, subDays } from 'date-fns'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await auth()

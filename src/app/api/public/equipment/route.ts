@@ -3,9 +3,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import type { BudgetTier } from '@prisma/client'
 import { prisma } from '@/lib/db/prisma'
 import { rateLimitByTier } from '@/lib/utils/rate-limit'
 import { cacheGet, cacheSet, cacheKeys } from '@/lib/cache'
+
+const BUDGET_TIERS: BudgetTier[] = ['ESSENTIAL', 'PROFESSIONAL', 'PREMIUM']
 
 export async function GET(request: NextRequest) {
   const rate = rateLimitByTier(request, 'public')
@@ -27,9 +30,11 @@ export async function GET(request: NextRequest) {
   const priceMinNum = priceMin != null ? parseInt(priceMin, 10) : undefined
   const priceMaxNum = priceMax != null ? parseInt(priceMax, 10) : undefined
   const featured = searchParams.get('featured') === 'true'
+  const budgetTier = searchParams.get('budgetTier') ?? undefined
+  const shootTypeSlug = searchParams.get('shootTypeSlug') ?? undefined
   const skip = Math.min(parseInt(searchParams.get('skip') ?? '0', 10), 500)
   const take = Math.min(parseInt(searchParams.get('take') ?? '24', 10), 100)
-  const cacheKey = `cat=${categoryId ?? ''}&brand=${brandId ?? ''}&bids=${brandIds?.join(',') ?? ''}&q=${q ?? ''}&sort=${sort}&pmin=${priceMinNum ?? ''}&pmax=${priceMaxNum ?? ''}&feat=${featured}&s=${skip}&t=${take}`
+  const cacheKey = `cat=${categoryId ?? ''}&brand=${brandId ?? ''}&bids=${brandIds?.join(',') ?? ''}&q=${q ?? ''}&sort=${sort}&pmin=${priceMinNum ?? ''}&pmax=${priceMaxNum ?? ''}&feat=${featured}&bt=${budgetTier ?? ''}&st=${shootTypeSlug ?? ''}&s=${skip}&t=${take}`
 
   const cached = await cacheGet<{ data: unknown[]; total: number }>(
     'equipmentList',
@@ -48,6 +53,7 @@ export async function GET(request: NextRequest) {
     isActive: true,
     ...(featured && { featured: true }),
     ...(categoryId && { categoryId }),
+    ...(budgetTier && BUDGET_TIERS.includes(budgetTier as BudgetTier) && { budgetTier: budgetTier as BudgetTier }),
     ...(brandIds?.length ? { brandId: { in: brandIds } } : brandId ? { brandId } : {}),
     ...(Object.keys(dailyPriceRange).length > 0 && { dailyPrice: dailyPriceRange }),
     ...(q && {

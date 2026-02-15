@@ -50,6 +50,12 @@ enum EquipmentCondition {
   DAMAGED
 }
 
+enum BudgetTier {
+  ESSENTIAL
+  PROFESSIONAL
+  PREMIUM
+}
+
 enum PaymentStatus {
   PENDING
   PROCESSING
@@ -902,6 +908,7 @@ model Category {
   equipment   Equipment[]
   products    Product[]   @relation("ProductCategory")
   subProducts Product[]   @relation("ProductSubCategory")
+  shootTypeCategoryFlows ShootTypeCategoryFlow[]
 
   // Translations (stored in Translation model)
 
@@ -960,6 +967,7 @@ model Equipment {
   specifications    Json? // Structured data
   customFields      Json? // Flexible custom fields
   vendorId          String?
+  budgetTier        BudgetTier? // For smart kit builder: Essential / Professional / Premium
 
   // Relations
   category       Category           @relation(fields: [categoryId], references: [id])
@@ -973,6 +981,7 @@ model Equipment {
   quoteEquipment QuoteEquipment[]
   kitEquipment   KitEquipment[]
   savedByUsers   SavedEquipment[]
+  shootTypeRecommendations ShootTypeRecommendation[]
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -990,6 +999,90 @@ model Equipment {
   @@index([isActive])
   @@index([featured])
   @@index([deletedAt])
+  @@index([budgetTier])
+}
+
+// ============================================
+// SHOOT TYPES (Smart Kit Builder)
+// ============================================
+
+model ShootType {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?  @db.Text
+  nameAr        String?
+  nameZh        String?
+  descriptionAr String?  @db.Text
+  descriptionZh String?  @db.Text
+  icon          String?  // Lucide icon name
+  coverImageUrl String?
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  questionnaire Json?    // Array of dynamic questions
+
+  // Relations
+  categoryFlows    ShootTypeCategoryFlow[]
+  recommendations  ShootTypeRecommendation[]
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model ShootTypeCategoryFlow {
+  id              String  @id @default(cuid())
+  shootTypeId     String
+  categoryId      String
+  sortOrder       Int     @default(0)
+  isRequired      Boolean @default(true)
+  minRecommended  Int?    // e.g. "We recommend at least 2 cameras"
+  maxRecommended  Int?
+  stepTitle       String?
+  stepTitleAr     String?
+  stepDescription String? @db.Text
+  stepDescriptionAr String? @db.Text
+
+  shootType ShootType @relation(fields: [shootTypeId], references: [id], onDelete: Cascade)
+  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shootTypeId, categoryId])
+  @@index([shootTypeId])
+  @@index([categoryId])
+}
+
+model ShootTypeRecommendation {
+  id             String     @id @default(cuid())
+  shootTypeId    String
+  equipmentId    String
+  budgetTier     BudgetTier
+  reason         String?    @db.Text
+  reasonAr       String?    @db.Text
+  defaultQuantity Int       @default(1)
+  isAutoSelect   Boolean    @default(false)
+  sortOrder      Int        @default(0)
+
+  shootType  ShootType  @relation(fields: [shootTypeId], references: [id], onDelete: Cascade)
+  equipment  Equipment  @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shootTypeId, equipmentId, budgetTier])
+  @@index([shootTypeId])
+  @@index([equipmentId])
+  @@index([budgetTier])
+  @@index([shootTypeId, budgetTier])
 }
 
 // ============================================

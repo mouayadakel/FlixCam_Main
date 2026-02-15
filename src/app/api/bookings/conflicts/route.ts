@@ -21,6 +21,8 @@ export interface ConflictPair {
 
 const CONFIRMED_ACTIVE = ['CONFIRMED', 'ACTIVE']
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await auth()

@@ -13,8 +13,10 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "deploy:db": "prisma migrate deploy && tsx prisma/seed.ts",
     "db:seed:rbac": "tsx prisma/seed-rbac.ts",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -24,7 +26,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "worker:import": "tsx scripts/start-import-worker.ts",
-    "worker:all": "tsx scripts/start-workers.ts"
+    "worker:all": "tsx scripts/start-workers.ts",
+    "migrate:specs": "tsx scripts/migrate-equipment-specs-to-structured.ts",
+    "test:specs": "tsx scripts/test-specifications.ts"
   },
   "dependencies": {
     "@fullcalendar/react": "^6.1.20",

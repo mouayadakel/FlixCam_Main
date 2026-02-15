@@ -5,7 +5,7 @@
  */
 
 import { prisma } from '@/lib/db/prisma'
-import type { Equipment, EquipmentCondition } from '@prisma/client'
+import type { Equipment, EquipmentCondition, Prisma } from '@prisma/client'
 import { TranslationService } from './translation.service'
 import { MediaService } from './media.service'
 
@@ -123,7 +123,7 @@ export class EquipmentService {
 
     const [items, total] = await Promise.all([
       prisma.equipment.findMany({
-        where: where as Parameters<typeof prisma.equipment.findMany>[0]['where'],
+        where: where as Prisma.EquipmentWhereInput,
         include: {
           vendor: {
             select: { id: true, companyName: true, isNameVisible: true },

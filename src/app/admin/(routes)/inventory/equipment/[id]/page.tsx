@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import Image from 'next/image'
 import DOMPurify from 'dompurify'
+import { SpecificationsDisplay } from '@/components/features/equipment/specifications-display'
 import type { Equipment, EquipmentCondition } from '@prisma/client'
 
 const ALLOWED_HTML_TAGS = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'span', 'div']
@@ -491,34 +492,11 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {equipment.specifications ? (
-                <div className="space-y-4">
-                  {Object.entries(equipment.specifications as Record<string, unknown>).map(([key, value]) => {
-                    if (key === 'mode' || key === 'html') return null
-                    return (
-                      <div key={key} className="flex gap-4 py-2 border-b border-neutral-200 last:border-0">
-                        <div className="font-semibold min-w-[150px]">{key}:</div>
-                        <div className="flex-1">{String(value)}</div>
-                      </div>
-                    )
-                  })}
-                  {typeof equipment.specifications === 'object' &&
-                  equipment.specifications !== null &&
-                  'html' in equipment.specifications &&
-                  (equipment.specifications as { html?: string }).html && (
-                    <div className="mt-4 pt-4 border-t">
-                      <div
-                        className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{
-                          __html: sanitizeHtml((equipment.specifications as { html?: string }).html ?? ''),
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-center py-8 text-neutral-500">لا توجد مواصفات</p>
-              )}
+              <SpecificationsDisplay
+                specifications={equipment.specifications as import('@/lib/types/specifications.types').AnySpecifications ?? null}
+                locale="ar"
+                showQuickSpecPills={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>

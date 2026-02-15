@@ -1,10 +1,51 @@
 /**
- * Kit wizard state (Build Your Kit). Step, category, equipment selections, duration.
+ * Kit wizard state (Build Your Kit). Smart flow: shoot type → budget → questionnaire → categories → duration → summary.
  * Persisted so progress survives refresh.
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+
+export type KitWizardPhase =
+  | 'shoot-type'
+  | 'budget'
+  | 'questionnaire'
+  | 'categories'
+  | 'duration'
+  | 'summary'
+
+export type BudgetTier = 'ESSENTIAL' | 'PROFESSIONAL' | 'PREMIUM'
+
+export interface CategoryStepConfig {
+  id: string
+  categoryId: string
+  categoryName: string
+  categorySlug: string
+  sortOrder: number
+  isRequired: boolean
+  minRecommended: number | null
+  maxRecommended: number | null
+  stepTitle: string | null
+  stepTitleAr: string | null
+  stepDescription: string | null
+  stepDescriptionAr: string | null
+}
+
+export interface ShootTypeFullConfig {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  nameAr: string | null
+  nameZh: string | null
+  icon: string | null
+  coverImageUrl: string | null
+  sortOrder: number
+  isActive: boolean
+  questionnaire: unknown
+  categorySteps: CategoryStepConfig[]
+  recommendations: unknown[]
+}
 
 export type KitWizardStepIndex = 0 | 1 | 2 | 3
 
@@ -13,34 +54,80 @@ export interface KitSelectedItem {
   dailyPrice: number
   model?: string
   imageUrl?: string
+  categoryId?: string
+  isRecommended?: boolean
+  budgetTier?: BudgetTier
+}
+
+export interface EquipmentRecommendationItem {
+  equipmentId: string
+  equipmentName: string
+  sku: string
+  quantity: number
+  dailyPrice: number
+  role: string
+  reason: string
 }
 
 interface KitWizardState {
+  phase: KitWizardPhase
   step: KitWizardStepIndex
+
+  shootTypeId: string | null
+  shootTypeSlug: string | null
+  shootTypeData: ShootTypeFullConfig | null
+  budgetTier: BudgetTier | null
+  answers: Record<string, string | string[]>
+  categorySteps: CategoryStepConfig[]
+  currentCategoryIndex: number
+  skippedCategories: string[]
   selectedCategoryId: string
-  /** equipmentId -> { qty, dailyPrice } */
   selectedEquipment: Record<string, KitSelectedItem>
   durationDays: number
+  aiSuggestions: EquipmentRecommendationItem[] | null
+  showAiAssistant: boolean
 
+  setPhase: (phase: KitWizardPhase) => void
+  toggleAiAssistant: () => void
   setStep: (step: KitWizardStepIndex) => void
+  setShootType: (id: string, slug: string) => void
+  setShootTypeData: (data: ShootTypeFullConfig | null) => void
+  setBudgetTier: (tier: BudgetTier | null) => void
+  setAnswer: (questionId: string, value: string | string[]) => void
+  setCategorySteps: (steps: CategoryStepConfig[]) => void
+  nextCategory: () => void
+  prevCategory: () => void
+  skipCategory: (categoryId: string) => void
   setCategory: (categoryId: string) => void
   addEquipment: (
     equipmentId: string,
     qty: number,
     dailyPrice: number,
-    display?: { model?: string; imageUrl?: string }
+    display?: { model?: string; imageUrl?: string; categoryId?: string; isRecommended?: boolean; budgetTier?: BudgetTier }
   ) => void
   removeEquipment: (equipmentId: string) => void
   setQty: (equipmentId: string, qty: number) => void
   setDuration: (days: number) => void
+  setAiSuggestions: (suggestions: EquipmentRecommendationItem[] | null) => void
   reset: () => void
 }
 
 const defaultState = {
+  phase: 'shoot-type' as KitWizardPhase,
   step: 0 as KitWizardStepIndex,
+  shootTypeId: null as string | null,
+  shootTypeSlug: null as string | null,
+  shootTypeData: null as ShootTypeFullConfig | null,
+  budgetTier: null as BudgetTier | null,
+  answers: {} as Record<string, string | string[]>,
+  categorySteps: [] as CategoryStepConfig[],
+  currentCategoryIndex: 0,
+  skippedCategories: [] as string[],
   selectedCategoryId: '',
   selectedEquipment: {} as Record<string, KitSelectedItem>,
   durationDays: 1,
+  aiSuggestions: null as EquipmentRecommendationItem[] | null,
+  showAiAssistant: false,
 }
 
 export const useKitWizardStore = create<KitWizardState>()(
@@ -48,8 +135,34 @@ export const useKitWizardStore = create<KitWizardState>()(
     (set, get) => ({
       ...defaultState,
 
+      setPhase: (phase) => set({ phase }),
       setStep: (step) => set({ step }),
 
+      setShootType: (id, slug) => set({ shootTypeId: id, shootTypeSlug: slug }),
+      setShootTypeData: (data) => set({ shootTypeData: data, categorySteps: data?.categorySteps ?? [] }),
+      setBudgetTier: (budgetTier) => set({ budgetTier }),
+      setAnswer: (questionId, value) =>
+        set((state) => ({ answers: { ...state.answers, [questionId]: value } })),
+      setCategorySteps: (categorySteps) => set({ categorySteps, currentCategoryIndex: 0 }),
+      nextCategory: () =>
+        set((state) => ({
+          currentCategoryIndex: Math.min(state.currentCategoryIndex + 1, state.categorySteps.length - 1),
+          selectedCategoryId: state.categorySteps[state.currentCategoryIndex + 1]?.categoryId ?? '',
+        })),
+      prevCategory: () =>
+        set((state) => {
+          const next = Math.max(0, state.currentCategoryIndex - 1)
+          return {
+            currentCategoryIndex: next,
+            selectedCategoryId: state.categorySteps[next]?.categoryId ?? '',
+          }
+        }),
+      skipCategory: (categoryId) =>
+        set((state) => ({
+          skippedCategories: state.skippedCategories.includes(categoryId) ? state.skippedCategories : [...state.skippedCategories, categoryId],
+          currentCategoryIndex: Math.min(state.currentCategoryIndex + 1, state.categorySteps.length - 1),
+          selectedCategoryId: state.categorySteps[state.currentCategoryIndex + 1]?.categoryId ?? '',
+        })),
       setCategory: (selectedCategoryId) => set({ selectedCategoryId }),
 
       addEquipment: (equipmentId, qty, dailyPrice, display) =>
@@ -61,6 +174,9 @@ export const useKitWizardStore = create<KitWizardState>()(
               dailyPrice,
               model: display?.model,
               imageUrl: display?.imageUrl,
+              categoryId: display?.categoryId,
+              isRecommended: display?.isRecommended,
+              budgetTier: display?.budgetTier,
             },
           },
         })),
@@ -91,13 +207,22 @@ export const useKitWizardStore = create<KitWizardState>()(
 
       setDuration: (durationDays) =>
         set({ durationDays: Math.min(365, Math.max(1, durationDays)) }),
-
+      setAiSuggestions: (aiSuggestions) => set({ aiSuggestions }),
+      toggleAiAssistant: () => set((s) => ({ showAiAssistant: !s.showAiAssistant })),
       reset: () => set(defaultState),
     }),
     {
       name: 'flixcam-kit-wizard',
       partialize: (s) => ({
+        phase: s.phase,
         step: s.step,
+        shootTypeId: s.shootTypeId,
+        shootTypeSlug: s.shootTypeSlug,
+        budgetTier: s.budgetTier,
+        answers: s.answers,
+        categorySteps: s.categorySteps,
+        currentCategoryIndex: s.currentCategoryIndex,
+        skippedCategories: s.skippedCategories,
         selectedCategoryId: s.selectedCategoryId,
         selectedEquipment: s.selectedEquipment,
         durationDays: s.durationDays,
@@ -130,4 +255,19 @@ export function getKitWizardSelectedCount(state: {
   selectedEquipment: Record<string, KitSelectedItem>
 }): number {
   return Object.keys(state.selectedEquipment).length
+}
+
+/** Total units (sum of qty) */
+export function getKitWizardTotalUnits(state: {
+  selectedEquipment: Record<string, KitSelectedItem>
+}): number {
+  return Object.values(state.selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
+}
+
+/** Current category step config (when in categories phase) */
+export function getCurrentCategoryStep(state: {
+  categorySteps: CategoryStepConfig[]
+  currentCategoryIndex: number
+}): CategoryStepConfig | null {
+  return state.categorySteps[state.currentCategoryIndex] ?? null
 }
