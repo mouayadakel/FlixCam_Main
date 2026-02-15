@@ -6,7 +6,7 @@
 
 'use client'
 
-import { Search, Bell, User, LogOut, Settings } from 'lucide-react'
+import { Search, Bell, User, LogOut, Settings, ExternalLink } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -49,6 +49,14 @@ export function AdminHeader() {
     >
       {/* Mobile Menu Button */}
       <MobileNav />
+
+      {/* Main website link */}
+      <Button variant="outline" size="sm" className="shrink-0 gap-1.5" asChild>
+        <Link href="/">
+          <ExternalLink className="h-4 w-4" />
+          <span className="hidden sm:inline">الموقع الرئيسي</span>
+        </Link>
+      </Button>
 
       {/* Search */}
       <div className="relative flex-1 max-w-md">

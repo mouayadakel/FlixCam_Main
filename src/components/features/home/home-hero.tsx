@@ -1,49 +1,36 @@
 /**
- * Homepage hero section – dramatic gradient background with floating search form,
- * text left + image right with overlay treatment. Polished animations.
+ * Homepage hero section – dynamic carousel when banner data exists,
+ * otherwise static gradient + CTA. Polished animations.
  */
 
 'use client'
 
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Search, ArrowRight, Calendar } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { HeroCarousel } from '@/components/features/home/hero-carousel'
+import type { HeroBannerPublic } from '@/lib/services/hero-banner.service'
 
 const HERO_IMAGE_URL =
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80'
 
-function getDefaultDates() {
-  const start = new Date()
-  start.setDate(start.getDate() + 1)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 6)
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  }
-}
-
-export function HomeHero() {
+export function HomeHero({ banner }: { banner?: HeroBannerPublic | null }) {
   const { t } = useLocale()
-  const router = useRouter()
-  const [q, setQ] = useState('')
-  const defaultDates = getDefaultDates()
-  const [startDate, setStartDate] = useState(defaultDates.start)
-  const [endDate, setEndDate] = useState(defaultDates.end)
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const params = new URLSearchParams()
-    if (q.trim()) params.set('q', q.trim())
-    if (startDate) params.set('startDate', startDate)
-    if (endDate) params.set('endDate', endDate)
-    router.push(`/equipment?${params.toString()}`)
+  if (banner?.slides?.length) {
+    return (
+      <HeroCarousel
+        slides={banner.slides}
+        settings={{
+          autoPlay: banner.autoPlay,
+          autoPlayInterval: banner.autoPlayInterval,
+          transitionType: banner.transitionType,
+        }}
+      />
+    )
   }
 
   return (
@@ -68,58 +55,7 @@ export function HomeHero() {
               {t('home.heroSubtitle')}
             </p>
 
-            {/* Search form – floating card style */}
-            <form
-              onSubmit={handleSearch}
-              role="search"
-              className="mt-8 w-full max-w-2xl rounded-2xl bg-white p-2 shadow-modal sm:p-3 opacity-0 animate-fade-in-up"
-              style={{ animationDelay: '0.2s' }}
-              aria-label={t('common.search')}
-            >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="relative flex-[2]">
-                  <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                  <Input
-                    id="hero-q"
-                    type="search"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder={t('home.heroSearchPlaceholder')}
-                    className="h-12 border-border-light bg-surface-light ps-10 text-text-heading placeholder:text-text-muted/70 rounded-xl focus-visible:ring-brand-primary/20"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1">
-                  <div className="relative">
-                    <Calendar className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={startDate}
-                      min={new Date().toISOString().slice(0, 10)}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="h-12 border-border-light bg-surface-light ps-10 text-text-heading rounded-xl focus-visible:ring-brand-primary/20"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Calendar className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={endDate}
-                      min={startDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="h-12 border-border-light bg-surface-light ps-10 text-text-heading rounded-xl focus-visible:ring-brand-primary/20"
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-12 bg-brand-primary hover:bg-brand-primary-hover rounded-xl px-8 font-semibold shadow-md transition-all hover:shadow-lg active:scale-[0.98]"
-                >
-                  <Search className="me-2 h-4 w-4" />
-                  {t('common.search')}
-                </Button>
-              </div>
-            </form>
+            {/* Search form hidden */}
 
             <div
               className="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start opacity-0 animate-fade-in"

@@ -5,9 +5,11 @@
 
 'use client'
 
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
+import { isExternalImageUrl } from '@/lib/utils/image.utils'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Eye } from 'lucide-react'
@@ -31,6 +33,10 @@ interface HomeFeaturedEquipmentProps {
 
 export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
   const { t } = useLocale()
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set())
+  const handleImageError = useCallback((itemId: string) => {
+    setFailedImageIds((prev) => new Set(prev).add(itemId))
+  }, [])
 
   return (
     <section className="bg-surface-light py-16 md:py-20 lg:py-24">
@@ -66,14 +72,19 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                 style={{ animationDelay: `${0.1 * index}s` }}
               >
                 <div className="relative aspect-[4/3] shrink-0 overflow-hidden bg-surface-light">
-                  <Image
-                    src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
-                    alt={item.model ?? item.sku ?? item.id}
-                    fill
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    unoptimized={!item.media[0]?.url}
-                  />
+                  {failedImageIds.has(item.id) ? (
+                    <div className="absolute inset-0 bg-surface-light" aria-hidden />
+                  ) : (
+                    <Image
+                      src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+                      alt={item.model ?? item.sku ?? item.id}
+                      fill
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+                      onError={() => handleImageError(item.id)}
+                    />
+                  )}
                   {/* Hover overlay */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/30">
                     <span className="flex items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-semibold text-text-heading opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 shadow-lg backdrop-blur-sm">

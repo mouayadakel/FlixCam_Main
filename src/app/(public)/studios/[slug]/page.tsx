@@ -1,9 +1,11 @@
 /**
  * Studio detail page (Phase 2.4): Detail, Slot Picker, Booking Form.
+ * Guarded by enable_studios feature flag.
  */
 
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { StudioDetail } from '@/components/features/studio/studio-detail'
 
 async function getStudio(slug: string) {
@@ -27,6 +29,8 @@ export default async function StudioDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  const enabled = await FeatureFlagService.isEnabled('enable_studios')
+  if (!enabled) redirect('/')
   const { slug } = await params
   const studio = await getStudio(slug)
   if (!studio) notFound()

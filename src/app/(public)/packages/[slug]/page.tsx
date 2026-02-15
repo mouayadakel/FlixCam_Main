@@ -1,9 +1,11 @@
 /**
  * Package detail page (Phase 2.5).
+ * Guarded by enable_packages feature flag.
  */
 
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { PackageDetail } from '@/components/features/packages/package-detail'
 
 async function getPackage(slug: string) {
@@ -60,6 +62,8 @@ export default async function PackageDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  const enabled = await FeatureFlagService.isEnabled('enable_packages')
+  if (!enabled) redirect('/')
   const { slug } = await params
   const pkg = await getPackage(slug)
   if (!pkg) notFound()

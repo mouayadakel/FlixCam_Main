@@ -614,7 +614,7 @@ export default function NewEquipmentPage() {
               <CardContent>
                 <SpecificationsEditor
                   value={watchedSpecifications as Record<string, unknown>}
-                  onChange={(specs) => setValue('specifications', specs)}
+                  onChange={(specs) => setValue('specifications', specs as unknown as Record<string, unknown>)}
                   categoryHint={categoryHint}
                 />
               </CardContent>

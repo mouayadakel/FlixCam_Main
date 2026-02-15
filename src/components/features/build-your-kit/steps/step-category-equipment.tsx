@@ -301,7 +301,7 @@ export function StepCategoryEquipment() {
         {showMore && (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {loadingOther ? (
-              <div className="col-span-2 py-8 text-center text-text-muted">Loading...</div>
+              <div className="col-span-2 py-8 text-center text-text-muted">{t('common.loading')}</div>
             ) : (
               otherEquipment.map((item) => {
                 const selectedQty = selectedEquipment[item.id]?.qty ?? 0

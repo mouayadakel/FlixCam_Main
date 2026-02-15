@@ -2416,7 +2416,7 @@ async function main() {
         warehouseLocation: item.warehouseLocation,
         barcode: item.barcode,
         budgetTier: item.budgetTier || null,
-        specifications: item.specifications ? (item.specifications as object) : null,
+        specifications: item.specifications != null ? (item.specifications as object) : undefined,
         updatedBy: admin.id,
       },
       create: {
@@ -2435,7 +2435,7 @@ async function main() {
         warehouseLocation: item.warehouseLocation,
         barcode: item.barcode,
         budgetTier: item.budgetTier || null,
-        specifications: item.specifications ? (item.specifications as object) : null,
+        specifications: item.specifications != null ? (item.specifications as object) : undefined,
         createdBy: admin.id,
       },
     })
@@ -2593,14 +2593,36 @@ async function main() {
 
   // 9. Feature Flags
   const featureFlags = [
+    // Integrations & Payments
     { name: 'enable_booking_checkout', description: 'Enable booking checkout flow', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
     { name: 'enable_payments', description: 'Enable payment processing', enabled: true, scope: FeatureFlagScope.INTEGRATION, requiresApproval: false },
     { name: 'enable_whatsapp', description: 'Enable WhatsApp notifications', enabled: false, scope: FeatureFlagScope.INTEGRATION, requiresApproval: false },
+    // System
     { name: 'enable_ai_recommendations', description: 'Enable AI equipment recommendations', enabled: false, scope: FeatureFlagScope.MODULE, requiresApproval: true },
     { name: 'maintenance_mode', description: 'Maintenance mode - read-only access', enabled: false, scope: FeatureFlagScope.EMERGENCY, requiresApproval: true },
+    // Build Your Kit
     { name: 'smart-kit-builder', description: 'Smart Kit Builder – shoot type, budget tier, dynamic category flow', enabled: true, scope: FeatureFlagScope.UI, requiresApproval: false },
     { name: 'kit-ai-assistant', description: 'Floating AI chat widget on Build Your Kit', enabled: true, scope: FeatureFlagScope.INTEGRATION, requiresApproval: false },
     { name: 'kit-prebuilt-comparison', description: 'Pre-built kit comparison at summary step', enabled: true, scope: FeatureFlagScope.UI, requiresApproval: false },
+    // Public Website
+    { name: 'enable_build_kit', description: 'Show or hide the Build Your Kit page and navigation links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_equipment_catalog', description: 'Show /equipment page and nav links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_studios', description: 'Show /studios page and nav links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_packages', description: 'Show /packages page and nav links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_how_it_works', description: 'Show /how-it-works page and nav links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_support', description: 'Show /support page and nav links', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_whatsapp_cta', description: 'Show floating WhatsApp button on public site', enabled: true, scope: FeatureFlagScope.UI, requiresApproval: false },
+    // Control Panel (Admin Sidebar)
+    { name: 'enable_admin_ai', description: 'Show AI Features in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_kit_builder', description: 'Show Kit Builder in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_shoot_types', description: 'Show Shoot Types in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_dynamic_pricing', description: 'Show Dynamic Pricing in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_ai_recommendations', description: 'Show AI Recommendations in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_vendors', description: 'Show Vendors section in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_marketing', description: 'Show Marketing in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_coupons', description: 'Show Coupons in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_live_ops', description: 'Show Live Operations in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
+    { name: 'enable_admin_analytics', description: 'Show Analytics in admin sidebar', enabled: true, scope: FeatureFlagScope.MODULE, requiresApproval: false },
   ]
 
   for (const flag of featureFlags) {
@@ -2627,6 +2649,98 @@ async function main() {
     })
   }
   console.log(`✅ Created ${sampleNotifications.length} sample notifications`)
+
+  // 11. Hero Banner (home page carousel)
+  const HERO_IMAGE_URL = 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80'
+  const heroBanner = await prisma.heroBanner.upsert({
+    where: { pageSlug: 'home' },
+    update: {},
+    create: {
+      name: 'Homepage Hero',
+      pageSlug: 'home',
+      isActive: true,
+      autoPlay: true,
+      autoPlayInterval: 6000,
+      transitionType: 'fade',
+      createdBy: admin.id,
+      updatedAt: new Date(),
+    },
+  })
+
+  const heroSlidesData = [
+    {
+      order: 0,
+      imageUrl: HERO_IMAGE_URL,
+      titleAr: 'تأجير معدات سينمائية واستوديوهات',
+      titleEn: 'Cinematic Equipment & Studio Rental',
+      titleZh: '影视设备与工作室租赁',
+      subtitleAr: 'احجز المعدات والاستوديوهات المناسبة لمشروعك في الرياض',
+      subtitleEn: 'Book the right equipment and studios for your project in Riyadh',
+      subtitleZh: '在利雅得为您的项目预订合适的设备和工作室',
+      ctaTextAr: 'احجز الآن',
+      ctaTextEn: 'Book Now',
+      ctaTextZh: '立即预订',
+      ctaUrl: '/equipment',
+      ctaStyle: 'primary',
+      cta2TextAr: 'استكشف الاستوديوهات',
+      cta2TextEn: 'Explore Studios',
+      cta2TextZh: '探索工作室',
+      cta2Url: '/studios',
+      cta2Style: 'outline',
+    },
+    {
+      order: 1,
+      imageUrl: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=1200&q=80',
+      titleAr: 'معدات احترافية للإنتاج السينمائي',
+      titleEn: 'Professional Gear for Film Production',
+      titleZh: '专业影视制作设备',
+      subtitleAr: 'كاميرات، عدسات، إضاءة ومعدات دعم من أفضل العلامات',
+      subtitleEn: 'Cameras, lenses, lighting and support from top brands',
+      subtitleZh: '顶级品牌的相机、镜头、灯光与支撑设备',
+      ctaTextAr: 'عرض المعدات',
+      ctaTextEn: 'Browse Equipment',
+      ctaTextZh: '浏览设备',
+      ctaUrl: '/equipment',
+      ctaStyle: 'primary',
+    },
+    {
+      order: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&q=80',
+      titleAr: 'ابن مجموعتك المثالية',
+      titleEn: 'Build Your Perfect Kit',
+      titleZh: '打造您的完美套件',
+      subtitleAr: 'اختر نوع التصوير والميزانية واحصل على توصيات ذكية',
+      subtitleEn: 'Pick your shoot type and budget, get smart recommendations',
+      subtitleZh: '选择拍摄类型和预算，获得智能推荐',
+      ctaTextAr: 'ابدأ الآن',
+      ctaTextEn: 'Build Your Kit',
+      ctaTextZh: '开始搭配',
+      ctaUrl: '/build-your-kit',
+      ctaStyle: 'primary',
+    },
+  ]
+
+  const existingSlides = await prisma.heroSlide.findMany({
+    where: { bannerId: heroBanner.id, deletedAt: null },
+  })
+  if (existingSlides.length === 0) {
+    for (const slide of heroSlidesData) {
+      await prisma.heroSlide.create({
+        data: {
+          bannerId: heroBanner.id,
+          ...slide,
+          overlayOpacity: 0.3,
+          textPosition: 'start',
+          isActive: true,
+          createdBy: admin.id,
+          updatedAt: new Date(),
+        },
+      })
+    }
+    console.log(`✅ Created hero banner "home" with ${heroSlidesData.length} slides`)
+  } else {
+    console.log('✅ Hero banner "home" already has slides')
+  }
 
   // Summary
   console.log('\n🎉 Comprehensive database seed completed!')

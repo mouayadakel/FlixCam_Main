@@ -254,6 +254,26 @@
     "addSuggestion": "أضف للكيت",
     "stillToChoose": "ما زال للاختيار",
     "minRecommended": "نوصي بـ {min} على الأقل لهذا النوع",
-    "upgradeToTier": "ترقية إلى بريميوم لخيارات أعلى."
+    "upgradeToTier": "ترقية إلى بريميوم لخيارات أعلى.",
+    "acceptAll": "قبول الكل",
+    "clearAll": "مسح الكل",
+    "startFresh": "بدء من جديد",
+    "yourPreviousSelections": "لديك عناصر من جلسة سابقة. أضف التوصيات أعلاه أو ابدأ من جديد.",
+    "completeness": "اكتمال الكيت",
+    "completenessCelebration": "اكتمل الكيت!",
+    "missingEssentials": "أساسيات ناقصة",
+    "addMore": "إضافة",
+    "freeDelivery": "للتوصيل المجاني",
+    "freeDeliveryUnlocked": "تم تفعيل التوصيل المجاني!",
+    "reviewKit": "مراجعة الكيت",
+    "upsellMissingLens": "أكمل إعدادك: أضف عدسة",
+    "upsellMissingAudio": "لا تنسَ الصوت لـ {shootType}",
+    "upsellDurationPlay": "استأجر 7+ أيام ووفر 15%",
+    "upsellBundleProximity": "أضف {amount} للمزيد للتوصيل المجاني",
+    "unavailable": "غير متوفر حالياً",
+    "onlyNLeft": "المتبقي {count} فقط",
+    "dateStart": "تاريخ البداية",
+    "dateEnd": "تاريخ النهاية",
+    "suggestionsUnavailable": "الاقتراحات غير متوفرة مؤقتاً"
   }
 }

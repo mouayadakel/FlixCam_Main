@@ -2250,6 +2250,81 @@ model WebsiteLayout {
   @@index([type])
 }
 
+model HeroBanner {
+  id               String   @id @default(cuid())
+  name             String
+  pageSlug         String   @unique
+  isActive         Boolean  @default(true)
+  autoPlay         Boolean  @default(true)
+  autoPlayInterval Int      @default(6000)
+  transitionType   String   @default("fade")
+
+  slides HeroSlide[]
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model HeroSlide {
+  id             String  @id @default(cuid())
+  bannerId       String
+  imageUrl       String
+  mobileImageUrl String?
+  videoUrl       String?
+
+  titleAr    String   @db.Text
+  titleEn    String   @db.Text
+  titleZh    String?  @db.Text
+  subtitleAr String?  @db.Text
+  subtitleEn String?  @db.Text
+  subtitleZh String?  @db.Text
+
+  badgeTextAr String?  @db.Text
+  badgeTextEn String?  @db.Text
+  badgeTextZh String?  @db.Text
+
+  ctaTextAr  String? @db.Text
+  ctaTextEn  String? @db.Text
+  ctaTextZh  String? @db.Text
+  ctaUrl     String?
+  ctaStyle   String  @default("primary")
+
+  cta2TextAr String? @db.Text
+  cta2TextEn String? @db.Text
+  cta2TextZh String? @db.Text
+  cta2Url    String?
+  cta2Style  String?
+
+  order          Int     @default(0)
+  isActive       Boolean @default(true)
+  overlayOpacity Float   @default(0.3)
+  textPosition   String  @default("start")
+
+  publishAt   DateTime?
+  unpublishAt DateTime?
+
+  banner HeroBanner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  createdBy String?
+  updatedAt DateTime  @updatedAt
+  updatedBy String?
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([bannerId])
+  @@index([order])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
 model Cart {
   id            String    @id @default(cuid())
   userId        String?   @unique

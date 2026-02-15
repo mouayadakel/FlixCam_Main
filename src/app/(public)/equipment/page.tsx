@@ -1,11 +1,16 @@
 /**
  * Equipment catalog page (Phase 2.2): Grid, filters, cards, skeleton, pagination.
+ * Guarded by enable_equipment_catalog feature flag.
  */
 
+import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { EquipmentCatalogClient } from './equipment-catalog-client'
 
-export default function EquipmentCatalogPage() {
+export default async function EquipmentCatalogPage() {
+  const enabled = await FeatureFlagService.isEnabled('enable_equipment_catalog')
+  if (!enabled) redirect('/')
   return (
     <main className="mx-auto w-full max-w-public-container px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <Suspense fallback={<EquipmentCatalogFallback />}>

@@ -18,9 +18,15 @@ const CATEGORY_LINKS = [
   { href: '/how-it-works', key: 'nav.howItWorks' },
 ] as const
 
-export function CategoryBar() {
+interface CategoryBarProps {
+  hiddenRoutes?: Set<string>
+}
+
+export function CategoryBar({ hiddenRoutes }: CategoryBarProps = {}) {
   const { t } = useLocale()
   const pathname = usePathname()
+  const visibleLinks =
+    hiddenRoutes?.size ? CATEGORY_LINKS.filter(({ href }) => !hiddenRoutes.has(href)) : CATEGORY_LINKS
 
   return (
     <nav
@@ -28,7 +34,7 @@ export function CategoryBar() {
       aria-label="Categories"
     >
       <div className="mx-auto flex w-full max-w-public-container items-center gap-1 overflow-x-auto px-4 py-1">
-        {CATEGORY_LINKS.map(({ href, key }) => {
+        {visibleLinks.map(({ href, key }) => {
           const isActive = pathname ? (pathname === href || pathname.startsWith(href + '/')) : false
           return (
             <Link

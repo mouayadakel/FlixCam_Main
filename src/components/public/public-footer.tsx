@@ -22,15 +22,23 @@ const CATEGORY_LINKS = [
   { href: '/build-your-kit', key: 'nav.buildKit' },
 ] as const
 
+interface PublicFooterProps {
+  hiddenRoutes?: Set<string>
+}
+
 const ABOUT_LINKS = [
   { href: '/how-it-works', key: 'nav.howItWorks' },
   { href: '/support', key: 'nav.support' },
   { href: '/policies', key: 'nav.policies' },
 ] as const
 
-export function PublicFooter() {
+export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
   const { t } = useLocale()
   const [email, setEmail] = useState('')
+  const visibleCategoryLinks =
+    hiddenRoutes?.size ? CATEGORY_LINKS.filter(({ href }) => !hiddenRoutes.has(href)) : CATEGORY_LINKS
+  const visibleAboutLinks =
+    hiddenRoutes?.size ? ABOUT_LINKS.filter(({ href }) => !hiddenRoutes.has(href)) : ABOUT_LINKS
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,7 +123,7 @@ export function PublicFooter() {
               {t('footer.category')}
             </h3>
             <ul className="mt-5 space-y-3">
-              {CATEGORY_LINKS.map(({ href, key }) => (
+              {visibleCategoryLinks.map(({ href, key }) => (
                 <li key={href}>
                   <Link
                     href={href}
@@ -137,7 +145,7 @@ export function PublicFooter() {
               {t('footer.aboutText')}
             </p>
             <ul className="mt-4 space-y-3">
-              {ABOUT_LINKS.map(({ href, key }) => (
+              {visibleAboutLinks.map(({ href, key }) => (
                 <li key={href}>
                   <Link
                     href={href}

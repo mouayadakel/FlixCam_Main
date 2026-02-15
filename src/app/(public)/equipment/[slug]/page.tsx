@@ -1,10 +1,12 @@
 /**
  * Equipment detail page: Gallery, Price Block, Availability, Recommendations.
  * Uses PublicContainer for consistent max-width and padding.
+ * Guarded by enable_equipment_catalog feature flag.
  */
 
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { EquipmentDetail } from '@/components/features/equipment/equipment-detail'
 
 async function getEquipment(id: string) {
@@ -80,6 +82,8 @@ export default async function EquipmentDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  const enabled = await FeatureFlagService.isEnabled('enable_equipment_catalog')
+  if (!enabled) redirect('/')
   try {
     const { slug: id } = await params
     const equipment = await getEquipment(id)

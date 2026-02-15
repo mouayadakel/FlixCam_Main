@@ -12,6 +12,8 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/use-permissions'
+import { useAdminFeatureFlags } from '@/lib/hooks/use-admin-feature-flags'
+import { ADMIN_SIDEBAR_FLAG_MAP } from '@/config/feature-flag-groups'
 import {
   Home,
   Calendar,
@@ -148,6 +150,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'الفروع', en: 'Branches' }, href: '/admin/settings/branches', permission: 'settings.read' },
       { label: { ar: 'مناطق التوصيل', en: 'Delivery Zones' }, href: '/admin/settings/delivery-zones', permission: 'settings.read' },
       { label: { ar: 'الضريبة / ض.ق.م', en: 'Tax / VAT' }, href: '/admin/settings/tax', permission: 'settings.read' },
+      { label: { ar: 'البانر الرئيسي', en: 'Hero Banners' }, href: '/admin/settings/hero-banners', permission: 'settings.update' },
     ],
   },
 ]
@@ -155,6 +158,14 @@ const sidebarSections: SidebarSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { hasPermission, loading, error } = usePermissions()
+  const { flags: featureFlags, loading: flagsLoading } = useAdminFeatureFlags()
+
+  const isItemVisibleByFlag = (href: string): boolean => {
+    const flagName = ADMIN_SIDEBAR_FLAG_MAP[href]
+    if (!flagName) return true
+    if (flagsLoading) return true
+    return !!featureFlags[flagName]
+  }
   const [collapsed, setCollapsed] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
@@ -249,7 +260,9 @@ export function AdminSidebar() {
           </div>
         ) : (
         sidebarSections.map((section) => {
-          const filteredItems = section.items.filter((item) => hasPermission(item.permission))
+          const filteredItems = section.items
+            .filter((item) => hasPermission(item.permission))
+            .filter((item) => isItemVisibleByFlag(item.href))
           if (filteredItems.length === 0) return null
           const isExpanded = expandedSections.includes(section.title.ar)
           const hasActiveItem = filteredItems.some((item) => isActive(item.href))

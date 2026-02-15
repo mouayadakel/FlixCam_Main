@@ -40,13 +40,9 @@ function htmlToText(html: string): string {
   return s
 }
 
-export interface FetchPageTextResult {
-  success: true
-  text: string
-} | {
-  success: false
-  error: string
-}
+export type FetchPageTextResult =
+  | { success: true; text: string }
+  | { success: false; error: string }
 
 /**
  * Fetch a URL and return extracted plain text for spec extraction.

@@ -14,6 +14,8 @@ export type KitWizardPhase =
   | 'duration'
   | 'summary'
 
+export type KitWizardView = 'setup' | 'building' | 'review'
+
 export type BudgetTier = 'ESSENTIAL' | 'PROFESSIONAL' | 'PREMIUM'
 
 export interface CategoryStepConfig {
@@ -72,6 +74,7 @@ export interface EquipmentRecommendationItem {
 interface KitWizardState {
   phase: KitWizardPhase
   step: KitWizardStepIndex
+  view: KitWizardView
 
   shootTypeId: string | null
   shootTypeSlug: string | null
@@ -87,7 +90,14 @@ interface KitWizardState {
   aiSuggestions: EquipmentRecommendationItem[] | null
   showAiAssistant: boolean
 
+  activeCategory: string | null
+  searchQuery: string
+  sortBy: string
+  startDate: string | null
+  endDate: string | null
+
   setPhase: (phase: KitWizardPhase) => void
+  setView: (view: KitWizardView) => void
   toggleAiAssistant: () => void
   setStep: (step: KitWizardStepIndex) => void
   setShootType: (id: string, slug: string) => void
@@ -99,6 +109,10 @@ interface KitWizardState {
   prevCategory: () => void
   skipCategory: (categoryId: string) => void
   setCategory: (categoryId: string) => void
+  setActiveCategory: (categoryId: string | null) => void
+  setSearchQuery: (q: string) => void
+  setSortBy: (sort: string) => void
+  setDates: (start: string | null, end: string | null) => void
   addEquipment: (
     equipmentId: string,
     qty: number,
@@ -115,6 +129,7 @@ interface KitWizardState {
 const defaultState = {
   phase: 'shoot-type' as KitWizardPhase,
   step: 0 as KitWizardStepIndex,
+  view: 'setup' as KitWizardView,
   shootTypeId: null as string | null,
   shootTypeSlug: null as string | null,
   shootTypeData: null as ShootTypeFullConfig | null,
@@ -128,6 +143,11 @@ const defaultState = {
   durationDays: 1,
   aiSuggestions: null as EquipmentRecommendationItem[] | null,
   showAiAssistant: false,
+  activeCategory: null as string | null,
+  searchQuery: '',
+  sortBy: 'recommended',
+  startDate: null as string | null,
+  endDate: null as string | null,
 }
 
 export const useKitWizardStore = create<KitWizardState>()(
@@ -136,6 +156,7 @@ export const useKitWizardStore = create<KitWizardState>()(
       ...defaultState,
 
       setPhase: (phase) => set({ phase }),
+      setView: (view) => set({ view }),
       setStep: (step) => set({ step }),
 
       setShootType: (id, slug) => set({ shootTypeId: id, shootTypeSlug: slug }),
@@ -164,6 +185,19 @@ export const useKitWizardStore = create<KitWizardState>()(
           selectedCategoryId: state.categorySteps[state.currentCategoryIndex + 1]?.categoryId ?? '',
         })),
       setCategory: (selectedCategoryId) => set({ selectedCategoryId }),
+      setActiveCategory: (activeCategory) => set({ activeCategory }),
+      setSearchQuery: (searchQuery) => set({ searchQuery }),
+      setSortBy: (sortBy) => set({ sortBy }),
+      setDates: (startDate, endDate) =>
+        set((state) => {
+          const start = startDate ? new Date(startDate) : null
+          const end = endDate ? new Date(endDate) : null
+          const durationDays =
+            start && end && end > start
+              ? Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)))
+              : state.durationDays
+          return { startDate, endDate, durationDays }
+        }),
 
       addEquipment: (equipmentId, qty, dailyPrice, display) =>
         set((state) => ({
@@ -216,6 +250,7 @@ export const useKitWizardStore = create<KitWizardState>()(
       partialize: (s) => ({
         phase: s.phase,
         step: s.step,
+        view: s.view,
         shootTypeId: s.shootTypeId,
         shootTypeSlug: s.shootTypeSlug,
         budgetTier: s.budgetTier,
@@ -226,6 +261,11 @@ export const useKitWizardStore = create<KitWizardState>()(
         selectedCategoryId: s.selectedCategoryId,
         selectedEquipment: s.selectedEquipment,
         durationDays: s.durationDays,
+        activeCategory: s.activeCategory,
+        searchQuery: s.searchQuery,
+        sortBy: s.sortBy,
+        startDate: s.startDate,
+        endDate: s.endDate,
       }),
     }
   )
@@ -270,4 +310,37 @@ export function getCurrentCategoryStep(state: {
   currentCategoryIndex: number
 }): CategoryStepConfig | null {
   return state.categorySteps[state.currentCategoryIndex] ?? null
+}
+
+/** Selected equipment grouped by categoryId */
+export function getSelectedByCategory(state: {
+  selectedEquipment: Record<string, KitSelectedItem>
+}): Map<string, [string, KitSelectedItem][]> {
+  const byCategory = new Map<string, [string, KitSelectedItem][]>()
+  for (const [id, item] of Object.entries(state.selectedEquipment)) {
+    const catId = item.categoryId ?? 'other'
+    if (!byCategory.has(catId)) byCategory.set(catId, [])
+    byCategory.get(catId)!.push([id, item])
+  }
+  return byCategory
+}
+
+/** Category IDs that have at least one selected item */
+function getSelectedCategoryIds(state: {
+  selectedEquipment: Record<string, KitSelectedItem>
+}): Set<string> {
+  const ids = new Set<string>()
+  for (const item of Object.values(state.selectedEquipment)) {
+    if (item.categoryId) ids.add(item.categoryId)
+  }
+  return ids
+}
+
+/** Category steps that have no selected equipment (missing essentials) */
+export function getMissingCategories(state: {
+  categorySteps: CategoryStepConfig[]
+  selectedEquipment: Record<string, KitSelectedItem>
+}): CategoryStepConfig[] {
+  const selectedIds = getSelectedCategoryIds(state)
+  return state.categorySteps.filter((step) => !selectedIds.has(step.categoryId))
 }

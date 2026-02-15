@@ -4,6 +4,7 @@
  * Requires equipment.update permission.
  */
 
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   const equipment = await prisma.equipment.findMany({
     where: {
       deletedAt: null,
-      specifications: { not: null },
+      specifications: { not: Prisma.JsonNull },
     },
     select: {
       id: true,

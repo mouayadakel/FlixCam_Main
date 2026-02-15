@@ -1,9 +1,12 @@
 /**
  * Support – contact, WhatsApp, FAQ.
+ * Guarded by enable_support feature flag.
  */
 
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { siteConfig } from '@/config/site.config'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 
@@ -19,7 +22,9 @@ const FAQ = [
   { q: 'When is my deposit released?', a: 'After equipment is returned and inspected (usually within 2–3 business days).' },
 ]
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  const enabled = await FeatureFlagService.isEnabled('enable_support')
+  if (!enabled) redirect('/')
   return (
     <main className="py-12">
       <PublicContainer className="max-w-3xl">

@@ -254,6 +254,26 @@
     "addSuggestion": "加入套件",
     "stillToChoose": "待选择",
     "minRecommended": "我们建议此类至少 {min} 件",
-    "upgradeToTier": "升级至高端档位获取顶级选项。"
+    "upgradeToTier": "升级至高端档位获取顶级选项。",
+    "acceptAll": "全部接受",
+    "clearAll": "全部清除",
+    "startFresh": "重新开始",
+    "yourPreviousSelections": "您有之前会话的项目。在上方添加推荐或重新开始。",
+    "completeness": "套件完整度",
+    "completenessCelebration": "套件已完整！",
+    "missingEssentials": "缺少必备项",
+    "addMore": "添加",
+    "freeDelivery": "享免费配送",
+    "freeDeliveryUnlocked": "已享免费配送！",
+    "reviewKit": "查看套件",
+    "upsellMissingLens": "完善配置：添加镜头",
+    "upsellMissingAudio": "别忘了 {shootType} 的音频",
+    "upsellDurationPlay": "租 7 天以上省 15%",
+    "upsellBundleProximity": "再加 {amount} 享免费配送",
+    "unavailable": "暂无库存",
+    "onlyNLeft": "仅剩 {count} 件",
+    "dateStart": "开始日期",
+    "dateEnd": "结束日期",
+    "suggestionsUnavailable": "推荐暂时不可用"
   }
 }

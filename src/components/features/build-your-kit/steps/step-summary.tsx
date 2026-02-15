@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useLocale } from '@/hooks/use-locale'
@@ -18,6 +18,7 @@ import {
 import { useCartStore } from '@/lib/stores/cart.store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,9 @@ export function StepSummary() {
   const addEquipment = useKitWizardStore((s) => s.addEquipment)
   const setAiSuggestions = useKitWizardStore((s) => s.setAiSuggestions)
   const aiSuggestions = useKitWizardStore((s) => s.aiSuggestions)
+  const startDate = useKitWizardStore((s) => s.startDate)
+  const endDate = useKitWizardStore((s) => s.endDate)
+  const setDates = useKitWizardStore((s) => s.setDates)
 
   const totalDaily = getKitWizardTotalDaily({ selectedEquipment })
   const subtotal = getKitWizardTotalAmount({ selectedEquipment, durationDays })
@@ -86,6 +90,15 @@ export function StepSummary() {
   }
   const entries = Object.entries(selectedEquipment)
   const isEmpty = entries.length === 0
+
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const defaultEnd = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + durationDays)
+    return d.toISOString().slice(0, 10)
+  }, [durationDays])
+  const displayStart = startDate ?? todayIso
+  const displayEnd = endDate ?? defaultEnd
 
   const fetchPrebuiltAndAi = useCallback(async () => {
     const ids = Object.keys(selectedEquipment)
@@ -192,12 +205,16 @@ export function StepSummary() {
     if (isEmpty) return
     setAdding(true)
     try {
+      const effectiveStart = startDate ?? displayStart
+      const effectiveEnd = endDate ?? displayEnd
       for (const [equipmentId, { qty, dailyPrice }] of entries) {
         await addItem({
           itemType: 'EQUIPMENT',
           equipmentId,
           quantity: qty,
           dailyRate: dailyPrice,
+          startDate: effectiveStart,
+          endDate: effectiveEnd,
         })
       }
       toast({
@@ -236,6 +253,19 @@ export function StepSummary() {
     <div className="animate-fade-in">
       <h2 className="text-section-title text-text-heading mb-1">{t('kit.summaryTitle')}</h2>
       <p className="text-body-main text-text-muted mb-6">{t('kit.summaryDesc')}</p>
+
+      {/* Date range */}
+      <div className="mb-6 rounded-xl border border-border-light bg-surface-light p-4">
+        <DateRangePicker
+          startDate={displayStart}
+          endDate={displayEnd}
+          onStartDateChange={(v) => setDates(v || null, endDate ?? displayEnd)}
+          onEndDateChange={(v) => setDates(startDate ?? displayStart, v || null)}
+          startLabel={t('kit.dateStart')}
+          endLabel={t('kit.dateEnd')}
+          minStart={todayIso}
+        />
+      </div>
 
       {/* Per-category breakdown */}
       <ul className="space-y-6 mb-6">

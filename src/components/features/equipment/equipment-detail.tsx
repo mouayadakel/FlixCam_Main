@@ -21,6 +21,7 @@ import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
 import { SaveEquipmentButton } from './save-equipment-button'
 import { SpecificationsDisplay, QuickSpecPills } from './specifications-display'
 import type { EquipmentCardItem } from './equipment-card'
+import type { AnySpecifications } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 import {
   ChevronRight,
@@ -199,7 +200,7 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
 
             <TabsContent value="specs" className="pt-6">
               <SpecificationsDisplay
-                specifications={equipment.specifications ?? null}
+                specifications={(equipment.specifications ?? null) as AnySpecifications | null}
                 locale={locale === 'ar' ? 'ar' : 'en'}
                 showQuickSpecPills={false}
                 showAllLabel={t('equipment.specShowAll')}

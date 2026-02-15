@@ -1,6 +1,6 @@
 /**
- * Public website header – top bar (contact + language), main bar (logo, search, nav, actions),
- * category bar. Sticky with backdrop blur on scroll. Mobile: hamburger, search icon opens overlay.
+ * Public website header – top bar (contact + language), main bar (logo, search, nav, actions).
+ * Sticky with backdrop blur on scroll. Mobile: hamburger, search icon opens overlay.
  */
 
 'use client'
@@ -14,7 +14,6 @@ import { PublicContainer } from './public-container'
 import { LanguageSwitcher } from './language-switcher'
 import { PublicNav } from './public-nav'
 import { PublicSearch } from './public-search'
-import { CategoryBar } from './category-bar'
 import { MiniCart } from './mini-cart'
 import { MobileNav } from './mobile-nav'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,11 @@ import {
 import { siteConfig } from '@/config/site.config'
 import { cn } from '@/lib/utils'
 
-export function PublicHeader() {
+interface PublicHeaderProps {
+  hiddenRoutes?: Set<string>
+}
+
+export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
   const { t } = useLocale()
   const authModal = useAuthModalOptional()
   const { phone, email } = siteConfig.contact
@@ -121,7 +124,7 @@ export function PublicHeader() {
               </Dialog>
             </div>
 
-            <PublicNav className="hidden flex-shrink-0 md:flex" />
+            <PublicNav className="hidden flex-shrink-0 md:flex" hiddenRoutes={hiddenRoutes} />
 
             {/* Auth actions – ms-auto keeps them at end (visible in RTL) */}
             <div className="ms-auto flex flex-shrink-0 items-center gap-1.5">
@@ -168,14 +171,12 @@ export function PublicHeader() {
               </div>
               <div className="md:hidden flex items-center gap-1">
                 <MiniCart />
-                <MobileNav />
+                <MobileNav hiddenRoutes={hiddenRoutes} />
               </div>
             </div>
           </div>
         </PublicContainer>
       </div>
-
-      <CategoryBar />
     </header>
   )
 }

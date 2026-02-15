@@ -20,7 +20,11 @@ import { LanguageSwitcher } from './language-switcher'
 import { MiniCart } from './mini-cart'
 import { useLocale } from '@/hooks/use-locale'
 
-export function MobileNav() {
+interface MobileNavProps {
+  hiddenRoutes?: Set<string>
+}
+
+export function MobileNav({ hiddenRoutes }: MobileNavProps) {
   const [open, setOpen] = useState(false)
   const { t } = useLocale()
   const { openAuthModal } = useAuthModal()
@@ -45,6 +49,7 @@ export function MobileNav() {
           <PublicNav
             className="flex-col items-stretch gap-4 text-base"
             onLinkClick={() => setOpen(false)}
+            hiddenRoutes={hiddenRoutes}
           />
           <div className="flex items-center justify-between border-t pt-4">
             <LanguageSwitcher />

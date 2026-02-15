@@ -235,5 +235,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-
-export { analyzeSpecifications }

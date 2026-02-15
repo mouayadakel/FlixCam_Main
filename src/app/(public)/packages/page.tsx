@@ -1,8 +1,11 @@
 /**
  * Packages list page (Phase 2.5).
+ * Guarded by enable_packages feature flag.
  */
 
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { PackagesListClient } from './packages-list-client'
 
 async function getPackages() {
@@ -29,6 +32,8 @@ async function getPackages() {
 }
 
 export default async function PackagesListPage() {
+  const enabled = await FeatureFlagService.isEnabled('enable_packages')
+  if (!enabled) redirect('/')
   const packages = await getPackages()
   return (
     <main className="container py-8 px-4">

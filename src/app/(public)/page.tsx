@@ -5,6 +5,7 @@
 
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/db/prisma'
+import { HeroBannerService } from '@/lib/services/hero-banner.service'
 import { HomeHero } from '@/components/features/home/home-hero'
 import { HomeCategoryCards } from '@/components/features/home/home-category-cards'
 import { HomeFeaturedEquipment } from '@/components/features/home/home-featured-equipment'
@@ -84,16 +85,42 @@ async function getHomeStats() {
   )()
 }
 
+async function getHeroBanner() {
+  try {
+    return await unstable_cache(
+      async () => HeroBannerService.getActiveBannerByPage('home'),
+      ['public-hero-banner-home'],
+      { revalidate: 300 }
+    )()
+  } catch {
+    return null
+  }
+}
+
 export default async function PublicHomePage() {
-  const [featured, categories, stats] = await Promise.all([
-    getFeaturedEquipment(),
-    getCategoriesForHome(),
-    getHomeStats(),
-  ])
+  let featured: Awaited<ReturnType<typeof getFeaturedEquipment>> = []
+  let categories: Awaited<ReturnType<typeof getCategoriesForHome>> = []
+  let stats: Awaited<ReturnType<typeof getHomeStats>> = {
+    equipmentCount: 0,
+    rentalsCount: 0,
+    yearFounded: 2020,
+  }
+  let heroBanner: Awaited<ReturnType<typeof getHeroBanner>> = null
+
+  try {
+    ;[featured, categories, stats, heroBanner] = await Promise.all([
+      getFeaturedEquipment(),
+      getCategoriesForHome(),
+      getHomeStats(),
+      getHeroBanner(),
+    ])
+  } catch (e) {
+    console.error('[PublicHomePage] data fetch failed:', e)
+  }
 
   return (
     <main className="flex flex-col">
-      <HomeHero />
+      <HomeHero banner={heroBanner ?? undefined} />
       <HomeCategoryCards categories={categories} />
       <HomeFeaturedEquipment items={featured} />
       <HomeTrustSignals

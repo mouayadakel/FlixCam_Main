@@ -5,9 +5,11 @@
 
 'use client'
 
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
+import { isExternalImageUrl } from '@/lib/utils/image.utils'
 import { cn } from '@/lib/utils'
 import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
 import { SaveEquipmentButton } from './save-equipment-button'
@@ -34,7 +36,9 @@ interface EquipmentCardProps {
 
 export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   const { t } = useLocale()
+  const [imageFailed, setImageFailed] = useState(false)
   const availabilityStatus = getAvailabilityStatus(item.quantityAvailable, true)
+  const handleImageError = useCallback(() => setImageFailed(true), [])
 
   if (layout === 'list') {
     return (
@@ -43,14 +47,19 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
         className="group flex gap-4 rounded-2xl border border-border-light/60 bg-white p-4 shadow-card transition-all duration-300 hover:shadow-card-hover hover:border-brand-primary/10 hover:-translate-y-0.5"
       >
         <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-surface-light">
-          <Image
-            src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
-            alt={item.model ?? item.sku ?? item.id}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="144px"
-            unoptimized={!item.media[0]?.url}
-          />
+          {imageFailed ? (
+            <div className="absolute inset-0 bg-surface-light" aria-hidden />
+          ) : (
+            <Image
+              src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+              alt={item.model ?? item.sku ?? item.id}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="144px"
+              unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+              onError={handleImageError}
+            />
+          )}
         </div>
         <div className="min-w-0 flex-1 flex flex-col justify-center">
           <p className="text-label-small uppercase tracking-wider text-text-muted">
@@ -92,14 +101,19 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
         <div className="absolute top-3 right-3 z-10">
           <SaveEquipmentButton equipmentId={item.id} />
         </div>
-        <Image
-          src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
-          alt={item.model ?? item.sku ?? item.id}
-          fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          unoptimized={!item.media[0]?.url}
-        />
+        {imageFailed ? (
+          <div className="absolute inset-0 bg-surface-light" aria-hidden />
+        ) : (
+          <Image
+            src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+            alt={item.model ?? item.sku ?? item.id}
+            fill
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+            onError={handleImageError}
+          />
+        )}
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/25">
           <span className="flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-text-heading opacity-0 translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 shadow-lg backdrop-blur-sm">

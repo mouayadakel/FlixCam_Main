@@ -1,9 +1,12 @@
 /**
  * How it works – 5 steps with short descriptions.
+ * Guarded by enable_how_it_works feature flag.
  */
 
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Search, CalendarCheck, CreditCard, Package, RotateCcw } from 'lucide-react'
+import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 
@@ -15,7 +18,9 @@ const STEPS = [
   { icon: RotateCcw, title: 'Return', description: 'Return equipment on time and in the same condition. After inspection we release your deposit.' },
 ]
 
-export default function HowItWorksPage() {
+export default async function HowItWorksPage() {
+  const enabled = await FeatureFlagService.isEnabled('enable_how_it_works')
+  if (!enabled) redirect('/')
   return (
     <main className="py-12">
       <PublicContainer className="max-w-3xl">

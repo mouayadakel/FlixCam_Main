@@ -45,6 +45,7 @@ prisma/migrations/*.sql
 # IDE
 .vscode/
 .idea/
+.history/
 *.swp
 *.swo
 *~

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
+import { isExternalImageUrl } from '@/lib/utils/image.utils'
 import { PublicContainer } from '@/components/public/public-container'
 
 interface BrandItem {
@@ -24,6 +25,7 @@ export function HomeTopBrands() {
   const { t } = useLocale()
   const [brands, setBrands] = useState<BrandItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [failedLogoIds, setFailedLogoIds] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
     fetch('/api/public/brands')
@@ -68,13 +70,15 @@ export function HomeTopBrands() {
                 style={{ animationDelay: `${0.05 * index}s` }}
               >
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-light transition-transform duration-300 group-hover:scale-110">
-                  {brand.logo ? (
+                  {brand.logo && !failedLogoIds.has(brand.id) ? (
                     <Image
                       src={brand.logo}
                       alt=""
                       fill
                       className="object-contain p-1"
                       sizes="56px"
+                      unoptimized={isExternalImageUrl(brand.logo)}
+                      onError={() => setFailedLogoIds((prev) => new Set(prev).add(brand.id))}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-base font-bold text-brand-primary">
