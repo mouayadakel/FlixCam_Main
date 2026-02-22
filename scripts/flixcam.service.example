@@ -1,0 +1,28 @@
+# Example systemd unit for FlixCam Next.js app on Hostinger VPS.
+# Install (as flixcam):
+#   mkdir -p ~/.config/systemd/user
+#   cp scripts/flixcam.service.example ~/.config/systemd/user/flixcam.service
+#   # Edit paths/port if needed, then:
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now flixcam
+#
+# Or install system-wide (as root):
+#   cp scripts/flixcam.service.example /etc/systemd/system/flixcam.service
+#   systemctl daemon-reload && systemctl enable --now flixcam
+
+[Unit]
+Description=FlixCam Next.js app
+After=network.target
+
+[Service]
+Type=simple
+User=flixcam
+WorkingDirectory=/home/flixcam/public_html/app
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

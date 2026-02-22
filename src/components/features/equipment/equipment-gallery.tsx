@@ -8,6 +8,7 @@
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { isExternalImageUrl } from '@/lib/utils/image.utils'
 import { ImageOff, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface EquipmentGalleryProps {
@@ -57,6 +58,7 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={i === 0}
+              unoptimized={isExternalImageUrl(m.url)}
             />
           </div>
         ))}
@@ -106,7 +108,7 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
                   : 'border-transparent opacity-70 hover:border-border-light hover:opacity-100'
               )}
             >
-              <Image src={m.url} alt={`${alt} - thumbnail ${i + 1}`} fill className="object-cover" sizes="92px" />
+              <Image src={m.url} alt={`${alt} - thumbnail ${i + 1}`} fill className="object-cover" sizes="92px" unoptimized={isExternalImageUrl(m.url)} />
             </button>
           ))}
         </div>

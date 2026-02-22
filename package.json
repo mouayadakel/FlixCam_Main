@@ -31,14 +31,14 @@
     "worker:import": "tsx scripts/start-import-worker.ts",
     "worker:all": "tsx scripts/start-workers.ts",
     "migrate:specs": "tsx scripts/migrate-equipment-specs-to-structured.ts",
-    "test:specs": "tsx scripts/test-specifications.ts"
+    "test:specs": "tsx scripts/test-specifications.ts",
+    "deploy:hostinger": "./scripts/deploy-to-hostinger.sh"
   },
   "dependencies": {
     "@fullcalendar/react": "^6.1.20",
     "@fullcalendar/resource-timeline": "^6.1.20",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
-    "@next/swc-darwin-arm64": "^16.1.6",
     "@prisma/client": "^5.19.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

@@ -169,7 +169,7 @@ export default function CheckoutPage() {
           {step === 1 && <CheckoutStepDates onSuccess={() => setStep(2)} />}
           {step === 2 && <CheckoutStepAvailability onSuccess={() => setStep(3)} />}
           {step === 3 && <CheckoutStepAddons onSuccess={() => setStep(4)} />}
-          {step === 4 && <CheckoutStepReview />}
+          {step === 4 && <CheckoutStepReview onAdvanceToPayment={() => setStep(5)} />}
           {step === 5 && (
             <CheckoutStepPayment depositAmount={depositAmount} onSuccess={() => setStep(6)} />
           )}

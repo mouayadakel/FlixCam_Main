@@ -25,7 +25,12 @@ function formatSar(value: number): string {
   return `${value.toLocaleString('ar-SA')} ر.س`
 }
 
-export function CheckoutStepReview() {
+interface CheckoutStepReviewProps {
+  /** When provided, "Pay Now" advances to payment step (5) instead of redirecting to /payment */
+  onAdvanceToPayment?: () => void
+}
+
+export function CheckoutStepReview({ onAdvanceToPayment }: CheckoutStepReviewProps) {
   const { t } = useLocale()
   const router = useRouter()
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -61,7 +66,11 @@ export function CheckoutStepReview() {
   }, [])
 
   const handlePayNow = () => {
-    router.push('/payment')
+    if (onAdvanceToPayment) {
+      onAdvanceToPayment()
+    } else {
+      router.push('/payment')
+    }
   }
 
   const canPay = termsAccepted && details && items.length > 0 && !lockLoading && !lockExpired
