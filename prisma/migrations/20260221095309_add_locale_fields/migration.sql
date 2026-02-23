@@ -9,14 +9,12 @@
   - You are about to drop the column `nameZh` on the `Category` table. All the data in the column will be lost.
 
 */
--- CreateEnum
-CREATE TYPE "ImageSource" AS ENUM ('UPLOAD', 'BRAND_ASSET', 'AI_GENERATED', 'STOCK_PHOTO', 'WEB_SCRAPED');
+-- CreateEnum (idempotent)
+DO $$ BEGIN CREATE TYPE "ImageSource" AS ENUM ('UPLOAD', 'BRAND_ASSET', 'AI_GENERATED', 'STOCK_PHOTO', 'WEB_SCRAPED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateEnum
-CREATE TYPE "AiJobType" AS ENUM ('TEXT_BACKFILL', 'PHOTO_BACKFILL', 'SPEC_BACKFILL', 'FULL_BACKFILL', 'EMBEDDING_BACKFILL');
+DO $$ BEGIN CREATE TYPE "AiJobType" AS ENUM ('TEXT_BACKFILL', 'PHOTO_BACKFILL', 'SPEC_BACKFILL', 'FULL_BACKFILL', 'EMBEDDING_BACKFILL'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateEnum
-CREATE TYPE "JobStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED');
+DO $$ BEGIN CREATE TYPE "JobStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- DropIndex (IF EXISTS for idempotency when index was never created or already dropped)
 DROP INDEX IF EXISTS "Equipment_nameEn_idx";
@@ -37,15 +35,27 @@ ADD COLUMN     "nightlyCronEnabled" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN     "nightlyCronTime" TEXT DEFAULT '02:00',
 ADD COLUMN     "spendResetDate" TIMESTAMP(3);
 
--- AlterTable
-ALTER TABLE "Brand" DROP COLUMN "nameEn",
-DROP COLUMN "nameZh";
-
--- AlterTable
-ALTER TABLE "Category" DROP COLUMN "descriptionEn",
-DROP COLUMN "descriptionZh",
-DROP COLUMN "nameEn",
-DROP COLUMN "nameZh";
+-- AlterTable (defensive: columns may not exist on a fresh DB)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Brand' AND column_name='nameEn') THEN
+    ALTER TABLE "Brand" DROP COLUMN "nameEn";
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Brand' AND column_name='nameZh') THEN
+    ALTER TABLE "Brand" DROP COLUMN "nameZh";
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Category' AND column_name='descriptionEn') THEN
+    ALTER TABLE "Category" DROP COLUMN "descriptionEn";
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Category' AND column_name='descriptionZh') THEN
+    ALTER TABLE "Category" DROP COLUMN "descriptionZh";
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Category' AND column_name='nameEn') THEN
+    ALTER TABLE "Category" DROP COLUMN "nameEn";
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Category' AND column_name='nameZh') THEN
+    ALTER TABLE "Category" DROP COLUMN "nameZh";
+  END IF;
+END $$;
 
 -- AlterTable
 ALTER TABLE "Coupon" ADD COLUMN     "applicableStudioIds" JSONB;

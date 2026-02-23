@@ -32,7 +32,10 @@
     "worker:all": "tsx scripts/start-workers.ts",
     "migrate:specs": "tsx scripts/migrate-equipment-specs-to-structured.ts",
     "test:specs": "tsx scripts/test-specifications.ts",
-    "deploy:hostinger": "./scripts/deploy-to-hostinger.sh"
+    "deploy:hostinger": "./scripts/deploy-to-hostinger.sh",
+    "db:validate": "prisma validate && prisma format --check",
+    "db:status": "prisma migrate status",
+    "prepush": "bash scripts/prepush-check.sh"
   },
   "dependencies": {
     "@fullcalendar/react": "^6.1.20",
