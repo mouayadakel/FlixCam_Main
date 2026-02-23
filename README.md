@@ -137,13 +137,12 @@ src/
 
 ## Documentation
 
-See `/docs` folder for comprehensive documentation:
+All project docs are under **`docs/`**. Start from **[docs/00-README-DOCS.md](docs/00-README-DOCS.md)** for the full index.
 
-- `PRD.md` - Product requirements
-- `ARCHITECTURE.md` - System architecture
-- `ROLES_AND_SECURITY.md` - Security doctrine
-- `BOOKING_ENGINE.md` - Booking workflow
-- And more...
+- **Core:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/ROLES_AND_SECURITY.md`, `docs/BOOKING_ENGINE.md`
+- **Planning:** `docs/planning/` — main plans, sprints, milestones
+- **Setup:** `docs/setup/` — database, Redis, Supabase, quick start
+- **Audits & reports:** `docs/audits/`, `docs/reports/`, `docs/phases/`
 
 ## Contributing
 

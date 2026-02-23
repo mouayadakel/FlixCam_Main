@@ -2,7 +2,7 @@
 
 **Equipment & Studio Rental Platform**  
 **Date**: February 3, 2026  
-**Based on**: ADMIN_CONTROL_PANEL_AUDIT_REPORT.md
+**Based on**: [ADMIN_CONTROL_PANEL_AUDIT_REPORT.md](../audits/ADMIN_CONTROL_PANEL_AUDIT_REPORT.md)
 
 ---
 
