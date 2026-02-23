@@ -140,4 +140,32 @@ For a **full local setup** (Postgres via Docker, migrate dev, seed, build):
 
 ---
 
+## 8. Troubleshooting — migration failed (P3018)
+
+If `npm run db:deploy` fails with:
+
+- **P3018** — "A migration failed to apply. New migrations cannot be applied before the error is recovered from."
+- **Database error:** `index "Equipment_nameEn_idx" does not exist` (or similar locale index).
+
+**Fix applied in repo:** Migration `20260221095309_add_locale_fields` was updated to use `DROP INDEX IF EXISTS` so deploy is idempotent. Ensure you have the latest code (`git pull`).
+
+**If the failure already happened** on a persistent DB (e.g. CI or production), run **once** against that database (set `DATABASE_URL` to the failing DB):
+
+```bash
+npx prisma migrate resolve --rolled-back 20260221095309_add_locale_fields
+```
+
+Then run `npm run db:deploy` again (or re-run CI). See: [Prisma migrate resolve](https://pris.ly/d/migrate-resolve).
+
+**Commit (full message):**
+
+```text
+fix: use DROP INDEX IF EXISTS in locale migration to fix P3018 deploy failure
+Migration 20260221095309_add_locale_fields failed when indexes did not exist
+(Equipment_nameEn_idx, etc.). Use IF EXISTS so deploy is idempotent.
+Resolves: https://pris.ly/d/migrate-resolve
+```
+
+---
+
 **Last updated:** February 2025
