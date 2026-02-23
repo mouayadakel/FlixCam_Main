@@ -38,9 +38,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Prisma
-prisma/migrations/*.sql
-!prisma/migrations/.gitkeep
+# Prisma — do NOT ignore migration SQL files; they must be in repo for db:deploy / migrate deploy
+# (Only ignore generated client / build artifacts if any; migrations stay tracked.)
 
 # IDE
 .vscode/
