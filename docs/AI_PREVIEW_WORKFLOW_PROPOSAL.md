@@ -9,21 +9,25 @@
 ## Current State (Problems)
 
 ### 1. Misleading data
+
 - **AI Dashboard** reads from **Product** (synced from Equipment).
 - **Equipment pages** (where you manage items) read from **Equipment** + **Translation** (entityType: equipment).
 - Backfill writes to **Product** (ProductTranslation, ProductImage). Equipment stays separate.
 - So: dashboard shows "content filled" but equipment detail page can show empty content.
 
 ### 2. Image preview
+
 - Pending images use Cloudinary URLs. `res.cloudinary.com` added to `next.config.js` for `next/image`.
 - Product name fallback improved (ar → en → sku → id) so lightbox title always shows.
 
 ### 3. No preview for text/specs
+
 - **Current flow:** Backfill runs → AI generates text (description, SEO, specs) → **writes directly to DB**.
 - Only **images** have review: `ProductImage.pendingReview = true` → Image Review tab → approve/reject.
 - **Specs, description, SEO, recommended items** are auto-committed with no preview.
 
 ### 4. AI as filler, not thinker
+
 - Prompts are tuned for "fill missing fields" not "think about context, category, brand, use case".
 - No reasoning or confidence shown to the user.
 - No way to edit AI output before it goes live.
@@ -34,13 +38,13 @@
 
 ### Phase 1: Preview for all AI content
 
-| Content type | Current | Proposed |
-|-------------|---------|----------|
-| **Images** | pendingReview → approve/reject | Keep as-is (already works) |
-| **Description** | Auto-saved to ProductTranslation | Generate → show in preview panel → edit → approve |
-| **SEO** | Auto-saved | Same |
-| **Specs** | Auto-saved (confidence ≥90%) or suggestion | Always show in preview → edit → approve |
-| **Recommended items** | Kit builder suggests → user edits in form | Keep (already previewable) |
+| Content type          | Current                                    | Proposed                                          |
+| --------------------- | ------------------------------------------ | ------------------------------------------------- |
+| **Images**            | pendingReview → approve/reject             | Keep as-is (already works)                        |
+| **Description**       | Auto-saved to ProductTranslation           | Generate → show in preview panel → edit → approve |
+| **SEO**               | Auto-saved                                 | Same                                              |
+| **Specs**             | Auto-saved (confidence ≥90%) or suggestion | Always show in preview → edit → approve           |
+| **Recommended items** | Kit builder suggests → user edits in form  | Keep (already previewable)                        |
 
 ### Phase 2: Staging model
 

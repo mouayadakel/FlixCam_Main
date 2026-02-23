@@ -85,13 +85,15 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
             {/* Logo: first in DOM so RTL puts it on the right; order-last in LTR so it stays on the right */}
             <Link
               href="/"
-              className="order-last rtl:order-first group flex shrink-0 flex-col items-end text-end transition-opacity hover:opacity-90 focus:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface rounded-sm pe-4 sm:pe-6 md:pe-8 rtl:items-start rtl:text-start rtl:pe-0 rtl:ps-4 rtl:sm:ps-6 rtl:md:ps-8"
+              className="group order-last flex shrink-0 flex-col items-end rounded-sm pe-4 text-end transition-opacity hover:opacity-90 focus:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface sm:pe-6 md:pe-8 rtl:order-first rtl:items-start rtl:pe-0 rtl:ps-4 rtl:text-start rtl:sm:ps-6 rtl:md:ps-8"
               aria-label={siteConfig.brandName}
             >
               <span
-                className="relative flex h-9 w-[120px] shrink-0 items-center justify-end bg-no-repeat bg-[length:200%_100%] bg-[position:100%_0] md:h-10 md:w-[130px] rtl:justify-start header-logo-bg"
+                className="header-logo-bg relative flex h-9 w-[120px] shrink-0 items-center justify-end bg-[length:200%_100%] bg-[position:100%_0] bg-no-repeat md:h-10 md:w-[130px] rtl:justify-start"
                 style={{
-                  ['--header-logo-url' as string]: logoError ? 'none' : `url(${siteConfig.logoInverted})`,
+                  ['--header-logo-url' as string]: logoError
+                    ? 'none'
+                    : `url(${siteConfig.logoInverted})`,
                 }}
               >
                 {!logoError && (
@@ -128,14 +130,14 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
                       <Link
                         href={href}
                         className={cn(
-                          'group/link relative block py-2 text-[15px] font-medium text-white/85 outline-none transition-colors hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface rounded-sm',
+                          'group/link relative block rounded-sm py-2 text-[15px] font-medium text-white/85 outline-none transition-colors hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface',
                           isActive && 'text-brand-primary'
                         )}
                       >
                         {t(key)}
                         <span
                           className={cn(
-                            'absolute bottom-0 inset-x-0 h-0.5 rounded-full bg-brand-primary transition-all duration-200',
+                            'absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-primary transition-all duration-200',
                             isActive ? 'opacity-100' : 'opacity-0 group-hover/link:opacity-100'
                           )}
                           aria-hidden
@@ -145,18 +147,19 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
                   )
                 })}
                 {/* المزيد dropdown */}
-                <li className="relative group/dd">
+                <li className="group/dd relative">
                   <span
-                    className="flex cursor-pointer items-center gap-1 py-2 text-[15px] font-medium text-white/85 outline-none transition-colors hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface rounded-sm"
+                    className="flex cursor-pointer items-center gap-1 rounded-sm py-2 text-[15px] font-medium text-white/85 outline-none transition-colors hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-header-surface"
                     tabIndex={0}
                     aria-label={t('nav.more')}
                   >
                     {t('nav.more')}
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-hover/dd:rotate-180 group-focus-within/dd:rotate-180" aria-hidden />
+                    <ChevronDown
+                      className="h-4 w-4 shrink-0 transition-transform group-focus-within/dd:rotate-180 group-hover/dd:rotate-180"
+                      aria-hidden
+                    />
                   </span>
-                  <div
-                    className="invisible absolute top-full right-0 z-50 mt-1.5 w-44 rounded-xl border border-white/10 bg-header-dropdown py-1.5 shadow-xl opacity-0 transition-[opacity,visibility] duration-200 group-hover/dd:visible group-hover/dd:opacity-100 group-focus-within/dd:visible group-focus-within/dd:opacity-100"
-                  >
+                  <div className="invisible absolute right-0 top-full z-50 mt-1.5 w-44 rounded-xl border border-white/10 bg-header-dropdown py-1.5 opacity-0 shadow-xl transition-[opacity,visibility] duration-200 group-focus-within/dd:visible group-focus-within/dd:opacity-100 group-hover/dd:visible group-hover/dd:opacity-100">
                     {moreLinks.map(({ href, key }) => (
                       <Link
                         key={href}

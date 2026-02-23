@@ -193,11 +193,7 @@ export async function autofillProduct(
         let translatedLongDesc = longDesc
 
         if (shortDesc) {
-          const shortDescKey = getTranslationCacheKey(
-            shortDesc,
-            sourceLocale,
-            targetLocale
-          )
+          const shortDescKey = getTranslationCacheKey(shortDesc, sourceLocale, targetLocale)
           const cachedShortDesc = getCachedTranslation(shortDescKey)
 
           if (cachedShortDesc) {
@@ -225,11 +221,7 @@ export async function autofillProduct(
         }
 
         if (longDesc) {
-          const longDescKey = getTranslationCacheKey(
-            longDesc,
-            sourceLocale,
-            targetLocale
-          )
+          const longDescKey = getTranslationCacheKey(longDesc, sourceLocale, targetLocale)
           const cachedLongDesc = getCachedTranslation(longDescKey)
 
           if (cachedLongDesc) {
@@ -404,9 +396,15 @@ export async function autofillMissingFields(
         },
       ]
       try {
-        seoResult = await generateSEOBatch(seoPayload, effectiveProvider === 'gemini' ? 'gemini' : 'openai')
+        seoResult = await generateSEOBatch(
+          seoPayload,
+          effectiveProvider === 'gemini' ? 'gemini' : 'openai'
+        )
       } catch {
-        seoResult = await generateSEOBatch(seoPayload, effectiveProvider === 'gemini' ? 'openai' : 'gemini')
+        seoResult = await generateSEOBatch(
+          seoPayload,
+          effectiveProvider === 'gemini' ? 'openai' : 'gemini'
+        )
       }
       let metaTitle = seoResult[0]?.metaTitle ?? ''
       let metaDescription = seoResult[0]?.metaDescription ?? ''
@@ -415,10 +413,16 @@ export async function autofillMissingFields(
       const descValid = validateGeneratedText(metaDescription, { minWords: 20, maxWords: 30 })
       if ((!titleValid.valid || !descValid.valid) && seoResult[0]) {
         try {
-          const retry = await generateSEOBatch(seoPayload, effectiveProvider === 'gemini' ? 'openai' : 'gemini')
+          const retry = await generateSEOBatch(
+            seoPayload,
+            effectiveProvider === 'gemini' ? 'openai' : 'gemini'
+          )
           if (retry[0]) {
             const rTitle = validateGeneratedText(retry[0].metaTitle, { maxChars: 70 })
-            const rDesc = validateGeneratedText(retry[0].metaDescription, { minWords: 20, maxWords: 30 })
+            const rDesc = validateGeneratedText(retry[0].metaDescription, {
+              minWords: 20,
+              maxWords: 30,
+            })
             if (rTitle.valid && rDesc.valid) {
               metaTitle = retry[0].metaTitle
               metaDescription = retry[0].metaDescription
@@ -456,7 +460,8 @@ export async function autofillMissingFields(
 
     if (!existingTranslation || !existingTranslation.name) {
       try {
-        const translationContext = `${context.category ?? ''} ${context.brand ?? ''} ${REGION_CONTEXT}`.trim()
+        const translationContext =
+          `${context.category ?? ''} ${context.brand ?? ''} ${REGION_CONTEXT}`.trim()
         const translatePayload = [
           {
             text: existingData.name || '',
@@ -538,7 +543,14 @@ export async function autofillMissingFields(
   if (arTrans || zhTrans) {
     try {
       result.seoByLocale = {}
-      const seoPayload: { name: string; description?: string; category?: string; brand?: string; specifications?: Record<string, unknown>; locale: string }[] = []
+      const seoPayload: {
+        name: string
+        description?: string
+        category?: string
+        brand?: string
+        specifications?: Record<string, unknown>
+        locale: string
+      }[] = []
       if (arTrans) {
         seoPayload.push({
           name: arTrans.name,
@@ -566,11 +578,21 @@ export async function autofillMissingFields(
       let idx = 0
       if (arTrans) {
         const r = localeSeoResults[idx++]
-        if (r) result.seoByLocale!.ar = { metaTitle: r.metaTitle, metaDescription: r.metaDescription, metaKeywords: r.metaKeywords }
+        if (r)
+          result.seoByLocale!.ar = {
+            metaTitle: r.metaTitle,
+            metaDescription: r.metaDescription,
+            metaKeywords: r.metaKeywords,
+          }
       }
       if (zhTrans) {
         const r = localeSeoResults[idx]
-        if (r) result.seoByLocale!.zh = { metaTitle: r.metaTitle, metaDescription: r.metaDescription, metaKeywords: r.metaKeywords }
+        if (r)
+          result.seoByLocale!.zh = {
+            metaTitle: r.metaTitle,
+            metaDescription: r.metaDescription,
+            metaKeywords: r.metaKeywords,
+          }
       }
     } catch (error) {
       console.error('Locale SEO generation failed:', error)
@@ -612,7 +634,10 @@ Return valid JSON only: { "shortDescription": "...", "longDescription": "..." }
     contextParts.join(' '),
     2000
   )
-  const parsed = typeof out === 'object' && out !== null ? (out as { shortDescription?: string; longDescription?: string }) : {}
+  const parsed =
+    typeof out === 'object' && out !== null
+      ? (out as { shortDescription?: string; longDescription?: string })
+      : {}
   const short = (parsed.shortDescription ?? '').trim()
   const long = (parsed.longDescription ?? '').trim()
   return {
@@ -633,7 +658,8 @@ export async function generateBoxContents(
     `List what is typically included in the box for this product. Return a short paragraph or bullet list (plain text, no JSON). Be concise.`,
     `Product: ${productName}. Category: ${category ?? 'N/A'}. ${specifications ? `Specs: ${JSON.stringify(specifications)}` : ''}`
   )
-  const str = typeof text === 'string' ? text : (typeof text === 'object' ? JSON.stringify(text) : String(text))
+  const str =
+    typeof text === 'string' ? text : typeof text === 'object' ? JSON.stringify(text) : String(text)
   return str.trim().slice(0, 2000)
 }
 
@@ -649,7 +675,8 @@ export async function generateTags(
     `Return 5-10 comma-separated tags for search/filter (e.g. camera, 4k, cinema). Plain text only, no JSON.`,
     `Product: ${productName}. Category: ${category ?? 'N/A'}. Brand: ${brand ?? 'N/A'}.`
   )
-  const str = typeof text === 'string' ? text : (typeof text === 'object' ? JSON.stringify(text) : String(text))
+  const str =
+    typeof text === 'string' ? text : typeof text === 'object' ? JSON.stringify(text) : String(text)
   return str.trim().slice(0, 500)
 }
 

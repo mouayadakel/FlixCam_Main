@@ -103,7 +103,13 @@ function createBackfillWorker() {
           data: {
             status: JobStatus.FAILED,
             completedAt: new Date(),
-            errorLog: [{ error: 'Budget limit reached (daily or monthly). Increase limit in AI Settings > التكاليف.', timestamp: new Date().toISOString() }] as object,
+            errorLog: [
+              {
+                error:
+                  'Budget limit reached (daily or monthly). Increase limit in AI Settings > التكاليف.',
+                timestamp: new Date().toISOString(),
+              },
+            ] as object,
           },
         })
         return
@@ -154,7 +160,11 @@ function createBackfillWorker() {
           if (!product) {
             failed++
             processed++
-            errorLog.push({ productId, error: 'Product not found', timestamp: new Date().toISOString() })
+            errorLog.push({
+              productId,
+              error: 'Product not found',
+              timestamp: new Date().toISOString(),
+            })
             await job.updateProgress({ processed, total: productIds.length, succeeded, failed })
             continue
           }
@@ -176,8 +186,11 @@ function createBackfillWorker() {
               const name = enTranslation?.name ?? product.sku ?? productId
               const category = product.category?.name ?? 'Equipment'
               const brand = product.brand?.name ?? ''
-              const specs = (enTranslation?.specifications ?? null) as Record<string, unknown> | undefined
-              const existingDesc = enTranslation?.longDescription ?? enTranslation?.shortDescription ?? undefined
+              const specs = (enTranslation?.specifications ?? null) as
+                | Record<string, unknown>
+                | undefined
+              const existingDesc =
+                enTranslation?.longDescription ?? enTranslation?.shortDescription ?? undefined
 
               let webResearchSpecs: Record<string, string> | undefined
               let webBoxContents: string[] | undefined
@@ -189,8 +202,12 @@ function createBackfillWorker() {
                   if (research.specs && Object.keys(research.specs).length > 0) {
                     webResearchSpecs = research.specs
                     webBoxContents = research.boxContents?.length ? research.boxContents : undefined
-                    webHighlights = research.marketingHighlights?.length ? research.marketingHighlights : undefined
-                    webSources = research.sources?.map((s) => s.provider + (s.url ? `:${s.url}` : '')) ?? undefined
+                    webHighlights = research.marketingHighlights?.length
+                      ? research.marketingHighlights
+                      : undefined
+                    webSources =
+                      research.sources?.map((s) => s.provider + (s.url ? `:${s.url}` : '')) ??
+                      undefined
                   }
                 } catch {
                   // fallback without web research
@@ -286,12 +303,15 @@ function createBackfillWorker() {
             try {
               const productForSourcing = {
                 ...product,
-                name: enTranslation?.name ?? product.translations[0]?.name ?? product.sku ?? product.id,
+                name:
+                  enTranslation?.name ?? product.translations[0]?.name ?? product.sku ?? product.id,
               }
               const sourced = await sourceImages(productForSourcing, 4)
               if (sourced.length > 0) {
                 const existingGallery = (product.galleryImages as string[] | null) ?? []
-                const newUrls = sourced.filter((s) => s.cloudinaryUrl).map((s) => s.cloudinaryUrl as string)
+                const newUrls = sourced
+                  .filter((s) => s.cloudinaryUrl)
+                  .map((s) => s.cloudinaryUrl as string)
                 const combined = [...existingGallery, ...newUrls].slice(0, 10)
                 await prisma.aiContentDraft.create({
                   data: {
@@ -315,7 +335,11 @@ function createBackfillWorker() {
             try {
               const specResult = await inferMissingSpecs(product)
               if (specResult.cost > 0) {
-                await recordCost({ jobId: aiJobId, feature: 'spec_inference', costUsd: specResult.cost })
+                await recordCost({
+                  jobId: aiJobId,
+                  feature: 'spec_inference',
+                  costUsd: specResult.cost,
+                })
               }
               const toMerge = specResult.specs.filter((s) => {
                 const val = String(s.value ?? '').trim()
@@ -334,14 +358,16 @@ function createBackfillWorker() {
                   data: {
                     productId,
                     type: 'spec',
-                    suggestedData: JSON.parse(JSON.stringify({
-                      specifications: next,
-                      specResults: toMerge.map((s) => ({
-                        key: s.key,
-                        value: s.value,
-                        confidence: s.confidence,
-                      })),
-                    })),
+                    suggestedData: JSON.parse(
+                      JSON.stringify({
+                        specifications: next,
+                        specResults: toMerge.map((s) => ({
+                          key: s.key,
+                          value: s.value,
+                          confidence: s.confidence,
+                        })),
+                      })
+                    ),
                     status: 'pending',
                   },
                 })
@@ -386,7 +412,10 @@ function createBackfillWorker() {
               payload: { types, productIds: [productId] },
               failedAt: new Date().toISOString(),
             })
-            console.error('[backfill.worker] Product sent to DLQ:', { productId, error: errorMessage })
+            console.error('[backfill.worker] Product sent to DLQ:', {
+              productId,
+              error: errorMessage,
+            })
           } catch (dlqErr) {
             console.error('[backfill.worker] Failed to send to DLQ:', dlqErr)
           }
@@ -438,7 +467,9 @@ function createBackfillWorker() {
         data: {
           status: JobStatus.FAILED,
           completedAt: new Date(),
-          errorLog: [{ error: err?.message ?? 'Worker failed', timestamp: new Date().toISOString() }] as object,
+          errorLog: [
+            { error: err?.message ?? 'Worker failed', timestamp: new Date().toISOString() },
+          ] as object,
         },
       })
     }

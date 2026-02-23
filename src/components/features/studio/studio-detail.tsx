@@ -31,7 +31,9 @@ export function StudioDetail({ studio }: StudioDetailProps) {
   const { t } = useLocale()
   const hasPackages = studio.packages.length > 0
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
-    hasPackages ? (studio.packages.find((p) => p.recommended)?.id ?? studio.packages[0]?.id ?? null) : null
+    hasPackages
+      ? (studio.packages.find((p) => p.recommended)?.id ?? studio.packages[0]?.id ?? null)
+      : null
   )
   const selectedPkg = hasPackages ? studio.packages.find((p) => p.id === selectedPackageId) : null
   const [calendarDate, setCalendarDate] = useState('')
@@ -51,7 +53,7 @@ export function StudioDetail({ studio }: StudioDetailProps) {
     trackStudioEvent('package_selected', {
       studio_slug: studio.slug,
       package_id: id,
-      package_name: pkg ? (pkg.nameAr || pkg.name) : 'hourly',
+      package_name: pkg ? pkg.nameAr || pkg.name : 'hourly',
       package_price: pkg ? pkg.price : studio.hourlyRate,
     })
   }
@@ -69,7 +71,9 @@ export function StudioDetail({ studio }: StudioDetailProps) {
               <h3 className="mb-3 text-lg font-semibold text-text-heading">
                 {t('studios.description')}
               </h3>
-              <p className="whitespace-pre-wrap leading-relaxed text-text-body">{studio.description}</p>
+              <p className="whitespace-pre-wrap leading-relaxed text-text-body">
+                {studio.description}
+              </p>
             </section>
           )}
 
@@ -138,7 +142,7 @@ export function StudioDetail({ studio }: StudioDetailProps) {
         <div className="mx-auto flex max-w-public-container items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-text-heading">
-              {selectedPkg ? (selectedPkg.nameAr || selectedPkg.name) : studio.name}
+              {selectedPkg ? selectedPkg.nameAr || selectedPkg.name : studio.name}
             </p>
             <p className="text-xs text-text-muted">
               {selectedPkg

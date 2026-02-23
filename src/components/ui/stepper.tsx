@@ -43,18 +43,16 @@ export function Stepper({ steps, currentStep, className, onStepClick }: StepperP
           {currentStep + 1} / {steps.length}
         </p>
         <div
-          className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-light stepper-progress-track"
+          className="stepper-progress-track mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-light"
           role="progressbar"
           {...progressbarAria}
         >
           <div
-            className="h-full rounded-full bg-brand-primary transition-all duration-300 stepper-progress-fill"
+            className="stepper-progress-fill h-full rounded-full bg-brand-primary transition-all duration-300"
             style={{ ['--stepper-progress' as string]: progressPercent }}
           />
         </div>
-        <p className="mt-1 text-sm font-semibold text-brand-primary">
-          {steps[currentStep]?.label}
-        </p>
+        <p className="mt-1 text-sm font-semibold text-brand-primary">{steps[currentStep]?.label}</p>
       </div>
       {/* Desktop: full stepper */}
       <ol className="hidden lg:flex lg:items-center">

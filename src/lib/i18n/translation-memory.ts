@@ -69,39 +69,45 @@ class TranslationMemory {
 
     // 1. Exact matches from memory
     const exactMatches = this.findExactMatches(text, sourceLocale, targetLocale)
-    suggestions.push(...exactMatches.map(entry => ({
-      text: entry.target,
-      confidence: entry.confidence,
-      source: 'memory' as const,
-      metadata: {
-        domain: entry.domain,
-        context: entry.context,
-        similarPhrases: this.findSimilarPhrases(text, sourceLocale)
-      }
-    })))
+    suggestions.push(
+      ...exactMatches.map((entry) => ({
+        text: entry.target,
+        confidence: entry.confidence,
+        source: 'memory' as const,
+        metadata: {
+          domain: entry.domain,
+          context: entry.context,
+          similarPhrases: this.findSimilarPhrases(text, sourceLocale),
+        },
+      }))
+    )
 
     // 2. Fuzzy matches from memory
     const fuzzyMatches = this.findFuzzyMatches(text, sourceLocale, targetLocale, 0.8)
-    suggestions.push(...fuzzyMatches.map(entry => ({
-      text: entry.target,
-      confidence: entry.confidence * 0.8, // Reduce confidence for fuzzy matches
-      source: 'memory' as const,
-      metadata: {
-        domain: entry.domain,
-        context: entry.context
-      }
-    })))
+    suggestions.push(
+      ...fuzzyMatches.map((entry) => ({
+        text: entry.target,
+        confidence: entry.confidence * 0.8, // Reduce confidence for fuzzy matches
+        source: 'memory' as const,
+        metadata: {
+          domain: entry.domain,
+          context: entry.context,
+        },
+      }))
+    )
 
     // 3. Glossary matches
     const glossaryMatches = this.findGlossaryMatches(text, sourceLocale, targetLocale)
-    suggestions.push(...glossaryMatches.map(translation => ({
-      text: translation,
-      confidence: 0.9,
-      source: 'glossary' as const,
-      metadata: {
-        domain: 'terminology'
-      }
-    })))
+    suggestions.push(
+      ...glossaryMatches.map((translation) => ({
+        text: translation,
+        confidence: 0.9,
+        source: 'glossary' as const,
+        metadata: {
+          domain: 'terminology',
+        },
+      }))
+    )
 
     // Sort by confidence and remove duplicates
     return this.deduplicateSuggestions(suggestions)
@@ -128,7 +134,7 @@ class TranslationMemory {
 
     // Check if entry already exists
     const existingEntry = entries.find(
-      entry => entry.target.toLowerCase() === target.toLowerCase()
+      (entry) => entry.target.toLowerCase() === target.toLowerCase()
     )
 
     if (existingEntry) {
@@ -151,7 +157,7 @@ class TranslationMemory {
         confidence: approved ? 0.8 : 0.5,
         usageCount: 1,
         lastUsed: new Date(),
-        approved
+        approved,
       }
 
       entries.push(newEntry)
@@ -176,9 +182,7 @@ class TranslationMemory {
     const key = this.generateMemoryKey(source, sourceLocale, targetLocale)
     const entries = this.memory.get(key) || []
 
-    const entry = entries.find(
-      entry => entry.target.toLowerCase() === target.toLowerCase()
-    )
+    const entry = entries.find((entry) => entry.target.toLowerCase() === target.toLowerCase())
 
     if (entry) {
       entry.approved = true
@@ -220,7 +224,7 @@ class TranslationMemory {
       approvedEntries,
       locales: Array.from(locales),
       domains: Array.from(domains),
-      averageConfidence: totalEntries > 0 ? totalConfidence / totalEntries : 0
+      averageConfidence: totalEntries > 0 ? totalConfidence / totalEntries : 0,
     }
   }
 
@@ -236,9 +240,9 @@ class TranslationMemory {
       statistics: this.getStatistics(),
       memory: Array.from(this.memory.entries()).map(([key, entries]) => ({
         key,
-        entries
+        entries,
       })),
-      glossary: Array.from(this.glossary.entries())
+      glossary: Array.from(this.glossary.entries()),
     }
 
     return JSON.stringify(exportData, null, 2)
@@ -305,7 +309,7 @@ class TranslationMemory {
         if (similarity >= threshold) {
           matches.push({
             ...entry,
-            confidence: entry.confidence * similarity
+            confidence: entry.confidence * similarity,
           })
         }
       }
@@ -314,11 +318,7 @@ class TranslationMemory {
     return matches
   }
 
-  private findGlossaryMatches(
-    text: string,
-    sourceLocale: string,
-    targetLocale: string
-  ): string[] {
+  private findGlossaryMatches(text: string, sourceLocale: string, targetLocale: string): string[] {
     const matches: string[] = []
     const words = text.toLowerCase().split(/\s+/)
 
@@ -352,7 +352,9 @@ class TranslationMemory {
 
   private calculateSimilarity(str1: string, str2: string): number {
     // Simple Levenshtein distance based similarity
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null))
+    const matrix = Array(str2.length + 1)
+      .fill(null)
+      .map(() => Array(str1.length + 1).fill(null))
 
     for (let i = 0; i <= str1.length; i++) matrix[0][i] = i
     for (let j = 0; j <= str2.length; j++) matrix[j][0] = j
@@ -375,7 +377,7 @@ class TranslationMemory {
 
   private deduplicateSuggestions(suggestions: TranslationSuggestion[]): TranslationSuggestion[] {
     const seen = new Set<string>()
-    return suggestions.filter(suggestion => {
+    return suggestions.filter((suggestion) => {
       const key = suggestion.text.toLowerCase()
       if (seen.has(key)) return false
       seen.add(key)
@@ -387,7 +389,7 @@ class TranslationMemory {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')
-      
+
       const memoryPath = path.join(process.cwd(), 'data/translation-memory.json')
       const data = await fs.readFile(memoryPath, 'utf-8')
       const memoryData = JSON.parse(data)
@@ -405,7 +407,7 @@ class TranslationMemory {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')
-      
+
       const memoryPath = path.join(process.cwd(), 'data/translation-memory.json')
       const memoryData: Record<string, TranslationMemoryEntry[]> = {}
 
@@ -423,7 +425,7 @@ class TranslationMemory {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')
-      
+
       const glossaryPath = path.join(process.cwd(), 'data/translation-glossary.json')
       const data = await fs.readFile(glossaryPath, 'utf-8')
       const glossaryData = JSON.parse(data)
@@ -439,36 +441,36 @@ class TranslationMemory {
 
   private async createDefaultGlossary(): Promise<void> {
     const defaultGlossary = {
-      'camera': {
-        'ar': 'كاميرا',
-        'en': 'camera',
-        'zh': '相机',
-        'fr': 'caméra'
+      camera: {
+        ar: 'كاميرا',
+        en: 'camera',
+        zh: '相机',
+        fr: 'caméra',
       },
-      'studio': {
-        'ar': 'استوديو',
-        'en': 'studio',
-        'zh': '工作室',
-        'fr': 'studio'
+      studio: {
+        ar: 'استوديو',
+        en: 'studio',
+        zh: '工作室',
+        fr: 'studio',
       },
-      'equipment': {
-        'ar': 'معدات',
-        'en': 'equipment',
-        'zh': '设备',
-        'fr': 'équipement'
+      equipment: {
+        ar: 'معدات',
+        en: 'equipment',
+        zh: '设备',
+        fr: 'équipement',
       },
-      'booking': {
-        'ar': 'حجز',
-        'en': 'booking',
-        'zh': '预订',
-        'fr': 'réservation'
+      booking: {
+        ar: 'حجز',
+        en: 'booking',
+        zh: '预订',
+        fr: 'réservation',
       },
-      'professional': {
-        'ar': 'احترافي',
-        'en': 'professional',
-        'zh': '专业',
-        'fr': 'professionnel'
-      }
+      professional: {
+        ar: 'احترافي',
+        en: 'professional',
+        zh: '专业',
+        fr: 'professionnel',
+      },
     }
 
     for (const [term, translations] of Object.entries(defaultGlossary)) {
@@ -482,7 +484,7 @@ class TranslationMemory {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')
-      
+
       const glossaryPath = path.join(process.cwd(), 'data/translation-glossary.json')
       const glossaryData: Record<string, Record<string, string>> = {}
 
@@ -508,6 +510,6 @@ export function useTranslationMemory() {
     approveTranslation: translationMemory.approveTranslation.bind(translationMemory),
     getStatistics: translationMemory.getStatistics.bind(translationMemory),
     exportMemory: translationMemory.exportMemory.bind(translationMemory),
-    importMemory: translationMemory.importMemory.bind(translationMemory)
+    importMemory: translationMemory.importMemory.bind(translationMemory),
   }
 }

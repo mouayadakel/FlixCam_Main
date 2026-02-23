@@ -71,7 +71,9 @@ export async function POST() {
       equipmentList.map((eq) =>
         limit(async () => {
           const currentPrice =
-            typeof eq.dailyPrice === 'object' && eq.dailyPrice != null && 'toNumber' in eq.dailyPrice
+            typeof eq.dailyPrice === 'object' &&
+            eq.dailyPrice != null &&
+            'toNumber' in eq.dailyPrice
               ? (eq.dailyPrice as { toNumber: () => number }).toNumber()
               : Number(eq.dailyPrice)
           return AIService.suggestPricing({

@@ -9,15 +9,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Loader2,
-  Plus,
-  Pencil,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  HelpCircle,
-} from 'lucide-react'
+import { Loader2, Plus, Pencil, Trash2, ChevronUp, ChevronDown, HelpCircle } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -204,9 +196,7 @@ export default function CmsFaqPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       ترتيب {item.order + 1}
-                      {!item.isActive && (
-                        <Badge variant="secondary">معطّل</Badge>
-                      )}
+                      {!item.isActive && <Badge variant="secondary">معطّل</Badge>}
                     </div>
                   </div>
                   <div className="flex gap-2">

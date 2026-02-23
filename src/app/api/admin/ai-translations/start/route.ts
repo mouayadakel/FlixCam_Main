@@ -27,10 +27,7 @@ export async function POST(request: NextRequest) {
     const { sourceLocale, targetLocales, apiKey, selectedKeys } = await request.json()
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenAI API key is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'OpenAI API key is required' }, { status: 400 })
     }
 
     // Initialize OpenAI client
@@ -39,10 +36,10 @@ export async function POST(request: NextRequest) {
     // Load source translations
     const sourceTranslations = await import(`@/messages/${sourceLocale}.json`)
     const allKeys = Object.keys(flattenObject(sourceTranslations.default))
-    
+
     // Filter keys if selection provided
-    const keysToTranslate = selectedKeys?.length 
-      ? allKeys.filter(key => selectedKeys.includes(key))
+    const keysToTranslate = selectedKeys?.length
+      ? allKeys.filter((key) => selectedKeys.includes(key))
       : allKeys
 
     const job: TranslationJob = {
@@ -64,16 +61,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(job)
   } catch (error) {
     console.error('Failed to start translation job:', error)
-    return NextResponse.json(
-      { error: 'Failed to start translation job' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to start translation job' }, { status: 500 })
   }
 }
 
 export async function GET() {
-  const jobList = Array.from(jobs.values()).sort((a, b) => 
-    b.createdAt.getTime() - a.createdAt.getTime()
+  const jobList = Array.from(jobs.values()).sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
   )
   return NextResponse.json({ jobs: jobList })
 }
@@ -86,24 +80,24 @@ async function startTranslationJob(
 ) {
   const job = jobs.get(jobId)!
   job.status = 'running'
-  
+
   const batchSize = 10
   const targetLocales = job.targetLocales
 
   try {
     for (let i = 0; i < keysToTranslate.length; i += batchSize) {
       const batch = keysToTranslate.slice(i, i + batchSize)
-      
+
       // Process each target locale
       for (const targetLocale of targetLocales) {
         await translateBatch(openai, sourceTranslations, batch, targetLocale, job)
       }
-      
+
       job.keysProcessed = Math.min(i + batchSize, keysToTranslate.length)
       job.progress = (job.keysProcessed / job.totalKeys) * 100
-      
+
       // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
 
     job.status = 'completed'
@@ -137,9 +131,7 @@ Keep the same tone and meaning. For technical terms, use standard translations.
 
 Source JSON:
 ${JSON.stringify(
-  Object.fromEntries(
-    keys.map(key => [key, getNestedValue(sourceTranslations, key)])
-  ),
+  Object.fromEntries(keys.map((key) => [key, getNestedValue(sourceTranslations, key)])),
   null,
   2
 )}
@@ -170,14 +162,13 @@ Translated JSON:
 
     // Parse and save translations
     const translated = JSON.parse(translatedText)
-    
+
     // Load existing target translations
     const targetTranslations = await import(`@/messages/${targetLocale}.json`)
     const merged = deepMerge(targetTranslations.default, unflattenObject(translated))
-    
+
     // Save to file (in production, use database)
     await saveTranslations(targetLocale, merged)
-    
   } catch (error) {
     console.error(`Failed to translate batch to ${targetLocale}:`, error)
     throw error
@@ -236,7 +227,7 @@ function deepMerge(target: any, source: any): any {
 async function saveTranslations(locale: string, translations: any) {
   const fs = await import('fs/promises')
   const path = await import('path')
-  
+
   const filePath = path.join(process.cwd(), `src/messages/${locale}.json`)
   await fs.writeFile(filePath, JSON.stringify(translations, null, 2), 'utf-8')
 }

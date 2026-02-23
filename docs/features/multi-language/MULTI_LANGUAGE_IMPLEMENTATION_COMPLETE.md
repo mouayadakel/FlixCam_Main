@@ -3,6 +3,7 @@
 ## ✅ Completed Sprints (1-2)
 
 ### Sprint 1: Language Switcher + Chinese Translations
+
 - ✅ Language switcher in desktop header (2 locations)
 - ✅ Language switcher in mobile navigation
 - ✅ Cookie-based locale persistence (365 days)
@@ -11,6 +12,7 @@
 - ✅ English: 88.5% (702 keys)
 
 ### Sprint 2: SEO Enhancements
+
 - ✅ Hreflang tags on all public pages (14 files)
 - ✅ Canonical URLs for all routes
 - ✅ Locale-specific sitemap with alternates
@@ -21,11 +23,14 @@
 ## 🚧 Sprint 3: Dynamic Content Localization (IN PROGRESS)
 
 ### Database Schema Updates ✅
+
 **Files Modified:**
+
 - `prisma/schema.prisma` - Added locale fields to Equipment, Studio, Kit models
 - `prisma/migrations/20260221_add_locale_fields/migration.sql` - Migration script
 
 **New Fields Added:**
+
 ```prisma
 Equipment:
   - nameEn, nameZh (English/Chinese names)
@@ -42,6 +47,7 @@ Kit:
 ```
 
 ### Next Steps for Sprint 3:
+
 1. **Run migration:** `npx prisma migrate dev --name add_locale_fields`
 2. **Generate Prisma client:** `npx prisma generate`
 3. **Create helper function** for locale-aware content retrieval
@@ -54,6 +60,7 @@ Kit:
 ## 📋 Sprint 4: Admin Translation Management Tool
 
 ### Components to Build:
+
 1. **Translation Dashboard** (`/admin/translations`)
    - View all i18n keys across ar.json, en.json, zh.json
    - Filter by namespace, locale, completion status
@@ -75,6 +82,7 @@ Kit:
    - Human review workflow
 
 ### Files to Create:
+
 ```
 src/app/admin/translations/
   ├── page.tsx                    # Main dashboard
@@ -100,6 +108,7 @@ src/app/api/admin/translations/
 ### Locale-Aware Formatting Utilities
 
 **Create:** `src/lib/i18n/formatting.ts`
+
 ```typescript
 // Date/time formatting
 export function formatDate(date: Date, locale: Locale): string
@@ -115,11 +124,13 @@ export function formatPercentage(num: number, locale: Locale): string
 ```
 
 ### ARIA Labels
+
 - Add `aria-label` attributes in all 3 languages
 - Update form labels with locale-specific text
 - Ensure screen reader compatibility
 
 ### Files to Update:
+
 - All form components
 - All button components
 - All navigation components
@@ -136,7 +147,9 @@ export function formatPercentage(num: number, locale: Locale): string
 **Target:** Only load active locale
 
 **Implementation:**
+
 1. **Create dynamic import utility:**
+
 ```typescript
 // src/lib/i18n/dynamic-loader.ts
 export async function loadLocale(locale: Locale) {
@@ -150,12 +163,14 @@ export async function loadLocale(locale: Locale) {
 4. **Implement route-based code splitting**
 
 ### Bundle Size Optimization
+
 - Split translations by route/feature
 - Remove unused keys
 - Compress JSON files
 - Use CDN caching for locale bundles
 
 **Expected Results:**
+
 - 60% reduction in initial bundle size
 - Faster page loads (target: <2s FCP)
 - Reduced bandwidth usage
@@ -167,12 +182,14 @@ export async function loadLocale(locale: Locale) {
 ### French (fr) Locale
 
 **Files to Create:**
+
 - `src/messages/fr.json` (copy from en.json as template)
 - Update `src/lib/i18n/locales.ts` to include 'fr'
 - Add French to language switcher
 - Update sitemap with French alternates
 
 ### Future Locales (Roadmap):
+
 - **Urdu (ur):** RTL language, large expat community
 - **Hindi (hi):** Growing market segment
 - **Spanish (es):** International expansion
@@ -182,7 +199,9 @@ export async function loadLocale(locale: Locale) {
 ## 🔧 Helper Utilities Created
 
 ### 1. Locale-Aware Content Helper
+
 **File:** `src/lib/i18n/content-helper.ts`
+
 ```typescript
 import type { Locale } from './locales'
 
@@ -198,7 +217,7 @@ export function getLocalizedField<T extends Record<string, any>>(
   if (locale === 'zh' && item[`${fieldName}Zh`]) {
     return item[`${fieldName}Zh`]
   }
-  
+
   // Fallback to default (Arabic) field
   return item[fieldName] || ''
 }
@@ -212,15 +231,15 @@ export function getLocalizedField<T extends Record<string, any>>(
 
 ## 📊 Implementation Status
 
-| Sprint | Status | Completion | Files Modified |
-|--------|--------|------------|----------------|
-| Sprint 1 | ✅ Complete | 100% | 3 files |
-| Sprint 2 | ✅ Complete | 100% | 14 files |
-| Sprint 3 | 🚧 In Progress | 30% | 2 files |
-| Sprint 4 | 📋 Planned | 0% | 0 files |
-| Sprint 5 | 📋 Planned | 0% | 0 files |
-| Sprint 6 | 📋 Planned | 0% | 0 files |
-| Sprint 7 | 📋 Planned | 0% | 0 files |
+| Sprint   | Status         | Completion | Files Modified |
+| -------- | -------------- | ---------- | -------------- |
+| Sprint 1 | ✅ Complete    | 100%       | 3 files        |
+| Sprint 2 | ✅ Complete    | 100%       | 14 files       |
+| Sprint 3 | 🚧 In Progress | 30%        | 2 files        |
+| Sprint 4 | 📋 Planned     | 0%         | 0 files        |
+| Sprint 5 | 📋 Planned     | 0%         | 0 files        |
+| Sprint 6 | 📋 Planned     | 0%         | 0 files        |
+| Sprint 7 | 📋 Planned     | 0%         | 0 files        |
 
 ---
 
@@ -229,17 +248,20 @@ export function getLocalizedField<T extends Record<string, any>>(
 ### To Continue Sprint 3:
 
 1. **Run database migration:**
+
 ```bash
 npx prisma migrate dev --name add_locale_fields
 npx prisma generate
 ```
 
 2. **Create content helper utility:**
+
 ```bash
 # File already documented above in Helper Utilities section
 ```
 
 3. **Update equipment display component:**
+
 ```typescript
 // Example: src/components/equipment/equipment-card.tsx
 import { getLocalizedField } from '@/lib/i18n/content-helper'
@@ -247,10 +269,10 @@ import { useLocale } from '@/hooks/use-locale'
 
 export function EquipmentCard({ equipment }) {
   const { locale } = useLocale()
-  
+
   const name = getLocalizedField(equipment, 'name', locale)
   const description = getLocalizedField(equipment, 'description', locale)
-  
+
   return (
     <div>
       <h3>{name || equipment.model}</h3>

@@ -10,15 +10,7 @@ import { prisma } from '@/lib/db/prisma'
 import { siteConfig } from '@/config/site.config'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
-import {
-  Camera,
-  Zap,
-  Shield,
-  HeadphonesIcon,
-  MapPin,
-  Phone,
-  Mail,
-} from 'lucide-react'
+import { Camera, Zap, Shield, HeadphonesIcon, MapPin, Phone, Mail } from 'lucide-react'
 import { t } from '@/lib/i18n/translate'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
 
@@ -45,7 +37,15 @@ async function getPrimaryBranch() {
   try {
     const branch = await prisma.branch.findFirst({
       where: { isActive: true },
-      select: { name: true, nameAr: true, address: true, city: true, phone: true, email: true, workingHours: true },
+      select: {
+        name: true,
+        nameAr: true,
+        address: true,
+        city: true,
+        phone: true,
+        email: true,
+        workingHours: true,
+      },
     })
     return branch
   } catch {
@@ -57,7 +57,14 @@ async function getAboutConfig() {
   try {
     const rows = await prisma.integrationConfig.findMany({
       where: {
-        key: { in: ['about_hero_image', 'about_story_title', 'about_story_body', 'about_team_description'] },
+        key: {
+          in: [
+            'about_hero_image',
+            'about_story_title',
+            'about_story_body',
+            'about_team_description',
+          ],
+        },
         deletedAt: null,
       },
       select: { key: true, value: true },
@@ -71,7 +78,11 @@ async function getAboutConfig() {
 }
 
 export default async function AboutPage() {
-  const [stats, branch, aboutCfg] = await Promise.all([getAboutStats(), getPrimaryBranch(), getAboutConfig()])
+  const [stats, branch, aboutCfg] = await Promise.all([
+    getAboutStats(),
+    getPrimaryBranch(),
+    getAboutConfig(),
+  ])
   const address = branch?.address || branch?.city || t('ar', 'about.defaultAddress')
   const workingHours =
     branch?.workingHours && typeof branch.workingHours === 'object'
@@ -104,7 +115,10 @@ export default async function AboutPage() {
               </h2>
               <div className="mt-6 space-y-4 text-body-main text-text-body">
                 {aboutCfg.about_story_body ? (
-                  aboutCfg.about_story_body.split('\n').filter(Boolean).map((p, i) => <p key={i}>{p}</p>)
+                  aboutCfg.about_story_body
+                    .split('\n')
+                    .filter(Boolean)
+                    .map((p, i) => <p key={i}>{p}</p>)
                 ) : (
                   <>
                     <p>{t('ar', 'about.storyP1')}</p>
@@ -146,36 +160,28 @@ export default async function AboutPage() {
                 <Camera className="h-7 w-7" />
               </div>
               <h3 className="font-semibold text-text-heading">{t('ar', 'about.val1Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">
-                {t('ar', 'about.val1Desc')}
-              </p>
+              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val1Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Zap className="h-7 w-7" />
               </div>
               <h3 className="font-semibold text-text-heading">{t('ar', 'about.val2Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">
-                {t('ar', 'about.val2Desc')}
-              </p>
+              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val2Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Shield className="h-7 w-7" />
               </div>
               <h3 className="font-semibold text-text-heading">{t('ar', 'about.val3Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">
-                {t('ar', 'about.val3Desc')}
-              </p>
+              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val3Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <HeadphonesIcon className="h-7 w-7" />
               </div>
               <h3 className="font-semibold text-text-heading">{t('ar', 'about.val4Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">
-                {t('ar', 'about.val4Desc')}
-              </p>
+              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val4Desc')}</p>
             </div>
           </div>
         </PublicContainer>
@@ -218,7 +224,9 @@ export default async function AboutPage() {
               <div className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-brand-primary" />
                 <div>
-                  <p className="font-medium text-text-heading">{branch?.nameAr || branch?.name || 'FlixCam'}</p>
+                  <p className="font-medium text-text-heading">
+                    {branch?.nameAr || branch?.name || 'FlixCam'}
+                  </p>
                   <p className="text-sm text-text-muted">{address}</p>
                   <a
                     href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
@@ -232,13 +240,19 @@ export default async function AboutPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 shrink-0 text-brand-primary" />
-                <a href={`tel:${siteConfig.contact.phone}`} className="text-text-body hover:text-brand-primary">
+                <a
+                  href={`tel:${siteConfig.contact.phone}`}
+                  className="text-text-body hover:text-brand-primary"
+                >
                   {branch?.phone || siteConfig.contact.phone}
                 </a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 shrink-0 text-brand-primary" />
-                <a href={`mailto:${siteConfig.contact.email}`} className="text-text-body hover:text-brand-primary">
+                <a
+                  href={`mailto:${siteConfig.contact.email}`}
+                  className="text-text-body hover:text-brand-primary"
+                >
                   {branch?.email || siteConfig.contact.email}
                 </a>
               </div>
@@ -252,9 +266,7 @@ export default async function AboutPage() {
       <section className="border-t border-border-light/50 bg-white py-12 md:py-16">
         <PublicContainer className="text-center">
           <h2 className="text-2xl font-bold text-text-heading">{t('ar', 'about.ctaTitle')}</h2>
-          <p className="mx-auto mt-2 max-w-md text-text-muted">
-            {t('ar', 'about.ctaSubtitle')}
-          </p>
+          <p className="mx-auto mt-2 max-w-md text-text-muted">{t('ar', 'about.ctaSubtitle')}</p>
           <Button asChild size="lg" className="mt-6">
             <Link href="/equipment">{t('ar', 'about.ctaButton')}</Link>
           </Button>

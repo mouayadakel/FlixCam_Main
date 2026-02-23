@@ -54,16 +54,24 @@ export async function GET(request: NextRequest) {
     const total = list.length
     const sorted =
       sort === 'name'
-        ? [...list].sort((a, b) => (order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)))
+        ? [...list].sort((a, b) =>
+            order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+          )
         : sort === 'revenue'
-          ? [...list].sort((a, b) => (order === 'asc' ? a.revenueWeight - b.revenueWeight : b.revenueWeight - a.revenueWeight))
+          ? [...list].sort((a, b) =>
+              order === 'asc'
+                ? a.revenueWeight - b.revenueWeight
+                : b.revenueWeight - a.revenueWeight
+            )
           : [...list].sort((a, b) => (order === 'asc' ? a.score - b.score : b.score - a.score))
-    const products = sorted.slice(offset, offset + limit).map(({ gaps, revenueWeight, priorityScore, ...rest }) => ({
-      ...rest,
-      missingFields: gaps,
-      revenueWeight,
-      priorityScore,
-    }))
+    const products = sorted
+      .slice(offset, offset + limit)
+      .map(({ gaps, revenueWeight, priorityScore, ...rest }) => ({
+        ...rest,
+        missingFields: gaps,
+        revenueWeight,
+        priorityScore,
+      }))
     return NextResponse.json({
       data: { products, total },
     })

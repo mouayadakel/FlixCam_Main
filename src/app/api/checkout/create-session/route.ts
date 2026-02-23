@@ -116,12 +116,17 @@ export async function POST(request: NextRequest) {
   })
   if (emailCustomer?.email) {
     const studioRecord = studioId
-      ? await prisma.studio.findUnique({ where: { id: studioId }, select: { name: true, address: true } })
+      ? await prisma.studio.findUnique({
+          where: { id: studioId },
+          select: { name: true, address: true },
+        })
       : null
     const eqNames = equipment.length
-      ? await prisma.equipment.findMany({
-          where: { id: { in: equipment.map((e) => e.equipmentId) } },
-        }).then((rows) => rows.map((r) => (r as any).name as string).filter(Boolean))
+      ? await prisma.equipment
+          .findMany({
+            where: { id: { in: equipment.map((e) => e.equipmentId) } },
+          })
+          .then((rows) => rows.map((r) => (r as any).name as string).filter(Boolean))
       : []
     EmailService.sendBookingConfirmation({
       to: emailCustomer.email,

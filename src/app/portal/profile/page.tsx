@@ -26,9 +26,7 @@ export default async function PortalProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>{t('ar', 'portal.personalInfo')}</CardTitle>
-          <CardDescription>
-            {t('ar', 'portal.personalInfoDesc')}
-          </CardDescription>
+          <CardDescription>{t('ar', 'portal.personalInfoDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <PortalProfileForm />
@@ -41,9 +39,7 @@ export default async function PortalProfilePage() {
           <CardDescription>{t('ar', 'portal.twoFADesc')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {t('ar', 'portal.twoFAComingSoon')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('ar', 'portal.twoFAComingSoon')}</p>
         </CardContent>
       </Card>
     </div>

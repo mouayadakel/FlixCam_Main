@@ -77,9 +77,7 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
               ))}
             </div>
             <div className="mt-8 text-center">
-              <p className="mb-3 text-sm text-text-muted">
-                {t('home.newArrivalsEmptyMessage')}
-              </p>
+              <p className="mb-3 text-sm text-text-muted">{t('home.newArrivalsEmptyMessage')}</p>
               <Link
                 href="/equipment"
                 className="inline-flex items-center gap-1 font-semibold text-brand-primary transition-colors hover:text-brand-primary-hover"
@@ -111,7 +109,9 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
                           fill
                           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+                          unoptimized={
+                            !item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)
+                          }
                           onError={() => handleImageError(item.id)}
                         />
                       )}
@@ -146,7 +146,9 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
                             : '—'}
                         </span>
                         {item.dailyPrice > 0 && (
-                          <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+                          <span className="text-sm text-text-muted">
+                            / {t('common.pricePerDay')}
+                          </span>
                         )}
                       </div>
                     </div>

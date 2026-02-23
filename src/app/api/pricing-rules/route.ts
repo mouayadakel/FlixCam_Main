@@ -34,13 +34,17 @@ export async function GET(request: NextRequest) {
       isActive: r.isActive,
       validFrom: r.validFrom?.toISOString() ?? null,
       validUntil: r.validUntil?.toISOString() ?? null,
-      appliedCount: 'appliedCount' in r ? Number((r as { appliedCount?: number }).appliedCount ?? 0) : 0,
-      totalImpact: 'totalImpact' in r && (r as { totalImpact?: unknown }).totalImpact != null
-        ? (() => {
-            const t = (r as { totalImpact: unknown }).totalImpact
-            return typeof t === 'object' && t != null && 'toNumber' in t ? (t as { toNumber: () => number }).toNumber() : Number(t)
-          })()
-        : 0,
+      appliedCount:
+        'appliedCount' in r ? Number((r as { appliedCount?: number }).appliedCount ?? 0) : 0,
+      totalImpact:
+        'totalImpact' in r && (r as { totalImpact?: unknown }).totalImpact != null
+          ? (() => {
+              const t = (r as { totalImpact: unknown }).totalImpact
+              return typeof t === 'object' && t != null && 'toNumber' in t
+                ? (t as { toNumber: () => number }).toNumber()
+                : Number(t)
+            })()
+          : 0,
       createdBy: r.createdBy,
       creator: r.creator,
       createdAt: r.createdAt.toISOString(),

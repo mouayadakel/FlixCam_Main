@@ -2845,14 +2845,23 @@ async function main() {
   const LIGHTING_SUBCATEGORIES = [
     { name: 'LED Panels', slug: 'led-panels', description: 'LED panels and mat lights' },
     { name: 'COB Lights', slug: 'cob-lights', description: 'COB and fresnel-style lights' },
-    { name: 'Softboxes & Modifiers', slug: 'lighting-modifiers', description: 'Softboxes, diffusers, and modifiers for lighting' },
+    {
+      name: 'Softboxes & Modifiers',
+      slug: 'lighting-modifiers',
+      description: 'Softboxes, diffusers, and modifiers for lighting',
+    },
   ]
   const lightingParent = createdCategories['lighting']
   if (lightingParent) {
     for (const sub of LIGHTING_SUBCATEGORIES) {
       await prisma.category.upsert({
         where: { slug: sub.slug },
-        update: { name: sub.name, description: sub.description ?? null, parentId: lightingParent.id, updatedBy: admin.id },
+        update: {
+          name: sub.name,
+          description: sub.description ?? null,
+          parentId: lightingParent.id,
+          updatedBy: admin.id,
+        },
         create: {
           name: sub.name,
           slug: sub.slug,
@@ -3047,7 +3056,11 @@ async function main() {
       const seoTitle = `${name} | FlixCam Rental`
       const seoDesc = `Rent ${name}. SKU: ${eq.sku}.`
       const seoKeywords = `${eq.sku}, ${name}, rental, equipment`
-      for (const locale of [TranslationLocale.en, TranslationLocale.ar, TranslationLocale.zh] as const) {
+      for (const locale of [
+        TranslationLocale.en,
+        TranslationLocale.ar,
+        TranslationLocale.zh,
+      ] as const) {
         await prisma.productTranslation.upsert({
           where: {
             productId_locale: { productId: eq.id, locale },
@@ -3640,7 +3653,7 @@ async function main() {
       titleEn: 'Professional Lighting for Every Scene',
       titleZh: '每个场景的专业灯光',
       subtitleAr: 'معدات إضاءة متقدمة من أشهر العلامات التجارية العالمية',
-      subtitleEn: 'Advanced lighting gear from the world\'s most renowned brands',
+      subtitleEn: "Advanced lighting gear from the world's most renowned brands",
       subtitleZh: '来自全球知名品牌的先进灯光设备',
       ctaTextAr: 'تصفح الإضاءة',
       ctaTextEn: 'Browse Lighting',
@@ -3759,7 +3772,13 @@ async function main() {
       googleMapsUrl: 'https://maps.google.com/?q=Riyadh+Al+Olaya',
       arrivalTimeFromCenter: '15 دقيقة',
       parkingNotes: 'موقف مجاني داخل المبنى',
-      whatsIncluded: JSON.stringify(['إضاءة LED احترافية', 'نظام صوت 5.1', 'شاشة خضراء 6×4 م', 'تكييف مركزي', 'غرفة تحكم']),
+      whatsIncluded: JSON.stringify([
+        'إضاءة LED احترافية',
+        'نظام صوت 5.1',
+        'شاشة خضراء 6×4 م',
+        'تكييف مركزي',
+        'غرفة تحكم',
+      ]),
       notIncluded: JSON.stringify(['معدات الكاميرا', 'طاقم التصوير']),
       hasElectricity: true,
       hasAC: true,
@@ -3777,7 +3796,13 @@ async function main() {
       images: [0, 1, 2, 3, 4, 5],
       packages: [
         { name: 'نصف يوم (4 ساعات)', nameAr: 'نصف يوم (4 ساعات)', price: 3000, hours: 4, order: 0 },
-        { name: 'يوم كامل (8 ساعات)', nameAr: 'يوم كامل (8 ساعات)', price: 5500, hours: 8, order: 1 },
+        {
+          name: 'يوم كامل (8 ساعات)',
+          nameAr: 'يوم كامل (8 ساعات)',
+          price: 5500,
+          hours: 8,
+          order: 1,
+        },
         { name: 'باقة أسبوعية', nameAr: 'باقة أسبوعية', price: 28000, hours: 40, order: 2 },
       ],
       addons: [
@@ -3787,7 +3812,10 @@ async function main() {
       ],
       faqs: [
         { qAr: 'ما هي أوقات العمل؟', aAr: 'من 8 صباحاً حتى 10 مساءً، سبعة أيام في الأسبوع.' },
-        { qAr: 'هل يتوفر موقف سيارات؟', aAr: 'نعم، موقف مجاني داخل المبنى يتسع لأكثر من 20 سيارة.' },
+        {
+          qAr: 'هل يتوفر موقف سيارات؟',
+          aAr: 'نعم، موقف مجاني داخل المبنى يتسع لأكثر من 20 سيارة.',
+        },
       ],
     },
     {
@@ -3804,7 +3832,12 @@ async function main() {
       googleMapsUrl: 'https://maps.google.com/?q=Riyadh+Al+Nakheel',
       arrivalTimeFromCenter: '20 دقيقة',
       parkingNotes: 'موقف مدفوع في الطابق السفلي',
-      whatsIncluded: JSON.stringify(['كاميرات 4K', 'خلاط بث ATEM', 'مايكروفونات احترافية', 'إضاءة حلقة']),
+      whatsIncluded: JSON.stringify([
+        'كاميرات 4K',
+        'خلاط بث ATEM',
+        'مايكروفونات احترافية',
+        'إضاءة حلقة',
+      ]),
       notIncluded: JSON.stringify(['مقدم برنامج', 'محرر']),
       hasElectricity: true,
       hasAC: true,
@@ -3845,7 +3878,12 @@ async function main() {
       googleMapsUrl: 'https://maps.google.com/?q=Riyadh+Sulimaniyah',
       arrivalTimeFromCenter: '12 دقيقة',
       parkingNotes: 'موقف مجاني',
-      whatsIncluded: JSON.stringify(['إضاءة Broncolor', 'خلفيات بيضاء ورمادية وسوداء', 'منطقة تجهيز', 'مرآة كاملة']),
+      whatsIncluded: JSON.stringify([
+        'إضاءة Broncolor',
+        'خلفيات بيضاء ورمادية وسوداء',
+        'منطقة تجهيز',
+        'مرآة كاملة',
+      ]),
       notIncluded: JSON.stringify(['مصور', 'مكياج']),
       hasElectricity: true,
       hasAC: true,
@@ -3888,7 +3926,12 @@ async function main() {
       googleMapsUrl: 'https://maps.google.com/?q=Riyadh+Industrial',
       arrivalTimeFromCenter: '25 دقيقة',
       parkingNotes: 'موقف واسع مجاني',
-      whatsIncluded: JSON.stringify(['شاشة خضراء 8×4 م', 'إضاءة كروما موحدة', 'منصة مرتفعة', 'تكييف']),
+      whatsIncluded: JSON.stringify([
+        'شاشة خضراء 8×4 م',
+        'إضاءة كروما موحدة',
+        'منصة مرتفعة',
+        'تكييف',
+      ]),
       notIncluded: JSON.stringify(['محرر VFX', 'معدات تصوير']),
       hasElectricity: true,
       hasAC: true,
@@ -3929,7 +3972,12 @@ async function main() {
       googleMapsUrl: 'https://maps.google.com/?q=Riyadh+Al+Thumamah',
       arrivalTimeFromCenter: '18 دقيقة',
       parkingNotes: 'موقف أمام المبنى',
-      whatsIncluded: JSON.stringify(['إضاءة حلقة', '2 كاميرات', 'مايكروفون لافالير', 'خلفية قماشية']),
+      whatsIncluded: JSON.stringify([
+        'إضاءة حلقة',
+        '2 كاميرات',
+        'مايكروفون لافالير',
+        'خلفية قماشية',
+      ]),
       notIncluded: JSON.stringify(['معدات إضافية']),
       hasElectricity: true,
       hasAC: true,
@@ -4111,10 +4159,8 @@ async function main() {
       questionAr: 'كيف يتم تسليم المعدات واستلامها؟',
       questionEn: 'كيف يتم تسليم المعدات واستلامها؟',
       questionZh: null,
-      answerAr:
-        'يتم توصيل المعدات إلى موقعك في الرياض أو استلامها من نقطة محددة حسب الاتفاق.',
-      answerEn:
-        'يتم توصيل المعدات إلى موقعك في الرياض أو استلامها من نقطة محددة حسب الاتفاق.',
+      answerAr: 'يتم توصيل المعدات إلى موقعك في الرياض أو استلامها من نقطة محددة حسب الاتفاق.',
+      answerEn: 'يتم توصيل المعدات إلى موقعك في الرياض أو استلامها من نقطة محددة حسب الاتفاق.',
       answerZh: null,
       order: 5,
       isActive: true,
@@ -4149,10 +4195,8 @@ async function main() {
       questionEn:
         'هل يمكنني استخدام المعدات للمناسبات الخاصة مثل حفلات الزفاف أو الفعاليات العامة؟',
       questionZh: null,
-      answerAr:
-        'نعم، يمكن استئجار المعدات لأي مناسبة في الرياض مع الالتزام بشروط الاستخدام.',
-      answerEn:
-        'نعم، يمكن استئجار المعدات لأي مناسبة في الرياض مع الالتزام بشروط الاستخدام.',
+      answerAr: 'نعم، يمكن استئجار المعدات لأي مناسبة في الرياض مع الالتزام بشروط الاستخدام.',
+      answerEn: 'نعم، يمكن استئجار المعدات لأي مناسبة في الرياض مع الالتزام بشروط الاستخدام.',
       answerZh: null,
       order: 8,
       isActive: true,
@@ -4207,10 +4251,8 @@ async function main() {
       questionAr: 'كيف يتم الاستلام والتسليم؟',
       questionEn: 'كيف يتم الاستلام والتسليم؟',
       questionZh: null,
-      answerAr:
-        'استلام مباشر من الفرع في الرياض أو توصيل عبر مندوب للعنوان المحدد داخل الرياض.',
-      answerEn:
-        'استلام مباشر من الفرع في الرياض أو توصيل عبر مندوب للعنوان المحدد داخل الرياض.',
+      answerAr: 'استلام مباشر من الفرع في الرياض أو توصيل عبر مندوب للعنوان المحدد داخل الرياض.',
+      answerEn: 'استلام مباشر من الفرع في الرياض أو توصيل عبر مندوب للعنوان المحدد داخل الرياض.',
       answerZh: null,
       order: 13,
       isActive: true,
@@ -4231,10 +4273,8 @@ async function main() {
       questionAr: 'هل يمكن إلغاء الحجز بعد تأكيده؟',
       questionEn: 'هل يمكن إلغاء الحجز بعد تأكيده؟',
       questionZh: null,
-      answerAr:
-        'نعم، يمكن الإلغاء وفق سياسة الإلغاء الخاصة، ويفضل التواصل مع خدمة العملاء مباشرة.',
-      answerEn:
-        'نعم، يمكن الإلغاء وفق سياسة الإلغاء الخاصة، ويفضل التواصل مع خدمة العملاء مباشرة.',
+      answerAr: 'نعم، يمكن الإلغاء وفق سياسة الإلغاء الخاصة، ويفضل التواصل مع خدمة العملاء مباشرة.',
+      answerEn: 'نعم، يمكن الإلغاء وفق سياسة الإلغاء الخاصة، ويفضل التواصل مع خدمة العملاء مباشرة.',
       answerZh: null,
       order: 15,
       isActive: true,
@@ -4243,10 +4283,8 @@ async function main() {
       questionAr: 'ماذا لو تعطل الجهاز أثناء فترة الإيجار؟',
       questionEn: 'ماذا لو تعطل الجهاز أثناء فترة الإيجار؟',
       questionZh: null,
-      answerAr:
-        'يرجى التواصل فورًا مع خدمة العملاء وسيتم إيجاد الحل المناسب حسب الحالة.',
-      answerEn:
-        'يرجى التواصل فورًا مع خدمة العملاء وسيتم إيجاد الحل المناسب حسب الحالة.',
+      answerAr: 'يرجى التواصل فورًا مع خدمة العملاء وسيتم إيجاد الحل المناسب حسب الحالة.',
+      answerEn: 'يرجى التواصل فورًا مع خدمة العملاء وسيتم إيجاد الحل المناسب حسب الحالة.',
       answerZh: null,
       order: 16,
       isActive: true,
@@ -4267,10 +4305,8 @@ async function main() {
       questionAr: 'هل يمكن تمديد مدة الإيجار بعد بدايتها؟',
       questionEn: 'هل يمكن تمديد مدة الإيجار بعد بدايتها؟',
       questionZh: null,
-      answerAr:
-        'نعم، يمكن التمديد بشرط التواصل قبل انتهاء الفترة الحالية وتأكيد توفر المعدات.',
-      answerEn:
-        'نعم، يمكن التمديد بشرط التواصل قبل انتهاء الفترة الحالية وتأكيد توفر المعدات.',
+      answerAr: 'نعم، يمكن التمديد بشرط التواصل قبل انتهاء الفترة الحالية وتأكيد توفر المعدات.',
+      answerEn: 'نعم، يمكن التمديد بشرط التواصل قبل انتهاء الفترة الحالية وتأكيد توفر المعدات.',
       answerZh: null,
       order: 18,
       isActive: true,

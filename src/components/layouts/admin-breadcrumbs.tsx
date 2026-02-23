@@ -37,7 +37,7 @@ const routeLabels: Record<string, { ar: string; en: string }> = {
   integrations: { ar: 'التكاملات', en: 'Integrations' },
   features: { ar: 'الميزات', en: 'Features' },
   roles: { ar: 'الأدوار', en: 'Roles' },
-  'ai': { ar: 'إعدادات الذكاء الاصطناعي', en: 'AI Settings' },
+  ai: { ar: 'إعدادات الذكاء الاصطناعي', en: 'AI Settings' },
   'ai-control': { ar: 'إعدادات الذكاء الاصطناعي', en: 'AI Settings' },
   notifications: { ar: 'الإشعارات', en: 'Notifications' },
 }
@@ -102,7 +102,7 @@ export function AdminBreadcrumbs() {
       {/* Mobile: current page name only */}
       <div className="flex items-center gap-2 lg:hidden">
         {breadcrumbs.length > 1 ? (
-          <span className="font-medium text-neutral-900 truncate">{lastItem?.label[language]}</span>
+          <span className="truncate font-medium text-neutral-900">{lastItem?.label[language]}</span>
         ) : (
           <span className="text-neutral-500">{breadcrumbs[0]?.label[language]}</span>
         )}

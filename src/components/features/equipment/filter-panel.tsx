@@ -521,11 +521,13 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="w-full min-h-[44px] justify-between rounded-xl border-border-light active:scale-[0.98]"
+              className="min-h-[44px] w-full justify-between rounded-xl border-border-light active:scale-[0.98]"
             >
               <span className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4" />
-                {filterCount > 0 ? `${t('common.filter')} (${filterCount})` : `${t('common.filter')} & ${t('equipment.sortBy') ?? 'Sort'}`}
+                {filterCount > 0
+                  ? `${t('common.filter')} (${filterCount})`
+                  : `${t('common.filter')} & ${t('equipment.sortBy') ?? 'Sort'}`}
               </span>
               {filterCount > 0 && (
                 <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand-primary px-1.5 text-[10px] font-bold text-white">

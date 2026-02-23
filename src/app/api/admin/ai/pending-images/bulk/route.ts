@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
 
     await logAiAudit({
       userId,
-      action: body.action === 'approve' ? AI_AUDIT_ACTIONS.IMAGE_APPROVE : AI_AUDIT_ACTIONS.IMAGE_REJECT,
+      action:
+        body.action === 'approve' ? AI_AUDIT_ACTIONS.IMAGE_APPROVE : AI_AUDIT_ACTIONS.IMAGE_REJECT,
       resourceType: 'ProductImage',
       metadata: { count: images.length, ids: body.ids },
     })
@@ -91,7 +92,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       processed: images.length,
-      message: body.action === 'approve' ? `تمت الموافقة على ${images.length} صورة` : `تم رفض ${images.length} صورة`,
+      message:
+        body.action === 'approve'
+          ? `تمت الموافقة على ${images.length} صورة`
+          : `تم رفض ${images.length} صورة`,
     })
   } catch (error) {
     console.error('Bulk pending images update failed:', error)

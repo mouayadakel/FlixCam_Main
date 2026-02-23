@@ -182,22 +182,19 @@ export class NotificationService {
     if (!phone.startsWith('+') && !phone.startsWith('966')) phone = '966' + phone
 
     try {
-      const res = await fetch(
-        `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            to: phone,
-            type: 'text',
-            text: { body: `${input.title}\n\n${input.message}` },
-          }),
-        }
-      )
+      const res = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: phone,
+          type: 'text',
+          text: { body: `${input.title}\n\n${input.message}` },
+        }),
+      })
       if (!res.ok) {
         const err = await res.text().catch(() => 'unknown')
         console.error('[WhatsApp] send failed:', res.status, err)

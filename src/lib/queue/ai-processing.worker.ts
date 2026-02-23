@@ -7,9 +7,15 @@
 import { Worker, Job } from 'bullmq'
 import { getRedisClient } from './redis.client'
 import { prisma } from '@/lib/db/prisma'
-import { generateMasterFill, type ContentProvider } from '@/lib/services/ai-content-generation.service'
+import {
+  generateMasterFill,
+  type ContentProvider,
+} from '@/lib/services/ai-content-generation.service'
 import { syncProductToEquipment } from '@/lib/services/product-equipment-sync.service'
-import { inferMissingSpecs, type ProductForSpecInference } from '@/lib/services/ai-spec-parser.service'
+import {
+  inferMissingSpecs,
+  type ProductForSpecInference,
+} from '@/lib/services/ai-spec-parser.service'
 
 export const AI_PROCESSING_QUEUE_NAME = 'ai-processing'
 
@@ -152,7 +158,10 @@ export function createAIProcessingWorker() {
                 )
               }
             } catch (specErr) {
-              console.warn(`[AI Worker] Spec inference failed for product ${productId}:`, specErr instanceof Error ? specErr.message : String(specErr))
+              console.warn(
+                `[AI Worker] Spec inference failed for product ${productId}:`,
+                specErr instanceof Error ? specErr.message : String(specErr)
+              )
               // Non-fatal: continue with translations/SEO
             }
 
@@ -160,13 +169,19 @@ export function createAIProcessingWorker() {
             // PHASE 2: Master-fill — descriptions, SEO, translations (EN/AR/ZH), box contents, tags
             // Uses the high-quality master prompt with creative measurement rules
             // ═══════════════════════════════════════════════
-            const needsContent = needsSEO || needsArTranslation || needsZhTranslation ||
-              !enTranslation?.shortDescription || !enTranslation?.longDescription ||
-              !product.boxContents || !product.tags
+            const needsContent =
+              needsSEO ||
+              needsArTranslation ||
+              needsZhTranslation ||
+              !enTranslation?.shortDescription ||
+              !enTranslation?.longDescription ||
+              !product.boxContents ||
+              !product.tags
 
             if (needsContent) {
               try {
-                const enrichedSpecs = (enTranslation?.specifications as Record<string, unknown>) ?? {}
+                const enrichedSpecs =
+                  (enTranslation?.specifications as Record<string, unknown>) ?? {}
                 const masterResult = await generateMasterFill(
                   (provider || 'openai') as ContentProvider,
                   {
@@ -180,8 +195,10 @@ export function createAIProcessingWorker() {
 
                 if (masterResult) {
                   // Helper: use AI value only if current value is empty/missing
-                  const orExisting = (current: string | undefined | null, aiValue: string | undefined) =>
-                    (current && current.trim() !== '') ? current : (aiValue || '')
+                  const orExisting = (
+                    current: string | undefined | null,
+                    aiValue: string | undefined
+                  ) => (current && current.trim() !== '' ? current : aiValue || '')
 
                   // Update English translation
                   await prisma.productTranslation.upsert({
@@ -197,11 +214,23 @@ export function createAIProcessingWorker() {
                       seoKeywords: masterResult.seo_keywords_en || '',
                     },
                     update: {
-                      shortDescription: orExisting(enTranslation?.shortDescription, masterResult.short_desc_en),
-                      longDescription: orExisting(enTranslation?.longDescription, masterResult.long_desc_en),
+                      shortDescription: orExisting(
+                        enTranslation?.shortDescription,
+                        masterResult.short_desc_en
+                      ),
+                      longDescription: orExisting(
+                        enTranslation?.longDescription,
+                        masterResult.long_desc_en
+                      ),
                       seoTitle: orExisting(enTranslation?.seoTitle, masterResult.seo_title_en),
-                      seoDescription: orExisting(enTranslation?.seoDescription, masterResult.seo_desc_en),
-                      seoKeywords: orExisting(enTranslation?.seoKeywords, masterResult.seo_keywords_en),
+                      seoDescription: orExisting(
+                        enTranslation?.seoDescription,
+                        masterResult.seo_desc_en
+                      ),
+                      seoKeywords: orExisting(
+                        enTranslation?.seoKeywords,
+                        masterResult.seo_keywords_en
+                      ),
                     },
                   })
 
@@ -219,12 +248,30 @@ export function createAIProcessingWorker() {
                       seoKeywords: masterResult.seo_keywords_ar || '',
                     },
                     update: {
-                      name: orExisting(arTranslation?.name as string | undefined, masterResult.name_ar),
-                      shortDescription: orExisting(arTranslation?.shortDescription as string | undefined, masterResult.short_desc_ar),
-                      longDescription: orExisting(arTranslation?.longDescription as string | undefined, masterResult.long_desc_ar),
-                      seoTitle: orExisting(arTranslation?.seoTitle as string | undefined, masterResult.seo_title_ar),
-                      seoDescription: orExisting(arTranslation?.seoDescription as string | undefined, masterResult.seo_desc_ar),
-                      seoKeywords: orExisting(arTranslation?.seoKeywords as string | undefined, masterResult.seo_keywords_ar),
+                      name: orExisting(
+                        arTranslation?.name as string | undefined,
+                        masterResult.name_ar
+                      ),
+                      shortDescription: orExisting(
+                        arTranslation?.shortDescription as string | undefined,
+                        masterResult.short_desc_ar
+                      ),
+                      longDescription: orExisting(
+                        arTranslation?.longDescription as string | undefined,
+                        masterResult.long_desc_ar
+                      ),
+                      seoTitle: orExisting(
+                        arTranslation?.seoTitle as string | undefined,
+                        masterResult.seo_title_ar
+                      ),
+                      seoDescription: orExisting(
+                        arTranslation?.seoDescription as string | undefined,
+                        masterResult.seo_desc_ar
+                      ),
+                      seoKeywords: orExisting(
+                        arTranslation?.seoKeywords as string | undefined,
+                        masterResult.seo_keywords_ar
+                      ),
                     },
                   })
 
@@ -242,12 +289,30 @@ export function createAIProcessingWorker() {
                       seoKeywords: masterResult.seo_keywords_zh || '',
                     },
                     update: {
-                      name: orExisting(zhTranslation?.name as string | undefined, masterResult.name_zh),
-                      shortDescription: orExisting(zhTranslation?.shortDescription as string | undefined, masterResult.short_desc_zh),
-                      longDescription: orExisting(zhTranslation?.longDescription as string | undefined, masterResult.long_desc_zh),
-                      seoTitle: orExisting(zhTranslation?.seoTitle as string | undefined, masterResult.seo_title_zh),
-                      seoDescription: orExisting(zhTranslation?.seoDescription as string | undefined, masterResult.seo_desc_zh),
-                      seoKeywords: orExisting(zhTranslation?.seoKeywords as string | undefined, masterResult.seo_keywords_zh),
+                      name: orExisting(
+                        zhTranslation?.name as string | undefined,
+                        masterResult.name_zh
+                      ),
+                      shortDescription: orExisting(
+                        zhTranslation?.shortDescription as string | undefined,
+                        masterResult.short_desc_zh
+                      ),
+                      longDescription: orExisting(
+                        zhTranslation?.longDescription as string | undefined,
+                        masterResult.long_desc_zh
+                      ),
+                      seoTitle: orExisting(
+                        zhTranslation?.seoTitle as string | undefined,
+                        masterResult.seo_title_zh
+                      ),
+                      seoDescription: orExisting(
+                        zhTranslation?.seoDescription as string | undefined,
+                        masterResult.seo_desc_zh
+                      ),
+                      seoKeywords: orExisting(
+                        zhTranslation?.seoKeywords as string | undefined,
+                        masterResult.seo_keywords_zh
+                      ),
                     },
                   })
 
@@ -271,7 +336,10 @@ export function createAIProcessingWorker() {
                   )
                 }
               } catch (masterErr) {
-                console.warn(`[AI Worker] Master-fill failed for product ${productId}:`, masterErr instanceof Error ? masterErr.message : String(masterErr))
+                console.warn(
+                  `[AI Worker] Master-fill failed for product ${productId}:`,
+                  masterErr instanceof Error ? masterErr.message : String(masterErr)
+                )
               }
             }
 

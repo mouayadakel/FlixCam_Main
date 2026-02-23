@@ -51,11 +51,9 @@ export function StudioHeader({ studio }: StudioHeaderProps) {
                 {studio.bestUse}
               </span>
             )}
-          {studio.heroTagline && (
-            <p className="mt-1 text-sm text-text-muted">
-              {studio.heroTagline}
-            </p>
-          )}
+            {studio.heroTagline && (
+              <p className="mt-1 text-sm text-text-muted">{studio.heroTagline}</p>
+            )}
           </div>
         </div>
         <button
@@ -81,7 +79,7 @@ export function StudioHeader({ studio }: StudioHeaderProps) {
           </Badge>
         )}
         {studio.hourlyRate > 0 && (
-          <Badge className="border-primary/20 bg-primary-50 text-primary-700 text-xs">
+          <Badge className="border-primary/20 bg-primary-50 text-xs text-primary-700">
             {Number(studio.hourlyRate).toLocaleString()} ر.س / ساعة
           </Badge>
         )}

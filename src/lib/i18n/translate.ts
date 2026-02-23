@@ -24,7 +24,7 @@ async function loadMessages(locale: Locale): Promise<Messages> {
 
   // Dynamic import based on locale
   let messages: Messages
-  
+
   switch (locale) {
     case 'ar':
       messages = (await import('@/messages/ar.json')).default as Messages
@@ -57,7 +57,7 @@ export function getMessages(locale: Locale): Messages {
   if (messageCache.has(locale)) {
     return messageCache.get(locale)!
   }
-  
+
   // For server-side rendering, try to load messages synchronously
   if (typeof window === 'undefined') {
     try {
@@ -85,7 +85,7 @@ export function getMessages(locale: Locale): Messages {
       console.error(`Failed to load messages for locale ${locale}:`, error)
     }
   }
-  
+
   // Client-side: load synchronously so first paint matches server (avoids hydration mismatch)
   try {
     let messages: Messages

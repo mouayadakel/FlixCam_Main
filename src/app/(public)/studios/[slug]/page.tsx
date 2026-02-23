@@ -43,7 +43,9 @@ export async function generateMetadata({
   }
 }
 
-function toStudioPublicData(raw: Awaited<ReturnType<typeof StudioService.getBySlugPublic>>): StudioPublicData | null {
+function toStudioPublicData(
+  raw: Awaited<ReturnType<typeof StudioService.getBySlugPublic>>
+): StudioPublicData | null {
   if (!raw) return null
   return {
     id: raw.id,
@@ -200,7 +202,7 @@ export default async function StudioDetailPage({ params }: { params: Promise<{ s
 
 function StudioDetailFallback() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="animate-pulse space-y-6">
       <div className="h-5 w-32 rounded bg-muted" />
       <div className="space-y-3">
         <div className="h-8 w-64 rounded-xl bg-muted" />

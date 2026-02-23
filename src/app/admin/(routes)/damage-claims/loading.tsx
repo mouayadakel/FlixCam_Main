@@ -8,7 +8,10 @@ export default function DamageClaimsLoading() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-      <TableSkeleton rowCount={8} headers={['الحجز', 'النوع', 'الخطورة', 'الحالة', 'التاريخ', '']} />
+      <TableSkeleton
+        rowCount={8}
+        headers={['الحجز', 'النوع', 'الخطورة', 'الحالة', 'التاريخ', '']}
+      />
     </div>
   )
 }

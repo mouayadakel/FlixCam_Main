@@ -177,7 +177,8 @@ Output ONLY the JSON array, no markdown, no explanation.`
             .map((s) => ({
               key: s.key,
               value: String(s.value),
-              confidence: typeof s.confidence === 'number' ? Math.max(0, Math.min(100, s.confidence)) : 50,
+              confidence:
+                typeof s.confidence === 'number' ? Math.max(0, Math.min(100, s.confidence)) : 50,
               source: 'ai_inference' as const,
               autoSaved: typeof s.confidence === 'number' && s.confidence >= 70,
             }))
@@ -194,7 +195,10 @@ Output ONLY the JSON array, no markdown, no explanation.`
     if (geminiKey) {
       try {
         const genAI = new GoogleGenerativeAI(geminiKey)
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 4000 } })
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-2.0-flash',
+          generationConfig: { maxOutputTokens: 4000 },
+        })
         const result = await model.generateContent(prompt)
         const text = result.response.text()?.trim()
         const match = text?.replace(/```json?\s*|\s*```/g, '').match(/\[[\s\S]*\]/)
@@ -210,7 +214,8 @@ Output ONLY the JSON array, no markdown, no explanation.`
               .map((s) => ({
                 key: s.key,
                 value: String(s.value),
-                confidence: typeof s.confidence === 'number' ? Math.max(0, Math.min(100, s.confidence)) : 50,
+                confidence:
+                  typeof s.confidence === 'number' ? Math.max(0, Math.min(100, s.confidence)) : 50,
                 source: 'ai_inference' as const,
                 autoSaved: typeof s.confidence === 'number' && s.confidence >= 70,
               }))

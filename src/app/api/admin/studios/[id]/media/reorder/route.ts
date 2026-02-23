@@ -16,10 +16,7 @@ const reorderSchema = z.object({
   orderedIds: z.array(z.string().cuid()),
 })
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

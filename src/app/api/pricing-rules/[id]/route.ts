@@ -78,7 +78,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const newRange =
       parsed.conditions != null
         ? ((parsed.conditions as { dateRange?: { start?: string; end?: string } }).dateRange ?? {})
-        : ((existing.conditions as { dateRange?: { start?: string; end?: string } })?.dateRange ?? {})
+        : ((existing.conditions as { dateRange?: { start?: string; end?: string } })?.dateRange ??
+          {})
     const rangeToCheck = newRange.start && newRange.end ? newRange : null
     if (rangeToCheck) {
       const ruleType = (parsed.ruleType ?? existing.ruleType) as (typeof existing)['ruleType']

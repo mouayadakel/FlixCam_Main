@@ -29,7 +29,11 @@
         "location_tag": "Riyadh",
         "direction": "RTL",
         "mandatory_keywords": ["تأجير", "استأجر", "الرياض", "السعودية"],
-        "cultural_context": ["desert cinematography", "Al-Diriyah wedding shoots", "Riyadh commercial production"]
+        "cultural_context": [
+          "desert cinematography",
+          "Al-Diriyah wedding shoots",
+          "Riyadh commercial production"
+        ]
       },
       "EN": {
         "style": "Professional Marketing",
@@ -72,7 +76,14 @@
   "feedback_loop": {
     "model": "AiFeedback",
     "tracked_actions": ["approved", "rejected", "edited"],
-    "rejection_reasons": ["inaccurate", "wrong_locale", "too_generic", "factually_incorrect", "formatting", "other"],
+    "rejection_reasons": [
+      "inaccurate",
+      "wrong_locale",
+      "too_generic",
+      "factually_incorrect",
+      "formatting",
+      "other"
+    ],
     "maintenance_script": "scripts/analyze-ai-feedback.ts",
     "run_frequency": "weekly"
   },

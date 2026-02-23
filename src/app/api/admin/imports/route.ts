@@ -61,7 +61,10 @@ export async function POST(request: NextRequest) {
     const ext = file.name?.toLowerCase().match(/\.[^.]+$/)?.[0] ?? ''
     const allowedByExt = ['.xlsx', '.xls', '.csv', '.tsv'].includes(ext)
     if (!allowed.includes(file.type) && !allowedByExt) {
-      return NextResponse.json({ error: 'Unsupported file type. Use .xlsx, .xls, .csv or .tsv' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Unsupported file type. Use .xlsx, .xls, .csv or .tsv' },
+        { status: 400 }
+      )
     }
 
     const mapping: Array<{ sheetName: string; categoryId: string; subCategoryId?: string | null }> =
@@ -76,7 +79,10 @@ export async function POST(request: NextRequest) {
       sheetName: string
       excelRowNumber: number
       aiSuggestions: {
-        translations?: Record<string, { name: string; shortDescription: string; longDescription: string }>
+        translations?: Record<
+          string,
+          { name: string; shortDescription: string; longDescription: string }
+        >
         seo?: { metaTitle: string; metaDescription: string; metaKeywords: string }
         seoByLocale?: {
           ar?: { metaTitle: string; metaDescription: string; metaKeywords: string }
@@ -90,13 +96,15 @@ export async function POST(request: NextRequest) {
     }> = approvedSuggestionsRaw ? JSON.parse(approvedSuggestionsRaw) : []
 
     // Ensure every selected sheet has a category (otherwise every row fails with "Category mapping missing")
-    const sheetsNeedingCategory = (selectedSheets && selectedSheets.length > 0 ? selectedSheets : mapping.map((m) => m.sheetName)).filter(
-      (sheetName) => !mapping.find((m) => m.sheetName === sheetName)?.categoryId?.trim()
-    )
+    const sheetsNeedingCategory = (
+      selectedSheets && selectedSheets.length > 0 ? selectedSheets : mapping.map((m) => m.sheetName)
+    ).filter((sheetName) => !mapping.find((m) => m.sheetName === sheetName)?.categoryId?.trim())
     if (sheetsNeedingCategory.length > 0) {
       return NextResponse.json(
         {
-          error: 'Each sheet must have a category selected. Select a category for: ' + sheetsNeedingCategory.join(', '),
+          error:
+            'Each sheet must have a category selected. Select a category for: ' +
+            sheetsNeedingCategory.join(', '),
         },
         { status: 400 }
       )
@@ -230,7 +238,10 @@ export async function POST(request: NextRequest) {
       } catch (syncErr: any) {
         console.error('Sync import failed:', syncErr)
         return NextResponse.json(
-          { error: 'Import job created but processing failed. The server processes imports automatically; if this persists, check server logs and database connectivity.' },
+          {
+            error:
+              'Import job created but processing failed. The server processes imports automatically; if this persists, check server logs and database connectivity.',
+          },
           { status: 500 }
         )
       }

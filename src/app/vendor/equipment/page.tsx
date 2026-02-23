@@ -109,14 +109,18 @@ export default async function VendorEquipmentPage() {
                                 ? t('ar', 'vendor.approved')
                                 : t('ar', 'vendor.rejected')}
                           </Badge>
-                          {!eq.isActive && <Badge variant="outline">{t('ar', 'vendor.inactive')}</Badge>}
+                          {!eq.isActive && (
+                            <Badge variant="outline">{t('ar', 'vendor.inactive')}</Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <div className="font-medium">{formatCurrency(Number(eq.dailyPrice))}</div>
-                        <div className="text-xs text-muted-foreground">{t('ar', 'vendor.perDay')}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {t('ar', 'vendor.perDay')}
+                        </div>
                       </div>
                       <Link href={`/vendor/equipment/${eq.id}`}>
                         <Button variant="outline" size="sm">

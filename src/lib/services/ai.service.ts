@@ -429,9 +429,7 @@ export class AIService {
           ? this.cosineSimilarity(unavailableEmbedding, altEmbeddings[idx]!) * 100
           : 50 // fallback when no embeddings
 
-      const matchScore = Math.round(
-        categoryScore * 0.4 + priceScore * 0.2 + cosineScore * 0.4
-      )
+      const matchScore = Math.round(categoryScore * 0.4 + priceScore * 0.2 + cosineScore * 0.4)
       const clampedScore = Math.max(0, Math.min(100, matchScore))
 
       const reasons: string[] = []
@@ -865,7 +863,11 @@ Equipment list (id, sku, category, dailyPrice): ${JSON.stringify(equipmentListFo
         const text = res.choices[0]?.message?.content?.trim()
         const match = text?.replace(/```json?\s*|\s*```/g, '').match(/\[[\s\S]*\]/)
         if (match) {
-          const arr = JSON.parse(match[0]) as Array<{ equipmentId: string; quantity: number; reason: string }>
+          const arr = JSON.parse(match[0]) as Array<{
+            equipmentId: string
+            quantity: number
+            reason: string
+          }>
           if (Array.isArray(arr)) {
             const idSet = new Set(allEquipment.map((e) => e.id))
             llmSelected = arr.filter((x) => idSet.has(x.equipmentId)).slice(0, 12)
@@ -887,7 +889,11 @@ Equipment list (id, sku, category, dailyPrice): ${JSON.stringify(equipmentListFo
         const text = result.response.text()?.trim()
         const match = text?.replace(/```json?\s*|\s*```/g, '').match(/\[[\s\S]*\]/)
         if (match) {
-          const arr = JSON.parse(match[0]) as Array<{ equipmentId: string; quantity: number; reason: string }>
+          const arr = JSON.parse(match[0]) as Array<{
+            equipmentId: string
+            quantity: number
+            reason: string
+          }>
           if (Array.isArray(arr)) {
             const idSet = new Set(allEquipment.map((e) => e.id))
             llmSelected = arr.filter((x) => idSet.has(x.equipmentId)).slice(0, 12)
@@ -915,7 +921,11 @@ Equipment list (id, sku, category, dailyPrice): ${JSON.stringify(equipmentListFo
           sku: eq?.sku ?? '',
           quantity: Math.max(1, Math.min(2, sel.quantity)),
           dailyPrice,
-          role: (index === 0 ? 'primary' : index < 3 ? 'support' : 'optional') as KitEquipment['role'],
+          role: (index === 0
+            ? 'primary'
+            : index < 3
+              ? 'support'
+              : 'optional') as KitEquipment['role'],
           reason: sel.reason || `Recommended for ${input.projectType}`,
         }
       })

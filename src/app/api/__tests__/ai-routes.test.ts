@@ -18,7 +18,9 @@ const pendingImagesSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
   page: z.coerce.number().int().min(1).default(1),
   productId: z.string().cuid().optional(),
-  source: z.enum(['UPLOAD', 'BRAND_ASSET', 'AI_GENERATED', 'STOCK_PHOTO', 'WEB_SCRAPED']).optional(),
+  source: z
+    .enum(['UPLOAD', 'BRAND_ASSET', 'AI_GENERATED', 'STOCK_PHOTO', 'WEB_SCRAPED'])
+    .optional(),
   sort: z.enum(['createdAt', 'qualityScore']).default('createdAt'),
   order: z.enum(['asc', 'desc']).default('desc'),
 })

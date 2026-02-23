@@ -59,7 +59,12 @@ import {
 import Image from 'next/image'
 import DOMPurify from 'dompurify'
 import { SpecificationsDisplay } from '@/components/features/equipment/specifications-display'
-import type { Equipment, EquipmentCondition, MaintenanceType, MaintenanceStatus } from '@prisma/client'
+import type {
+  Equipment,
+  EquipmentCondition,
+  MaintenanceType,
+  MaintenanceStatus,
+} from '@prisma/client'
 
 const MAINT_TYPE_LABELS: Record<string, string> = {
   PREVENTIVE: 'وقائية',
@@ -206,7 +211,9 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
         const data = await res.json()
         setMaintenanceRecords(data.records ?? data.data ?? [])
       }
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
     setMaintLoading(false)
   }
 
@@ -228,13 +235,20 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
           description: newMaint.description,
         }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'فشل الجدولة') }
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'فشل الجدولة')
+      }
       toast({ title: 'تم', description: 'تم جدولة الصيانة بنجاح' })
       setShowScheduleDialog(false)
       setNewMaint({ type: 'PREVENTIVE', priority: 'medium', scheduledDate: '', description: '' })
       loadMaintenance()
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل الجدولة', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل الجدولة',
+        variant: 'destructive',
+      })
     } finally {
       setScheduling(false)
     }
@@ -625,7 +639,7 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
                               className="prose prose-sm max-w-none"
                               dangerouslySetInnerHTML={{
                                 __html: sanitizeHtml(
-                                  (trans.longDescription ?? trans.description) ?? ''
+                                  trans.longDescription ?? trans.description ?? ''
                                 ),
                               }}
                             />
@@ -723,19 +737,31 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
                   <div className="space-y-4">
                     <div>
                       <Label>نوع الصيانة</Label>
-                      <Select value={newMaint.type} onValueChange={(v) => setNewMaint((p) => ({ ...p, type: v }))}>
-                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <Select
+                        value={newMaint.type}
+                        onValueChange={(v) => setNewMaint((p) => ({ ...p, type: v }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {Object.entries(MAINT_TYPE_LABELS).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                            <SelectItem key={k} value={k}>
+                              {v}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <Label>الأولوية</Label>
-                      <Select value={newMaint.priority} onValueChange={(v) => setNewMaint((p) => ({ ...p, priority: v }))}>
-                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <Select
+                        value={newMaint.priority}
+                        onValueChange={(v) => setNewMaint((p) => ({ ...p, priority: v }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="low">منخفضة</SelectItem>
                           <SelectItem value="medium">متوسطة</SelectItem>
@@ -750,7 +776,9 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
                         type="date"
                         className="mt-1"
                         value={newMaint.scheduledDate}
-                        onChange={(e) => setNewMaint((p) => ({ ...p, scheduledDate: e.target.value }))}
+                        onChange={(e) =>
+                          setNewMaint((p) => ({ ...p, scheduledDate: e.target.value }))
+                        }
                       />
                     </div>
                     <div>
@@ -760,10 +788,16 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
                         rows={3}
                         placeholder="وصف الصيانة المطلوبة..."
                         value={newMaint.description}
-                        onChange={(e) => setNewMaint((p) => ({ ...p, description: e.target.value }))}
+                        onChange={(e) =>
+                          setNewMaint((p) => ({ ...p, description: e.target.value }))
+                        }
                       />
                     </div>
-                    <Button className="w-full" onClick={handleScheduleMaintenance} disabled={scheduling}>
+                    <Button
+                      className="w-full"
+                      onClick={handleScheduleMaintenance}
+                      disabled={scheduling}
+                    >
                       {scheduling && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                       جدولة
                     </Button>
@@ -774,7 +808,9 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
             <CardContent>
               {maintLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-14" />
+                  ))}
                 </div>
               ) : maintenanceRecords.length === 0 ? (
                 <p className="py-8 text-center text-neutral-500">لا توجد سجلات صيانة</p>
@@ -797,18 +833,43 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
                         <TableCell className="font-mono text-sm">{m.maintenanceNumber}</TableCell>
                         <TableCell>{MAINT_TYPE_LABELS[m.type] ?? m.type}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className={MAINT_STATUS_COLORS[m.status] ?? ''}>
+                          <Badge
+                            variant="secondary"
+                            className={MAINT_STATUS_COLORS[m.status] ?? ''}
+                          >
                             {MAINT_STATUS_LABELS[m.status] ?? m.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={m.priority === 'urgent' ? 'destructive' : m.priority === 'high' ? 'default' : 'secondary'}>
-                            {m.priority === 'urgent' ? 'عاجلة' : m.priority === 'high' ? 'عالية' : m.priority === 'medium' ? 'متوسطة' : 'منخفضة'}
+                          <Badge
+                            variant={
+                              m.priority === 'urgent'
+                                ? 'destructive'
+                                : m.priority === 'high'
+                                  ? 'default'
+                                  : 'secondary'
+                            }
+                          >
+                            {m.priority === 'urgent'
+                              ? 'عاجلة'
+                              : m.priority === 'high'
+                                ? 'عالية'
+                                : m.priority === 'medium'
+                                  ? 'متوسطة'
+                                  : 'منخفضة'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{new Date(m.scheduledDate).toLocaleDateString('ar-SA')}</TableCell>
-                        <TableCell>{m.completedDate ? new Date(m.completedDate).toLocaleDateString('ar-SA') : '—'}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm">{m.description}</TableCell>
+                        <TableCell>
+                          {new Date(m.scheduledDate).toLocaleDateString('ar-SA')}
+                        </TableCell>
+                        <TableCell>
+                          {m.completedDate
+                            ? new Date(m.completedDate).toLocaleDateString('ar-SA')
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate text-sm">
+                          {m.description}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

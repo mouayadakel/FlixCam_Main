@@ -28,7 +28,10 @@ export function StudioLocation({ studio }: StudioLocationProps) {
   if (!studio.address && !studio.googleMapsUrl) return null
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card" dir="rtl">
+    <section
+      className="space-y-4 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card"
+      dir="rtl"
+    >
       <h3 className="flex items-center gap-2 text-lg font-semibold text-text-heading">
         <MapPin className="h-5 w-5 text-primary" />
         {t('studios.location')}
@@ -36,7 +39,13 @@ export function StudioLocation({ studio }: StudioLocationProps) {
       {studio.address && (
         <div className="flex items-start justify-between gap-3 rounded-xl bg-surface-light p-3">
           <p className="text-sm leading-relaxed text-text-body">{studio.address}</p>
-          <Button variant="ghost" size="icon" onClick={copyAddress} aria-label={t('studios.copyAddress')} className="shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={copyAddress}
+            aria-label={t('studios.copyAddress')}
+            className="shrink-0"
+          >
             <Copy className="h-4 w-4" />
           </Button>
         </div>
@@ -61,9 +70,7 @@ export function StudioLocation({ studio }: StudioLocationProps) {
           {t('studios.arrivalTime')}: {studio.arrivalTimeFromCenter}
         </p>
       )}
-      {studio.parkingNotes && (
-        <p className="text-sm text-text-muted">{studio.parkingNotes}</p>
-      )}
+      {studio.parkingNotes && <p className="text-sm text-text-muted">{studio.parkingNotes}</p>}
     </section>
   )
 }

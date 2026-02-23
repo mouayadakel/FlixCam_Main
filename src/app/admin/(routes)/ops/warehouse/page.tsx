@@ -147,19 +147,27 @@ export default function WarehousePage() {
       {/* Quick Actions - stacked full-width on mobile, large tap targets */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
         <Link href="/admin/ops/warehouse/check-out" className="w-full sm:w-auto">
-          <Button className="h-12 w-full min-h-[44px] sm:h-auto sm:w-auto" size="lg">
+          <Button className="h-12 min-h-[44px] w-full sm:h-auto sm:w-auto" size="lg">
             <ArrowRight className="ml-2 h-5 w-5" />
             إخراج معدات
           </Button>
         </Link>
         <Link href="/admin/ops/warehouse/check-in" className="w-full sm:w-auto">
-          <Button variant="outline" className="h-12 w-full min-h-[44px] sm:h-auto sm:w-auto" size="lg">
+          <Button
+            variant="outline"
+            className="h-12 min-h-[44px] w-full sm:h-auto sm:w-auto"
+            size="lg"
+          >
             <ArrowLeft className="ml-2 h-5 w-5" />
             إرجاع معدات
           </Button>
         </Link>
         <Link href="/admin/ops/warehouse/inventory" className="w-full sm:w-auto">
-          <Button variant="outline" className="h-12 w-full min-h-[44px] sm:h-auto sm:w-auto" size="lg">
+          <Button
+            variant="outline"
+            className="h-12 min-h-[44px] w-full sm:h-auto sm:w-auto"
+            size="lg"
+          >
             <Package className="ml-2 h-5 w-5" />
             عرض المخزون
           </Button>

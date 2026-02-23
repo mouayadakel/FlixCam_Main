@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
 
   const idsParam = request.nextUrl.searchParams.get('ids')
   if (!idsParam) {
-    return NextResponse.json({ error: 'ids query param required (comma-separated)' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'ids query param required (comma-separated)' },
+      { status: 400 }
+    )
   }
 
   const ids = idsParam.split(',').slice(0, 4)

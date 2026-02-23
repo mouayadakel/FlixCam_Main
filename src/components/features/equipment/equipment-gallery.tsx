@@ -108,7 +108,14 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
                   : 'border-transparent opacity-70 hover:border-border-light hover:opacity-100'
               )}
             >
-              <Image src={m.url} alt={`${alt} - thumbnail ${i + 1}`} fill className="object-cover" sizes="92px" unoptimized={isExternalImageUrl(m.url)} />
+              <Image
+                src={m.url}
+                alt={`${alt} - thumbnail ${i + 1}`}
+                fill
+                className="object-cover"
+                sizes="92px"
+                unoptimized={isExternalImageUrl(m.url)}
+              />
             </button>
           ))}
         </div>

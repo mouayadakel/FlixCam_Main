@@ -4,7 +4,14 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader2, Upload, CheckCircle2, AlertTriangle, Sparkles, FileSpreadsheet } from 'lucide-react'
+import {
+  Loader2,
+  Upload,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+  FileSpreadsheet,
+} from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -73,9 +80,7 @@ const FIELD_LABELS: Record<string, string> = {
   featured_image: 'الصورة',
 }
 
-const DISPLAY_FIELDS = [
-  'name', 'brand', 'model', 'sku', 'daily_price', 'quantity', 'condition',
-]
+const DISPLAY_FIELDS = ['name', 'brand', 'model', 'sku', 'daily_price', 'quantity', 'condition']
 
 export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewProps) {
   const [file, setFile] = useState<File | null>(null)
@@ -143,12 +148,12 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
               aria-label="اختر ملف Excel للمعاينة"
               className="text-sm file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
             />
-            <Button
-              onClick={handlePreview}
-              disabled={!file || loading}
-              size="sm"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Upload className="h-4 w-4 ml-2" />}
+            <Button onClick={handlePreview} disabled={!file || loading} size="sm">
+              {loading ? (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="ml-2 h-4 w-4" />
+              )}
               معاينة
             </Button>
           </div>
@@ -178,12 +183,16 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
                   <p className="text-xs text-muted-foreground">عدد الأوراق</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-700">{preview.summary.mappedFieldsRatio}</p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {preview.summary.mappedFieldsRatio}
+                  </p>
                   <p className="text-xs text-muted-foreground">الأعمدة المطابقة</p>
                 </div>
                 <div className="text-center">
-                  <Sparkles className="mx-auto h-5 w-5 text-blue-600 mb-1" />
-                  <p className="text-sm font-medium text-blue-700">سيتم ملء الحقول الفارغة بالذكاء الاصطناعي</p>
+                  <Sparkles className="mx-auto mb-1 h-5 w-5 text-blue-600" />
+                  <p className="text-sm font-medium text-blue-700">
+                    سيتم ملء الحقول الفارغة بالذكاء الاصطناعي
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -209,10 +218,12 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
           {currentSheet && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">تعيين الأعمدة — {currentSheet.sheetName}</CardTitle>
+                <CardTitle className="text-base">
+                  تعيين الأعمدة — {currentSheet.sheetName}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="mb-4 flex flex-wrap gap-2">
                   {currentSheet.columnMappings.map((m) => (
                     <Badge
                       key={m.sourceHeader}
@@ -220,15 +231,13 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
                       className="text-xs"
                     >
                       {m.sourceHeader} → {m.mappedField || '❌ غير معروف'}
-                      {m.mappedField && (
-                        <span className="mr-1 opacity-70">({m.confidence}%)</span>
-                      )}
+                      {m.mappedField && <span className="mr-1 opacity-70">({m.confidence}%)</span>}
                     </Badge>
                   ))}
                 </div>
 
                 {currentSheet.unmappedHeaders.length > 0 && (
-                  <div className="flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 mb-4">
+                  <div className="mb-4 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
                     <AlertTriangle className="h-4 w-4 shrink-0" />
                     أعمدة غير مطابقة: {currentSheet.unmappedHeaders.join(', ')}
                   </div>
@@ -256,18 +265,19 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
                             {row.excelRowNumber}
                           </TableCell>
                           {DISPLAY_FIELDS.map((f) => (
-                            <TableCell key={f} className="text-sm max-w-[200px] truncate">
-                              {row.resolvedFields[f] != null
-                                ? String(row.resolvedFields[f])
-                                : <span className="text-muted-foreground italic">—</span>
-                              }
+                            <TableCell key={f} className="max-w-[200px] truncate text-sm">
+                              {row.resolvedFields[f] != null ? (
+                                String(row.resolvedFields[f])
+                              ) : (
+                                <span className="italic text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                           ))}
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
                               {row.willAiFill.slice(0, 3).map((f) => (
                                 <Badge key={f} variant="secondary" className="text-[10px]">
-                                  <Sparkles className="h-2.5 w-2.5 ml-0.5" />
+                                  <Sparkles className="ml-0.5 h-2.5 w-2.5" />
                                   {FIELD_LABELS[f] || f}
                                 </Badge>
                               ))}
@@ -295,8 +305,9 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
                 </div>
 
                 {currentSheet.totalRows > preview.summary.previewRowCount && (
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    يتم عرض أول {preview.summary.previewRowCount} صفوف من أصل {currentSheet.totalRows}
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    يتم عرض أول {preview.summary.previewRowCount} صفوف من أصل{' '}
+                    {currentSheet.totalRows}
                   </p>
                 )}
               </CardContent>
@@ -309,7 +320,7 @@ export function ImportPreview({ onConfirm, onCancel, disabled }: ImportPreviewPr
               إلغاء
             </Button>
             <Button onClick={onConfirm} disabled={disabled}>
-              {disabled && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+              {disabled && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
               تأكيد واستيراد
             </Button>
           </div>

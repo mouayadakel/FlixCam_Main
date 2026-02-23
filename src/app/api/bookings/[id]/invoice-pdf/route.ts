@@ -7,10 +7,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { InvoicePdfService } from '@/lib/services/invoice-pdf.service'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -48,7 +45,12 @@ export async function GET(
   if (isStudio && studioData) {
     const hours =
       booking.studioStartTime && booking.studioEndTime
-        ? Math.max(1, Math.round((booking.studioEndTime.getTime() - booking.studioStartTime.getTime()) / 3600000))
+        ? Math.max(
+            1,
+            Math.round(
+              (booking.studioEndTime.getTime() - booking.studioStartTime.getTime()) / 3600000
+            )
+          )
         : 1
     const hourlyRate = Number(studioData.hourlyRate ?? 0)
     items.push({

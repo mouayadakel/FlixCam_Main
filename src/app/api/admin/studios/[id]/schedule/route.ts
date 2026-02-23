@@ -19,10 +19,7 @@ const scheduleEntrySchema = z.object({
 
 const saveScheduleSchema = z.array(scheduleEntrySchema).length(7)
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rate = rateLimitByTier(request, 'authenticated')
   if (!rate.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -49,10 +46,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rate = rateLimitByTier(request, 'authenticated')
   if (!rate.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

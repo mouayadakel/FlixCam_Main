@@ -119,9 +119,7 @@ export async function POST(
     const dayEnd = new Date(date)
     dayEnd.setHours(23, 59, 59, 999)
 
-    const isBlackedOut = blackouts.some(
-      (b) => b.startDate <= dayEnd && b.endDate >= dayStart
-    )
+    const isBlackedOut = blackouts.some((b) => b.startDate <= dayEnd && b.endDate >= dayStart)
     if (isBlackedOut) {
       days.push({ date: dateStr, status: 'blackout' })
       continue

@@ -83,7 +83,10 @@ export function PermissionMatrix({
       .map((cat) => ({
         ...cat,
         permissions: cat.permissions.filter(
-          (p) => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q) || (p.descriptionAr || '').includes(q)
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.description || '').toLowerCase().includes(q) ||
+            (p.descriptionAr || '').includes(q)
         ),
       }))
       .filter((c) => c.permissions.length > 0)

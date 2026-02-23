@@ -54,10 +54,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!result.ok) {
-      return NextResponse.json(
-        { error: result.error ?? 'Failed to send message' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: result.error ?? 'Failed to send message' }, { status: 500 })
     }
 
     const whatsappUrl = getWhatsAppUrl({

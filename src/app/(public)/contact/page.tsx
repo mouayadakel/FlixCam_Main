@@ -102,7 +102,10 @@ export default async function ContactPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="h-5 w-5 shrink-0 text-brand-primary" />
-                    <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-text-body hover:text-brand-primary">
+                    <a
+                      href={`tel:${phone.replace(/\s/g, '')}`}
+                      className="text-text-body hover:text-brand-primary"
+                    >
                       {phone}
                     </a>
                   </div>

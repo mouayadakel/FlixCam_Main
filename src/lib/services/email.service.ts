@@ -57,7 +57,8 @@ export const EmailService = {
     message: string
   }): Promise<{ ok: boolean; error?: string }> {
     if (!resend) return { ok: false, error: 'Email not configured' }
-    const adminEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? process.env.RESEND_FROM ?? 'contact@flixcam.rent'
+    const adminEmail =
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? process.env.RESEND_FROM ?? 'contact@flixcam.rent'
     const body = [
       `<p><strong>الاسم:</strong> ${escapeHtml(data.name)}</p>`,
       `<p><strong>البريد:</strong> ${escapeHtml(data.email)}</p>`,
@@ -102,7 +103,12 @@ export const EmailService = {
     const portalUrl = `${baseUrl}/portal/bookings/${data.bookingId}`
     const isStudio = !!data.studioName
 
-    const dateOpts: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    const dateOpts: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }
     const timeOpts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
 
     let detailsHtml = ''

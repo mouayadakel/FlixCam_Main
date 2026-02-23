@@ -56,7 +56,7 @@ describe('BookingService', () => {
         startDate: new Date('2026-03-05'),
         endDate: new Date('2026-03-01'),
       }
-      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any);
+      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any)
       await expect(BookingService.create(invalidInput, 'user-1')).rejects.toThrow(ValidationError)
     })
 
@@ -66,7 +66,7 @@ describe('BookingService', () => {
         startDate: new Date('2020-01-01'),
         endDate: new Date('2020-01-05'),
       }
-      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any);
+      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any)
       await expect(BookingService.create(pastInput, 'user-1')).rejects.toThrow(ValidationError)
     })
 
@@ -75,12 +75,12 @@ describe('BookingService', () => {
         ...validInput,
         equipment: [],
       }
-      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any);
+      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'cust-1' } as any)
       await expect(BookingService.create(noEquipment, 'user-1')).rejects.toThrow(ValidationError)
     })
 
     it('throws NotFoundError when customer does not exist', async () => {
-      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue(null);
+      ;(mockPrisma.user.findFirst as jest.Mock).mockResolvedValue(null)
       await expect(BookingService.create(validInput, 'user-1')).rejects.toThrow(NotFoundError)
     })
   })

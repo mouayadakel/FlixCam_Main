@@ -58,9 +58,7 @@ export function DepositInsuranceSummary({
       )}
 
       {depositAmount != null && depositAmount > 0 && (
-        <p className="text-xs text-text-muted">
-          {t('checkout.depositNote')}
-        </p>
+        <p className="text-xs text-text-muted">{t('checkout.depositNote')}</p>
       )}
     </div>
   )

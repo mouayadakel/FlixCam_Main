@@ -20,7 +20,7 @@ export default function TranslationsPage() {
           Manage translations across all supported locales (Arabic, English, Chinese)
         </p>
       </div>
-      
+
       <Suspense fallback={<div>Loading translations...</div>}>
         <TranslationDashboard />
       </Suspense>

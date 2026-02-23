@@ -66,7 +66,10 @@ export function EquipmentCatalog() {
     else if (key === 'priceMax') next.delete('priceMax')
     else if (key.startsWith('brand:')) {
       const bid = key.replace('brand:', '')
-      const rest = brandIds.split(',').map((s) => s.trim()).filter((id) => id !== bid)
+      const rest = brandIds
+        .split(',')
+        .map((s) => s.trim())
+        .filter((id) => id !== bid)
       if (rest.length) next.set('brandIds', rest.join(','))
       else next.delete('brandIds')
     }
@@ -127,125 +130,133 @@ export function EquipmentCatalog() {
         <div className="sticky top-[72px] z-30 w-full shrink-0 lg:relative lg:top-0 lg:z-0 lg:w-72">
           <FilterPanel categories={categories} brands={brands} total={total} />
         </div>
-      <div className="min-w-0 flex-1 space-y-6">
-        {activeChips.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-            {activeChips.map((chip) => (
-              <span
-                key={chip.key}
-                className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm"
+        <div className="min-w-0 flex-1 space-y-6">
+          {activeChips.length > 0 && (
+            <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-1">
+              {activeChips.map((chip) => (
+                <span
+                  key={chip.key}
+                  className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm"
+                >
+                  <span className="max-w-[120px] truncate">{chip.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeChip(chip.key)}
+                    className="min-h-[24px] min-w-[24px] rounded-full p-0.5 hover:bg-muted"
+                    aria-label={t('common.remove') ?? 'Remove'}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              ))}
+              <Link
+                href="/equipment"
+                className="shrink-0 text-sm font-medium text-primary hover:underline"
               >
-                <span className="truncate max-w-[120px]">{chip.label}</span>
-                <button
-                  type="button"
-                  onClick={() => removeChip(chip.key)}
-                  className="min-h-[24px] min-w-[24px] rounded-full p-0.5 hover:bg-muted"
-                  aria-label={t('common.remove') ?? 'Remove'}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </span>
-            ))}
-            <Link
-              href="/equipment"
-              className="shrink-0 text-sm font-medium text-primary hover:underline"
-            >
-              {t('common.clearAll') ?? 'Clear all'}
-            </Link>
-          </div>
-        )}
-        {q && (
-          <p className="text-body-main text-text-muted">
-            {t('common.resultsFor').replace('{query}', q)}
-          </p>
-        )}
+                {t('common.clearAll') ?? 'Clear all'}
+              </Link>
+            </div>
+          )}
+          {q && (
+            <p className="text-body-main text-text-muted">
+              {t('common.resultsFor').replace('{query}', q)}
+            </p>
+          )}
 
-        {error && (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
-            {error}
-            <Button
-              variant="link"
-              className="ms-2 text-destructive"
-              onClick={() => window.location.reload()}
-            >
-              {t('common.retry')}
-            </Button>
-          </div>
-        )}
+          {error && (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+              {error}
+              <Button
+                variant="link"
+                className="ms-2 text-destructive"
+                onClick={() => window.location.reload()}
+              >
+                {t('common.retry')}
+              </Button>
+            </div>
+          )}
 
-        {!error && (
-          <>
-            <EquipmentGrid items={equipment} isLoading={isLoading} />
+          {!error && (
+            <>
+              <EquipmentGrid items={equipment} isLoading={isLoading} />
 
-            {!isLoading && equipment.length === 0 && (
-              <div className="py-16 text-center text-muted-foreground">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-light">
-                  <span className="text-3xl">🔍</span>
-                </div>
-                <p className="text-lg font-medium text-text-heading">{t('common.noResults')}</p>
-                <p className="mt-1 text-sm text-text-muted">{t('equipment.adjustFilters')}</p>
-                <Button
-                  variant="outline"
-                  asChild
-                  className="mt-4 rounded-xl border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5"
-                >
-                  <Link href="/equipment">{t('common.viewAll')}</Link>
-                </Button>
-              </div>
-            )}
-
-            {totalPages > 1 && !isLoading && (
-              <nav className="flex flex-col items-center gap-4 pt-6 sm:flex-row sm:justify-center sm:gap-2" aria-label="Pagination">
-                {/* Mobile: Load more only */}
-                {hasNext && (
-                  <Button variant="outline" size="sm" asChild className="w-full min-h-[44px] rounded-xl sm:w-auto lg:hidden">
-                    <Link
-                      href={`/equipment?${new URLSearchParams({
-                        ...Object.fromEntries(searchParams?.entries() ?? []),
-                        skip: String(skip + PAGE_SIZE),
-                      }).toString()}`}
-                    >
-                      {t('common.loadMore') ?? 'Load more'}
-                    </Link>
+              {!isLoading && equipment.length === 0 && (
+                <div className="py-16 text-center text-muted-foreground">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-light">
+                    <span className="text-3xl">🔍</span>
+                  </div>
+                  <p className="text-lg font-medium text-text-heading">{t('common.noResults')}</p>
+                  <p className="mt-1 text-sm text-text-muted">{t('equipment.adjustFilters')}</p>
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="mt-4 rounded-xl border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5"
+                  >
+                    <Link href="/equipment">{t('common.viewAll')}</Link>
                   </Button>
-                )}
-                {/* Desktop: full pagination */}
-                <div className="hidden items-center justify-center gap-2 lg:flex">
-                  {hasPrev && (
-                    <Button variant="outline" size="sm" asChild className="rounded-xl">
-                      <Link
-                        href={`/equipment?${new URLSearchParams({
-                          ...Object.fromEntries(searchParams?.entries() ?? []),
-                          skip: String(Math.max(0, skip - PAGE_SIZE)),
-                        }).toString()}`}
-                      >
-                        <ChevronLeft className="me-1 h-4 w-4" />
-                        {t('common.back')}
-                      </Link>
-                    </Button>
-                  )}
-                  <span className="rounded-xl bg-surface-light px-4 py-2 text-sm font-medium text-text-heading">
-                    {currentPage} / {totalPages}
-                  </span>
+                </div>
+              )}
+
+              {totalPages > 1 && !isLoading && (
+                <nav
+                  className="flex flex-col items-center gap-4 pt-6 sm:flex-row sm:justify-center sm:gap-2"
+                  aria-label="Pagination"
+                >
+                  {/* Mobile: Load more only */}
                   {hasNext && (
-                    <Button variant="outline" size="sm" asChild className="rounded-xl">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="min-h-[44px] w-full rounded-xl sm:w-auto lg:hidden"
+                    >
                       <Link
                         href={`/equipment?${new URLSearchParams({
                           ...Object.fromEntries(searchParams?.entries() ?? []),
                           skip: String(skip + PAGE_SIZE),
                         }).toString()}`}
                       >
-                        {t('common.next')}
-                        <ChevronRight className="ms-1 h-4 w-4" />
+                        {t('common.loadMore') ?? 'Load more'}
                       </Link>
                     </Button>
                   )}
-                </div>
-              </nav>
-            )}
-          </>
-        )}
-      </div>
+                  {/* Desktop: full pagination */}
+                  <div className="hidden items-center justify-center gap-2 lg:flex">
+                    {hasPrev && (
+                      <Button variant="outline" size="sm" asChild className="rounded-xl">
+                        <Link
+                          href={`/equipment?${new URLSearchParams({
+                            ...Object.fromEntries(searchParams?.entries() ?? []),
+                            skip: String(Math.max(0, skip - PAGE_SIZE)),
+                          }).toString()}`}
+                        >
+                          <ChevronLeft className="me-1 h-4 w-4" />
+                          {t('common.back')}
+                        </Link>
+                      </Button>
+                    )}
+                    <span className="rounded-xl bg-surface-light px-4 py-2 text-sm font-medium text-text-heading">
+                      {currentPage} / {totalPages}
+                    </span>
+                    {hasNext && (
+                      <Button variant="outline" size="sm" asChild className="rounded-xl">
+                        <Link
+                          href={`/equipment?${new URLSearchParams({
+                            ...Object.fromEntries(searchParams?.entries() ?? []),
+                            skip: String(skip + PAGE_SIZE),
+                          }).toString()}`}
+                        >
+                          {t('common.next')}
+                          <ChevronRight className="ms-1 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </nav>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

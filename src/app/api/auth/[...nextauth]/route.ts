@@ -16,12 +16,19 @@ function withJsonErrorHandler(
     } catch (error) {
       console.error('[Auth] Route error:', error)
       return NextResponse.json(
-        { error: 'Authentication error', message: error instanceof Error ? error.message : 'Unknown error' },
+        {
+          error: 'Authentication error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
         { status: 500 }
       )
     }
   }
 }
 
-export const GET = withJsonErrorHandler(handlers.GET as (req: Request, ...args: unknown[]) => Promise<Response>)
-export const POST = withJsonErrorHandler(handlers.POST as (req: Request, ...args: unknown[]) => Promise<Response>)
+export const GET = withJsonErrorHandler(
+  handlers.GET as (req: Request, ...args: unknown[]) => Promise<Response>
+)
+export const POST = withJsonErrorHandler(
+  handlers.POST as (req: Request, ...args: unknown[]) => Promise<Response>
+)

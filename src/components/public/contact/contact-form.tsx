@@ -160,7 +160,12 @@ export function ContactForm() {
           {errorMessage}
         </p>
       )}
-      <Button type="submit" disabled={status === 'submitting'} size="lg" className="w-full sm:w-auto">
+      <Button
+        type="submit"
+        disabled={status === 'submitting'}
+        size="lg"
+        className="w-full sm:w-auto"
+      >
         {status === 'submitting' ? t('contactPage.submitting') : t('contactPage.submit')}
       </Button>
     </form>

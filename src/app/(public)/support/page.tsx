@@ -85,9 +85,7 @@ export default async function SupportPage() {
               <HelpCircle className="h-5 w-5 text-brand-primary" />
               {t('ar', 'supportPage.faqTitle')}
             </h2>
-            <p className="mb-4 text-sm text-text-muted">
-              {t('ar', 'supportPage.faqDesc')}
-            </p>
+            <p className="mb-4 text-sm text-text-muted">{t('ar', 'supportPage.faqDesc')}</p>
             <Button asChild variant="outline" size="lg">
               <Link href="/faq">{t('ar', 'supportPage.browseFaq')}</Link>
             </Button>
@@ -95,10 +93,10 @@ export default async function SupportPage() {
 
           {/* لم تجد إجابتك؟ */}
           <div className="rounded-2xl border border-brand-primary/20 bg-brand-primary/5 p-6 text-center">
-            <h2 className="mb-2 text-xl font-bold text-text-heading">{t('ar', 'supportPage.notFoundTitle')}</h2>
-            <p className="mb-4 text-sm text-text-muted">
-              {t('ar', 'supportPage.notFoundDesc')}
-            </p>
+            <h2 className="mb-2 text-xl font-bold text-text-heading">
+              {t('ar', 'supportPage.notFoundTitle')}
+            </h2>
+            <p className="mb-4 text-sm text-text-muted">{t('ar', 'supportPage.notFoundDesc')}</p>
             <Button asChild size="lg">
               <Link href="/contact">{t('ar', 'supportPage.contactUs')}</Link>
             </Button>
@@ -106,11 +104,16 @@ export default async function SupportPage() {
 
           <p className="mt-8 text-center text-sm text-text-muted">
             {t('ar', 'supportPage.seeAlso')}{' '}
-            <Link href="/policies" className="font-medium text-brand-primary underline hover:opacity-90">
+            <Link
+              href="/policies"
+              className="font-medium text-brand-primary underline hover:opacity-90"
+            >
               {t('ar', 'supportPage.termsLink')}
             </Link>{' '}
-            {' '}
-            <Link href="/how-it-works" className="font-medium text-brand-primary underline hover:opacity-90">
+            <Link
+              href="/how-it-works"
+              className="font-medium text-brand-primary underline hover:opacity-90"
+            >
               {t('ar', 'supportPage.howItWorksLink')}
             </Link>
             .

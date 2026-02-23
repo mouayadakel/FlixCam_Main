@@ -35,14 +35,15 @@ export function StudioTestimonials({ testimonials }: StudioTestimonialsProps) {
   const next = () => setActiveIndex((i) => (i === testimonials.length - 1 ? 0 : i + 1))
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card" dir="rtl">
-      <h3 className="text-lg font-semibold text-text-heading">
-        {t('studios.testimonials')}
-      </h3>
+    <section
+      className="space-y-4 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card"
+      dir="rtl"
+    >
+      <h3 className="text-lg font-semibold text-text-heading">{t('studios.testimonials')}</h3>
 
       {/* Featured testimonial */}
       <div className="relative rounded-xl bg-surface-light p-5">
-        <Quote className="absolute top-4 end-4 h-8 w-8 text-primary/10" />
+        <Quote className="absolute end-4 top-4 h-8 w-8 text-primary/10" />
 
         <div className="space-y-3">
           {/* Stars */}
@@ -58,7 +59,7 @@ export function StudioTestimonials({ testimonials }: StudioTestimonialsProps) {
           </div>
 
           {/* Text */}
-          <p className="text-sm leading-relaxed text-text-body">"{current.text}"</p>
+          <p className="text-sm leading-relaxed text-text-body">&quot;{current.text}&quot;</p>
 
           {/* Author */}
           <div className="flex items-center gap-3">
@@ -77,9 +78,7 @@ export function StudioTestimonials({ testimonials }: StudioTestimonialsProps) {
             )}
             <div>
               <p className="text-sm font-semibold text-text-heading">{current.name}</p>
-              {current.role && (
-                <p className="text-xs text-text-muted">{current.role}</p>
-              )}
+              {current.role && <p className="text-xs text-text-muted">{current.role}</p>}
             </div>
           </div>
         </div>

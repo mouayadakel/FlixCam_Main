@@ -75,9 +75,13 @@ export default async function PortalContractsPage() {
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
                       <FileText className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-lg font-medium">{t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}</span>
+                      <span className="text-lg font-medium">
+                        {t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
+                      </span>
                       <Badge variant={contract.signedAt ? 'default' : 'secondary'}>
-                        {contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}
+                        {contract.signedAt
+                          ? t('ar', 'portal.signed')
+                          : t('ar', 'portal.awaitingSignature')}
                       </Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
@@ -100,7 +104,9 @@ export default async function PortalContractsPage() {
                   <div className="flex items-center gap-2">
                     <Link href={`/portal/contracts/${contract.id}`}>
                       <Button variant="outline" size="sm">
-                        {!contract.signedAt ? t('ar', 'portal.signContract') : t('ar', 'portal.viewContract')}
+                        {!contract.signedAt
+                          ? t('ar', 'portal.signContract')
+                          : t('ar', 'portal.viewContract')}
                       </Button>
                     </Link>
                   </div>

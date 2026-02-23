@@ -7,64 +7,71 @@
 ## 1. Public Studio Page Structure (Frontend)
 
 ### 1.1 Header (بسيط)
-| Field | Source | CMS Control |
-|-------|--------|-------------|
-| Studio name | `Studio.name` | ✅ |
-| Subtitle (2 lines): المساحة / النوع / أفضل استخدام | `Studio.areaSqm`, `Studio.studioType`, `Studio.bestUse` | ✅ |
-| Badge: "متاح اليوم" / "يتطلب تأكيد" | `Studio.availabilityConfidence` | ✅ |
-| CTA: "اختر وقتك" | Fixed | — |
+
+| Field                                              | Source                                                  | CMS Control |
+| -------------------------------------------------- | ------------------------------------------------------- | ----------- |
+| Studio name                                        | `Studio.name`                                           | ✅          |
+| Subtitle (2 lines): المساحة / النوع / أفضل استخدام | `Studio.areaSqm`, `Studio.studioType`, `Studio.bestUse` | ✅          |
+| Badge: "متاح اليوم" / "يتطلب تأكيد"                | `Studio.availabilityConfidence`                         | ✅          |
+| CTA: "اختر وقتك"                                   | Fixed                                                   | —           |
 
 ### 1.2 Gallery (8–15 images)
-| Field | Source | CMS Control |
-|-------|--------|-------------|
-| Hero + Grid (8–15 images) | `Media` (studioId) | ✅ Reorder, add, remove |
-| Button: "شاهد كل الصور" | Fixed | — |
-| Optional video (10–20 sec) | `Studio.videoUrl` | ✅ |
-| Disclaimer: "الصور من جلسات حقيقية / أو صور تسويقية" | `Studio.galleryDisclaimer` | ✅ |
+
+| Field                                                | Source                     | CMS Control             |
+| ---------------------------------------------------- | -------------------------- | ----------------------- |
+| Hero + Grid (8–15 images)                            | `Media` (studioId)         | ✅ Reorder, add, remove |
+| Button: "شاهد كل الصور"                              | Fixed                      | —                       |
+| Optional video (10–20 sec)                           | `Studio.videoUrl`          | ✅                      |
+| Disclaimer: "الصور من جلسات حقيقية / أو صور تسويقية" | `Studio.galleryDisclaimer` | ✅                      |
 
 ### 1.3 Location
-| Field | Source | CMS Control |
-|-------|--------|-------------|
-| Google Maps link | `Studio.address`, `Studio.googleMapsUrl` | ✅ |
-| Copy address button | `Studio.address` | ✅ |
-| Arrival time from وسط الرياض | `Studio.arrivalTimeFromCenter` | ✅ |
-| Parking/Entrance notes | `Studio.parkingNotes` | ✅ |
+
+| Field                        | Source                                   | CMS Control |
+| ---------------------------- | ---------------------------------------- | ----------- |
+| Google Maps link             | `Studio.address`, `Studio.googleMapsUrl` | ✅          |
+| Copy address button          | `Studio.address`                         | ✅          |
+| Arrival time from وسط الرياض | `Studio.arrivalTimeFromCenter`           | ✅          |
+| Parking/Entrance notes       | `Studio.parkingNotes`                    | ✅          |
 
 ### 1.4 Booking Panel (Sticky on desktop)
-| Section | Fields | CMS Control |
-|---------|--------|-------------|
-| **Date** | Calendar, unavailable days | `StudioBlackoutDate` + availability API |
-| **Time** | Slots (30/60 min) | `Studio.slotDurationMinutes` |
-| **Buffer** | "يتضمن 15 دقيقة تجهيز/تنظيف" | `Studio.setupBuffer`, `Studio.cleaningBuffer` |
-| **Duration** | 1/2/3 / Half day / Full day | `Studio.minHours`, `Studio.durationOptions` |
-| **Price** | Hourly / Daily, line items | `Studio.hourlyRate`, `Studio.dailyRate` |
-| **Packages** | 3–6 packages | `StudioPackage` model |
-| **Add-ons** | Toggles | `StudioAddOn` (existing) |
-| **CTA** | "متابعة للدفع" | Fixed |
-| **Disclaimer** | "لن يتم تأكيد الحجز إلا بعد الدفع" | `Studio.bookingDisclaimer` |
+
+| Section        | Fields                             | CMS Control                                   |
+| -------------- | ---------------------------------- | --------------------------------------------- |
+| **Date**       | Calendar, unavailable days         | `StudioBlackoutDate` + availability API       |
+| **Time**       | Slots (30/60 min)                  | `Studio.slotDurationMinutes`                  |
+| **Buffer**     | "يتضمن 15 دقيقة تجهيز/تنظيف"       | `Studio.setupBuffer`, `Studio.cleaningBuffer` |
+| **Duration**   | 1/2/3 / Half day / Full day        | `Studio.minHours`, `Studio.durationOptions`   |
+| **Price**      | Hourly / Daily, line items         | `Studio.hourlyRate`, `Studio.dailyRate`       |
+| **Packages**   | 3–6 packages                       | `StudioPackage` model                         |
+| **Add-ons**    | Toggles                            | `StudioAddOn` (existing)                      |
+| **CTA**        | "متابعة للدفع"                     | Fixed                                         |
+| **Disclaimer** | "لن يتم تأكيد الحجز إلا بعد الدفع" | `Studio.bookingDisclaimer`                    |
 
 ### 1.5 Essential Info (What many forget)
-| Section | Fields | CMS Control |
-|---------|--------|-------------|
-| What's included | Bullet list | `Studio.whatsIncluded` (JSON array) |
-| Not included | Bullet list | `Studio.notIncluded` (JSON array) |
-| Electricity / AC / Changing rooms | Checkboxes | `Studio.hasElectricity`, `Studio.hasAC`, `Studio.hasChangingRooms` |
-| Rules & Requirements | Text | `Studio.rulesText` |
-| Max persons | Number | `Studio.capacity` |
-| Smoking / Food | Text | `Studio.smokingPolicy`, `Studio.foodPolicy` |
-| Equipment care | Text | `Studio.equipmentCarePolicy` |
-| Cancellation policy | 2 lines + link | `Studio.cancellationPolicyShort`, `Studio.cancellationPolicyLink` |
+
+| Section                           | Fields         | CMS Control                                                        |
+| --------------------------------- | -------------- | ------------------------------------------------------------------ |
+| What's included                   | Bullet list    | `Studio.whatsIncluded` (JSON array)                                |
+| Not included                      | Bullet list    | `Studio.notIncluded` (JSON array)                                  |
+| Electricity / AC / Changing rooms | Checkboxes     | `Studio.hasElectricity`, `Studio.hasAC`, `Studio.hasChangingRooms` |
+| Rules & Requirements              | Text           | `Studio.rulesText`                                                 |
+| Max persons                       | Number         | `Studio.capacity`                                                  |
+| Smoking / Food                    | Text           | `Studio.smokingPolicy`, `Studio.foodPolicy`                        |
+| Equipment care                    | Text           | `Studio.equipmentCarePolicy`                                       |
+| Cancellation policy               | 2 lines + link | `Studio.cancellationPolicyShort`, `Studio.cancellationPolicyLink`  |
 
 ### 1.6 Trust & Contact
-| Field | Source | CMS Control |
-|-------|--------|-------------|
-| Reviews / Client logos | `Studio.reviewsText`, `Studio.clientLogos` (Media) | ✅ |
-| WhatsApp: "أسأل قبل الحجز" | `Studio.whatsappNumber` | ✅ |
-| Share (copy link + WhatsApp) | Derived | — |
+
+| Field                        | Source                                             | CMS Control |
+| ---------------------------- | -------------------------------------------------- | ----------- |
+| Reviews / Client logos       | `Studio.reviewsText`, `Studio.clientLogos` (Media) | ✅          |
+| WhatsApp: "أسأل قبل الحجز"   | `Studio.whatsappNumber`                            | ✅          |
+| Share (copy link + WhatsApp) | Derived                                            | —           |
 
 ### 1.7 FAQ (3 questions max)
-| Field | Source | CMS Control |
-|-------|--------|-------------|
+
+| Field       | Source            | CMS Control       |
+| ----------- | ----------------- | ----------------- |
 | 3 FAQ items | `StudioFaq` model | ✅ Per-studio FAQ |
 
 ---
@@ -219,6 +226,7 @@ model Studio {
 ### 3.1 Navigation
 
 Add under **إدارة المحتوى (CMS)**:
+
 - **الاستوديوهات (Studios)** → `/admin/cms/studios`
 
 ### 3.2 CMS Studios List Page
@@ -236,19 +244,19 @@ Add under **إدارة المحتوى (CMS)**:
 
 **Layout**: Tabs or sections (similar to equipment edit)
 
-| Tab/Section | Content | Fields |
-|-------------|---------|--------|
-| **أساسي (Basic)** | Name, slug, description, area, type, best use, availability badge | name, slug, description, areaSqm, studioType, bestUse, availabilityConfidence |
-| **المعرض (Gallery)** | Upload/reorder 8–15 images, optional video, disclaimer | media (with sort), videoUrl, galleryDisclaimer |
-| **الموقع (Location)** | Address, Google Maps, arrival time, parking | address, googleMapsUrl, arrivalTimeFromCenter, parkingNotes |
-| **الحجز (Booking)** | Slots, buffers, duration, pricing, disclaimer | slotDurationMinutes, setupBuffer, cleaningBuffer, minHours, durationOptions, hourlyRate, dailyRate, bookingDisclaimer, vatIncluded |
-| **الباكجات (Packages)** | 3–6 packages CRUD | StudioPackage: name, includes (3 bullets), price, order |
-| **الإضافات (Add-ons)** | Existing StudioAddOn | Reuse current add-ons UI |
-| **المشمول / غير المشمول** | What's included, not included, amenities | whatsIncluded, notIncluded, hasElectricity, hasAC, hasChangingRooms |
-| **القواعد (Rules)** | Rules, policies, cancellation | rulesText, smokingPolicy, foodPolicy, equipmentCarePolicy, cancellationPolicyShort, cancellationPolicyLink |
-| **الثقة والاتصال** | Reviews, WhatsApp, client logos | reviewsText, whatsappNumber, client logos (Media) |
-| **الأسئلة الشائعة** | 3 FAQ items for this studio | StudioFaq CRUD |
-| **الأيام المعطلة** | Blackout dates | StudioBlackoutDate (existing) |
+| Tab/Section               | Content                                                           | Fields                                                                                                                             |
+| ------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **أساسي (Basic)**         | Name, slug, description, area, type, best use, availability badge | name, slug, description, areaSqm, studioType, bestUse, availabilityConfidence                                                      |
+| **المعرض (Gallery)**      | Upload/reorder 8–15 images, optional video, disclaimer            | media (with sort), videoUrl, galleryDisclaimer                                                                                     |
+| **الموقع (Location)**     | Address, Google Maps, arrival time, parking                       | address, googleMapsUrl, arrivalTimeFromCenter, parkingNotes                                                                        |
+| **الحجز (Booking)**       | Slots, buffers, duration, pricing, disclaimer                     | slotDurationMinutes, setupBuffer, cleaningBuffer, minHours, durationOptions, hourlyRate, dailyRate, bookingDisclaimer, vatIncluded |
+| **الباكجات (Packages)**   | 3–6 packages CRUD                                                 | StudioPackage: name, includes (3 bullets), price, order                                                                            |
+| **الإضافات (Add-ons)**    | Existing StudioAddOn                                              | Reuse current add-ons UI                                                                                                           |
+| **المشمول / غير المشمول** | What's included, not included, amenities                          | whatsIncluded, notIncluded, hasElectricity, hasAC, hasChangingRooms                                                                |
+| **القواعد (Rules)**       | Rules, policies, cancellation                                     | rulesText, smokingPolicy, foodPolicy, equipmentCarePolicy, cancellationPolicyShort, cancellationPolicyLink                         |
+| **الثقة والاتصال**        | Reviews, WhatsApp, client logos                                   | reviewsText, whatsappNumber, client logos (Media)                                                                                  |
+| **الأسئلة الشائعة**       | 3 FAQ items for this studio                                       | StudioFaq CRUD                                                                                                                     |
+| **الأيام المعطلة**        | Blackout dates                                                    | StudioBlackoutDate (existing)                                                                                                      |
 
 ### 3.4 CMS Permissions
 
@@ -259,20 +267,21 @@ Add under **إدارة المحتوى (CMS)**:
 
 ## 4. API Routes Required
 
-| Method | Route | Purpose |
-|--------|-------|---------|
-| GET | `/api/admin/studios` | List studios for CMS |
-| GET | `/api/admin/studios/[id]` | Full studio for edit (with packages, faqs, media) |
-| PUT | `/api/admin/studios/[id]` | Update studio |
-| POST | `/api/admin/studios` | Create studio (optional) |
-| GET | `/api/admin/studios/[id]/media` | List media with order |
-| PUT | `/api/admin/studios/[id]/media/reorder` | Reorder gallery |
-| POST | `/api/admin/studios/[id]/media` | Upload/add media |
-| DELETE | `/api/admin/studios/[id]/media/[mediaId]` | Remove from gallery |
-| CRUD | `/api/admin/studios/[id]/packages` | StudioPackage CRUD |
-| CRUD | `/api/admin/studios/[id]/faqs` | StudioFaq CRUD |
+| Method | Route                                     | Purpose                                           |
+| ------ | ----------------------------------------- | ------------------------------------------------- |
+| GET    | `/api/admin/studios`                      | List studios for CMS                              |
+| GET    | `/api/admin/studios/[id]`                 | Full studio for edit (with packages, faqs, media) |
+| PUT    | `/api/admin/studios/[id]`                 | Update studio                                     |
+| POST   | `/api/admin/studios`                      | Create studio (optional)                          |
+| GET    | `/api/admin/studios/[id]/media`           | List media with order                             |
+| PUT    | `/api/admin/studios/[id]/media/reorder`   | Reorder gallery                                   |
+| POST   | `/api/admin/studios/[id]/media`           | Upload/add media                                  |
+| DELETE | `/api/admin/studios/[id]/media/[mediaId]` | Remove from gallery                               |
+| CRUD   | `/api/admin/studios/[id]/packages`        | StudioPackage CRUD                                |
+| CRUD   | `/api/admin/studios/[id]/faqs`            | StudioFaq CRUD                                    |
 
 **Public** (existing or extend):
+
 - `GET /api/public/studios` – List
 - `GET /api/public/studios/[slug]` – Detail (include all new fields)
 - `POST /api/public/studios/[slug]/availability` – Slots (existing)
@@ -351,23 +360,27 @@ src/components/features/studio/
 ## 7. Implementation Order
 
 ### Phase 1: Schema & CMS Foundation
+
 1. Prisma migration: extend Studio, add StudioPackage, StudioFaq
 2. Add Media.sortOrder (or mediaOrder on Studio)
 3. StudioService, validators
 4. API: GET/PUT `/api/admin/studios/[id]`
 
 ### Phase 2: CMS UI
+
 5. Add "الاستوديوهات" to CMS sidebar
 6. CMS Studios list page
 7. CMS Studio edit page (tabs: Basic, Gallery, Location, Booking, Packages, Add-ons, Included, Rules, Trust, FAQ)
 
 ### Phase 3: Public Page
+
 8. Refactor `StudioDetail` into subcomponents
 9. Implement all sections from spec
 10. Sticky booking panel
 11. Price breakdown
 
 ### Phase 4: Polish
+
 12. Media upload/reorder in CMS
 13. Package & FAQ CRUD in CMS
 14. Cache invalidation
@@ -388,18 +401,18 @@ src/components/features/studio/
 
 ## 9. File Summary
 
-| Area | New/Modified Files |
-|------|--------------------|
-| **Schema** | `prisma/schema.prisma` |
-| **Migration** | `prisma/migrations/YYYYMMDD_add_cms_studio/` |
-| **Services** | `studio.service.ts`, `studio-package.service.ts`, `studio-faq.service.ts` |
-| **Validators** | `studio.validator.ts`, `studio-package.validator.ts`, `studio-faq.validator.ts` |
-| **API** | `api/admin/studios/`, `api/admin/studios/[id]/`, `api/admin/studios/[id]/packages/`, `api/admin/studios/[id]/faqs/`, `api/admin/studios/[id]/media/` |
-| **CMS Pages** | `admin/cms/studios/page.tsx`, `admin/cms/studios/[id]/page.tsx` |
-| **CMS Components** | `cms/studios/studio-form-tabs.tsx`, `studio-package-form.tsx`, `studio-faq-form.tsx` |
-| **Public Components** | `studio-detail.tsx`, `studio-header.tsx`, `studio-gallery.tsx`, `studio-location.tsx`, `studio-booking-panel.tsx`, etc. |
-| **Sidebar** | `admin-sidebar.tsx` – add Studios link |
-| **CMS Overview** | `cms/page.tsx` – add Studios card |
+| Area                  | New/Modified Files                                                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Schema**            | `prisma/schema.prisma`                                                                                                                               |
+| **Migration**         | `prisma/migrations/YYYYMMDD_add_cms_studio/`                                                                                                         |
+| **Services**          | `studio.service.ts`, `studio-package.service.ts`, `studio-faq.service.ts`                                                                            |
+| **Validators**        | `studio.validator.ts`, `studio-package.validator.ts`, `studio-faq.validator.ts`                                                                      |
+| **API**               | `api/admin/studios/`, `api/admin/studios/[id]/`, `api/admin/studios/[id]/packages/`, `api/admin/studios/[id]/faqs/`, `api/admin/studios/[id]/media/` |
+| **CMS Pages**         | `admin/cms/studios/page.tsx`, `admin/cms/studios/[id]/page.tsx`                                                                                      |
+| **CMS Components**    | `cms/studios/studio-form-tabs.tsx`, `studio-package-form.tsx`, `studio-faq-form.tsx`                                                                 |
+| **Public Components** | `studio-detail.tsx`, `studio-header.tsx`, `studio-gallery.tsx`, `studio-location.tsx`, `studio-booking-panel.tsx`, etc.                              |
+| **Sidebar**           | `admin-sidebar.tsx` – add Studios link                                                                                                               |
+| **CMS Overview**      | `cms/page.tsx` – add Studios card                                                                                                                    |
 
 ---
 

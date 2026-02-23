@@ -36,9 +36,7 @@ function VerifyContent() {
     return (
       <>
         <h1 className="mb-4 text-2xl font-bold">{i18n('auth.emailVerified')}</h1>
-        <p className="mb-6 text-muted-foreground">
-          {i18n('auth.emailVerifiedDesc')}
-        </p>
+        <p className="mb-6 text-muted-foreground">{i18n('auth.emailVerifiedDesc')}</p>
         <Button asChild>
           <Link href="/login">{i18n('auth.signIn')}</Link>
         </Button>
@@ -48,9 +46,7 @@ function VerifyContent() {
   return (
     <>
       <h1 className="mb-4 text-2xl font-bold">{i18n('auth.verificationFailed')}</h1>
-      <p className="mb-6 text-muted-foreground">
-        {i18n('auth.verificationFailedDesc')}
-      </p>
+      <p className="mb-6 text-muted-foreground">{i18n('auth.verificationFailedDesc')}</p>
       <Button asChild variant="outline">
         <Link href="/login">{i18n('auth.backToLogin')}</Link>
       </Button>

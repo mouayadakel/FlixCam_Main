@@ -32,11 +32,7 @@ export class StudioPackageService {
     })
   }
 
-  static async create(
-    studioId: string,
-    data: CreateStudioPackageInput,
-    userId: string
-  ) {
+  static async create(studioId: string, data: CreateStudioPackageInput, userId: string) {
     const count = await prisma.studioPackage.count({
       where: { studioId, deletedAt: null },
     })
@@ -78,11 +74,7 @@ export class StudioPackageService {
     return pkg
   }
 
-  static async update(
-    id: string,
-    data: UpdateStudioPackageInput,
-    userId: string
-  ) {
+  static async update(id: string, data: UpdateStudioPackageInput, userId: string) {
     const existing = await prisma.studioPackage.findFirst({
       where: { id, deletedAt: null },
     })

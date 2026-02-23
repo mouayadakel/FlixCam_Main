@@ -31,7 +31,14 @@ const LOCALE_LABELS: Record<Locale, string> = {
 }
 
 function calculateCompletion(data: TranslationData): number {
-  const fields = ['name', 'shortDescription', 'description', 'seoTitle', 'seoDescription', 'seoKeywords'] as const
+  const fields = [
+    'name',
+    'shortDescription',
+    'description',
+    'seoTitle',
+    'seoDescription',
+    'seoKeywords',
+  ] as const
   const filled = fields.filter((f) => {
     const val = data[f]
     return val && String(val).trim().length > 0
@@ -67,11 +74,21 @@ export function TranslationTabSwitcher({
                   : 'border-muted hover:border-muted-foreground/30'
               )}
             >
-              <span className={cn('text-sm font-medium', isActive ? 'text-primary' : 'text-muted-foreground')}>
+              <span
+                className={cn(
+                  'text-sm font-medium',
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
                 {LOCALE_LABELS[locale]}
               </span>
-              <Progress value={completion} className="h-1 mt-1.5" />
-              <span className={cn('text-xs mt-0.5 block', completion === 100 ? 'text-green-600' : 'text-muted-foreground')}>
+              <Progress value={completion} className="mt-1.5 h-1" />
+              <span
+                className={cn(
+                  'mt-0.5 block text-xs',
+                  completion === 100 ? 'text-green-600' : 'text-muted-foreground'
+                )}
+              >
                 {completion}%
               </span>
             </button>

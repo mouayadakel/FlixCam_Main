@@ -178,7 +178,9 @@ export default function DeliveryPage() {
         <Card>
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">قيد الانتظار</p>
-            <p className={`text-2xl font-bold ${summary.pending > 0 ? 'text-amber-600' : ''}`}>{summary.pending}</p>
+            <p className={`text-2xl font-bold ${summary.pending > 0 ? 'text-amber-600' : ''}`}>
+              {summary.pending}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -196,7 +198,9 @@ export default function DeliveryPage() {
         <Card className={summary.today > 0 ? 'border-primary/50' : ''}>
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">اليوم</p>
-            <p className={`text-2xl font-bold ${summary.today > 0 ? 'text-primary' : ''}`}>{summary.today}</p>
+            <p className={`text-2xl font-bold ${summary.today > 0 ? 'text-primary' : ''}`}>
+              {summary.today}
+            </p>
           </CardContent>
         </Card>
         <Card className={summary.noDriver > 0 ? 'border-red-300' : ''}>
@@ -205,7 +209,9 @@ export default function DeliveryPage() {
               {summary.noDriver > 0 && <AlertTriangle className="h-3 w-3 text-red-500" />}
               <p className="text-sm text-muted-foreground">بدون سائق</p>
             </div>
-            <p className={`text-2xl font-bold ${summary.noDriver > 0 ? 'text-red-600' : ''}`}>{summary.noDriver}</p>
+            <p className={`text-2xl font-bold ${summary.noDriver > 0 ? 'text-red-600' : ''}`}>
+              {summary.noDriver}
+            </p>
           </CardContent>
         </Card>
       </div>

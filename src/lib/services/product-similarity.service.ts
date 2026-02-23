@@ -188,9 +188,7 @@ export async function findSimilarProducts(
     })
   }
 
-  return similarities
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, topN)
+  return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topN)
 }
 
 /**

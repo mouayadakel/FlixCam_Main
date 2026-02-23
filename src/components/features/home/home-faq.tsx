@@ -75,9 +75,7 @@ export function HomeFaq() {
   }, [])
 
   const useFallback = apiItems === null || apiItems.length === 0
-  const displayItems = useFallback
-    ? FALLBACK_FAQ_ITEMS
-    : apiItems.slice(0, HOMEPAGE_FAQ_LIMIT)
+  const displayItems = useFallback ? FALLBACK_FAQ_ITEMS : apiItems.slice(0, HOMEPAGE_FAQ_LIMIT)
 
   return (
     <section className="border-t border-border-light/50 bg-surface-light py-10 md:py-14">

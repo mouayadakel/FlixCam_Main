@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,12 +19,7 @@ interface IncludedTabProps {
   saving: boolean
 }
 
-export function CmsStudioIncludedTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: IncludedTabProps) {
+export function CmsStudioIncludedTab({ studio, onSave, onDirtyChange, saving }: IncludedTabProps) {
   const [form, setForm] = useState({
     whatsIncluded: '',
     notIncluded: '',

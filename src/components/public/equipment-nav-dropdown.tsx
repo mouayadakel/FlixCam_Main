@@ -160,7 +160,7 @@ export function EquipmentNavDropdown({
       onMouseEnter={handlePanelMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'min-w-[200px] overflow-x-hidden overflow-y-auto rounded-xl border border-border-light/60 bg-white py-2 shadow-lg',
+        'min-w-[200px] overflow-y-auto overflow-x-hidden rounded-xl border border-border-light/60 bg-white py-2 shadow-lg',
         'max-h-[60vh]'
       )}
       style={{
@@ -186,9 +186,7 @@ export function EquipmentNavDropdown({
       </div>
       <div className="py-1">
         {loading && (
-          <div className="px-3 py-4 text-center text-sm text-text-muted">
-            {t('common.loading')}
-          </div>
+          <div className="px-3 py-4 text-center text-sm text-text-muted">{t('common.loading')}</div>
         )}
         {error && !loading && (
           <div className="px-3 py-2 text-sm text-text-muted">
@@ -221,7 +219,7 @@ export function EquipmentNavDropdown({
                   onClick={onLinkClick}
                   role="menuitem"
                   className={cn(
-                    'block px-3 py-1.5 text-sm transition-colors text-start',
+                    'block px-3 py-1.5 text-start text-sm transition-colors',
                     item.isSubcategory
                       ? 'ms-4 text-text-body hover:bg-brand-primary/10 hover:text-brand-primary'
                       : 'font-medium text-text-heading hover:bg-brand-primary/10 hover:text-brand-primary'
@@ -250,10 +248,8 @@ export function EquipmentNavDropdown({
         aria-haspopup="true"
         aria-expanded={open}
         className={cn(
-          'flex items-center text-sm font-medium transition-colors h-10',
-          isActive
-            ? 'font-semibold text-brand-primary'
-            : 'text-foreground/90 hover:text-foreground'
+          'flex h-10 items-center text-sm font-medium transition-colors',
+          isActive ? 'font-semibold text-brand-primary' : 'text-foreground/90 hover:text-foreground'
         )}
       >
         {t('nav.equipment')}

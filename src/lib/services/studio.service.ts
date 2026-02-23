@@ -516,7 +516,9 @@ export class StudioService {
         ...(data.heroTagline !== undefined && { heroTagline: data.heroTagline }),
         ...(data.reviewsText !== undefined && { reviewsText: data.reviewsText }),
         ...(data.whatsappNumber !== undefined && { whatsappNumber: data.whatsappNumber }),
-        ...(data.bookingCountDisplay !== undefined && { bookingCountDisplay: data.bookingCountDisplay }),
+        ...(data.bookingCountDisplay !== undefined && {
+          bookingCountDisplay: data.bookingCountDisplay,
+        }),
         ...(data.metaTitle !== undefined && { metaTitle: data.metaTitle }),
         ...(data.metaDescription !== undefined && { metaDescription: data.metaDescription }),
         updatedBy: userId,

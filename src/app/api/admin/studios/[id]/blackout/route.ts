@@ -19,10 +19,7 @@ const createSchema = z.object({
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(new NextRequest(new URL('http://localhost')))
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -50,17 +47,11 @@ export async function GET(
     })
     return NextResponse.json({ data: blackouts })
   } catch {
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -87,10 +78,7 @@ export async function POST(
     const startDate = new Date(data.startDate)
     const endDate = new Date(data.endDate)
     if (endDate < startDate) {
-      return NextResponse.json(
-        { error: 'End date must be after start date' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 })
     }
     const blackout = await StudioService.addBlackoutDate(
       id,
@@ -104,10 +92,7 @@ export async function POST(
     return NextResponse.json(blackout, { status: 201 })
   } catch (e) {
     if (e instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: e.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation failed', details: e.errors }, { status: 400 })
     }
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Internal Server Error' },

@@ -115,13 +115,13 @@ async function testPackageI18n() {
       FAKE_USER
     )
     createdPackageId = pkg.id
-    if (
-      (pkg as any).nameZh === '测试套餐' &&
-      (pkg as any).descriptionAr === 'وصف تجريبي'
-    ) {
+    if ((pkg as any).nameZh === '测试套餐' && (pkg as any).descriptionAr === 'وصف تجريبي') {
       ok('Create package with nameZh + descriptionAr')
     } else {
-      fail('Create package with i18n', `nameZh=${(pkg as any).nameZh}, descriptionAr=${(pkg as any).descriptionAr}`)
+      fail(
+        'Create package with i18n',
+        `nameZh=${(pkg as any).nameZh}, descriptionAr=${(pkg as any).descriptionAr}`
+      )
     }
   } catch (e) {
     fail('Create package with i18n', e)
@@ -241,7 +241,15 @@ function testAnalyticsUtility() {
 
   // Check wiring in components
   try {
-    const detailPath = path.join(__dirname, '..', 'src', 'components', 'features', 'studio', 'studio-detail.tsx')
+    const detailPath = path.join(
+      __dirname,
+      '..',
+      'src',
+      'components',
+      'features',
+      'studio',
+      'studio-detail.tsx'
+    )
     const detail = fs.readFileSync(detailPath, 'utf-8')
     if (detail.includes('trackStudioEvent') && detail.includes('package_selected')) {
       ok('studio-detail.tsx fires package_selected')
@@ -253,7 +261,15 @@ function testAnalyticsUtility() {
   }
 
   try {
-    const panelPath = path.join(__dirname, '..', 'src', 'components', 'features', 'studio', 'studio-booking-panel.tsx')
+    const panelPath = path.join(
+      __dirname,
+      '..',
+      'src',
+      'components',
+      'features',
+      'studio',
+      'studio-booking-panel.tsx'
+    )
     const panel = fs.readFileSync(panelPath, 'utf-8')
     const hasAddon = panel.includes('addon_toggled')
     const hasBooking = panel.includes('booking_started')
@@ -272,7 +288,14 @@ function testAnalyticsUtility() {
 function testI18nKeys() {
   console.log('\n── 6. i18n keys completeness ──')
 
-  const requiredKeys = ['testimonials', 'couponPlaceholder', 'comparePackages', 'feature', 'discountRow', 'selectLabel']
+  const requiredKeys = [
+    'testimonials',
+    'couponPlaceholder',
+    'comparePackages',
+    'feature',
+    'discountRow',
+    'selectLabel',
+  ]
   const locales = ['ar', 'en', 'zh']
 
   for (const locale of locales) {

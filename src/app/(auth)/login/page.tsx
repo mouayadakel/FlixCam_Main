@@ -169,11 +169,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form
-          method="post"
-          onSubmit={(e) => handleSubmit(onSubmit)(e)}
-          className="space-y-6"
-        >
+        <form method="post" onSubmit={(e) => handleSubmit(onSubmit)(e)} className="space-y-6">
           {/* Email Field */}
           <div className="space-y-2">
             <Label htmlFor="email">{t.email}</Label>

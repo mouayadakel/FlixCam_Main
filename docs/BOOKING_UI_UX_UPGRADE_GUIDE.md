@@ -80,6 +80,7 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 **Why:** Users adding only a studio cannot complete payment.
 
 **Actions:**
+
 1. Extend `create-session` to accept studio-only carts
 2. Pass `studioId`, `studioStartTime`, `studioEndTime` from cart items to `BookingService.create`
 3. Fix availability API to use `studioStartTime`/`studioEndTime` for blocking
@@ -90,6 +91,7 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 **Why:** Selecting a 4-hour package can still send `duration=2` from the previous hourly selection.
 
 **Actions:**
+
 1. When `selectedPackageId` is set, use `selectedPkg.hours` for `duration` in cart params
 2. Ensure add-studio API receives correct duration
 
@@ -98,6 +100,7 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 **Why:** Redirect to `/portal/profile?complete=true` can feel abrupt.
 
 **Actions:**
+
 1. Show a modal or inline message: "Complete your profile to continue"
 2. Add a clear CTA and link back to cart after completion
 3. Optionally allow guest checkout for studio-only (if business allows)
@@ -257,6 +260,7 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 **Current:** Dates → Availability → Add-ons → Review → Payment → Confirm
 
 **Improvements:**
+
 1. **Combine where possible**
    - Dates + Availability (for equipment) in one step
    - Or: "When" (dates) + "Confirm availability" (read-only summary)
@@ -332,14 +336,14 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 
 ### Step 7.2 — Error & empty states
 
-| Scenario | Message | Action |
-|---------|---------|--------|
-| Add to cart failed | "Couldn't add to cart. Please try again." | Retry |
+| Scenario           | Message                                                     | Action                       |
+| ------------------ | ----------------------------------------------------------- | ---------------------------- |
+| Add to cart failed | "Couldn't add to cart. Please try again."                   | Retry                        |
 | Studio sync failed | "Couldn't add studio. The slot may no longer be available." | Retry, Choose different slot |
-| Cart empty | "Your cart is empty" | Continue shopping |
-| No availability | "No slots available for this date" | Choose another date |
-| Payment failed | "Payment could not be processed." | Retry, Try different card |
-| Profile incomplete | "Complete your profile to continue" | Go to profile |
+| Cart empty         | "Your cart is empty"                                        | Continue shopping            |
+| No availability    | "No slots available for this date"                          | Choose another date          |
+| Payment failed     | "Payment could not be processed."                           | Retry, Try different card    |
+| Profile incomplete | "Complete your profile to continue"                         | Go to profile                |
 
 ### Step 7.3 — Localization
 
@@ -444,29 +448,29 @@ Discovery → Detail → Add to Cart → Cart → Checkout (5 steps) → Payment
 
 ## Quick Reference: Priority Order
 
-| Priority | Phase | Focus |
-|----------|-------|-------|
-| P0 | Phase 2 | Fix studio checkout, package duration, CartStudioSync errors |
-| P1 | Phase 5 | Cart UX, empty states, studio sync feedback |
-| P2 | Phase 6 | Checkout step consolidation, mobile, review step |
-| P3 | Phase 4 | Detail page date picker, studio slot UX |
-| P4 | Phase 3 | Discovery, filters, Build Your Kit clarity |
-| P5 | Phase 7–8 | Copy, errors, UI polish, a11y |
+| Priority | Phase     | Focus                                                        |
+| -------- | --------- | ------------------------------------------------------------ |
+| P0       | Phase 2   | Fix studio checkout, package duration, CartStudioSync errors |
+| P1       | Phase 5   | Cart UX, empty states, studio sync feedback                  |
+| P2       | Phase 6   | Checkout step consolidation, mobile, review step             |
+| P3       | Phase 4   | Detail page date picker, studio slot UX                      |
+| P4       | Phase 3   | Discovery, filters, Build Your Kit clarity                   |
+| P5       | Phase 7–8 | Copy, errors, UI polish, a11y                                |
 
 ---
 
 ## Files to Touch (Reference)
 
-| Area | Key Files |
-|------|-----------|
-| Checkout flow | `src/app/(public)/checkout/page.tsx`, `create-session/route.ts` |
-| Cart | `src/app/(public)/cart/page.tsx`, `cart-studio-sync.tsx`, `cart-list.tsx` |
-| Studio booking | `studio-booking-panel.tsx`, `studio-slot-picker.tsx` |
-| Equipment | `equipment-detail.tsx`, equipment list page |
-| Build Your Kit | `kit-builder-flow.tsx`, `kit-wizard.tsx` |
-| Content | `src/messages/en.json`, `ar.json`, `zh.json` |
-| Checkout steps | `checkout-step-*.tsx` |
+| Area           | Key Files                                                                 |
+| -------------- | ------------------------------------------------------------------------- |
+| Checkout flow  | `src/app/(public)/checkout/page.tsx`, `create-session/route.ts`           |
+| Cart           | `src/app/(public)/cart/page.tsx`, `cart-studio-sync.tsx`, `cart-list.tsx` |
+| Studio booking | `studio-booking-panel.tsx`, `studio-slot-picker.tsx`                      |
+| Equipment      | `equipment-detail.tsx`, equipment list page                               |
+| Build Your Kit | `kit-builder-flow.tsx`, `kit-wizard.tsx`                                  |
+| Content        | `src/messages/en.json`, `ar.json`, `zh.json`                              |
+| Checkout steps | `checkout-step-*.tsx`                                                     |
 
 ---
 
-*Use this guide as a living document. Update as you ship changes and learn from user behavior.*
+_Use this guide as a living document. Update as you ship changes and learn from user behavior._

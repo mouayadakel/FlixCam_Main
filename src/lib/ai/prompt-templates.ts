@@ -17,12 +17,10 @@ export interface ProductContext {
 const CATEGORY_KEYWORDS: Record<string, string> = {
   Cameras:
     'cinema camera rental, film camera hire, digital cinema, 4K camera rental, production camera',
-  Lenses:
-    'cinema lens rental, prime lens hire, zoom lens rental, anamorphic lens, PL mount',
+  Lenses: 'cinema lens rental, prime lens hire, zoom lens rental, anamorphic lens, PL mount',
   Lighting:
     'film lighting rental, LED panel hire, fresnel light, production lighting, studio light rental',
-  Audio:
-    'production audio rental, wireless mic hire, boom mic, sound recording, lavalier rental',
+  Audio: 'production audio rental, wireless mic hire, boom mic, sound recording, lavalier rental',
   Grip: 'grip equipment rental, tripod hire, slider rental, dolly, gimbal stabilizer rental',
   Monitors:
     'field monitor rental, director monitor, video village, SDI monitor, production display rental',

@@ -13,19 +13,38 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  CheckCircle, XCircle, Loader2, FileText, Image as ImageIcon,
-  Settings2, Sparkles, Eye, ChevronDown,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  FileText,
+  Image as ImageIcon,
+  Settings2,
+  Sparkles,
+  Eye,
+  ChevronDown,
 } from 'lucide-react'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfidenceBadge } from '@/components/shared/confidence-badge'
 import { format } from 'date-fns'
@@ -61,49 +80,71 @@ function InlineConfidenceBadge({ value }: { value: number }) {
 function DraftPreview({ draft }: { draft: DraftItem }) {
   const data = draft.suggestedData
   if (draft.type === 'text') {
-    const genEn = data.generatedEnDescription as { shortDescription?: string; longDescription?: string } | undefined
+    const genEn = data.generatedEnDescription as
+      | { shortDescription?: string; longDescription?: string }
+      | undefined
     const seo = data.seo as { metaTitle?: string; metaDescription?: string } | undefined
-    const translations = data.translations as Record<string, { name?: string; shortDescription?: string }> | undefined
+    const translations = data.translations as
+      | Record<string, { name?: string; shortDescription?: string }>
+      | undefined
     const confidence = data.confidence as Record<string, number> | undefined
 
     return (
       <div className="space-y-3 text-sm" dir="rtl">
         {genEn?.shortDescription && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1 flex items-center gap-2">
               <span className="font-medium text-muted-foreground">وصف قصير (EN)</span>
-              {confidence?.shortDescription && <InlineConfidenceBadge value={confidence.shortDescription} />}
+              {confidence?.shortDescription && (
+                <InlineConfidenceBadge value={confidence.shortDescription} />
+              )}
             </div>
-            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">{genEn.shortDescription}</p>
+            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">
+              {genEn.shortDescription}
+            </p>
           </div>
         )}
         {seo?.metaTitle && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1 flex items-center gap-2">
               <span className="font-medium text-muted-foreground">عنوان SEO</span>
               {confidence?.seoTitle && <InlineConfidenceBadge value={confidence.seoTitle} />}
             </div>
-            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">{seo.metaTitle}</p>
+            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">
+              {seo.metaTitle}
+            </p>
           </div>
         )}
-        {translations && Object.entries(translations).map(([locale, t]) => (
-          <div key={locale}>
-            <span className="font-medium text-muted-foreground">
-              {locale === 'ar' ? 'العربية' : locale === 'zh' ? '中文' : locale.toUpperCase()}
-            </span>
-            {t?.name && <p className="rounded bg-muted/50 p-2 text-xs mt-1" dir={locale === 'ar' ? 'rtl' : 'ltr'}>{t.name}</p>}
-          </div>
-        ))}
+        {translations &&
+          Object.entries(translations).map(([locale, t]) => (
+            <div key={locale}>
+              <span className="font-medium text-muted-foreground">
+                {locale === 'ar' ? 'العربية' : locale === 'zh' ? '中文' : locale.toUpperCase()}
+              </span>
+              {t?.name && (
+                <p
+                  className="mt-1 rounded bg-muted/50 p-2 text-xs"
+                  dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                >
+                  {t.name}
+                </p>
+              )}
+            </div>
+          ))}
         {data.boxContents != null && String(data.boxContents).trim() !== '' && (
           <div>
             <span className="font-medium text-muted-foreground">محتويات الصندوق</span>
-            <p className="rounded bg-muted/50 p-2 text-xs mt-1" dir="ltr">{String(data.boxContents)}</p>
+            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="ltr">
+              {String(data.boxContents)}
+            </p>
           </div>
         )}
         {data.tags != null && String(data.tags).trim() !== '' && (
           <div>
             <span className="font-medium text-muted-foreground">الوسوم</span>
-            <p className="rounded bg-muted/50 p-2 text-xs mt-1" dir="ltr">{String(data.tags)}</p>
+            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="ltr">
+              {String(data.tags)}
+            </p>
           </div>
         )}
       </div>
@@ -112,27 +153,32 @@ function DraftPreview({ draft }: { draft: DraftItem }) {
 
   if (draft.type === 'spec') {
     const specs = data.specifications as Record<string, unknown> | undefined
-    const specResults = data.specResults as Array<{ key: string; value: unknown; confidence: number }> | undefined
+    const specResults = data.specResults as
+      | Array<{ key: string; value: unknown; confidence: number }>
+      | undefined
     return (
       <div className="space-y-2 text-sm">
-        {specResults ? (
-          specResults.map((s) => (
-            <div key={s.key} className="flex items-center justify-between rounded bg-muted/50 p-2">
-              <span className="font-medium">{s.key}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs">{String(s.value)}</span>
-                <InlineConfidenceBadge value={s.confidence} />
+        {specResults
+          ? specResults.map((s) => (
+              <div
+                key={s.key}
+                className="flex items-center justify-between rounded bg-muted/50 p-2"
+              >
+                <span className="font-medium">{s.key}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">{String(s.value)}</span>
+                  <InlineConfidenceBadge value={s.confidence} />
+                </div>
               </div>
-            </div>
-          ))
-        ) : specs ? (
-          Object.entries(specs).map(([k, v]) => (
-            <div key={k} className="flex items-center justify-between rounded bg-muted/50 p-2">
-              <span className="font-medium">{k}</span>
-              <span className="text-xs">{String(v)}</span>
-            </div>
-          ))
-        ) : null}
+            ))
+          : specs
+            ? Object.entries(specs).map(([k, v]) => (
+                <div key={k} className="flex items-center justify-between rounded bg-muted/50 p-2">
+                  <span className="font-medium">{k}</span>
+                  <span className="text-xs">{String(v)}</span>
+                </div>
+              ))
+            : null}
       </div>
     )
   }
@@ -190,15 +236,25 @@ export function ContentReviewTab() {
       const data = await res.json()
       setDrafts(data.drafts ?? [])
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تحميل المسودات', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تحميل المسودات',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
   }, [toast])
 
-  useEffect(() => { fetchDrafts() }, [fetchDrafts])
+  useEffect(() => {
+    fetchDrafts()
+  }, [fetchDrafts])
 
-  const handleAction = async (id: string, action: 'approve' | 'reject', rejectionReason?: string) => {
+  const handleAction = async (
+    id: string,
+    action: 'approve' | 'reject',
+    rejectionReason?: string
+  ) => {
     setActingId(id)
     try {
       const body: Record<string, string> = {}
@@ -212,10 +268,18 @@ export function ContentReviewTab() {
       if (!res.ok) throw new Error(data.error || 'فشل التنفيذ')
       toast({ title: action === 'approve' ? 'تمت الموافقة' : 'تم الرفض' })
       setDrafts((prev) => prev.filter((d) => d.id !== id))
-      setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next })
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
       if (previewDraft?.id === id) setPreviewDraft(null)
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل التنفيذ', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل التنفيذ',
+        variant: 'destructive',
+      })
     } finally {
       setActingId(null)
     }
@@ -239,11 +303,15 @@ export function ContentReviewTab() {
           successCount++
           setDrafts((prev) => prev.filter((d) => d.id !== id))
         }
-      } catch { /* continue with remaining */ }
+      } catch {
+        /* continue with remaining */
+      }
     }
     setSelectedIds(new Set())
     setBulkActing(false)
-    toast({ title: `${action === 'approve' ? 'تمت الموافقة على' : 'تم رفض'} ${successCount} من ${ids.length}` })
+    toast({
+      title: `${action === 'approve' ? 'تمت الموافقة على' : 'تم رفض'} ${successCount} من ${ids.length}`,
+    })
   }
 
   const toggleSelect = (id: string) => {
@@ -273,8 +341,10 @@ export function ContentReviewTab() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="grid gap-4 grid-cols-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20" />
+          ))}
         </div>
         <Skeleton className="h-64" />
       </div>
@@ -285,7 +355,7 @@ export function ContentReviewTab() {
     <>
       <div className="space-y-6" dir="rtl">
         {/* Summary cards */}
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -318,10 +388,12 @@ export function ContentReviewTab() {
         {/* Draft list */}
         <Card>
           <CardHeader className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>مسودات المحتوى</CardTitle>
-                <CardDescription>راجع واعتمد أو ارفض مقترحات الذكاء الاصطناعي قبل النشر</CardDescription>
+                <CardDescription>
+                  راجع واعتمد أو ارفض مقترحات الذكاء الاصطناعي قبل النشر
+                </CardDescription>
               </div>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
@@ -343,21 +415,25 @@ export function ContentReviewTab() {
                 />
                 <span className="text-xs text-muted-foreground">تحديد الكل</span>
                 {selectedIds.size > 0 && (
-                  <div className="flex items-center gap-2 mr-auto">
+                  <div className="mr-auto flex items-center gap-2">
                     <Button
                       size="sm"
                       disabled={bulkActing}
                       onClick={() => handleBulkAction('approve')}
                     >
-                      {bulkActing ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : <CheckCircle className="h-3 w-3 ml-1" />}
+                      {bulkActing ? (
+                        <Loader2 className="ml-1 h-3 w-3 animate-spin" />
+                      ) : (
+                        <CheckCircle className="ml-1 h-3 w-3" />
+                      )}
                       اعتماد المحدد ({selectedIds.size})
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="sm" variant="outline" disabled={bulkActing}>
-                          <XCircle className="h-3 w-3 ml-1" />
+                          <XCircle className="ml-1 h-3 w-3" />
                           رفض المحدد ({selectedIds.size})
-                          <ChevronDown className="h-3 w-3 mr-1" />
+                          <ChevronDown className="mr-1 h-3 w-3" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -379,51 +455,72 @@ export function ContentReviewTab() {
           <CardContent>
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-green-300 bg-green-50/50 py-16 text-center">
-                <CheckCircle className="h-12 w-12 mb-4 text-green-500" />
-                <p className="text-lg font-medium text-green-700">لا توجد مسودات في انتظار المراجعة</p>
-                <p className="text-sm text-green-600 mt-1">جميع المحتوى تم مراجعته</p>
+                <CheckCircle className="mb-4 h-12 w-12 text-green-500" />
+                <p className="text-lg font-medium text-green-700">
+                  لا توجد مسودات في انتظار المراجعة
+                </p>
+                <p className="mt-1 text-sm text-green-600">جميع المحتوى تم مراجعته</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {filtered.map((draft) => {
                   const Icon = TYPE_ICONS[draft.type] ?? FileText
-                  const productName = draft.product?.translations?.[0]?.name ?? draft.product?.sku ?? draft.productId
+                  const productName =
+                    draft.product?.translations?.[0]?.name ?? draft.product?.sku ?? draft.productId
                   return (
-                    <div key={draft.id} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border p-4">
+                    <div
+                      key={draft.id}
+                      className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center"
+                    >
                       <Checkbox
                         checked={selectedIds.has(draft.id)}
                         onCheckedChange={() => toggleSelect(draft.id)}
                         className="shrink-0"
                       />
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 shrink-0">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100">
                           <Icon className="h-5 w-5 text-purple-600" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{productName}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Badge variant="secondary" className="text-xs">{TYPE_LABELS[draft.type] ?? draft.type}</Badge>
+                          <p className="truncate font-medium">{productName}</p>
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {TYPE_LABELS[draft.type] ?? draft.type}
+                            </Badge>
                             <span className="text-xs text-muted-foreground">
                               {format(new Date(draft.createdAt), 'dd/MM HH:mm', { locale: arSA })}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex shrink-0 items-center gap-2">
                         <Button size="sm" variant="outline" onClick={() => setPreviewDraft(draft)}>
-                          <Eye className="h-4 w-4 ml-1" />
+                          <Eye className="ml-1 h-4 w-4" />
                           معاينة
                         </Button>
-                        <Button size="sm" variant="default" disabled={actingId === draft.id} onClick={() => handleAction(draft.id, 'approve')}>
-                          {actingId === draft.id ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : <CheckCircle className="h-4 w-4 ml-1" />}
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={actingId === draft.id}
+                          onClick={() => handleAction(draft.id, 'approve')}
+                        >
+                          {actingId === draft.id ? (
+                            <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="ml-1 h-4 w-4" />
+                          )}
                           اعتماد
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button size="sm" variant="outline" disabled={actingId === draft.id}>
-                              {actingId === draft.id ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : <XCircle className="h-4 w-4 ml-1" />}
+                              {actingId === draft.id ? (
+                                <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                              ) : (
+                                <XCircle className="ml-1 h-4 w-4" />
+                              )}
                               رفض
-                              <ChevronDown className="h-3 w-3 mr-1" />
+                              <ChevronDown className="mr-1 h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -452,22 +549,32 @@ export function ContentReviewTab() {
         <DialogContent className="max-w-lg" dir="rtl">
           <DialogHeader>
             <DialogTitle>
-              معاينة مسودة — {previewDraft?.product?.translations?.[0]?.name ?? previewDraft?.product?.sku}
+              معاينة مسودة —{' '}
+              {previewDraft?.product?.translations?.[0]?.name ?? previewDraft?.product?.sku}
             </DialogTitle>
             <DialogDescription>
               {previewDraft && (
-                <Badge variant="secondary">{TYPE_LABELS[previewDraft.type] ?? previewDraft.type}</Badge>
+                <Badge variant="secondary">
+                  {TYPE_LABELS[previewDraft.type] ?? previewDraft.type}
+                </Badge>
               )}
             </DialogDescription>
           </DialogHeader>
           {previewDraft && <DraftPreview draft={previewDraft} />}
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => previewDraft && handleAction(previewDraft.id, 'reject')} disabled={!previewDraft || actingId === previewDraft?.id}>
-              <XCircle className="h-4 w-4 ml-1" />
+            <Button
+              variant="outline"
+              onClick={() => previewDraft && handleAction(previewDraft.id, 'reject')}
+              disabled={!previewDraft || actingId === previewDraft?.id}
+            >
+              <XCircle className="ml-1 h-4 w-4" />
               رفض
             </Button>
-            <Button onClick={() => previewDraft && handleAction(previewDraft.id, 'approve')} disabled={!previewDraft || actingId === previewDraft?.id}>
-              <CheckCircle className="h-4 w-4 ml-1" />
+            <Button
+              onClick={() => previewDraft && handleAction(previewDraft.id, 'approve')}
+              disabled={!previewDraft || actingId === previewDraft?.id}
+            >
+              <CheckCircle className="ml-1 h-4 w-4" />
               اعتماد
             </Button>
           </DialogFooter>

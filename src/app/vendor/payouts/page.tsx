@@ -63,7 +63,9 @@ export default async function VendorPayoutsPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(Number(pendingSum._sum.netAmount ?? 0))}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{pendingSum._count} {t('ar', 'vendor.paymentUnit')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {pendingSum._count} {t('ar', 'vendor.paymentUnit')}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -74,7 +76,9 @@ export default async function VendorPayoutsPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(Number(paidSum._sum.netAmount ?? 0))}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{paidSum._count} {t('ar', 'vendor.paymentUnit')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {paidSum._count} {t('ar', 'vendor.paymentUnit')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -85,7 +89,9 @@ export default async function VendorPayoutsPage() {
         </CardHeader>
         <CardContent>
           {payouts.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">{t('ar', 'vendor.noPayoutsYet')}</p>
+            <p className="py-12 text-center text-muted-foreground">
+              {t('ar', 'vendor.noPayoutsYet')}
+            </p>
           ) : (
             <div className="space-y-4">
               {payouts.map((p) => (
@@ -111,13 +117,16 @@ export default async function VendorPayoutsPage() {
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground">
                       {formatDate(p.createdAt)}
-                      {p.paidAt && ` • ${t('ar', 'vendor.paidAt').replace('{date}', formatDate(p.paidAt))}`}
+                      {p.paidAt &&
+                        ` • ${t('ar', 'vendor.paidAt').replace('{date}', formatDate(p.paidAt))}`}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium">{formatCurrency(Number(p.netAmount))}</div>
                     <div className="text-xs text-muted-foreground">
-                      {t('ar', 'vendor.grossMinusCommission').replace('{gross}', formatCurrency(Number(p.grossAmount))).replace('{commission}', formatCurrency(Number(p.commissionAmount)))}
+                      {t('ar', 'vendor.grossMinusCommission')
+                        .replace('{gross}', formatCurrency(Number(p.grossAmount)))
+                        .replace('{commission}', formatCurrency(Number(p.commissionAmount)))}
                     </div>
                   </div>
                 </div>

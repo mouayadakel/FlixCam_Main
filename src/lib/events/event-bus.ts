@@ -275,7 +275,8 @@ export class EventBus {
     const NOTIFICATION_MAP: Record<string, { title: string; message: (p: any) => string }> = {
       'booking.created': {
         title: 'تم إنشاء الحجز',
-        message: (d) => `تم إنشاء حجزك رقم ${d.booking?.bookingNumber ?? ''} بنجاح. في انتظار الدفع.`,
+        message: (d) =>
+          `تم إنشاء حجزك رقم ${d.booking?.bookingNumber ?? ''} بنجاح. في انتظار الدفع.`,
       },
       'booking.confirmed': {
         title: 'تم تأكيد الحجز',

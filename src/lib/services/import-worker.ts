@@ -140,7 +140,9 @@ export async function processImportJob(
   jobId: string,
   options?: { approvedSuggestions?: ApprovedSuggestion[] }
 ) {
-  console.info(`[Import] Starting job ${jobId}, approvedSuggestions: ${options?.approvedSuggestions?.length ?? 0}`)
+  console.info(
+    `[Import] Starting job ${jobId}, approvedSuggestions: ${options?.approvedSuggestions?.length ?? 0}`
+  )
   const job = await ImportService.getJob(jobId)
   if (!job) throw new Error('Job not found')
 
@@ -235,17 +237,30 @@ export async function processImportJob(
         const conditionRaw = resolveField(r, 'condition', columnMappings)
         const warehouseLocation = resolveField(r, 'warehouse_location', columnMappings) ?? null
         const featuredRaw = resolveField(r, 'featured', columnMappings)
-        const isFeatured = featuredRaw != null ? String(featuredRaw).toLowerCase() === 'true' || featuredRaw === '1' || featuredRaw === true : false
+        const isFeatured =
+          featuredRaw != null
+            ? String(featuredRaw).toLowerCase() === 'true' ||
+              featuredRaw === '1' ||
+              featuredRaw === true
+            : false
         const isActiveRaw = resolveField(r, 'is_active', columnMappings)
-        const isActive = isActiveRaw != null ? String(isActiveRaw).toLowerCase() !== 'false' && isActiveRaw !== '0' && isActiveRaw !== false : true
+        const isActive =
+          isActiveRaw != null
+            ? String(isActiveRaw).toLowerCase() !== 'false' &&
+              isActiveRaw !== '0' &&
+              isActiveRaw !== false
+            : true
         const subCategoryFromExcel = resolveField(r, 'sub_category', columnMappings) ?? null
 
         const priceDaily = safePrice(daily) ?? 0
-        const priceWeekly = safePrice(weekly) ?? (priceDaily > 0 ? priceDaily * WEEKLY_FACTOR : null)
-        const priceMonthly = safePrice(monthly) ?? (priceDaily > 0 ? priceDaily * MONTHLY_FACTOR : null)
+        const priceWeekly =
+          safePrice(weekly) ?? (priceDaily > 0 ? priceDaily * WEEKLY_FACTOR : null)
+        const priceMonthly =
+          safePrice(monthly) ?? (priceDaily > 0 ? priceDaily * MONTHLY_FACTOR : null)
         const status = priceDaily > 0 ? ProductStatus.ACTIVE : ProductStatus.DRAFT
 
-        const featuredImageRaw = resolveField(r, 'featured_image', columnMappings) ?? '/images/placeholder.jpg'
+        const featuredImageRaw =
+          resolveField(r, 'featured_image', columnMappings) ?? '/images/placeholder.jpg'
         const featuredImage =
           typeof featuredImageRaw === 'string' && featuredImageRaw.trim()
             ? featuredImageRaw.trim()
@@ -260,14 +275,25 @@ export async function processImportJob(
         let sku = resolveField(r, 'sku', columnMappings) ?? null
         const barcodeValue = resolveField(r, 'barcode', columnMappings) ?? null
         if (!sku) {
-          const cat = await prisma.category.findUnique({ where: { id: payload.categoryId }, select: { name: true } })
+          const cat = await prisma.category.findUnique({
+            where: { id: payload.categoryId },
+            select: { name: true },
+          })
           sku = await generateUniqueSKU(cat?.name || 'General', brandName || 'Unknown')
         }
         // Proactively replace duplicate SKU within file (e.g. "50000009" appearing in multiple rows)
         if (usedSkusInJob.has(sku)) {
-          const cat = await prisma.category.findUnique({ where: { id: payload.categoryId }, select: { name: true } })
-          const fallbackSku = await generateUniqueSKU(cat?.name || 'General', brandName || 'Unknown')
-          console.info(`[Import] Row ${row.rowNumber}: duplicate SKU "${sku}" within file → using ${fallbackSku}`)
+          const cat = await prisma.category.findUnique({
+            where: { id: payload.categoryId },
+            select: { name: true },
+          })
+          const fallbackSku = await generateUniqueSKU(
+            cat?.name || 'General',
+            brandName || 'Unknown'
+          )
+          console.info(
+            `[Import] Row ${row.rowNumber}: duplicate SKU "${sku}" within file → using ${fallbackSku}`
+          )
           sku = fallbackSku
         }
         usedSkusInJob.add(sku)
@@ -277,7 +303,9 @@ export async function processImportJob(
         const curatedMatch = lookupDeepSpecs(name, brandName)
         if (curatedMatch && curatedMatch.confidence >= 75) {
           specifications = curatedMatch.specs
-          console.info(`[Import] Curated specs match for "${name}" → ${curatedMatch.matchedModel} (${curatedMatch.confidence}%)`)
+          console.info(
+            `[Import] Curated specs match for "${name}" → ${curatedMatch.matchedModel} (${curatedMatch.confidence}%)`
+          )
         }
 
         const specsRaw = resolveField(r, 'specifications', columnMappings)
@@ -300,9 +328,13 @@ export async function processImportJob(
 
         // Translations
         const translations: Array<{
-          locale: TranslationLocale; name: string
-          shortDescription?: string; longDescription?: string
-          seoTitle?: string; seoDescription?: string; seoKeywords?: string
+          locale: TranslationLocale
+          name: string
+          shortDescription?: string
+          longDescription?: string
+          seoTitle?: string
+          seoDescription?: string
+          seoKeywords?: string
         }> = []
 
         const enFromSuggestion = suggestion?.translations?.en
@@ -316,14 +348,12 @@ export async function processImportJob(
           enFromSuggestion?.longDescription ||
           (resolveField(r, 'long_description', columnMappings) ?? '')
         const seoTitleEn =
-          seoFromSuggestion?.metaTitle ||
-          (resolveField(r, 'seo_title', columnMappings) ?? name)
+          seoFromSuggestion?.metaTitle || (resolveField(r, 'seo_title', columnMappings) ?? name)
         const seoDescEn =
           seoFromSuggestion?.metaDescription ||
           (resolveField(r, 'seo_description', columnMappings) ?? (shortDescEn || name))
         const seoKeywordsEn =
-          seoFromSuggestion?.metaKeywords ||
-          (resolveField(r, 'seo_keywords', columnMappings) ?? '')
+          seoFromSuggestion?.metaKeywords || (resolveField(r, 'seo_keywords', columnMappings) ?? '')
 
         translations.push({
           locale: TranslationLocale.en,
@@ -336,9 +366,7 @@ export async function processImportJob(
         })
 
         const arFromSuggestion = suggestion?.translations?.ar
-        const nameAr =
-          arFromSuggestion?.name ||
-          (resolveField(r, 'name_ar', columnMappings) ?? '')
+        const nameAr = arFromSuggestion?.name || (resolveField(r, 'name_ar', columnMappings) ?? '')
         const shortDescAr =
           arFromSuggestion?.shortDescription ||
           (resolveField(r, 'short_desc_ar', columnMappings) ?? '')
@@ -347,8 +375,10 @@ export async function processImportJob(
           (resolveField(r, 'long_desc_ar', columnMappings) ?? '')
         if (nameAr) {
           translations.push({
-            locale: TranslationLocale.ar, name: nameAr,
-            shortDescription: shortDescAr || undefined, longDescription: longDescAr || undefined,
+            locale: TranslationLocale.ar,
+            name: nameAr,
+            shortDescription: shortDescAr || undefined,
+            longDescription: longDescAr || undefined,
             seoTitle:
               seoByLocale?.ar?.metaTitle ||
               seoFromSuggestion?.metaTitle ||
@@ -365,9 +395,7 @@ export async function processImportJob(
         }
 
         const zhFromSuggestion = suggestion?.translations?.zh
-        const nameZh =
-          zhFromSuggestion?.name ||
-          (resolveField(r, 'name_zh', columnMappings) ?? '')
+        const nameZh = zhFromSuggestion?.name || (resolveField(r, 'name_zh', columnMappings) ?? '')
         const shortDescZh =
           zhFromSuggestion?.shortDescription ||
           (resolveField(r, 'short_desc_zh', columnMappings) ?? '')
@@ -376,8 +404,10 @@ export async function processImportJob(
           (resolveField(r, 'long_desc_zh', columnMappings) ?? '')
         if (nameZh) {
           translations.push({
-            locale: TranslationLocale.zh, name: nameZh,
-            shortDescription: shortDescZh || undefined, longDescription: longDescZh || undefined,
+            locale: TranslationLocale.zh,
+            name: nameZh,
+            shortDescription: shortDescZh || undefined,
+            longDescription: longDescZh || undefined,
             seoTitle:
               seoByLocale?.zh?.metaTitle ||
               seoFromSuggestion?.metaTitle ||
@@ -407,7 +437,11 @@ export async function processImportJob(
         }
 
         const effectiveTags =
-          (tags && tags.trim().length > 0) ? tags : (suggestion?.tags?.trim() ? suggestion.tags.trim() : null)
+          tags && tags.trim().length > 0
+            ? tags
+            : suggestion?.tags?.trim()
+              ? suggestion.tags.trim()
+              : null
 
         const createPayload = (skuForCreate: string | null) => ({
           status,
@@ -440,7 +474,12 @@ export async function processImportJob(
           })),
           inventoryItems:
             barcodeValue && String(barcodeValue).trim()
-              ? [{ serialNumber: skuForCreate ?? `import-${row.rowNumber}`, barcode: String(barcodeValue).trim() }]
+              ? [
+                  {
+                    serialNumber: skuForCreate ?? `import-${row.rowNumber}`,
+                    barcode: String(barcodeValue).trim(),
+                  },
+                ]
               : [],
           createdBy: job.createdBy || 'system',
         })
@@ -464,7 +503,9 @@ export async function processImportJob(
             )
             usedSkusInJob.add(fallbackSku)
             product = await ProductCatalogService.create(createPayload(fallbackSku))
-            console.info(`[Import] Row ${row.rowNumber}: duplicate SKU "${sku}" (in DB) replaced with ${fallbackSku}`)
+            console.info(
+              `[Import] Row ${row.rowNumber}: duplicate SKU "${sku}" (in DB) replaced with ${fallbackSku}`
+            )
           } else {
             throw createErr
           }
@@ -472,7 +513,9 @@ export async function processImportJob(
 
         batchProductIds.push(product.id)
 
-        await ImportService.markRow(jobId, row.rowNumber, ImportRowStatus.SUCCESS, { productId: product.id })
+        await ImportService.markRow(jobId, row.rowNumber, ImportRowStatus.SUCCESS, {
+          productId: product.id,
+        })
         batchSuccess++
         console.info(`[Import] Row ${row.rowNumber} success → product ${product.id}`)
       } catch (err: unknown) {
@@ -491,7 +534,10 @@ export async function processImportJob(
       try {
         await syncProductToEquipment(pid)
       } catch (syncErr) {
-        console.warn(`[Import] Sync to equipment failed for product ${pid}:`, syncErr instanceof Error ? syncErr.message : String(syncErr))
+        console.warn(
+          `[Import] Sync to equipment failed for product ${pid}:`,
+          syncErr instanceof Error ? syncErr.message : String(syncErr)
+        )
       }
     }
 
@@ -511,13 +557,18 @@ export async function processImportJob(
       await addAIProcessingJob(jobId, productIds)
       aiQueueSucceeded = true
     } catch (queueErr) {
-      console.warn('[Import] AI queue unavailable, will run spec inference synchronously:', queueErr instanceof Error ? queueErr.message : String(queueErr))
+      console.warn(
+        '[Import] AI queue unavailable, will run spec inference synchronously:',
+        queueErr instanceof Error ? queueErr.message : String(queueErr)
+      )
     }
 
     // Synchronous fallback: if AI queue failed (Redis down), run spec inference inline
     // so specs are ALWAYS filled regardless of infrastructure
     if (!aiQueueSucceeded) {
-      console.info(`[Import] Running synchronous AI spec inference for ${productIds.length} products...`)
+      console.info(
+        `[Import] Running synchronous AI spec inference for ${productIds.length} products...`
+      )
       const { inferMissingSpecs } = await import('@/lib/services/ai-spec-parser.service')
       for (const pid of productIds) {
         try {
@@ -551,7 +602,8 @@ export async function processImportJob(
               const key = (s as { key: string }).key
               const value = (s as { value: string }).value
               if (
-                key && value &&
+                key &&
+                value &&
                 String(value).trim() !== '' &&
                 String(value).toLowerCase() !== 'unknown' &&
                 String(value).toLowerCase() !== 'n/a' &&
@@ -567,10 +619,15 @@ export async function processImportJob(
               })
             }
             await syncProductToEquipment(pid)
-            console.info(`[Import] Sync spec inference for "${enTrans?.name}": ${specResult.specs.length} specs inferred`)
+            console.info(
+              `[Import] Sync spec inference for "${enTrans?.name}": ${specResult.specs.length} specs inferred`
+            )
           }
         } catch (specErr) {
-          console.warn(`[Import] Sync spec inference failed for product ${pid}:`, specErr instanceof Error ? specErr.message : String(specErr))
+          console.warn(
+            `[Import] Sync spec inference failed for product ${pid}:`,
+            specErr instanceof Error ? specErr.message : String(specErr)
+          )
         }
       }
     }
@@ -579,14 +636,20 @@ export async function processImportJob(
       const { addImageProcessingJob } = await import('@/lib/queue/image-processing.queue')
       await addImageProcessingJob(jobId, productIds)
     } catch (imgErr) {
-      console.warn('[Import] Image queue unavailable:', imgErr instanceof Error ? imgErr.message : String(imgErr))
+      console.warn(
+        '[Import] Image queue unavailable:',
+        imgErr instanceof Error ? imgErr.message : String(imgErr)
+      )
     }
 
     try {
       const { rebuildRelatedProducts } = await import('@/lib/services/product-similarity.service')
       await rebuildRelatedProducts(productIds, 5)
     } catch (err) {
-      console.warn('[Import] Related products rebuild skipped:', err instanceof Error ? err.message : String(err))
+      console.warn(
+        '[Import] Related products rebuild skipped:',
+        err instanceof Error ? err.message : String(err)
+      )
     }
   }
 

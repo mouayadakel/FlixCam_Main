@@ -51,17 +51,23 @@ export async function getProviderStats(): Promise<ProviderStats[]> {
 
       const totalCost = jobs.reduce((sum, j) => sum + (j.cost ? Number(j.cost) : 0), 0)
       const avgCost = jobs.length > 0 ? totalCost / jobs.length : 0
-      const errorRate = jobs.length > 0
-        ? (jobs.reduce((sum, j) => sum + (j.failedItems || 0), 0) /
-           Math.max(1, jobs.reduce((sum, j) => sum + (j.totalItems || 0), 0))) * 100
-        : 0
+      const errorRate =
+        jobs.length > 0
+          ? (jobs.reduce((sum, j) => sum + (j.failedItems || 0), 0) /
+              Math.max(
+                1,
+                jobs.reduce((sum, j) => sum + (j.totalItems || 0), 0)
+              )) *
+            100
+          : 0
 
       const processingTimes = jobs
         .filter((j) => j.startedAt && j.completedAt)
         .map((j) => (j.completedAt!.getTime() - j.startedAt!.getTime()) / 1000)
-      const avgProcessingTime = processingTimes.length > 0
-        ? processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length
-        : 0
+      const avgProcessingTime =
+        processingTimes.length > 0
+          ? processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length
+          : 0
 
       stats.push({
         provider,

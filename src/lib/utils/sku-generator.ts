@@ -54,7 +54,10 @@ function getBrandAbbr(brandName: string): string {
   if (cleaned.length <= 4) return cleaned
   const words = cleaned.split(/[\s-]+/)
   if (words.length >= 2) {
-    return words.map((w) => w[0]).join('').slice(0, 4)
+    return words
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 4)
   }
   return cleaned.slice(0, 4)
 }
@@ -77,10 +80,7 @@ export function generateSKU(categoryName: string, brandName: string): string {
  * Generate a unique SKU by checking against the database
  * Retries up to 10 times if collision detected
  */
-export async function generateUniqueSKU(
-  categoryName: string,
-  brandName: string
-): Promise<string> {
+export async function generateUniqueSKU(categoryName: string, brandName: string): Promise<string> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const sku = generateSKU(categoryName, brandName)
     const existing = await prisma.product.findUnique({

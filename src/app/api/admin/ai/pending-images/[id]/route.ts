@@ -22,10 +22,7 @@ const bodySchema = z.object({
  * PATCH /api/admin/ai/pending-images/:id
  * Body: { action: "approve" | "reject" }
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -41,7 +38,10 @@ export async function PATCH(
   try {
     body = bodySchema.parse(await request.json())
   } catch {
-    return NextResponse.json({ error: 'Invalid body: action must be "approve" or "reject"' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Invalid body: action must be "approve" or "reject"' },
+      { status: 400 }
+    )
   }
 
   try {

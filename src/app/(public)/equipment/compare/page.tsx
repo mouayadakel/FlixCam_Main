@@ -106,12 +106,8 @@ export default function EquipmentComparePage() {
     return (
       <main className="py-12">
         <PublicContainer className="text-center">
-          <h1 className="text-2xl font-bold text-text-heading">
-            {t('equipment.compareTitle')}
-          </h1>
-          <p className="mt-4 text-text-muted">
-            {t('equipment.compareEmpty')}
-          </p>
+          <h1 className="text-2xl font-bold text-text-heading">{t('equipment.compareTitle')}</h1>
+          <p className="mt-4 text-text-muted">{t('equipment.compareEmpty')}</p>
           <Button asChild className="mt-6">
             <Link href="/equipment">
               <ArrowLeft className="me-2 h-4 w-4" />
@@ -133,9 +129,7 @@ export default function EquipmentComparePage() {
               {t('nav.equipment')}
             </Link>
           </Button>
-          <h1 className="text-xl font-bold text-text-heading">
-            {t('equipment.compareTitle')}
-          </h1>
+          <h1 className="text-xl font-bold text-text-heading">{t('equipment.compareTitle')}</h1>
         </div>
 
         <div className="overflow-x-auto">
@@ -167,7 +161,9 @@ export default function EquipmentComparePage() {
                         <p className="text-sm font-semibold text-text-heading group-hover:text-brand-primary">
                           {item.model ?? item.sku}
                         </p>
-                        <p className="text-xs text-text-muted">{item.brand ?? item.category ?? ''}</p>
+                        <p className="text-xs text-text-muted">
+                          {item.brand ?? item.category ?? ''}
+                        </p>
                       </Link>
                     </th>
                   )

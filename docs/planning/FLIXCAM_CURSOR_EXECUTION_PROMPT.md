@@ -1,5 +1,7 @@
 # 🎬 FlixCam.rent — Elite Platform Execution Prompt
+
 # Version 2.0 — Schema-Corrected & Path-Verified
+
 # Save this file as FLIXCAM_CURSOR_EXECUTION_PROMPT.md in the repo root
 
 ---
@@ -9,13 +11,13 @@
 Before implementing anything, internalize these confirmed facts about the
 real codebase schema. These correct errors in earlier audit drafts:
 
-| Fact | Detail |
-|------|--------|
-| `Equipment` has NO `branchId` | Branch and Equipment are not directly related. Pickup location must come from `SiteConfig` or a separate join table. Do NOT add `equipment.branchId`. |
-| `Booking.customerId` is REQUIRED | The current schema requires a user. Guest checkout needs EITHER: (a) make `customerId` nullable + add `guestEmail/guestName/guestPhone`, OR (b) create a shadow "guest" User record on checkout. Confirm the existing schema constraint before migrating. |
-| `[slug]` route actually receives an `id` | `src/app/(public)/equipment/[slug]/page.tsx` currently queries by `id`, not a real slug. Adding a slug field requires a migration + backward-compat redirect. |
-| Review links to `bookingId` only | Review model has no `equipmentId`. To show reviews on equipment detail, either add `equipmentId` to Review or JOIN through Booking → BookingItem → Equipment. |
-| Auth is NextAuth, not Supabase | Supabase is DB-only. `src/lib/auth/auth-helpers.ts` Supabase auth functions are dead code. |
+| Fact                                     | Detail                                                                                                                                                                                                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Equipment` has NO `branchId`            | Branch and Equipment are not directly related. Pickup location must come from `SiteConfig` or a separate join table. Do NOT add `equipment.branchId`.                                                                                                     |
+| `Booking.customerId` is REQUIRED         | The current schema requires a user. Guest checkout needs EITHER: (a) make `customerId` nullable + add `guestEmail/guestName/guestPhone`, OR (b) create a shadow "guest" User record on checkout. Confirm the existing schema constraint before migrating. |
+| `[slug]` route actually receives an `id` | `src/app/(public)/equipment/[slug]/page.tsx` currently queries by `id`, not a real slug. Adding a slug field requires a migration + backward-compat redirect.                                                                                             |
+| Review links to `bookingId` only         | Review model has no `equipmentId`. To show reviews on equipment detail, either add `equipmentId` to Review or JOIN through Booking → BookingItem → Equipment.                                                                                             |
+| Auth is NextAuth, not Supabase           | Supabase is DB-only. `src/lib/auth/auth-helpers.ts` Supabase auth functions are dead code.                                                                                                                                                                |
 
 ---
 
@@ -29,6 +31,7 @@ verified (see above). Your job is to execute every improvement below, one
 by one, in priority order.
 
 **Rules:**
+
 - Before touching any file, open and read it fully first
 - Verify the real schema in `prisma/schema.prisma` before any migration
 - After each item, write: ✅ **[#] Fixed** — [file(s) changed + why it matters]
@@ -44,6 +47,7 @@ by one, in priority order.
 ### 1. Fix Hero Image Alt Text & All Missing Alt Attributes
 
 **Files:**
+
 - `src/components/public/home/home-hero.tsx` (~line 99)
 - `src/components/public/home/home-featured-equipment.tsx`
 - `src/components/public/home/home-top-brands.tsx`
@@ -55,6 +59,7 @@ by one, in priority order.
 **Problem:** `alt=""` on hero image fails WCAG and hurts SEO image indexing.
 
 **Fix:**
+
 - In `home-hero.tsx`: replace `alt=""` with `alt={t('hero.imageAlt')}` or
   the static string `"FlixCam — تأجير المعدات السينمائية"`
 - In all other files above: audit every `<Image>` and `<img>`. Add
@@ -72,35 +77,36 @@ by one, in priority order.
 Add a `metadata` export (static) or `generateMetadata` function (dynamic)
 to every file below. Use the existing `SiteConfig` values for the site name.
 
-| File | Type | Key Tags |
-|------|------|----------|
-| `src/app/(public)/equipment/page.tsx` | Static | title, description, keywords |
+| File                                         | Type    | Key Tags                                         |
+| -------------------------------------------- | ------- | ------------------------------------------------ |
+| `src/app/(public)/equipment/page.tsx`        | Static  | title, description, keywords                     |
 | `src/app/(public)/equipment/[slug]/page.tsx` | Dynamic | equipment name, og:image, JSON-LD Product schema |
-| `src/app/(public)/faq/page.tsx` | Static | FAQ keywords |
-| `src/app/(public)/policies/page.tsx` | Static | policies keywords |
-| `src/app/(public)/how-it-works/page.tsx` | Static | how to rent keywords |
-| `src/app/(public)/support/page.tsx` | Static | support, contact keywords |
-| `src/app/(public)/studios/page.tsx` | Static | studios keywords |
-| `src/app/(public)/packages/page.tsx` | Static | packages, bundles keywords |
-| `src/app/(public)/terms/page.tsx` | Static | terms of service |
-| `src/app/(public)/privacy/page.tsx` | Static | privacy policy |
+| `src/app/(public)/faq/page.tsx`              | Static  | FAQ keywords                                     |
+| `src/app/(public)/policies/page.tsx`         | Static  | policies keywords                                |
+| `src/app/(public)/how-it-works/page.tsx`     | Static  | how to rent keywords                             |
+| `src/app/(public)/support/page.tsx`          | Static  | support, contact keywords                        |
+| `src/app/(public)/studios/page.tsx`          | Static  | studios keywords                                 |
+| `src/app/(public)/packages/page.tsx`         | Static  | packages, bundles keywords                       |
+| `src/app/(public)/terms/page.tsx`            | Static  | terms of service                                 |
+| `src/app/(public)/privacy/page.tsx`          | Static  | privacy policy                                   |
 
 **For `equipment/[slug]/page.tsx` specifically — also add JSON-LD:**
+
 ```typescript
 const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
+  '@context': 'https://schema.org',
+  '@type': 'Product',
   name: equipment.model,
   image: equipment.images?.[0],
   description: equipment.shortDescription ?? equipment.model,
-  brand: { "@type": "Brand", name: equipment.brand },
+  brand: { '@type': 'Brand', name: equipment.brand },
   offers: {
-    "@type": "Offer",
-    priceCurrency: "SAR",
+    '@type': 'Offer',
+    priceCurrency: 'SAR',
     price: equipment.dailyRate,
     availability: equipment.isActive
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock",
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock',
   },
 }
 // Inject via: <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
@@ -116,6 +122,7 @@ const jsonLd = {
 `/faq`, `/terms`, `/privacy`, `/about`, `/contact`, `/studios`, `/packages`
 
 **Add dynamic equipment pages:**
+
 ```typescript
 const equipmentItems = await prisma.equipment.findMany({
   where: { isActive: true },
@@ -138,6 +145,7 @@ Set `changeFrequency: 'weekly'` for equipment pages,
 **Reference:** Read `src/app/403/page.tsx` first and match its design language.
 
 **Build:**
+
 - RTL-compatible layout matching the 403 page style exactly
 - Large camera or film reel icon (Lucide or inline SVG — no external URLs)
 - Arabic headline: `"عذراً، الصفحة غير موجودة"` + sub: `"404 — Page Not Found"`
@@ -159,26 +167,31 @@ Set `changeFrequency: 'weekly'` for equipment pages,
 **Page sections (in order):**
 
 **Section 1 — Hero:**
+
 - Headline: `"من نحن"` with a short brand statement
 - Match homepage hero style (gradient or dark overlay)
 
 **Section 2 — Our Story:**
+
 - 2–3 paragraphs about FlixCam's founding and mission
 - Wrap placeholder content in `{/* TODO: replace with CMS content */}` comment
 - Split layout: text on one side, image placeholder on the other
 
 **Section 3 — Why FlixCam? (4 value prop cards with Lucide icons):**
+
 1. 🎥 "معدات احترافية مختارة بعناية"
 2. 🚀 "حجز سريع وتسليم موثوق"
 3. 🛡️ "ضمان الجودة في كل إيجار"
 4. 🤝 "دعم عملاء على مدار الساعة"
 
 **Section 4 — Stats Bar:**
+
 - Reuse the stats pattern from `HomeTrustSignals`
 - Pull from `/api/dashboard/kpis` OR static `SiteConfig` values
 - Show: عدد المعدات | الإيجارات المكتملة | سنوات الخبرة
 
 **Section 5 — Location / Contact Info:**
+
 - Pull branch name, address, phone, email from `SiteConfig`
 - ⚠️ Equipment has no `branchId` — use `SiteConfig` for global pickup info
 - Add Google Maps link: `https://maps.google.com/?q=${encodeURIComponent(address)}`
@@ -198,6 +211,7 @@ Set `changeFrequency: 'weekly'` for equipment pages,
 **Problem:** `/support` has static info only. No form. Customers give up.
 
 **Left column — Contact Form fields:**
+
 - الاسم الكامل (required, text)
 - البريد الإلكتروني (required, email)
 - رقم الجوال (optional, tel)
@@ -210,6 +224,7 @@ Set `changeFrequency: 'weekly'` for equipment pages,
 Show inline field errors. Disable submit while pending.
 
 **On submit:** POST to `/api/public/contact`
+
 - Validate with Zod server-side
 - Send email to admin via existing `NotificationService`
 - Send WhatsApp message to admin number from `SiteConfig`
@@ -219,6 +234,7 @@ Show inline field errors. Disable submit while pending.
 - Error state: `"حدث خطأ، يرجى المحاولة مرة أخرى أو التواصل عبر واتساب"`
 
 **Right column — Contact Info Panel:**
+
 - Pull ALL values from `SiteConfig` — do NOT hardcode phone/email/address
 - Show: 📞 رقم الهاتف | 💬 واتساب (button) | 📧 البريد الإلكتروني | ⏰ ساعات العمل
 - WhatsApp button: `https://wa.me/{phone}?text=مرحباً، أريد الاستفسار عن...`
@@ -234,6 +250,7 @@ Show inline field errors. Disable submit while pending.
 **Problem:** Hardcodes FAQ content duplicating `/faq`. No form. Dead end page.
 
 **Fix:**
+
 - Remove hardcoded FAQ accordion entirely
 - Add `"الأسئلة الشائعة"` card linking to `/faq`
 - Add `"لم تجد إجابتك؟"` section linking to the new `/contact` page
@@ -254,13 +271,16 @@ Show inline field errors. Disable submit while pending.
 
 **Step A — Verify schema:** Open `prisma/schema.prisma`. Check if `slug`
 already exists on Equipment. If not, add:
+
 ```prisma
 slug String? @unique
 ```
+
 Run: `prisma migrate dev --name add-equipment-slug`
 
 **Step B — Backfill slugs for existing records:**
 Create `src/scripts/backfill-slugs.ts`:
+
 - For each equipment: generate slug from `${brand}-${model}` lowercased,
   spaces → hyphens, special chars stripped
 - Handle duplicates by appending `-2`, `-3`, etc.
@@ -272,10 +292,11 @@ provided. Use a `slugify` utility (add if not present).
 
 **Step D — Update the detail page lookup:**
 In `src/app/(public)/equipment/[slug]/page.tsx`:
+
 ```typescript
 // Try slug first, fall back to id for backward compatibility
 const equipment = await prisma.equipment.findFirst({
-  where: { OR: [{ slug: params.slug }, { id: params.slug }] }
+  where: { OR: [{ slug: params.slug }, { id: params.slug }] },
 })
 ```
 
@@ -295,6 +316,7 @@ In `next.config.js` or middleware, add 301 redirects from
 **API already exists:** `GET /api/public/equipment/[id]/availability`
 
 **Create:** `src/components/features/equipment/equipment-availability-calendar.tsx`
+
 - Monthly calendar view (check what date picker checkout already uses — reuse it)
 - Fetch on mount: `GET /api/public/equipment/{id}/availability`
 - Show loading skeleton while fetching
@@ -316,6 +338,7 @@ Must be fixed at schema level before building the UI.
 
 **Step A — Update Review model:**
 Open `prisma/schema.prisma`. Add to Review:
+
 ```prisma
 equipmentId  String?
 equipment    Equipment? @relation(fields: [equipmentId], references: [id])
@@ -323,6 +346,7 @@ images       String[]
 verified     Boolean    @default(false)
 helpfulCount Int        @default(0)
 ```
+
 Run: `prisma migrate dev --name review-equipment-fields`
 
 Write a backfill script: for existing reviews, set `equipmentId` from
@@ -334,6 +358,7 @@ items when a review is submitted.
 
 **Step C — Build Reviews component:**
 Create `src/components/features/equipment/equipment-reviews.tsx`:
+
 - Fetch: `GET /api/reviews?equipmentId={id}&limit=5&page=1`
   (extend the reviews API to accept `equipmentId` filter)
 - Show: average star rating, total count, 5-star distribution bars
@@ -354,6 +379,7 @@ Extend the equipment list API to include `_avg { rating }` from Review.
 **Create:** `src/app/api/public/equipment/[id]/frequently-rented-together/route.ts`
 
 **Logic:**
+
 ```typescript
 // 1. Find BookingItems where equipmentId = params.id → collect bookingIds
 // 2. Find all BookingItems in those bookings where equipmentId != params.id
@@ -363,6 +389,7 @@ Extend the equipment list API to include `_avg { rating }` from Review.
 ```
 
 **UI in `equipment-detail.tsx`:**
+
 - Section title: `"كثيراً ما يُحجز معاً"`
 - Horizontal card row (3 cards max) using the existing `EquipmentCard`
 - `"أضف للسلة"` on each card
@@ -377,6 +404,7 @@ Extend the equipment list API to include `_avg { rating }` from Review.
 **API already exists:** `GET /api/invoices/[id]/pdf`
 
 **Fix:**
+
 - Fetch invoice linked to this booking on page load
 - Show `"تحميل الفاتورة PDF"` button only when booking is CONFIRMED or later
 - Add `"إضافة للتقويم"` button:
@@ -393,6 +421,7 @@ Extend the equipment list API to include `_avg { rating }` from Review.
 Open `prisma/schema.prisma`. Check if `shortDescription`, `longDescription`,
 `metaTitle`, `metaDescription`, `specSheetUrl`, `rentCount` already exist.
 Only add the genuinely missing ones:
+
 ```prisma
 shortDescription String?
 longDescription  String?
@@ -401,6 +430,7 @@ metaDescription  String?
 specSheetUrl     String?
 rentCount        Int     @default(0)
 ```
+
 Run: `prisma migrate dev --name equipment-content-fields`
 
 **Step B — Admin edit form:**
@@ -410,6 +440,7 @@ Add textarea for `shortDescription` (max 160 chars), rich textarea for
 section for `metaTitle` and `metaDescription`.
 
 **Step C — Equipment detail page:**
+
 - Show `shortDescription` in the price block sub-heading
 - Add a `"تفاصيل المعدة"` tab showing `longDescription` (rendered as HTML/Markdown)
 - Show `specSheetUrl` as `"تحميل المواصفات (PDF) ↓"` link (new tab)
@@ -431,12 +462,14 @@ increment `rentCount` on each Equipment in that booking's items.
 **Create:** `src/components/features/cart/cart-upsell.tsx`
 
 **Logic:**
+
 - Get category IDs of all items in the cart
 - Fetch: `GET /api/public/equipment?categories={ids}&limit=4`
 - Exclude equipment IDs already in the cart from results
 - Show skeleton while loading; render nothing if no results returned
 
 **UI:**
+
 - Title: `"قد تحتاج أيضاً"`
 - Horizontal scrollable row of up to 4 `EquipmentCard` components
 - Place below cart items list, above order summary
@@ -448,6 +481,7 @@ increment `rentCount` on each Equipment in that booking's items.
 **File:** `src/components/features/cart/cart-item-row.tsx`
 
 **Fix:**
+
 - Below each cart item, add a checkbox:
   `"✅ أضف تأمين الحماية (+{amount} ر.س / يوم)"`
 - Insurance cost = `dailyRate × insuranceRate` where `insuranceRate` comes
@@ -466,18 +500,21 @@ increment `rentCount` on each Equipment in that booking's items.
 **Step A — Schema migration:**
 Open `prisma/schema.prisma`. Confirm `Booking.customerId` is required.
 Make it nullable and add guest fields:
+
 ```prisma
 customerId   String?   // was required, now nullable
 guestEmail   String?
 guestName    String?
 guestPhone   String?
 ```
+
 Run: `prisma migrate dev --name booking-guest-checkout`
 
 After migration: search all Prisma queries that assume `customerId` is
 non-null (e.g., `booking.customerId!`) and add null guards.
 
 **Step B — Checkout UI:**
+
 - Remove hard redirect to `/login` for unauthenticated users
 - Add a pre-step gate before the stepper:
   ```
@@ -499,6 +536,7 @@ with link to `/register?email={guestEmail}&redirect=/portal/bookings`
 **File:** `src/app/(public)/cart/page.tsx`
 
 **Fix:**
+
 - Add `"حفظ السلة لوقت لاحق"` secondary button in the cart header
 - Logged-in users: cart is already persisted — show toast:
   `"تم حفظ سلتك — ستجدها هنا عند عودتك"`
@@ -515,14 +553,17 @@ with link to `/register?email={guestEmail}&redirect=/portal/bookings`
 **Create:** `src/app/api/cron/abandoned-cart/route.ts`
 
 **Step A — Schema** (verify Cart model exists first, add if missing):
+
 ```prisma
 abandonedEmail1hSentAt  DateTime?
 abandonedEmail24hSentAt DateTime?
 updatedAt               DateTime @updatedAt
 ```
+
 Run: `prisma migrate dev --name cart-abandonment-tracking`
 
 **Step B — Cron logic:**
+
 ```typescript
 // Guard: check Authorization header against CRON_SECRET
 // 1-hour carts: items exist, no completed booking, updatedAt < now-1hr, 1h email not sent
@@ -532,6 +573,7 @@ Run: `prisma migrate dev --name cart-abandonment-tracking`
 ```
 
 **Step C — Register in `vercel.json`:**
+
 ```json
 {
   "crons": [{ "path": "/api/cron/abandoned-cart", "schedule": "0 * * * *" }]
@@ -557,6 +599,7 @@ UI: 4 KPI cards in a row with `↑12%` / `↓3%` change badges.
 
 **Step B — Recent Bookings Widget:**
 Add `"آخر الحجوزات"` table directly on the overview page:
+
 - Fetch last 5 bookings (sorted by `createdAt DESC`)
 - Columns: اسم العميل | المعدة | تاريخ البداية | الحالة | المبلغ
 - Status as colored badge (reuse existing badge component)
@@ -564,11 +607,12 @@ Add `"آخر الحجوزات"` table directly on the overview page:
 
 **Step C — Alerts Widget:**
 Add `"تنبيهات تحتاج انتباهك"` section:
+
 - Equipment in MAINTENANCE status
 - Bookings where `actualReturnDate` is past and booking not closed
 - Pending approval bookings count
 - Equipment with 0 bookings in last 30 days
-Create `GET /api/admin/dashboard/alerts` or compute from existing data.
+  Create `GET /api/admin/dashboard/alerts` or compute from existing data.
 
 ---
 
@@ -578,6 +622,7 @@ Create `GET /api/admin/dashboard/alerts` or compute from existing data.
 (verify exact path — portal is NOT under `(public)`)
 
 **Fix:**
+
 - On COMPLETED bookings only, show `"احجز نفس المعدات مرة أخرى"` button
 - On click:
   1. For each equipment in `booking.items`, POST to `/api/cart`
@@ -591,6 +636,7 @@ Create `GET /api/admin/dashboard/alerts` or compute from existing data.
 ### 21. Add "Notify When Available" Feature
 
 **Step A — Schema:**
+
 ```prisma
 model EquipmentWaitlist {
   id          String    @id @default(cuid())
@@ -603,15 +649,18 @@ model EquipmentWaitlist {
   @@unique([equipmentId, email])
 }
 ```
+
 Run: `prisma migrate dev --name equipment-waitlist`
 
 **Step B — API:**
 Create `src/app/api/public/equipment/[id]/notify/route.ts`:
+
 - POST `{ email: string }` → validate, upsert into EquipmentWaitlist
 - Return `{ success: true }`
 
 **Step C — UI:**
 In the availability badge component (find where "غير متاح" is shown):
+
 - Show `"🔔 أبلغني عند التوفر"` button when equipment is unavailable
 - Click opens a popover with email input (pre-filled if logged in)
 - Submit → POST to `/api/public/equipment/[id]/notify`
@@ -619,6 +668,7 @@ In the availability badge component (find where "غير متاح" is shown):
 
 **Step D — Trigger:**
 In `booking.service.ts`, when a booking completes/returns:
+
 - Query `EquipmentWaitlist` where `equipmentId` matches and `notified = false`
 - Send notification email via `NotificationService`
 - Batch update: set `notified = true`
@@ -630,6 +680,7 @@ In `booking.service.ts`, when a booking completes/returns:
 **File:** `src/components/features/equipment/equipment-detail.tsx`
 
 **Add a ShareBar component** next to the Save button:
+
 - **WhatsApp:** `https://wa.me/?text=شاهد هذه المعدة: ${encodeURIComponent(pageUrl)}`
 - **X (Twitter):** `https://x.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(name)}`
 - **Copy link:** `navigator.clipboard.writeText(pageUrl)` → `"تم النسخ ✓"` toast for 2s
@@ -644,6 +695,7 @@ In `booking.service.ts`, when a booking completes/returns:
 **Create:** `src/components/features/home/home-newsletter.tsx`
 **Create:** `src/app/api/public/newsletter/route.ts`
 **Add to schema:**
+
 ```prisma
 model NewsletterSubscriber {
   id           String   @id @default(cuid())
@@ -653,9 +705,11 @@ model NewsletterSubscriber {
   source       String?  // e.g. "homepage", "checkout", "popup"
 }
 ```
+
 Run: `prisma migrate dev --name newsletter-subscribers`
 
 **UI** (add between Testimonials and FAQ on homepage):
+
 - Title: `"اشترك في نشرتنا — احصل على عروض حصرية"`
 - Email input + `"اشترك"` button
 - Checkbox: `"أوافق على استقبال العروض والتحديثات"` (required)
@@ -669,15 +723,18 @@ Run: `prisma migrate dev --name newsletter-subscribers`
 ### 24. Add Customer Blacklist Feature
 
 **Step A — Schema** (verify User model first):
+
 ```prisma
 blacklisted       Boolean   @default(false)
 blacklistReason   String?
 blacklistedAt     DateTime?
 ```
+
 Run: `prisma migrate dev --name user-blacklist`
 
 **Step B — Admin UI:**
 In the customer profile page:
+
 - Add `"حظر العميل"` danger button (only if not already blacklisted)
 - Opens dialog: reason input (required) + `"تأكيد الحظر"`
 - Call `POST /api/admin/clients/[id]/blacklist`
@@ -686,11 +743,13 @@ In the customer profile page:
 
 **Step C — Create API:**
 `src/app/api/admin/clients/[id]/blacklist/route.ts`
+
 - POST: set `blacklisted = true`, `blacklistReason`, `blacklistedAt`
 - DELETE: set `blacklisted = false`, clear reason and date
 
 **Step D — Guard booking creation:**
 In `src/lib/services/booking.service.ts`, at the top of create:
+
 ```typescript
 const user = await prisma.user.findUnique({ where: { id: customerId } })
 if (user?.blacklisted) {
@@ -707,6 +766,7 @@ if (user?.blacklisted) {
 **File:** `src/components/features/equipment/equipment-detail.tsx`
 
 **Fix:**
+
 - Read `SiteConfig` (already likely fetched in layout or page — don't re-fetch)
 - **Find the correct field names** by reading the `SiteConfig` model in
   `prisma/schema.prisma` and the admin settings page **before writing a single line of code**
@@ -721,17 +781,17 @@ if (user?.blacklisted) {
 
 Run these in order. Before each, verify the field doesn't already exist.
 
-| # | Migration Name | What's Added | Model |
-|---|---------------|-------------|-------|
-| M1 | `add-equipment-slug` | `slug String? @unique` | Equipment |
-| M2 | `equipment-content-fields` | shortDescription, longDescription, metaTitle, metaDescription, specSheetUrl, rentCount | Equipment |
-| M3 | `booking-guest-checkout` | customerId nullable, guestEmail, guestName, guestPhone | Booking |
-| M4 | `review-equipment-fields` | equipmentId, images[], verified, helpfulCount | Review |
-| M5 | `user-blacklist` | blacklisted, blacklistReason, blacklistedAt | User |
-| M6 | `user-loyalty` | loyaltyPoints, referralCode, referredBy, totalSpent, preferredLanguage | User |
-| M7 | `equipment-waitlist` | New `EquipmentWaitlist` model | — |
-| M8 | `newsletter-subscribers` | New `NewsletterSubscriber` model | — |
-| M9 | `cart-abandonment-tracking` | abandonedEmail1hSentAt, abandonedEmail24hSentAt | Cart |
+| #   | Migration Name              | What's Added                                                                           | Model     |
+| --- | --------------------------- | -------------------------------------------------------------------------------------- | --------- |
+| M1  | `add-equipment-slug`        | `slug String? @unique`                                                                 | Equipment |
+| M2  | `equipment-content-fields`  | shortDescription, longDescription, metaTitle, metaDescription, specSheetUrl, rentCount | Equipment |
+| M3  | `booking-guest-checkout`    | customerId nullable, guestEmail, guestName, guestPhone                                 | Booking   |
+| M4  | `review-equipment-fields`   | equipmentId, images[], verified, helpfulCount                                          | Review    |
+| M5  | `user-blacklist`            | blacklisted, blacklistReason, blacklistedAt                                            | User      |
+| M6  | `user-loyalty`              | loyaltyPoints, referralCode, referredBy, totalSpent, preferredLanguage                 | User      |
+| M7  | `equipment-waitlist`        | New `EquipmentWaitlist` model                                                          | —         |
+| M8  | `newsletter-subscribers`    | New `NewsletterSubscriber` model                                                       | —         |
+| M9  | `cart-abandonment-tracking` | abandonedEmail1hSentAt, abandonedEmail24hSentAt                                        | Cart      |
 
 **⚠️ Rule:** Before each migration, open `prisma/schema.prisma` and confirm
 the field is genuinely absent. Never create duplicate fields.
@@ -766,6 +826,7 @@ so screen readers announce them immediately without waiting for focus.
 
 **6. Skip link** — Verify `src/app/(public)/layout.tsx` has a skip-to-main
 link as the FIRST focusable element. If missing, add:
+
 ```tsx
 <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:p-4">
   تخطى للمحتوى الرئيسي
@@ -777,6 +838,7 @@ link as the FIRST focusable element. If missing, add:
 ### 27. Add Loading Skeletons to Admin Pages
 
 **Create these `loading.tsx` files** (Next.js App Router — auto-shown):
+
 - `src/app/admin/(routes)/dashboard/overview/loading.tsx`
 - `src/app/admin/(routes)/bookings/loading.tsx`
 - `src/app/admin/(routes)/clients/loading.tsx`
@@ -792,11 +854,13 @@ Each should render a skeleton matching the real page layout using the
 ### 28. Add Error Boundaries
 
 **Create:**
+
 - `src/app/admin/error.tsx`
 - `src/app/portal/error.tsx`
 - `src/app/(public)/error.tsx`
 
 Next.js App Router `error.tsx` convention:
+
 ```typescript
 'use client'
 import { useEffect } from 'react'
@@ -822,6 +886,7 @@ export default function Error({
 ### 29. Standardize API Error & Success Responses
 
 **Create:** `src/lib/api/response.ts`
+
 ```typescript
 export function apiError(message: string, status: number, code?: string) {
   return Response.json({ error: message, code, status }, { status })
@@ -832,12 +897,14 @@ export function apiSuccess<T>(data: T, status = 200) {
 ```
 
 **Grep for inconsistent patterns:**
+
 ```bash
 grep -rn "NextResponse.json" src/app/api/
 grep -rn "return Response.json" src/app/api/
 ```
 
 Replace error responses in these priority files:
+
 - `src/app/api/bookings/route.ts`
 - `src/app/api/cart/route.ts`
 - `src/app/api/public/equipment/route.ts`
@@ -867,6 +934,7 @@ import { unstable_cache } from 'next/cache'
 
 Add `?period=today|week|month|year` query param support.
 Response shape:
+
 ```typescript
 {
   revenue: number,
@@ -883,12 +951,14 @@ Response shape:
 ### 32. Add "Trending / Most Rented" Section
 
 **Create:** `src/app/api/public/equipment/trending/route.ts`
+
 ```typescript
 // Query: Equipment sorted by rentCount DESC, isActive = true, limit 8
 // Cache with unstable_cache, revalidate: 3600
 ```
 
 **Create:** `src/components/features/home/home-trending.tsx`
+
 - Title: `"🔥 الأكثر طلباً"`
 - Horizontal scrollable row of up to 8 `EquipmentCard` components
 - Flame badge overlay on each card
@@ -904,6 +974,7 @@ Add to homepage between Featured Equipment and Categories.
 (Find where `PublicSearch` is rendered — read it first)
 
 **Upgrade to include 3 inputs in one search bar:**
+
 1. Equipment text input with autocomplete
    (debounced fetch to `/api/public/equipment?q=` for suggestions)
 2. Category dropdown (fetch from `/api/public/categories`)
@@ -920,6 +991,7 @@ Add to homepage between Featured Equipment and Categories.
 After all 33 items, verify each:
 
 ### Public Pages
+
 - [ ] Every `<Image>` has meaningful `alt` (not empty on meaningful images)
 - [ ] Every public page has `metadata` or `generateMetadata`
 - [ ] `/about` exists and is linked in the footer
@@ -943,6 +1015,7 @@ After all 33 items, verify each:
 - [ ] Booking confirmation: Add to Calendar link
 
 ### Admin Panel
+
 - [ ] Dashboard: 4 time-period KPI cards with % change vs prior period
 - [ ] Dashboard: Recent bookings widget (last 5)
 - [ ] Dashboard: Alerts widget (maintenance, overdue, pending)
@@ -951,16 +1024,19 @@ After all 33 items, verify each:
 - [ ] Customer profile: total spent shown
 
 ### Customer Portal
+
 - [ ] "Rent Again" on completed booking detail
 - [ ] "Notify when available" on unavailable equipment
 
 ### Data Model
+
 - [ ] All migrations ran with no errors
 - [ ] Slug backfill script ran — all existing equipment have slugs
 - [ ] `Booking.customerId` nullable — all queries updated with null guards
 - [ ] `Review.equipmentId` backfilled for existing reviews
 
 ### APIs
+
 - [ ] `apiError()` / `apiSuccess()` used consistently
 - [ ] `/api/public/equipment/[id]/frequently-rented-together` works
 - [ ] `/api/public/newsletter` saves + sends welcome email
@@ -970,6 +1046,7 @@ After all 33 items, verify each:
 - [ ] Abandoned cart cron protected by `CRON_SECRET`, registered in `vercel.json`
 
 ### Accessibility
+
 - [ ] All icon-only buttons have `aria-label`
 - [ ] All form inputs have associated labels
 - [ ] All modals have `role="dialog"` and proper focus management

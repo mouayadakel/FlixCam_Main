@@ -69,23 +69,17 @@ export function StudioPackageCards({
     <section id="package-section" className="space-y-5" dir="rtl">
       {/* Section heading */}
       <div>
-        <h2 className="text-xl font-bold text-text-heading">
-          {t('studios.choosePackageTitle')}
-        </h2>
-        <p className="mt-1 text-sm text-text-muted">
-          {t('studios.choosePackageSubtitle')}
-        </p>
+        <h2 className="text-xl font-bold text-text-heading">{t('studios.choosePackageTitle')}</h2>
+        <p className="mt-1 text-sm text-text-muted">{t('studios.choosePackageSubtitle')}</p>
       </div>
 
       {/* Cards grid */}
       <fieldset
         role="radiogroup"
         aria-label={t('studios.choosePackageTitle')}
-        className="border-none p-0 m-0"
+        className="m-0 border-none p-0"
       >
-        <legend className="sr-only">
-          {t('studios.choosePackageTitle')}
-        </legend>
+        <legend className="sr-only">{t('studios.choosePackageTitle')}</legend>
 
         <div className={`grid gap-4 ${gridCols}`}>
           {/* Hourly card */}
@@ -114,9 +108,7 @@ export function StudioPackageCards({
       {/* Trust line */}
       <div className="flex items-center gap-2 text-xs text-text-muted">
         <ShieldCheck className="h-4 w-4 shrink-0 text-success-600" />
-        <span>
-          {cancellationPolicyShort || t('studios.trustCancellation')}
-        </span>
+        <span>{cancellationPolicyShort || t('studios.trustCancellation')}</span>
       </div>
     </section>
   )
@@ -137,14 +129,11 @@ function HourlyCard({ hourlyRate, minHours, isSelected, onSelect, index }: Hourl
 
   return (
     <label
-      className={`
-        relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-5 transition-all duration-300
-        ${
-          isSelected
-            ? 'border-primary bg-primary-50/30 shadow-lg ring-2 ring-primary/20'
-            : 'border-border-light/40 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/30 hover:shadow-md'
-        }
-      `}
+      className={`relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-5 transition-all duration-300 ${
+        isSelected
+          ? 'border-primary bg-primary-50/30 shadow-lg ring-2 ring-primary/20'
+          : 'border-border-light/40 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/30 hover:shadow-md'
+      } `}
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <input
@@ -165,9 +154,7 @@ function HourlyCard({ hourlyRate, minHours, isSelected, onSelect, index }: Hourl
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-semibold text-text-heading">
-          {t('studios.hourlyOption')}
-        </h3>
+        <h3 className="text-lg font-semibold text-text-heading">{t('studios.hourlyOption')}</h3>
 
         {/* Price */}
         <div className="text-2xl font-bold text-primary">
@@ -176,23 +163,18 @@ function HourlyCard({ hourlyRate, minHours, isSelected, onSelect, index }: Hourl
         </div>
 
         {/* Subtitle */}
-        <p className="text-sm text-text-muted">
-          {t('studios.hourlyOptionDesc')}
-        </p>
+        <p className="text-sm text-text-muted">{t('studios.hourlyOptionDesc')}</p>
       </div>
 
       {/* CTA */}
       <button
         type="button"
         onClick={onSelect}
-        className={`
-          mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-200
-          ${
-            isSelected
-              ? 'bg-primary text-white'
-              : 'border border-primary/20 bg-primary-50 text-primary hover:bg-primary hover:text-white'
-          }
-        `}
+        className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
+          isSelected
+            ? 'bg-primary text-white'
+            : 'border border-primary/20 bg-primary-50 text-primary hover:bg-primary hover:text-white'
+        } `}
       >
         {isSelected ? (
           <span className="inline-flex items-center gap-1.5">
@@ -220,20 +202,17 @@ interface PackageCardProps {
 function PackageCard({ pkg, isSelected, isRecommended, onSelect, index }: PackageCardProps) {
   const { t } = useLocale()
   const includesList = parseIncludes(pkg.includes)
-  const savings = pkg.originalPrice && pkg.originalPrice > pkg.price ? pkg.originalPrice - pkg.price : 0
+  const savings =
+    pkg.originalPrice && pkg.originalPrice > pkg.price ? pkg.originalPrice - pkg.price : 0
   const badgeLabel = pkg.badgeText || t('studios.mostPopular')
 
   return (
     <label
-      className={`
-        relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-5 transition-all duration-300
-        ${
-          isSelected
-            ? 'border-primary bg-primary-50/30 shadow-lg ring-2 ring-primary/20'
-            : 'border-border-light/40 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/30 hover:shadow-md'
-        }
-        ${isRecommended && !isSelected ? 'scale-[1.02]' : ''}
-      `}
+      className={`relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-5 transition-all duration-300 ${
+        isSelected
+          ? 'border-primary bg-primary-50/30 shadow-lg ring-2 ring-primary/20'
+          : 'border-border-light/40 bg-white shadow-sm hover:-translate-y-1 hover:border-primary/30 hover:shadow-md'
+      } ${isRecommended && !isSelected ? 'scale-[1.02]' : ''} `}
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <input
@@ -248,7 +227,7 @@ function PackageCard({ pkg, isSelected, isRecommended, onSelect, index }: Packag
 
       {/* Recommended badge */}
       {isRecommended && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-primary to-primary/80 px-4 py-1 text-xs font-bold text-white shadow-sm">
+        <span className="absolute -top-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-primary to-primary/80 px-4 py-1 text-xs font-bold text-white shadow-sm">
           <Sparkles className="h-3 w-3" />
           {badgeLabel}
         </span>
@@ -264,9 +243,7 @@ function PackageCard({ pkg, isSelected, isRecommended, onSelect, index }: Packag
         )}
 
         {/* Name */}
-        <h3 className="text-lg font-semibold text-text-heading">
-          {pkg.nameAr || pkg.name}
-        </h3>
+        <h3 className="text-lg font-semibold text-text-heading">{pkg.nameAr || pkg.name}</h3>
 
         {/* Price */}
         <div className="flex items-baseline gap-2">
@@ -316,16 +293,13 @@ function PackageCard({ pkg, isSelected, isRecommended, onSelect, index }: Packag
       <button
         type="button"
         onClick={onSelect}
-        className={`
-          mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-200
-          ${
-            isSelected
-              ? 'bg-primary text-white'
-              : isRecommended
-                ? 'bg-primary text-white hover:bg-primary/90'
-                : 'border border-primary/20 bg-primary-50 text-primary hover:bg-primary hover:text-white'
-          }
-        `}
+        className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
+          isSelected
+            ? 'bg-primary text-white'
+            : isRecommended
+              ? 'bg-primary text-white hover:bg-primary/90'
+              : 'border border-primary/20 bg-primary-50 text-primary hover:bg-primary hover:text-white'
+        } `}
       >
         {isSelected ? (
           <span className="inline-flex items-center gap-1.5">

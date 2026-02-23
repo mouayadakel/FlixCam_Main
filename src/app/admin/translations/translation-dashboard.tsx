@@ -38,17 +38,17 @@ interface FlatTranslation {
 
 function flattenTranslations(obj: any, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {}
-  
+
   for (const [key, value] of Object.entries(obj)) {
     const newKey = prefix ? `${prefix}.${key}` : key
-    
+
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       Object.assign(result, flattenTranslations(value, newKey))
     } else {
       result[newKey] = String(value)
     }
   }
-  
+
   return result
 }
 
@@ -71,17 +71,13 @@ export function TranslationDashboard() {
 
   // Get all unique keys
   const allKeys = useMemo(() => {
-    const keys = new Set([
-      ...Object.keys(flatAr),
-      ...Object.keys(flatEn),
-      ...Object.keys(flatZh),
-    ])
+    const keys = new Set([...Object.keys(flatAr), ...Object.keys(flatEn), ...Object.keys(flatZh)])
     return Array.from(keys).sort()
   }, [flatAr, flatEn, flatZh])
 
   // Build flat translations array
   const translations: FlatTranslation[] = useMemo(() => {
-    return allKeys.map(key => {
+    return allKeys.map((key) => {
       const missing: Locale[] = []
       if (!flatAr[key]) missing.push('ar')
       if (!flatEn[key]) missing.push('en')
@@ -100,7 +96,7 @@ export function TranslationDashboard() {
 
   // Get unique namespaces
   const namespaces = useMemo(() => {
-    const ns = new Set(translations.map(t => t.namespace))
+    const ns = new Set(translations.map((t) => t.namespace))
     return Array.from(ns).sort()
   }, [translations])
 
@@ -111,7 +107,7 @@ export function TranslationDashboard() {
 
   // Filter translations
   const filteredTranslations = useMemo(() => {
-    return translations.filter(t => {
+    return translations.filter((t) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -153,10 +149,10 @@ export function TranslationDashboard() {
   // Statistics
   const stats = useMemo(() => {
     const total = translations.length
-    const arComplete = translations.filter(t => !t.missing.includes('ar')).length
-    const enComplete = translations.filter(t => !t.missing.includes('en')).length
-    const zhComplete = translations.filter(t => !t.missing.includes('zh')).length
-    const fullyTranslated = translations.filter(t => t.missing.length === 0).length
+    const arComplete = translations.filter((t) => !t.missing.includes('ar')).length
+    const enComplete = translations.filter((t) => !t.missing.includes('en')).length
+    const zhComplete = translations.filter((t) => !t.missing.includes('zh')).length
+    const fullyTranslated = translations.filter((t) => t.missing.length === 0).length
 
     return {
       total,
@@ -173,7 +169,7 @@ export function TranslationDashboard() {
   const handleExportCSV = () => {
     const csv = [
       ['Key', 'Namespace', 'Arabic', 'English', 'Chinese', 'Missing'].join(','),
-      ...filteredTranslations.map(t =>
+      ...filteredTranslations.map((t) =>
         [
           t.key,
           t.namespace,
@@ -253,7 +249,7 @@ export function TranslationDashboard() {
 
       {/* Filters and Actions */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search translations..."
@@ -269,7 +265,7 @@ export function TranslationDashboard() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Namespaces</SelectItem>
-            {namespaces.map(ns => (
+            {namespaces.map((ns) => (
               <SelectItem key={ns} value={ns}>
                 {ns}
               </SelectItem>
@@ -298,10 +294,13 @@ export function TranslationDashboard() {
           Missing Only
         </Button>
 
-        <Select value={String(itemsPerPage)} onValueChange={(v) => {
-          setItemsPerPage(Number(v))
-          setCurrentPage(1)
-        }}>
+        <Select
+          value={String(itemsPerPage)}
+          onValueChange={(v) => {
+            setItemsPerPage(Number(v))
+            setCurrentPage(1)
+          }}
+        >
           <SelectTrigger className="w-[140px]">
             <SelectValue />
           </SelectTrigger>
@@ -327,8 +326,10 @@ export function TranslationDashboard() {
 
       {/* Results count */}
       <div className="text-sm text-muted-foreground">
-        Showing {startIndex + 1}-{Math.min(endIndex, filteredTranslations.length)} of {filteredTranslations.length} translations
-        {filteredTranslations.length !== translations.length && ` (filtered from ${translations.length} total)`}
+        Showing {startIndex + 1}-{Math.min(endIndex, filteredTranslations.length)} of{' '}
+        {filteredTranslations.length} translations
+        {filteredTranslations.length !== translations.length &&
+          ` (filtered from ${translations.length} total)`}
       </div>
 
       {/* Translations Table */}
@@ -347,7 +348,7 @@ export function TranslationDashboard() {
             <tbody>
               {paginatedTranslations.map((t, idx) => (
                 <tr key={t.key} className={idx % 2 === 0 ? 'bg-muted/20' : ''}>
-                  <td className="p-3 text-sm font-mono">
+                  <td className="p-3 font-mono text-sm">
                     <div className="max-w-[200px] truncate" title={t.key}>
                       {t.key}
                     </div>
@@ -355,17 +356,17 @@ export function TranslationDashboard() {
                   </td>
                   <td className="p-3 text-sm">
                     <div className="max-w-[250px] truncate" title={t.ar}>
-                      {t.ar || <span className="text-muted-foreground italic">—</span>}
+                      {t.ar || <span className="italic text-muted-foreground">—</span>}
                     </div>
                   </td>
                   <td className="p-3 text-sm">
                     <div className="max-w-[250px] truncate" title={t.en}>
-                      {t.en || <span className="text-muted-foreground italic">—</span>}
+                      {t.en || <span className="italic text-muted-foreground">—</span>}
                     </div>
                   </td>
                   <td className="p-3 text-sm">
                     <div className="max-w-[250px] truncate" title={t.zh}>
-                      {t.zh || <span className="text-muted-foreground italic">—</span>}
+                      {t.zh || <span className="italic text-muted-foreground">—</span>}
                     </div>
                   </td>
                   <td className="p-3">

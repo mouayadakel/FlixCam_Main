@@ -36,9 +36,33 @@ describe('quality-scorer.service', () => {
 
     it('returns 100 for fully filled product (all locales, SEO, desc, 4+ images)', async () => {
       const translations = [
-        { locale: 'ar', name: 'اسم عربي طويل جداً', shortDescription: 'وصف قصير من عشرين حرفاً على الأقل', longDescription: 'x'.repeat(100), seoTitle: 't', seoDescription: 'd', seoKeywords: 'k' },
-        { locale: 'en', name: 'English name here', shortDescription: 'Short description with at least twenty characters here', longDescription: 'x'.repeat(100), seoTitle: 't', seoDescription: 'd', seoKeywords: 'k' },
-        { locale: 'zh', name: '中文名称在这里', shortDescription: '短描述至少二十个字符才能得分', longDescription: 'x'.repeat(100), seoTitle: 't', seoDescription: 'd', seoKeywords: 'k' },
+        {
+          locale: 'ar',
+          name: 'اسم عربي طويل جداً',
+          shortDescription: 'وصف قصير من عشرين حرفاً على الأقل',
+          longDescription: 'x'.repeat(100),
+          seoTitle: 't',
+          seoDescription: 'd',
+          seoKeywords: 'k',
+        },
+        {
+          locale: 'en',
+          name: 'English name here',
+          shortDescription: 'Short description with at least twenty characters here',
+          longDescription: 'x'.repeat(100),
+          seoTitle: 't',
+          seoDescription: 'd',
+          seoKeywords: 'k',
+        },
+        {
+          locale: 'zh',
+          name: '中文名称在这里',
+          shortDescription: '短描述至少二十个字符才能得分',
+          longDescription: 'x'.repeat(100),
+          seoTitle: 't',
+          seoDescription: 'd',
+          seoKeywords: 'k',
+        },
       ]
       ;(mockPrisma.product.findUnique as jest.Mock).mockResolvedValue({
         id: 'p1',
@@ -59,7 +83,15 @@ describe('quality-scorer.service', () => {
         featuredImage: null,
         galleryImages: [],
         translations: [
-          { locale: 'en', name: 'English only', shortDescription: null, longDescription: null, seoTitle: null, seoDescription: null, seoKeywords: null },
+          {
+            locale: 'en',
+            name: 'English only',
+            shortDescription: null,
+            longDescription: null,
+            seoTitle: null,
+            seoDescription: null,
+            seoKeywords: null,
+          },
         ],
         productImages: [],
       } as any)
@@ -80,7 +112,15 @@ describe('quality-scorer.service', () => {
           lastAiRunAt: null,
           priceDaily: 100,
           translations: [
-            { locale: 'en', name: 'Product 1', shortDescription: 'x', longDescription: 'x', seoTitle: 't', seoDescription: 'd', seoKeywords: 'k' },
+            {
+              locale: 'en',
+              name: 'Product 1',
+              shortDescription: 'x',
+              longDescription: 'x',
+              seoTitle: 't',
+              seoDescription: 'd',
+              seoKeywords: 'k',
+            },
           ],
           productImages: [{ id: 'i1' }],
           galleryImages: ['u1'],

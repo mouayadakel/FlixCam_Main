@@ -42,13 +42,16 @@ export interface MasterFillWithResearchInput extends MasterFillInput {
   webSources?: string[]
 }
 
-export function buildMasterFillPrompt(input: MasterFillInput | MasterFillWithResearchInput): string {
+export function buildMasterFillPrompt(
+  input: MasterFillInput | MasterFillWithResearchInput
+): string {
   const specsStr = input.specifications
     ? JSON.stringify(input.specifications, null, 2)
     : 'Not provided'
 
   const researchInput = input as MasterFillWithResearchInput
-  const hasWebResearch = researchInput.webResearchSpecs && Object.keys(researchInput.webResearchSpecs).length > 0
+  const hasWebResearch =
+    researchInput.webResearchSpecs && Object.keys(researchInput.webResearchSpecs).length > 0
 
   const webResearchSection = hasWebResearch
     ? `
@@ -134,7 +137,10 @@ ENGLISH LAYER:
 
 export function parseMasterFillOutput(raw: string): MasterFillOutput | null {
   try {
-    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const cleaned = raw
+      .replace(/```json\s*/g, '')
+      .replace(/```\s*/g, '')
+      .trim()
     const parsed = JSON.parse(cleaned)
     if (!parsed.short_desc_en || !parsed.seo_title_en) return null
     return parsed as MasterFillOutput

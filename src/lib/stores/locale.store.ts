@@ -23,7 +23,7 @@ export const useLocaleStore = create<LocaleState>((set) => ({
   setLocale: (locale: Locale) => {
     // Preload messages for the new locale before switching
     preloadMessages(locale)
-    
+
     setLocaleCookie(locale)
     set({ locale, dir: getDir(locale) })
     if (typeof document !== 'undefined') {

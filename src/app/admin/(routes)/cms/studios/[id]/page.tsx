@@ -138,7 +138,9 @@ export default function CmsStudioEditPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{studio.name}</h1>
-            <p className="text-sm text-muted-foreground">CMS &gt; الاستوديوهات &gt; {studio.name}</p>
+            <p className="text-sm text-muted-foreground">
+              CMS &gt; الاستوديوهات &gt; {studio.name}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -262,7 +264,11 @@ export default function CmsStudioEditPage() {
                 تجاهل
               </Button>
               <Button disabled={saving} onClick={() => {}}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 <span className="mr-2">حفظ</span>
               </Button>
             </div>

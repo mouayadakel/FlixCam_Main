@@ -21,10 +21,7 @@ interface UseJobStreamOptions {
   onError?: (error: string) => void
 }
 
-export function useJobStream(
-  jobId: string | null,
-  options?: UseJobStreamOptions
-) {
+export function useJobStream(jobId: string | null, options?: UseJobStreamOptions) {
   const [data, setData] = useState<JobStreamData | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const esRef = useRef<EventSource | null>(null)

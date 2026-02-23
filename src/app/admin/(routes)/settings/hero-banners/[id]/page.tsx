@@ -308,13 +308,7 @@ export default function HeroBannerDetailPage() {
                     </Button>
                   </div>
                   <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded bg-muted">
-                    <Image
-                      src={slide.imageUrl}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="96px"
-                    />
+                    <Image src={slide.imageUrl} alt="" fill className="object-cover" sizes="96px" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{slide.titleAr || slide.titleEn}</div>

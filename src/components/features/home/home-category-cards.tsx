@@ -6,7 +6,17 @@
 'use client'
 
 import Link from 'next/link'
-import { Camera, Lightbulb, Mic2, Film, Video, Monitor, Clapperboard, Aperture, ArrowRight } from 'lucide-react'
+import {
+  Camera,
+  Lightbulb,
+  Mic2,
+  Film,
+  Video,
+  Monitor,
+  Clapperboard,
+  Aperture,
+  ArrowRight,
+} from 'lucide-react'
 import { useLocale } from '@/hooks/use-locale'
 import { PublicContainer } from '@/components/public/public-container'
 
@@ -73,9 +83,7 @@ export function HomeCategoryCards({ categories }: HomeCategoryCardsProps) {
               ))}
             </div>
             <div className="mt-8 text-center">
-              <p className="mb-3 text-sm text-text-muted">
-                {t('home.categoriesEmptyMessage')}
-              </p>
+              <p className="mb-3 text-sm text-text-muted">{t('home.categoriesEmptyMessage')}</p>
               <Link
                 href="/equipment"
                 className="inline-flex items-center gap-1 font-semibold text-brand-primary transition-colors hover:text-brand-primary-hover"

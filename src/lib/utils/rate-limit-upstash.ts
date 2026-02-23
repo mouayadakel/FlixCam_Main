@@ -125,14 +125,11 @@ export async function aiRateLimitResponse(
   const result = await checkRateLimitUpstash(request, 'ai', identifier)
   if (result.allowed) return null
   const retryAfter = Math.ceil((result.reset - Date.now()) / 1000)
-  return new Response(
-    JSON.stringify({ error: 'Too many requests', code: 'RATE_LIMITED' }),
-    {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': String(Math.max(1, retryAfter)),
-      },
-    }
-  )
+  return new Response(JSON.stringify({ error: 'Too many requests', code: 'RATE_LIMITED' }), {
+    status: 429,
+    headers: {
+      'Content-Type': 'application/json',
+      'Retry-After': String(Math.max(1, retryAfter)),
+    },
+  })
 }

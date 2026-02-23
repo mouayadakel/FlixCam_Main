@@ -8,7 +8,11 @@ import { prisma } from '@/lib/db/prisma'
 import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { buildMasterFillPrompt, parseMasterFillOutput } from '@/lib/prompts/master-fill'
-import type { MasterFillInput, MasterFillOutput, MasterFillWithResearchInput } from '@/lib/prompts/master-fill'
+import type {
+  MasterFillInput,
+  MasterFillOutput,
+  MasterFillWithResearchInput,
+} from '@/lib/prompts/master-fill'
 
 export type ContentProvider = 'openai' | 'gemini'
 
@@ -27,7 +31,11 @@ export async function generateWithLLM(
   maxTokens: number = 1000
 ): Promise<string | object> {
   const settings = await getSettings(provider)
-  const apiKey = settings?.apiKey ?? (provider === 'gemini' ? process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY : process.env.OPENAI_API_KEY)
+  const apiKey =
+    settings?.apiKey ??
+    (provider === 'gemini'
+      ? (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+      : process.env.OPENAI_API_KEY)
   if (!apiKey) {
     throw new Error(`No API key for provider: ${provider}`)
   }
@@ -89,7 +97,11 @@ export async function generateMasterFill(
 ): Promise<MasterFillOutput | null> {
   const prompt = buildMasterFillPrompt(input)
   const settings = await getSettings(provider)
-  const apiKey = settings?.apiKey ?? (provider === 'gemini' ? process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY : process.env.OPENAI_API_KEY)
+  const apiKey =
+    settings?.apiKey ??
+    (provider === 'gemini'
+      ? (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+      : process.env.OPENAI_API_KEY)
   if (!apiKey) {
     throw new Error(`No API key for provider: ${provider}`)
   }

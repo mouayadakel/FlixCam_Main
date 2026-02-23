@@ -9,7 +9,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Loader2, UserPlus, Trash2, ChevronDown, ChevronUp, Clock, Shield, Bell } from 'lucide-react'
+import {
+  ArrowRight,
+  Loader2,
+  UserPlus,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Shield,
+  Bell,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -96,7 +106,9 @@ export default function UserDetailPage() {
           const l = await logsRes.json()
           setActivityLogs(l.logs ?? l.data ?? [])
         }
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     } catch (error) {
       toast({ title: 'خطأ', description: 'فشل تحميل البيانات', variant: 'destructive' })
     } finally {
@@ -162,11 +174,15 @@ export default function UserDetailPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">البريد</p>
-              <p className="font-medium" dir="ltr">{user.email}</p>
+              <p className="font-medium" dir="ltr">
+                {user.email}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">الهاتف</p>
-              <p className="font-medium" dir="ltr">{user.phone || '-'}</p>
+              <p className="font-medium" dir="ltr">
+                {user.phone || '-'}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">الدور</p>
@@ -283,12 +299,12 @@ export default function UserDetailPage() {
               </CardTitle>
               <CardDescription>آخر 20 إجراء لهذا المستخدم</CardDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowActivity(!showActivity)}
-            >
-              {showActivity ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+            <Button variant="ghost" size="sm" onClick={() => setShowActivity(!showActivity)}>
+              {showActivity ? (
+                <ChevronUp className="ml-2 h-4 w-4" />
+              ) : (
+                <ChevronDown className="ml-2 h-4 w-4" />
+              )}
               {showActivity ? 'إخفاء' : 'عرض'} ({activityLogs.length})
             </Button>
           </div>
@@ -303,9 +319,13 @@ export default function UserDetailPage() {
                   <div key={log.id} className="flex items-start gap-3 rounded-lg border p-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">{log.action}</Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {log.action}
+                        </Badge>
                         {log.resourceType && (
-                          <Badge variant="secondary" className="text-xs">{log.resourceType}</Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {log.resourceType}
+                          </Badge>
                         )}
                       </div>
                       {log.description && (

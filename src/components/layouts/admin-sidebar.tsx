@@ -461,7 +461,9 @@ export function AdminSidebar() {
       <aside
         className={cn(
           'fixed right-0 top-0 z-50 flex h-screen flex-col border-l border-neutral-200 bg-white shadow-lg transition-transform duration-300 lg:relative lg:translate-x-0',
-          collapsed ? 'translate-x-full lg:w-16 lg:translate-x-0' : 'w-[80vw] max-w-[320px] translate-x-0 lg:w-64'
+          collapsed
+            ? 'translate-x-full lg:w-16 lg:translate-x-0'
+            : 'w-[80vw] max-w-[320px] translate-x-0 lg:w-64'
         )}
         dir="rtl"
       >

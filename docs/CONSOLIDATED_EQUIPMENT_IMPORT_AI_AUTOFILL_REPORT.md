@@ -24,140 +24,140 @@
 
 ### 1.1 Primary — Excel & Import (Equipment from Excel)
 
-| File | Type | Purpose |
-|------|------|---------|
-| `docs/IMPORT_REQUIREMENTS_AND_CHECKLIST.md` | Requirements | Checklist for verifying import flow (Admin → Inventory → Import) |
-| `IMPORT_IMPROVEMENTS_ANALYSIS.md` | Analysis | Critical gaps (job queue, multi-sheet, translation, image, dry-run) + 33 recommendations |
-| `IMPORT_ISSUE_DIAGNOSIS.md` | Diagnosis | Root cause: workers not running; solution: `npm run worker:all` |
-| `IMPORT_COMPARISON.md` | Comparison | Current vs user story requirements (~60% complete) |
-| `BULK_IMPORT_IMPLEMENTATION_STATUS.md` | Status | Implementation status: completed phases, pending, config, testing checklist |
+| File                                        | Type         | Purpose                                                                                  |
+| ------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `docs/IMPORT_REQUIREMENTS_AND_CHECKLIST.md` | Requirements | Checklist for verifying import flow (Admin → Inventory → Import)                         |
+| `IMPORT_IMPROVEMENTS_ANALYSIS.md`           | Analysis     | Critical gaps (job queue, multi-sheet, translation, image, dry-run) + 33 recommendations |
+| `IMPORT_ISSUE_DIAGNOSIS.md`                 | Diagnosis    | Root cause: workers not running; solution: `npm run worker:all`                          |
+| `IMPORT_COMPARISON.md`                      | Comparison   | Current vs user story requirements (~60% complete)                                       |
+| `BULK_IMPORT_IMPLEMENTATION_STATUS.md`      | Status       | Implementation status: completed phases, pending, config, testing checklist              |
 
 ### 1.2 Primary — AI Enhancement & Auto-Filling
 
-| File | Type | Purpose |
-|------|------|---------|
-| `docs/AI_PREVIEW_WORKFLOW_PROPOSAL.md` | Proposal | AI Suggest → Preview → Approve (not auto-commit); staging table, suggest-only API |
-| `docs/AI_BLUEPRINT.md` | Blueprint | AI philosophy: AI recommends, never executes; risk, deposit, alternatives, bundles |
-| `docs/AI_DASHBOARD_AUDIT.md` | Audit | Full architecture: `/admin/ai-dashboard`, APIs, services, queues, types, Prisma |
-| `docs/AI_DASHBOARD_AUDIT_REPORT.md` | Report | Fix report: DRY violations, SSR localStorage, Recharts types, keyboard conflicts |
-| `docs/ADMIN_AI_DASHBOARD_REPORT.md` | Report | User stories, use cases, step-by-step flow, API routes, security |
-| `AI_FEATURES_FULL_AUDIT_REPORT.md` | Audit | 7 AI pages: risk, kit builder, pricing, demand, chatbot, recommendations; real vs fake AI |
+| File                                   | Type      | Purpose                                                                                   |
+| -------------------------------------- | --------- | ----------------------------------------------------------------------------------------- |
+| `docs/AI_PREVIEW_WORKFLOW_PROPOSAL.md` | Proposal  | AI Suggest → Preview → Approve (not auto-commit); staging table, suggest-only API         |
+| `docs/AI_BLUEPRINT.md`                 | Blueprint | AI philosophy: AI recommends, never executes; risk, deposit, alternatives, bundles        |
+| `docs/AI_DASHBOARD_AUDIT.md`           | Audit     | Full architecture: `/admin/ai-dashboard`, APIs, services, queues, types, Prisma           |
+| `docs/AI_DASHBOARD_AUDIT_REPORT.md`    | Report    | Fix report: DRY violations, SSR localStorage, Recharts types, keyboard conflicts          |
+| `docs/ADMIN_AI_DASHBOARD_REPORT.md`    | Report    | User stories, use cases, step-by-step flow, API routes, security                          |
+| `AI_FEATURES_FULL_AUDIT_REPORT.md`     | Audit     | 7 AI pages: risk, kit builder, pricing, demand, chatbot, recommendations; real vs fake AI |
 
 ### 1.3 Primary — Equipment & Platform-Wide
 
-| File | Type | Purpose |
-|------|------|---------|
-| `IMPROVEMENT_BLUEPRINT.md` | Blueprint | Full platform audit: public site, admin, equipment detail, checkout, missing pages |
-| `CODEBASE_AUDIT_REPORT.md` | Audit | Codebase audit |
-| `docs/PRD.md` | Spec | Product requirements |
-| `docs/ARCHITECTURE.md` | Spec | System design |
-| `docs/BOOKING_ENGINE.md` | Spec | Booking workflow |
-| `docs/IMPLEMENTATION_SPEC.md` | Spec | Route map: `/admin/inventory/equipment`, `/p/:productSlug` |
-| `docs/IMPLEMENTATION_CHECKLIST.md` | Checklist | Route alignment: admin/inventory/equipment, data models |
+| File                               | Type      | Purpose                                                                            |
+| ---------------------------------- | --------- | ---------------------------------------------------------------------------------- |
+| `IMPROVEMENT_BLUEPRINT.md`         | Blueprint | Full platform audit: public site, admin, equipment detail, checkout, missing pages |
+| `CODEBASE_AUDIT_REPORT.md`         | Audit     | Codebase audit                                                                     |
+| `docs/PRD.md`                      | Spec      | Product requirements                                                               |
+| `docs/ARCHITECTURE.md`             | Spec      | System design                                                                      |
+| `docs/BOOKING_ENGINE.md`           | Spec      | Booking workflow                                                                   |
+| `docs/IMPLEMENTATION_SPEC.md`      | Spec      | Route map: `/admin/inventory/equipment`, `/p/:productSlug`                         |
+| `docs/IMPLEMENTATION_CHECKLIST.md` | Checklist | Route alignment: admin/inventory/equipment, data models                            |
 
 ### 1.4 Planning — Admin Panel Specs (Import / Inventory / AI Sections)
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_MASTER_SPEC.md` | Spec | D6) `/admin/inventory/import` section |
-| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_ADMIN_ONLY.md` | Spec | F7) `/admin/inventory/import` (LIVE), AI, ImportJob, AIProcessingJob |
-| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_FULL_SYSTEM.md` | Spec | F7) `/admin/inventory/import`, import sub-routes, DB models |
-| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_COMPLETE_DETAILED.md` | Spec | F7) import section, AI settings |
-| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_GAP_ANALYSIS.md` | Gap | Missing pages, Jobs/Queues, `/admin/inventory/products` for AI review |
-| `docs/planning/ADMIN_PANEL_ULTIMATE_SPEC_100PERCENT.md` | Spec | `/admin/inventory/import` route |
-| `docs/planning/ADMIN_PANEL_IMPLEMENTATION_ROADMAP.md` | Roadmap | POST /api/admin/inventory/import |
-| `docs/planning/ADMIN_PANEL_COMPLETE_SPECIFICATION_PRODUCTION_READY.md` | Spec | D8) /admin/inventory/import |
-| `docs/planning/ADMIN_PANEL_COMPLETE_SPECIFICATION_FULL.md` | Spec | Sidebar link to /admin/inventory/import |
-| `docs/planning/admin_panel_complete_specification_part1.md` | Spec | Sidebar: link /admin/inventory/import |
-| `docs/planning/admin_panel_complete_specification_part2.md` | Spec | Import/inventory context |
-| `docs/planning/admin_panel_complete_specification_part3.md` | Spec | Import/inventory context |
-| `docs/planning/admin_panel_complete_specification_part4.md` | Spec | Import/inventory context |
+| File                                                                   | Type    | Relevance                                                             |
+| ---------------------------------------------------------------------- | ------- | --------------------------------------------------------------------- |
+| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_MASTER_SPEC.md`            | Spec    | D6) `/admin/inventory/import` section                                 |
+| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_ADMIN_ONLY.md`             | Spec    | F7) `/admin/inventory/import` (LIVE), AI, ImportJob, AIProcessingJob  |
+| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_FULL_SYSTEM.md`            | Spec    | F7) `/admin/inventory/import`, import sub-routes, DB models           |
+| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_COMPLETE_DETAILED.md`      | Spec    | F7) import section, AI settings                                       |
+| `docs/planning/ADMIN_PANEL_PRODUCTION_READY_GAP_ANALYSIS.md`           | Gap     | Missing pages, Jobs/Queues, `/admin/inventory/products` for AI review |
+| `docs/planning/ADMIN_PANEL_ULTIMATE_SPEC_100PERCENT.md`                | Spec    | `/admin/inventory/import` route                                       |
+| `docs/planning/ADMIN_PANEL_IMPLEMENTATION_ROADMAP.md`                  | Roadmap | POST /api/admin/inventory/import                                      |
+| `docs/planning/ADMIN_PANEL_COMPLETE_SPECIFICATION_PRODUCTION_READY.md` | Spec    | D8) /admin/inventory/import                                           |
+| `docs/planning/ADMIN_PANEL_COMPLETE_SPECIFICATION_FULL.md`             | Spec    | Sidebar link to /admin/inventory/import                               |
+| `docs/planning/admin_panel_complete_specification_part1.md`            | Spec    | Sidebar: link /admin/inventory/import                                 |
+| `docs/planning/admin_panel_complete_specification_part2.md`            | Spec    | Import/inventory context                                              |
+| `docs/planning/admin_panel_complete_specification_part3.md`            | Spec    | Import/inventory context                                              |
+| `docs/planning/admin_panel_complete_specification_part4.md`            | Spec    | Import/inventory context                                              |
 
 ### 1.5 Planning — Equipment User Stories & Public Website
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `docs/public-website/equipment_rental_user_stories_use_cases_diagrams.md` | Spec | Equipment rental flows, use cases |
-| `docs/public-website/equipment_booking_user_stories_use_cases_state_machine_test_cases.md` | Spec | Equipment booking state machine |
-| `docs/public-website/action-checklist-summary.md` | Checklist | Action items (may include equipment/import) |
-| `docs/public-website/FILE_MANAGEMENT_PUBLIC_WEBSITE.md` | Spec | File/media handling |
-| `docs/public-website/PUBLIC_WEBSITE_COMPLETE_SPECIFICATION.md` | Spec | Public site spec |
-| `docs/public-website/flixcam_enhanced_plan.md` | Plan | Enhanced plan |
-| `docs/public-website/master_booking_system_full_specification.md` | Spec | Booking system |
-| `docs/public-website/CURSOR_BUILD_SPEC_PUBLIC_WEBSITE.md` | Spec | Build spec |
-| `docs/public-website/COMPLETE_PRODUCTION_READY_PLAN.md` | Plan | Production plan |
-| `docs/public-website/gap_analysis.md` | Analysis | Gap analysis |
+| File                                                                                       | Type      | Relevance                                   |
+| ------------------------------------------------------------------------------------------ | --------- | ------------------------------------------- |
+| `docs/public-website/equipment_rental_user_stories_use_cases_diagrams.md`                  | Spec      | Equipment rental flows, use cases           |
+| `docs/public-website/equipment_booking_user_stories_use_cases_state_machine_test_cases.md` | Spec      | Equipment booking state machine             |
+| `docs/public-website/action-checklist-summary.md`                                          | Checklist | Action items (may include equipment/import) |
+| `docs/public-website/FILE_MANAGEMENT_PUBLIC_WEBSITE.md`                                    | Spec      | File/media handling                         |
+| `docs/public-website/PUBLIC_WEBSITE_COMPLETE_SPECIFICATION.md`                             | Spec      | Public site spec                            |
+| `docs/public-website/flixcam_enhanced_plan.md`                                             | Plan      | Enhanced plan                               |
+| `docs/public-website/master_booking_system_full_specification.md`                          | Spec      | Booking system                              |
+| `docs/public-website/CURSOR_BUILD_SPEC_PUBLIC_WEBSITE.md`                                  | Spec      | Build spec                                  |
+| `docs/public-website/COMPLETE_PRODUCTION_READY_PLAN.md`                                    | Plan      | Production plan                             |
+| `docs/public-website/gap_analysis.md`                                                      | Analysis  | Gap analysis                                |
 
 ### 1.6 Control Panel & Admin Audits
 
-| File | Type | Relevance |
-|------|------|-----------|
+| File                                   | Type  | Relevance                                                 |
+| -------------------------------------- | ----- | --------------------------------------------------------- |
 | `CONTROL_PANEL_FULL_AUDIT_DETAILED.md` | Audit | 4.8 /admin/inventory/import (استيراد Excel مع AI Preview) |
-| `CONTROL_PANEL_DEEP_ANALYSIS.md` | Audit | Import route /admin/inventory/import |
-| `CONTROL_PANEL_SIDEBAR_AUDIT.md` | Audit | /admin/inventory/import sidebar entry |
-| `ADMIN_CONTROL_PANEL_AUDIT_REPORT.md` | Audit | Admin panel audit |
-| `EMPTY_PAGES_AUDIT.md` | Audit | /admin/inventory/import marked as ✅ |
+| `CONTROL_PANEL_DEEP_ANALYSIS.md`       | Audit | Import route /admin/inventory/import                      |
+| `CONTROL_PANEL_SIDEBAR_AUDIT.md`       | Audit | /admin/inventory/import sidebar entry                     |
+| `ADMIN_CONTROL_PANEL_AUDIT_REPORT.md`  | Audit | Admin panel audit                                         |
+| `EMPTY_PAGES_AUDIT.md`                 | Audit | /admin/inventory/import marked as ✅                      |
 
 ### 1.7 Phase Completion & Verification
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `PHASE3_FULL_FORM_COMPLETE.md` | Phase | Excel import page exists, needs update for new fields |
-| `IMPLEMENTATION_VERIFICATION.md` | Verification | Import page accordion, test import flow |
-| `IMPLEMENTATION_COMPLETE.md` | Status | Access import page |
-| `PRODUCTION_READINESS_CHECKLIST.md` | Checklist | Admin navigates to /admin/inventory/import |
-| `docs/PHASE_COMPLETION_VERIFICATION.md` | Verification | Phase completion |
-| `docs/planning/PHASES_4_TO_9_IMPLEMENTATION_SUMMARY.md` | Summary | Phases 4–9 (portal, admin, testing) |
+| File                                                    | Type         | Relevance                                             |
+| ------------------------------------------------------- | ------------ | ----------------------------------------------------- |
+| `PHASE3_FULL_FORM_COMPLETE.md`                          | Phase        | Excel import page exists, needs update for new fields |
+| `IMPLEMENTATION_VERIFICATION.md`                        | Verification | Import page accordion, test import flow               |
+| `IMPLEMENTATION_COMPLETE.md`                            | Status       | Access import page                                    |
+| `PRODUCTION_READINESS_CHECKLIST.md`                     | Checklist    | Admin navigates to /admin/inventory/import            |
+| `docs/PHASE_COMPLETION_VERIFICATION.md`                 | Verification | Phase completion                                      |
+| `docs/planning/PHASES_4_TO_9_IMPLEMENTATION_SUMMARY.md` | Summary      | Phases 4–9 (portal, admin, testing)                   |
 
 ### 1.8 Setup & Quick Start
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `QUICK_START.md` | Setup | Navigate to /admin/inventory/import |
-| `docs/WEBSITE_AND_CONTROL_PANEL_DEEP_DIVE.md` | Deep dive | ImportJobStatus, data models |
-| `docs/ROADMAP.md` | Roadmap | Product roadmap |
-| `docs/RESOURCES.md` | Resources | Resource links |
-| `docs/ROLES_AND_SECURITY.md` | Security | Roles/permissions |
-| `docs/RENTAL_COMPANY_STANDARDS_DEEP_DIVE.md` | Standards | Rental standards |
-| `docs/DATA_EVENTS.md` | Events | Event-driven architecture |
-| `docs/DASHBOARD_MIGRATION_REPORT.md` | Report | Dashboard migration |
-| `docs/ENTERPRISE_UX_REFERENCE_SPEC.md` | Spec | UX reference |
+| File                                          | Type      | Relevance                           |
+| --------------------------------------------- | --------- | ----------------------------------- |
+| `QUICK_START.md`                              | Setup     | Navigate to /admin/inventory/import |
+| `docs/WEBSITE_AND_CONTROL_PANEL_DEEP_DIVE.md` | Deep dive | ImportJobStatus, data models        |
+| `docs/ROADMAP.md`                             | Roadmap   | Product roadmap                     |
+| `docs/RESOURCES.md`                           | Resources | Resource links                      |
+| `docs/ROLES_AND_SECURITY.md`                  | Security  | Roles/permissions                   |
+| `docs/RENTAL_COMPANY_STANDARDS_DEEP_DIVE.md`  | Standards | Rental standards                    |
+| `docs/DATA_EVENTS.md`                         | Events    | Event-driven architecture           |
+| `docs/DASHBOARD_MIGRATION_REPORT.md`          | Report    | Dashboard migration                 |
+| `docs/ENTERPRISE_UX_REFERENCE_SPEC.md`        | Spec      | UX reference                        |
 
 ### 1.9 Kit Builder & Build Your Kit (Equipment-Related)
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `docs/BUILD_YOUR_KIT_FULL_AUDIT_REPORT.md` | Audit | Kit builder audit |
-| `docs/BUILD_YOUR_KIT_UX_AUDIT.md` | Audit | Kit UX |
-| `docs/kit-wizard-strategic-improvements.md` | Improvements | Kit wizard |
-| `docs/kit-wizard-completeness-addendum.md` | Addendum | Kit wizard completeness |
+| File                                        | Type         | Relevance               |
+| ------------------------------------------- | ------------ | ----------------------- |
+| `docs/BUILD_YOUR_KIT_FULL_AUDIT_REPORT.md`  | Audit        | Kit builder audit       |
+| `docs/BUILD_YOUR_KIT_UX_AUDIT.md`           | Audit        | Kit UX                  |
+| `docs/kit-wizard-strategic-improvements.md` | Improvements | Kit wizard              |
+| `docs/kit-wizard-completeness-addendum.md`  | Addendum     | Kit wizard completeness |
 
 ### 1.10 Execution Prompt (Equipment/Import Improvements)
 
-| File | Type | Relevance |
-|------|------|-----------|
+| File                                 | Type      | Relevance                                                                                                                                            |
+| ------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FLIXCAM_CURSOR_EXECUTION_PROMPT.md` | Execution | Sprint tasks: equipment slug, availability calendar, reviews, frequently rented together, description fields, backfill scripts, admin equipment edit |
 
 ### 1.11 Other Related (Docs Index, README)
 
-| File | Type | Relevance |
-|------|------|-----------|
-| `docs/00-README-DOCS.md` | Index | Docs index |
-| `docs/planning/ESTIMATES.md` | Estimates | Project estimates |
-| `docs/planning/MILESTONES.md` | Milestones | Project milestones |
-| `docs/planning/SPRINTS.md` | Sprints | Sprint planning |
-| `docs/planning/DEPENDENCIES.md` | Dependencies | Project dependencies |
-| `docs/planning/NEXT_PHASE_AND_STEP.md` | Planning | Next phase |
-| `docs/planning/COMPLETION_CHECK_100_PERCENT.md` | Planning | Completion check |
-| `docs/planning/RISKS.md` | Planning | Risks |
-| `docs/planning/ADMIN_PANEL_EXECUTIVE_SUMMARY.md` | Summary | Admin panel summary |
-| `docs/admin/Rule-permeiton/RBAC_IMPLEMENTATION_PLAN.md` | RBAC | Permissions (ai.use, etc.) |
-| `docs/admin/Rule-permeiton/ROLES_AND_PERMISSIONS_PAGE_REPORT.md` | RBAC | Roles report |
-| `docs/phase8/SECURITY_AUDIT_CHECKLIST.md` | Phase 8 | Security checklist |
-| `docs/phase8/QA_FINAL_CHECKLIST.md` | Phase 8 | QA checklist |
-| `docs/phase9/USER_GUIDE_PORTAL.md` | Phase 9 | User guide |
-| `docs/phase9/API_DOCS_PORTAL_AND_ADMIN.md` | Phase 9 | API docs |
-| `docs/phase9/MONITORING_AND_ALERTING.md` | Phase 9 | Monitoring |
+| File                                                             | Type         | Relevance                  |
+| ---------------------------------------------------------------- | ------------ | -------------------------- |
+| `docs/00-README-DOCS.md`                                         | Index        | Docs index                 |
+| `docs/planning/ESTIMATES.md`                                     | Estimates    | Project estimates          |
+| `docs/planning/MILESTONES.md`                                    | Milestones   | Project milestones         |
+| `docs/planning/SPRINTS.md`                                       | Sprints      | Sprint planning            |
+| `docs/planning/DEPENDENCIES.md`                                  | Dependencies | Project dependencies       |
+| `docs/planning/NEXT_PHASE_AND_STEP.md`                           | Planning     | Next phase                 |
+| `docs/planning/COMPLETION_CHECK_100_PERCENT.md`                  | Planning     | Completion check           |
+| `docs/planning/RISKS.md`                                         | Planning     | Risks                      |
+| `docs/planning/ADMIN_PANEL_EXECUTIVE_SUMMARY.md`                 | Summary      | Admin panel summary        |
+| `docs/admin/Rule-permeiton/RBAC_IMPLEMENTATION_PLAN.md`          | RBAC         | Permissions (ai.use, etc.) |
+| `docs/admin/Rule-permeiton/ROLES_AND_PERMISSIONS_PAGE_REPORT.md` | RBAC         | Roles report               |
+| `docs/phase8/SECURITY_AUDIT_CHECKLIST.md`                        | Phase 8      | Security checklist         |
+| `docs/phase8/QA_FINAL_CHECKLIST.md`                              | Phase 8      | QA checklist               |
+| `docs/phase9/USER_GUIDE_PORTAL.md`                               | Phase 9      | User guide                 |
+| `docs/phase9/API_DOCS_PORTAL_AND_ADMIN.md`                       | Phase 9      | API docs                   |
+| `docs/phase9/MONITORING_AND_ALERTING.md`                         | Phase 9      | Monitoring                 |
 
 ---
 
@@ -186,13 +186,13 @@ Backfill / AI Fill
 
 ### Key Services
 
-| Service | Role |
-|---------|------|
-| `ai-autofill.service.ts` | Translation/SEO autofill orchestrator |
-| `ai-spec-parser.service.ts` | LLM spec inference with confidence |
-| `import-worker.ts` | Excel row → Product creation |
-| `ai-processing.worker.ts` | AI processing (translations, SEO) |
-| `image-processing.service.ts` | Cloudinary upload |
+| Service                       | Role                                  |
+| ----------------------------- | ------------------------------------- |
+| `ai-autofill.service.ts`      | Translation/SEO autofill orchestrator |
+| `ai-spec-parser.service.ts`   | LLM spec inference with confidence    |
+| `import-worker.ts`            | Excel row → Product creation          |
+| `ai-processing.worker.ts`     | AI processing (translations, SEO)     |
+| `image-processing.service.ts` | Cloudinary upload                     |
 
 ---
 
@@ -211,23 +211,23 @@ Backfill / AI Fill
 
 **Sources:** `IMPORT_REQUIREMENTS_AND_CHECKLIST.md`, `IMPORT_IMPROVEMENTS_ANALYSIS.md`, `IMPORT_COMPARISON.md`, `BULK_IMPORT_IMPLEMENTATION_STATUS.md`
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| File formats | ✅ | .xlsx, .xls, .csv, .tsv |
-| Max size | ⚠️ | 50MB limit mentioned; 5,000 rows enforced |
-| Multi-sheet | ✅ | Parse all sheets; map each to category |
-| Category mapping | ✅ | Required per sheet before import |
-| Column mapping | ✅ | Accepts many variations (Name, Product Name, Brand, Daily Price, etc.) |
-| AI Preview | ✅ | Optional; needs GEMINI_API_KEY or OPENAI_API_KEY |
-| Import modes | ✅ | Preview + Edit (AI), Import then fill, Import + Auto-fill |
-| Dry Run / Validation | ⚠️ | `/api/admin/imports/validate` endpoint recommended; not fully implemented |
-| Translation (AR/ZH) | ✅ | `translation.service.ts` – OpenAI & Gemini |
-| SEO generation | ✅ | `seo-generation.service.ts` |
-| Image processing | ✅ | Cloudinary via `image-processing.service.ts` |
-| Error report CSV | ✅ | `/api/admin/imports/[id]/errors.csv` |
-| Retry failed rows | ✅ | `/api/admin/imports/[id]/retry` |
-| Rollback | ❌ | Not implemented |
-| Workers | ⚠️ | Must run `npm run worker:all` in separate terminal |
+| Aspect               | Status | Notes                                                                     |
+| -------------------- | ------ | ------------------------------------------------------------------------- |
+| File formats         | ✅     | .xlsx, .xls, .csv, .tsv                                                   |
+| Max size             | ⚠️     | 50MB limit mentioned; 5,000 rows enforced                                 |
+| Multi-sheet          | ✅     | Parse all sheets; map each to category                                    |
+| Category mapping     | ✅     | Required per sheet before import                                          |
+| Column mapping       | ✅     | Accepts many variations (Name, Product Name, Brand, Daily Price, etc.)    |
+| AI Preview           | ✅     | Optional; needs GEMINI_API_KEY or OPENAI_API_KEY                          |
+| Import modes         | ✅     | Preview + Edit (AI), Import then fill, Import + Auto-fill                 |
+| Dry Run / Validation | ⚠️     | `/api/admin/imports/validate` endpoint recommended; not fully implemented |
+| Translation (AR/ZH)  | ✅     | `translation.service.ts` – OpenAI & Gemini                                |
+| SEO generation       | ✅     | `seo-generation.service.ts`                                               |
+| Image processing     | ✅     | Cloudinary via `image-processing.service.ts`                              |
+| Error report CSV     | ✅     | `/api/admin/imports/[id]/errors.csv`                                      |
+| Retry failed rows    | ✅     | `/api/admin/imports/[id]/retry`                                           |
+| Rollback             | ❌     | Not implemented                                                           |
+| Workers              | ⚠️     | Must run `npm run worker:all` in separate terminal                        |
 
 **Known issues:** `IMPORT_ISSUE_DIAGNOSIS.md` – workers not running → jobs stay PENDING.
 
@@ -248,13 +248,13 @@ Backfill / AI Fill
 
 **Sources:** `AI_PREVIEW_WORKFLOW_PROPOSAL.md`, `docs/ADMIN_AI_DASHBOARD_REPORT.md`, `BULK_IMPORT_IMPLEMENTATION_STATUS.md`
 
-| Content type | Current | Proposed |
-|--------------|---------|----------|
-| **Images** | pendingReview → approve/reject | Keep as-is |
-| **Description** | Auto-saved to ProductTranslation | Generate → preview → edit → approve |
-| **SEO** | Auto-saved | Same |
-| **Specs** | Auto-saved (confidence ≥90%) | Always preview → edit → approve |
-| **Recommended items** | Kit builder suggests | Keep (already previewable) |
+| Content type          | Current                          | Proposed                            |
+| --------------------- | -------------------------------- | ----------------------------------- |
+| **Images**            | pendingReview → approve/reject   | Keep as-is                          |
+| **Description**       | Auto-saved to ProductTranslation | Generate → preview → edit → approve |
+| **SEO**               | Auto-saved                       | Same                                |
+| **Specs**             | Auto-saved (confidence ≥90%)     | Always preview → edit → approve     |
+| **Recommended items** | Kit builder suggests             | Keep (already previewable)          |
 
 **Proposed:** AiContentDraft table or in-memory session; “AI Suggest” button → returns JSON; user edits; “Apply” saves.
 
@@ -294,12 +294,12 @@ Backfill / AI Fill
 
 ### Code Dependencies
 
-| File | Depends on |
-|------|------------|
-| `import-worker.ts` | Redis, BullMQ, `ProductCatalogService`, `ai-autofill.service` |
-| `ai-autofill.service.ts` | Translation service, SEO generation, OpenAI/Gemini |
-| `ai-processing.worker.ts` | Import queue, AI autofill |
-| `image-processing.worker.ts` | Cloudinary, image-processing.service |
+| File                         | Depends on                                                    |
+| ---------------------------- | ------------------------------------------------------------- |
+| `import-worker.ts`           | Redis, BullMQ, `ProductCatalogService`, `ai-autofill.service` |
+| `ai-autofill.service.ts`     | Translation service, SEO generation, OpenAI/Gemini            |
+| `ai-processing.worker.ts`    | Import queue, AI autofill                                     |
+| `image-processing.worker.ts` | Cloudinary, image-processing.service                          |
 
 ---
 
@@ -307,35 +307,36 @@ Backfill / AI Fill
 
 ### From IMPORT_IMPROVEMENTS_ANALYSIS.md (P0)
 
-| Priority | Feature | Status |
-|----------|---------|--------|
-| P0 | Job Queue (BullMQ + Redis) | ✅ Done |
-| P0 | Multi-Sheet Mapping UI | ✅ Done |
-| P0 | Translation Service | ✅ Done |
-| P0 | Image Processing (CDN) | ✅ Done |
-| P0 | Dry Run Validation | ⚠️ Partial |
+| Priority | Feature                    | Status     |
+| -------- | -------------------------- | ---------- |
+| P0       | Job Queue (BullMQ + Redis) | ✅ Done    |
+| P0       | Multi-Sheet Mapping UI     | ✅ Done    |
+| P0       | Translation Service        | ✅ Done    |
+| P0       | Image Processing (CDN)     | ✅ Done    |
+| P0       | Dry Run Validation         | ⚠️ Partial |
 
 ### From AI_PREVIEW_WORKFLOW_PROPOSAL.md
 
-| Phase | Action | Status |
-|-------|--------|--------|
-| 1 | Fix image preview (Cloudinary) | ✅ Done |
-| 2 | Align Product vs Equipment | ❌ Pending |
-| 3 | Add "AI Suggest" on equipment form | ❌ Pending |
-| 4 | Add staging table (optional) | ❌ Pending |
-| 5 | Improve prompts (reasoning, confidence) | ❌ Pending |
+| Phase | Action                                  | Status     |
+| ----- | --------------------------------------- | ---------- |
+| 1     | Fix image preview (Cloudinary)          | ✅ Done    |
+| 2     | Align Product vs Equipment              | ❌ Pending |
+| 3     | Add "AI Suggest" on equipment form      | ❌ Pending |
+| 4     | Add staging table (optional)            | ❌ Pending |
+| 5     | Improve prompts (reasoning, confidence) | ❌ Pending |
 
 ### From BULK_IMPORT_IMPLEMENTATION_STATUS.md (Pending)
 
-| Item | Status |
-|------|--------|
-| Row-level selection UI | ⚠️ Pending |
-| AI preview dialog component | ⚠️ Pending |
+| Item                                  | Status     |
+| ------------------------------------- | ---------- |
+| Row-level selection UI                | ⚠️ Pending |
+| AI preview dialog component           | ⚠️ Pending |
 | AI preview integration in import page | ⚠️ Pending |
-| AI control dashboard page | ⚠️ Pending |
-| Needs review workflow page | ⚠️ Pending |
+| AI control dashboard page             | ⚠️ Pending |
+| Needs review workflow page            | ⚠️ Pending |
 
 ### From AI_FEATURES_FULL_AUDIT_REPORT.md
+
 - Consolidate 7 AI pages (merge Kit Builder, AI Pricing tab)
 - Replace rule-based “AI” with real LLM where appropriate
 - Add “AI Suggest” button to equipment form, kit builder, dynamic pricing
@@ -345,6 +346,7 @@ Backfill / AI Fill
 ## 6. File Paths (Complete Quick Lookup)
 
 ### Primary (14 files)
+
 ```
 docs/IMPORT_REQUIREMENTS_AND_CHECKLIST.md
 docs/AI_PREVIEW_WORKFLOW_PROPOSAL.md
@@ -368,6 +370,7 @@ FLIXCAM_CURSOR_EXECUTION_PROMPT.md
 ```
 
 ### Planning (18 files)
+
 ```
 docs/planning/ADMIN_PANEL_PRODUCTION_READY_MASTER_SPEC.md
 docs/planning/ADMIN_PANEL_PRODUCTION_READY_ADMIN_ONLY.md
@@ -394,6 +397,7 @@ docs/planning/ADMIN_PANEL_EXECUTIVE_SUMMARY.md
 ```
 
 ### Public Website & Equipment (10 files)
+
 ```
 docs/public-website/equipment_rental_user_stories_use_cases_diagrams.md
 docs/public-website/equipment_booking_user_stories_use_cases_state_machine_test_cases.md
@@ -408,6 +412,7 @@ docs/public-website/gap_analysis.md
 ```
 
 ### Control Panel & Phase (15 files)
+
 ```
 CONTROL_PANEL_FULL_AUDIT_DETAILED.md
 CONTROL_PANEL_DEEP_ANALYSIS.md
@@ -427,6 +432,7 @@ docs/kit-wizard-completeness-addendum.md
 ```
 
 ### Other Docs (12 files)
+
 ```
 docs/WEBSITE_AND_CONTROL_PANEL_DEEP_DIVE.md
 docs/ROADMAP.md
@@ -491,4 +497,4 @@ npx tsx scripts/process-pending-imports.ts
 
 ---
 
-*This report consolidates all documentation related to equipment addition, Excel import, AI enhancement, and auto-filling. Use it as the single entry point for planning and implementation.*
+_This report consolidates all documentation related to equipment addition, Excel import, AI enhancement, and auto-filling. Use it as the single entry point for planning and implementation._

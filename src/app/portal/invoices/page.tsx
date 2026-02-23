@@ -92,16 +92,23 @@ export default async function PortalInvoicesPage() {
                     <div className="flex-1">
                       <div className="mb-2 flex items-center gap-3">
                         <Receipt className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-lg font-medium">{t('ar', 'portal.invoiceHash').replace('{number}', invoice.invoiceNumber)}</span>
+                        <span className="text-lg font-medium">
+                          {t('ar', 'portal.invoiceHash').replace('{number}', invoice.invoiceNumber)}
+                        </span>
                         <Badge
                           variant={isPaid ? 'default' : isPartiallyPaid ? 'secondary' : 'outline'}
                         >
-                          {isPaid ? t('ar', 'portal.paid') : isPartiallyPaid ? t('ar', 'portal.partiallyPaid') : t('ar', 'portal.unpaid')}
+                          {isPaid
+                            ? t('ar', 'portal.paid')
+                            : isPartiallyPaid
+                              ? t('ar', 'portal.partiallyPaid')
+                              : t('ar', 'portal.unpaid')}
                         </Badge>
                       </div>
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <div>
-                          <span className="font-medium">{t('ar', 'portal.booking')}:</span> #{invoice.bookingNumber}
+                          <span className="font-medium">{t('ar', 'portal.booking')}:</span> #
+                          {invoice.bookingNumber}
                         </div>
                         <div>
                           <span className="font-medium">{t('ar', 'portal.amount')}:</span>{' '}

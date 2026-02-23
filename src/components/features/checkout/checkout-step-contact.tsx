@@ -102,7 +102,11 @@ export function CheckoutStepContact({ onSuccess }: CheckoutStepContactProps) {
       const { oneTimeToken } = json
       const result = await signIn('phone-otp', { oneTimeToken, redirect: false })
       if (result?.error) {
-        toast({ title: t('common.error'), description: t('checkout.loginFailed'), variant: 'destructive' })
+        toast({
+          title: t('common.error'),
+          description: t('checkout.loginFailed'),
+          variant: 'destructive',
+        })
         return
       }
       if (result?.ok) {
@@ -138,7 +142,11 @@ export function CheckoutStepContact({ onSuccess }: CheckoutStepContactProps) {
         redirect: false,
       })
       if (result?.error) {
-        toast({ title: t('common.error'), description: t('checkout.loginFailed'), variant: 'destructive' })
+        toast({
+          title: t('common.error'),
+          description: t('checkout.loginFailed'),
+          variant: 'destructive',
+        })
         return
       }
       if (result?.ok) {

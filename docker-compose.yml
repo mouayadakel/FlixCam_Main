@@ -7,7 +7,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       DATABASE_URL: postgresql://flixcam:flixcam@db:5432/flixcam_rent?schema=public
       NEXTAUTH_URL: http://localhost:3000
@@ -28,11 +28,11 @@ services:
       POSTGRES_PASSWORD: flixcam
       POSTGRES_DB: flixcam_rent
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flixcam -d flixcam_rent"]
+      test: ['CMD-SHELL', 'pg_isready -U flixcam -d flixcam_rent']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
 

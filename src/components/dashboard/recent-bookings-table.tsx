@@ -70,7 +70,9 @@ export function RecentBookingsTable({ bookings = [] }: RecentBookingsTableProps)
                     className="block rounded-lg border border-neutral-200 bg-neutral-50/50 p-4 transition-colors hover:bg-neutral-100"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-mono text-sm font-medium">{booking.booking_number}</span>
+                      <span className="font-mono text-sm font-medium">
+                        {booking.booking_number}
+                      </span>
                       <Badge
                         style={{ backgroundColor: stateConfig.color, color: '#fff' }}
                         className="text-xs"
@@ -93,7 +95,7 @@ export function RecentBookingsTable({ bookings = [] }: RecentBookingsTableProps)
               })}
             </div>
             {/* Desktop: table */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden overflow-x-auto lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -114,7 +116,9 @@ export function RecentBookingsTable({ bookings = [] }: RecentBookingsTableProps)
                     }
                     return (
                       <TableRow key={booking.id}>
-                        <TableCell className="font-mono text-sm">{booking.booking_number}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {booking.booking_number}
+                        </TableCell>
                         <TableCell>
                           {booking.client_name || `عميل #${booking.client_id.slice(0, 8)}`}
                         </TableCell>

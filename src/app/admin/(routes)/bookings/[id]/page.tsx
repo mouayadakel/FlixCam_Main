@@ -186,7 +186,9 @@ export default function BookingDetailPage() {
       estimatedCost: string
     }>
   >([])
-  const [auditLogs, setAuditLogs] = useState<Array<{ id: string; action: string; description: string | null; createdAt: string }>>([])
+  const [auditLogs, setAuditLogs] = useState<
+    Array<{ id: string; action: string; description: string | null; createdAt: string }>
+  >([])
 
   const loadBooking = useCallback(async () => {
     const id = params?.id
@@ -266,9 +268,8 @@ export default function BookingDetailPage() {
     }
   }
 
-  const isLateReturn = booking &&
-    booking.status === 'ACTIVE' &&
-    new Date(booking.endDate) < new Date()
+  const isLateReturn =
+    booking && booking.status === 'ACTIVE' && new Date(booking.endDate) < new Date()
 
   const formatAmount = (amount: number | string | null) => {
     if (!amount) return '0.00'
@@ -296,7 +297,10 @@ export default function BookingDetailPage() {
     )
   }
 
-  const PAYMENT_STATUS_LABELS: Record<string, { ar: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  const PAYMENT_STATUS_LABELS: Record<
+    string,
+    { ar: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
     PENDING: { ar: 'معلق', variant: 'secondary' },
     COMPLETED: { ar: 'مكتمل', variant: 'default' },
     FAILED: { ar: 'فشل', variant: 'destructive' },
@@ -534,7 +538,10 @@ export default function BookingDetailPage() {
                     </div>
                   </div>
                   {booking.payments.map((payment) => {
-                    const statusInfo = PAYMENT_STATUS_LABELS[payment.status] ?? { ar: payment.status, variant: 'secondary' as const }
+                    const statusInfo = PAYMENT_STATUS_LABELS[payment.status] ?? {
+                      ar: payment.status,
+                      variant: 'secondary' as const,
+                    }
                     return (
                       <div
                         key={payment.id}
@@ -770,7 +777,11 @@ export default function BookingDetailPage() {
                   ...(booking.updatedAt && booking.updatedAt !== booking.createdAt
                     ? [{ label: 'آخر تحديث', date: booking.updatedAt }]
                     : []),
-                  ...auditLogs.map((l) => ({ label: l.action, date: l.createdAt, description: l.description }))
+                  ...auditLogs.map((l) => ({
+                    label: l.action,
+                    date: l.createdAt,
+                    description: l.description,
+                  })),
                 ].map((entry, i) => (
                   <div key={i} className="flex gap-3 pb-4">
                     <div className="flex flex-col items-center">

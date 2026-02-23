@@ -180,19 +180,28 @@ export default function CouponsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('active')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('active')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">نشط</p>
             <p className="text-2xl font-bold text-green-600">{summary.active}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('scheduled')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('scheduled')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">مجدول</p>
             <p className="text-2xl font-bold text-blue-600">{summary.scheduled}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('expired')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('expired')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">منتهي</p>
             <p className="text-2xl font-bold">{summary.expired}</p>
@@ -204,7 +213,9 @@ export default function CouponsPage() {
               <AlertTriangle className="h-3 w-3 text-amber-500" />
               <p className="text-sm text-muted-foreground">تنتهي خلال 7 أيام</p>
             </div>
-            <p className={`text-2xl font-bold ${summary.expiringSoon > 0 ? 'text-amber-600' : ''}`}>{summary.expiringSoon}</p>
+            <p className={`text-2xl font-bold ${summary.expiringSoon > 0 ? 'text-amber-600' : ''}`}>
+              {summary.expiringSoon}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -315,13 +326,18 @@ export default function CouponsPage() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm">
                         <Users className="h-3 w-3 text-muted-foreground" />
-                        <span>{coupon.usageCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ''}</span>
+                        <span>
+                          {coupon.usageCount}
+                          {coupon.usageLimit ? ` / ${coupon.usageLimit}` : ''}
+                        </span>
                       </div>
                       {coupon.usageLimit && coupon.usageLimit > 0 && (
                         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                           <div
                             className="h-full rounded-full bg-primary transition-all"
-                            style={{ width: `${Math.min(100, (coupon.usageCount / coupon.usageLimit) * 100)}%` }}
+                            style={{
+                              width: `${Math.min(100, (coupon.usageCount / coupon.usageLimit) * 100)}%`,
+                            }}
                           />
                         </div>
                       )}
@@ -338,10 +354,14 @@ export default function CouponsPage() {
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-muted-foreground" />
                           {expired ? (
-                            <span className="text-destructive">{formatDate(coupon.validUntil)}</span>
+                            <span className="text-destructive">
+                              {formatDate(coupon.validUntil)}
+                            </span>
                           ) : expiringSoon ? (
                             <>
-                              <span className="text-amber-600">{formatDate(coupon.validUntil)}</span>
+                              <span className="text-amber-600">
+                                {formatDate(coupon.validUntil)}
+                              </span>
                               <span className="text-xs text-amber-500">({daysLeft}د)</span>
                             </>
                           ) : (

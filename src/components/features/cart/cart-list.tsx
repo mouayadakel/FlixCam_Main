@@ -120,13 +120,18 @@ export function CartList() {
       </div>
 
       {/* Mobile: sticky order summary + Proceed (above bottom nav) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
         <div className="mx-auto flex max-w-public-container items-center justify-between gap-4">
           <div>
             <span className="text-sm text-text-muted">{t('cart.total')}</span>
             <p className="text-xl font-bold text-brand-primary">{total.toLocaleString()} SAR</p>
           </div>
-          <Button asChild size="lg" className="min-h-[44px] flex-1 max-w-[200px] rounded-xl bg-brand-primary font-semibold" disabled={items.length === 0}>
+          <Button
+            asChild
+            size="lg"
+            className="min-h-[44px] max-w-[200px] flex-1 rounded-xl bg-brand-primary font-semibold"
+            disabled={items.length === 0}
+          >
             <Link href="/checkout">{t('cart.checkout')}</Link>
           </Button>
         </div>

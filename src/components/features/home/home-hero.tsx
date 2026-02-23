@@ -15,9 +15,16 @@ import { HeroCarousel } from '@/components/features/home/hero-carousel'
 import { PublicSearch } from '@/components/public/public-search'
 import type { HeroBannerPublic } from '@/lib/services/hero-banner.service'
 
-const DEFAULT_HERO_IMAGE_URL = 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80'
+const DEFAULT_HERO_IMAGE_URL =
+  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80'
 
-export function HomeHero({ banner, heroImageUrl }: { banner?: HeroBannerPublic | null; heroImageUrl?: string | null }) {
+export function HomeHero({
+  banner,
+  heroImageUrl,
+}: {
+  banner?: HeroBannerPublic | null
+  heroImageUrl?: string | null
+}) {
   const resolvedHeroImage = heroImageUrl || DEFAULT_HERO_IMAGE_URL
   const { t } = useLocale()
 
@@ -65,12 +72,10 @@ export function HomeHero({ banner, heroImageUrl }: { banner?: HeroBannerPublic |
               {t('home.heroSubtitle')}
             </p>
 
-            <div
-              className="mt-8 flex animate-fade-in flex-wrap items-center justify-center gap-3 opacity-0 [animation-delay:0.4s] md:justify-start"
-            >
+            <div className="mt-8 flex animate-fade-in flex-wrap items-center justify-center gap-3 opacity-0 [animation-delay:0.4s] md:justify-start">
               <Button
                 size="lg"
-                className="w-full min-h-[44px] rounded-[4px] bg-white px-8 font-semibold text-[#1A1A1A] shadow-lg transition-all hover:bg-white/90 hover:shadow-xl active:scale-95 sm:w-auto"
+                className="min-h-[44px] w-full rounded-[4px] bg-white px-8 font-semibold text-[#1A1A1A] shadow-lg transition-all hover:bg-white/90 hover:shadow-xl active:scale-95 sm:w-auto"
                 asChild
               >
                 <Link href="/equipment">
@@ -90,9 +95,7 @@ export function HomeHero({ banner, heroImageUrl }: { banner?: HeroBannerPublic |
           </div>
 
           {/* Image – right on md+, with modern treatment */}
-          <div
-            className="relative w-full flex-shrink-0 animate-slide-in-right opacity-0 [animation-delay:0.3s] md:w-[45%] lg:w-[420px]"
-          >
+          <div className="relative w-full flex-shrink-0 animate-slide-in-right opacity-0 [animation-delay:0.3s] md:w-[45%] lg:w-[420px]">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 md:aspect-[16/10]">
               <Image
                 src={resolvedHeroImage}

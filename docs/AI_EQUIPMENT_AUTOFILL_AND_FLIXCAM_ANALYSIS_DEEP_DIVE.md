@@ -2,6 +2,7 @@
 
 **Date:** February 19, 2026  
 **Files analyzed:**
+
 - `/Users/mohammedalakel/Downloads/AI_Equipment_Autofill.jsx` (565 lines)
 - `/Users/mohammedalakel/Downloads/FlixCam_Analysis.jsx` (600 lines)
 
@@ -9,10 +10,10 @@
 
 ## Executive Summary
 
-| File | Purpose | Type | Integration Status |
-|------|---------|------|-------------------|
-| **AI_Equipment_Autofill.jsx** | UI prototype for AI-powered equipment form + Excel import | Standalone React demo | Not integrated — uses mock data, hardcoded Anthropic API call |
-| **FlixCam_Analysis.jsx** | Technical audit dashboard — weaknesses, gaps, roadmap | Standalone React viewer | Not integrated — static data object, no backend |
+| File                          | Purpose                                                   | Type                    | Integration Status                                            |
+| ----------------------------- | --------------------------------------------------------- | ----------------------- | ------------------------------------------------------------- |
+| **AI_Equipment_Autofill.jsx** | UI prototype for AI-powered equipment form + Excel import | Standalone React demo   | Not integrated — uses mock data, hardcoded Anthropic API call |
+| **FlixCam_Analysis.jsx**      | Technical audit dashboard — weaknesses, gaps, roadmap     | Standalone React viewer | Not integrated — static data object, no backend               |
 
 Both are **design/prototype artifacts** that document intended behavior and findings. Neither is wired into the FlixCam Next.js app.
 
@@ -23,6 +24,7 @@ Both are **design/prototype artifacts** that document intended behavior and find
 ### 1.1 Purpose & Scope
 
 A **single-file React prototype** that demonstrates:
+
 1. **Add Equipment** — Form with 47 fields across 6 groups; AI fills all AI-capable fields from name/brand/category
 2. **Excel Import** — Simulated bulk import with mock rows; "Run AI Fill" processes rows and lets user "View AI Fill" per item
 
@@ -48,33 +50,35 @@ A **single-file React prototype** that demonstrates:
 
 ### 1.3 Field Schema (FIELD_GROUPS)
 
-| Group | Fields | AI-Capable | Notes |
-|-------|--------|------------|-------|
-| Identity | 8 | 6 | name_en/ar/zh, sku, slug, category (select) |
-| Descriptions | 7 | 7 | short/long EN+AR, key_features, use_cases, target_audience |
-| SEO | 8 | 8 | seo_title, seo_desc, keywords, og_title/desc (EN+AR) |
-| Technical Specs | 12 | 11 | sensor, resolution, mount, formats, weight, dimensions, etc. |
-| Pricing | 6 | 5 | daily/weekly/monthly, deposit, replacement_value |
-| Rental Info | 6 | 6 | min_rental_days, included_accessories, care_instructions, etc. |
+| Group           | Fields | AI-Capable | Notes                                                          |
+| --------------- | ------ | ---------- | -------------------------------------------------------------- |
+| Identity        | 8      | 6          | name_en/ar/zh, sku, slug, category (select)                    |
+| Descriptions    | 7      | 7          | short/long EN+AR, key_features, use_cases, target_audience     |
+| SEO             | 8      | 8          | seo_title, seo_desc, keywords, og_title/desc (EN+AR)           |
+| Technical Specs | 12     | 11         | sensor, resolution, mount, formats, weight, dimensions, etc.   |
+| Pricing         | 6      | 5          | daily/weekly/monthly, deposit, replacement_value               |
+| Rental Info     | 6      | 6          | min_rental_days, included_accessories, care_instructions, etc. |
 
 **Total:** 47 fields, 42 AI-capable.
 
 ### 1.4 AI Integration
 
 **API call (lines 356–364):**
+
 ```javascript
-const response = await fetch("https://api.anthropic.com/v1/messages", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
+const response = await fetch('https://api.anthropic.com/v1/messages', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    model: "claude-sonnet-4-20250514",
+    model: 'claude-sonnet-4-20250514',
     max_tokens: 1000,
-    messages: [{ role: "user", content: prompt }]
-  })
-});
+    messages: [{ role: 'user', content: prompt }],
+  }),
+})
 ```
 
 **Issues:**
+
 - **No API key** — Request has no `x-api-key` or `Authorization` header; will fail with 401
 - **Wrong provider** — FlixCam uses OpenAI/Gemini (`ai-autofill.service.ts`), not Anthropic
 - **max_tokens: 1000** — Far too low for the full JSON schema (42+ fields); response will be truncated
@@ -83,12 +87,14 @@ const response = await fetch("https://api.anthropic.com/v1/messages", {
 ### 1.5 Prompt Design (buildPrompt)
 
 **Strengths:**
+
 - Clear context: FlixCam, Riyadh, Saudi B2B cinema rental
 - Explicit rules: specific to model, fluent Arabic, Saudi SEO, SAR pricing
 - Confidence per field requested (`_confidence` 0–100)
 - JSON schema with examples
 
 **Gaps:**
+
 - No locale-specific SEO (AR/ZH get separate prompts in FlixCam; here it's one call)
 - No similar-products context (as recommended in FlixCam_Analysis)
 - No brand/regional context injection
@@ -113,13 +119,13 @@ const response = await fetch("https://api.anthropic.com/v1/messages", {
 
 ### 1.8 Alignment with FlixCam Codebase
 
-| Prototype Feature | FlixCam Equivalent | Status |
-|------------------|-------------------|--------|
-| AI Fill button | `/api/admin/ai/backfill` or `ai-autofill.service` | Exists; different API shape |
-| Confidence scores | `ai-spec-parser.service` (internal) | **Not exposed in UI** — FlixCam_Analysis flags this |
-| Excel import | `/admin/inventory/import` + `import-worker` | Exists; prototype is mock only |
-| Field groups | Equipment form in `inventory/equipment/[id]/edit` | Different schema; Equipment has different fields |
-| Preview before save | AiContentDraft / staging | **Not implemented** — FlixCam_Analysis P0 |
+| Prototype Feature   | FlixCam Equivalent                                | Status                                              |
+| ------------------- | ------------------------------------------------- | --------------------------------------------------- |
+| AI Fill button      | `/api/admin/ai/backfill` or `ai-autofill.service` | Exists; different API shape                         |
+| Confidence scores   | `ai-spec-parser.service` (internal)               | **Not exposed in UI** — FlixCam_Analysis flags this |
+| Excel import        | `/admin/inventory/import` + `import-worker`       | Exists; prototype is mock only                      |
+| Field groups        | Equipment form in `inventory/equipment/[id]/edit` | Different schema; Equipment has different fields    |
+| Preview before save | AiContentDraft / staging                          | **Not implemented** — FlixCam_Analysis P0           |
 
 ### 1.9 Recommendations for AI_Equipment_Autofill.jsx
 
@@ -156,15 +162,15 @@ Each category: `recommendations[]` array
 
 ### 2.3 Categories & Findings Summary
 
-| Category | Score (1–6) | Weaknesses | Critical | Key Themes |
-|----------|-------------|------------|----------|------------|
-| Security & Data Integrity | 2 | 6 | 4 | SSRF bypass, API key in URL, race condition, stack traces, no rate limit, timing attack |
-| Architecture & Data Model | 3 | 7 | 1 | Product vs Equipment mismatch, dead letter queue unused, N+1, OOM, file buffers in Redis |
-| AI Workflow & Auto-Fill | 3 | 6 | 2 | No preview (writes direct), AR/ZH get EN SEO, 8/11 "AI" are math, no confidence in UI |
-| Excel Import Workflow | 4 | 6 | 1 | Workers manual, multi-sheet one-at-a-time, AI Preview dialog pending |
-| Permissions & Audit | 2 | 3 | 1 | Single ai.use, no audit trail, no approval for large jobs |
-| Admin UX & Dashboard | 3 | 6 | 0 | Quality scores misleading, KPIs page-scoped, Scan All = Refresh |
-| Public Platform | 3 | 5 | 0 | No reviews, no availability calendar, forced login, missing About/Contact |
+| Category                  | Score (1–6) | Weaknesses | Critical | Key Themes                                                                               |
+| ------------------------- | ----------- | ---------- | -------- | ---------------------------------------------------------------------------------------- |
+| Security & Data Integrity | 2           | 6          | 4        | SSRF bypass, API key in URL, race condition, stack traces, no rate limit, timing attack  |
+| Architecture & Data Model | 3           | 7          | 1        | Product vs Equipment mismatch, dead letter queue unused, N+1, OOM, file buffers in Redis |
+| AI Workflow & Auto-Fill   | 3           | 6          | 2        | No preview (writes direct), AR/ZH get EN SEO, 8/11 "AI" are math, no confidence in UI    |
+| Excel Import Workflow     | 4           | 6          | 1        | Workers manual, multi-sheet one-at-a-time, AI Preview dialog pending                     |
+| Permissions & Audit       | 2           | 3          | 1        | Single ai.use, no audit trail, no approval for large jobs                                |
+| Admin UX & Dashboard      | 3           | 6          | 0        | Quality scores misleading, KPIs page-scoped, Scan All = Refresh                          |
+| Public Platform           | 3           | 5          | 0        | No reviews, no availability calendar, forced login, missing About/Contact                |
 
 **Totals:** 39 weaknesses, 9 CRITICAL, 18 HIGH, 12 MEDIUM
 
@@ -207,19 +213,20 @@ The findings in FlixCam_Analysis.jsx **align closely** with:
 
 ### 3.1 How They Relate
 
-| AI_Equipment_Autofill | FlixCam_Analysis |
-|-----------------------|------------------|
-| **Proposes** confidence badges in UI | **Flags** "No Confidence Score Shown to Users" as HIGH |
-| **Proposes** AI fill before save | **Flags** "AI Writes Directly to Live" as CRITICAL |
-| **Shows** Excel import with AI | **Flags** "AI Preview Dialog is Still Pending" as HIGH |
-| **Uses** 42 AI fields | **Flags** "8 of 11 AI Methods Are Just Math" — different scope (dashboard vs form) |
-| **Has** preview/edit before save (in prototype) | **Recommends** AiContentDraft staging table |
+| AI_Equipment_Autofill                           | FlixCam_Analysis                                                                   |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Proposes** confidence badges in UI            | **Flags** "No Confidence Score Shown to Users" as HIGH                             |
+| **Proposes** AI fill before save                | **Flags** "AI Writes Directly to Live" as CRITICAL                                 |
+| **Shows** Excel import with AI                  | **Flags** "AI Preview Dialog is Still Pending" as HIGH                             |
+| **Uses** 42 AI fields                           | **Flags** "8 of 11 AI Methods Are Just Math" — different scope (dashboard vs form) |
+| **Has** preview/edit before save (in prototype) | **Recommends** AiContentDraft staging table                                        |
 
 **Conclusion:** AI_Equipment_Autofill.jsx embodies several fixes that FlixCam_Analysis.jsx recommends. Integrating the prototype's UX (confidence, preview, staged save) would address multiple P0/P1 items.
 
 ### 3.2 Shared Gaps
 
 Both files assume or imply:
+
 - **Product/Equipment alignment** — Neither addresses the model mismatch; prototype uses a flat form, analysis calls it out
 - **Locale-specific SEO** — Prototype prompt asks for AR in one call; analysis says AR/ZH get EN metadata
 - **Real AI vs mock** — Prototype falls back to demo data; analysis says 8/11 "AI" features are math
@@ -256,17 +263,17 @@ Both files assume or imply:
 
 ## 5. File Comparison Table
 
-| Aspect | AI_Equipment_Autofill.jsx | FlixCam_Analysis.jsx |
-|--------|---------------------------|----------------------|
-| **Lines** | ~565 | ~600 |
-| **Dependencies** | React (useState, useRef, useEffect, useCallback) | React (useState only) |
-| **External APIs** | Anthropic (broken — no key) | None |
-| **Data source** | User input + AI/demo | Static `data` object |
-| **Styling** | Inline + `<style>` block, custom theme | Inline styles |
-| **i18n** | None (EN labels, AR field placeholders) | None |
-| **Responsive** | Grid layouts, no breakpoints | Grid, no mobile-specific |
-| **Accessibility** | Basic labels, no aria-* | Basic structure |
-| **Production-ready** | No | No (viewer only) |
+| Aspect               | AI_Equipment_Autofill.jsx                        | FlixCam_Analysis.jsx     |
+| -------------------- | ------------------------------------------------ | ------------------------ |
+| **Lines**            | ~565                                             | ~600                     |
+| **Dependencies**     | React (useState, useRef, useEffect, useCallback) | React (useState only)    |
+| **External APIs**    | Anthropic (broken — no key)                      | None                     |
+| **Data source**      | User input + AI/demo                             | Static `data` object     |
+| **Styling**          | Inline + `<style>` block, custom theme           | Inline styles            |
+| **i18n**             | None (EN labels, AR field placeholders)          | None                     |
+| **Responsive**       | Grid layouts, no breakpoints                     | Grid, no mobile-specific |
+| **Accessibility**    | Basic labels, no aria-\*                         | Basic structure          |
+| **Production-ready** | No                                               | No (viewer only)         |
 
 ---
 

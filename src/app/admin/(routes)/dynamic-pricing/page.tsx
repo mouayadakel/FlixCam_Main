@@ -162,12 +162,26 @@ export default function DynamicPricingPage() {
   const [analysisLoading, setAnalysisLoading] = useState(false)
 
   // Demand Forecast tab
-  const [equipmentList, setEquipmentList] = useState<{ id: string; model: string; sku: string }[]>([])
+  const [equipmentList, setEquipmentList] = useState<{ id: string; model: string; sku: string }[]>(
+    []
+  )
   const [forecastEquipmentId, setForecastEquipmentId] = useState('')
-  const [forecastPeriod, setForecastPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
-  const [forecasts, setForecasts] = useState<{ equipmentId: string; equipmentName: string; sku: string; period: string; predictedDemand: number }[]>([])
+  const [forecastPeriod, setForecastPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>(
+    'month'
+  )
+  const [forecasts, setForecasts] = useState<
+    {
+      equipmentId: string
+      equipmentName: string
+      sku: string
+      period: string
+      predictedDemand: number
+    }[]
+  >([])
   const [forecastLoading, setForecastLoading] = useState(false)
-  const [forecastChartData, setForecastChartData] = useState<{ week: number; demand: number; label: string }[]>([])
+  const [forecastChartData, setForecastChartData] = useState<
+    { week: number; demand: number; label: string }[]
+  >([])
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -190,8 +204,14 @@ export default function DynamicPricingPage() {
       const res = await fetch('/api/equipment?take=200')
       if (!res.ok) return
       const data = await res.json()
-      const list = Array.isArray(data.items) ? data.items : data.equipment ?? data.data ?? []
-      setEquipmentList(list.map((e: { id: string; model?: string; sku?: string }) => ({ id: e.id, model: e.model ?? e.sku ?? e.id, sku: e.sku ?? '' })))
+      const list = Array.isArray(data.items) ? data.items : (data.equipment ?? data.data ?? [])
+      setEquipmentList(
+        list.map((e: { id: string; model?: string; sku?: string }) => ({
+          id: e.id,
+          model: e.model ?? e.sku ?? e.id,
+          sku: e.sku ?? '',
+        }))
+      )
     } catch {
       setEquipmentList([])
     }
@@ -454,7 +474,16 @@ export default function DynamicPricingPage() {
       const weeks = 12
       const chartData: { week: number; demand: number; label: string }[] = []
       if (list.length > 0) {
-        const perWeek = list.reduce((s: number, f: { predictedDemand: number }) => s + f.predictedDemand, 0) / list.length / (forecastPeriod === 'year' ? 52 : forecastPeriod === 'quarter' ? 13 : forecastPeriod === 'month' ? 4 : 1)
+        const perWeek =
+          list.reduce((s: number, f: { predictedDemand: number }) => s + f.predictedDemand, 0) /
+          list.length /
+          (forecastPeriod === 'year'
+            ? 52
+            : forecastPeriod === 'quarter'
+              ? 13
+              : forecastPeriod === 'month'
+                ? 4
+                : 1)
         for (let w = 1; w <= weeks; w++) {
           chartData.push({ week: w, demand: Math.round(perWeek * 100) / 100, label: `أسبوع ${w}` })
         }
@@ -478,7 +507,9 @@ export default function DynamicPricingPage() {
       return
     }
     const headers = ['معرف المعدات', 'الاسم', 'SKU', 'الفترة', 'الطلب المتوقع']
-    const rows = forecasts.map((f) => [f.equipmentId, f.equipmentName, f.sku, f.period, f.predictedDemand].join(','))
+    const rows = forecasts.map((f) =>
+      [f.equipmentId, f.equipmentName, f.sku, f.period, f.predictedDemand].join(',')
+    )
     const csv = [headers.join(','), ...rows].join('\n')
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -708,7 +739,9 @@ export default function DynamicPricingPage() {
             <TabsContent value="ai-analysis" className="mt-0">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">تحليل أسعار المعدات بالذكاء الاصطناعي (السعر الحالي، الاستخدام، السعر المقترح)</p>
+                  <p className="text-sm text-muted-foreground">
+                    تحليل أسعار المعدات بالذكاء الاصطناعي (السعر الحالي، الاستخدام، السعر المقترح)
+                  </p>
                   <Button onClick={runAnalysis} disabled={analysisLoading}>
                     {analysisLoading ? 'جاري التحليل...' : 'تشغيل التحليل'}
                   </Button>
@@ -723,7 +756,9 @@ export default function DynamicPricingPage() {
                   <div className="py-12 text-center text-muted-foreground">
                     <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p className="text-lg font-medium">لم يُجرَ التحليل بعد</p>
-                    <p className="text-sm">اضغط &quot;تشغيل التحليل&quot; لتحليل أسعار جميع المعدات النشطة</p>
+                    <p className="text-sm">
+                      اضغط &quot;تشغيل التحليل&quot; لتحليل أسعار جميع المعدات النشطة
+                    </p>
                   </div>
                 ) : (
                   <Table>
@@ -749,7 +784,9 @@ export default function DynamicPricingPage() {
                           <TableCell>{row.currentPrice.toLocaleString('ar-SA')} ر.س</TableCell>
                           <TableCell>{(row.utilizationRate * 100).toFixed(1)}%</TableCell>
                           <TableCell>{row.suggestedPrice.toLocaleString('ar-SA')} ر.س</TableCell>
-                          <TableCell className={row.variance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                          <TableCell
+                            className={row.variance >= 0 ? 'text-green-600' : 'text-red-600'}
+                          >
                             {row.variance >= 0 ? '+' : ''}
                             {row.variance.toLocaleString('ar-SA')} ر.س
                           </TableCell>
@@ -766,9 +803,15 @@ export default function DynamicPricingPage() {
                                   })
                                   if (!res.ok) throw new Error()
                                   toast({ title: 'تم', description: 'تم تطبيق السعر المقترح' })
-                                  setAnalysisRows((prev) => prev.filter((r) => r.equipmentId !== row.equipmentId))
+                                  setAnalysisRows((prev) =>
+                                    prev.filter((r) => r.equipmentId !== row.equipmentId)
+                                  )
                                 } catch {
-                                  toast({ title: 'خطأ', description: 'فشل تطبيق السعر', variant: 'destructive' })
+                                  toast({
+                                    title: 'خطأ',
+                                    description: 'فشل تطبيق السعر',
+                                    variant: 'destructive',
+                                  })
                                 }
                               }}
                             >
@@ -787,8 +830,13 @@ export default function DynamicPricingPage() {
               <div className="space-y-4">
                 <div className="flex flex-wrap items-end gap-4">
                   <div className="min-w-[200px]">
-                    <label className="text-sm font-medium">المعدات (اختياري - اتركه فارغاً للكل)</label>
-                    <Select value={forecastEquipmentId || '_all'} onValueChange={(v) => setForecastEquipmentId(v === '_all' ? '' : v)}>
+                    <label className="text-sm font-medium">
+                      المعدات (اختياري - اتركه فارغاً للكل)
+                    </label>
+                    <Select
+                      value={forecastEquipmentId || '_all'}
+                      onValueChange={(v) => setForecastEquipmentId(v === '_all' ? '' : v)}
+                    >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="جميع المعدات" />
                       </SelectTrigger>
@@ -804,7 +852,10 @@ export default function DynamicPricingPage() {
                   </div>
                   <div className="min-w-[120px]">
                     <label className="text-sm font-medium">الفترة</label>
-                    <Select value={forecastPeriod} onValueChange={(v) => setForecastPeriod(v as typeof forecastPeriod)}>
+                    <Select
+                      value={forecastPeriod}
+                      onValueChange={(v) => setForecastPeriod(v as typeof forecastPeriod)}
+                    >
                       <SelectTrigger className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
@@ -829,12 +880,21 @@ export default function DynamicPricingPage() {
                 {forecastChartData.length > 0 && (
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={forecastChartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                      <LineChart
+                        data={forecastChartData}
+                        margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} />
                         <Tooltip />
-                        <Line type="monotone" dataKey="demand" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line
+                          type="monotone"
+                          dataKey="demand"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>

@@ -114,7 +114,10 @@ export default function ProductReviewPage() {
         }),
       })
       if (!res.ok) throw new Error('Backfill failed')
-      toast({ title: 'Backfill queued', description: 'Text and specs will be filled in the background.' })
+      toast({
+        title: 'Backfill queued',
+        description: 'Text and specs will be filled in the background.',
+      })
       setTimeout(() => loadProduct(), 3000)
     } catch (error: unknown) {
       toast({
@@ -201,12 +204,22 @@ export default function ProductReviewPage() {
           <h1 className="text-3xl font-bold">Review Product</h1>
           <div className="mt-1 flex items-center gap-2">
             {product.contentScore != null && (
-              <Badge variant={product.contentScore >= 60 ? 'secondary' : product.contentScore >= 40 ? 'outline' : 'destructive'}>
+              <Badge
+                variant={
+                  product.contentScore >= 60
+                    ? 'secondary'
+                    : product.contentScore >= 40
+                      ? 'outline'
+                      : 'destructive'
+                }
+              >
                 Quality score: {product.contentScore}
               </Badge>
             )}
             {product.needsAiReview && (
-              <Badge variant="destructive">Needs review: {product.aiReviewReason ?? 'AI flag'}</Badge>
+              <Badge variant="destructive">
+                Needs review: {product.aiReviewReason ?? 'AI flag'}
+              </Badge>
             )}
           </div>
         </div>

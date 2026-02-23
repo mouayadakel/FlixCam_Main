@@ -72,8 +72,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
   const model = enTranslation?.name ?? product.sku ?? product.id
   const sku = product.sku ?? `prod-${product.id}`
   const barcode = product.inventoryItems[0]?.barcode ?? null
-  const specifications =
-    (enTranslation?.specifications as Record<string, unknown> | null) ?? null
+  const specifications = (enTranslation?.specifications as Record<string, unknown> | null) ?? null
 
   const galleryUrls = Array.isArray(product.galleryImages)
     ? (product.galleryImages as string[])
@@ -93,9 +92,8 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
     const baseSlug = generateSlug(model)
     const slug = await ensureUniqueSlug(tx, baseSlug, existing?.id)
 
-    const specsValue = specifications != null
-      ? (JSON.parse(JSON.stringify(specifications)) as object)
-      : undefined
+    const specsValue =
+      specifications != null ? (JSON.parse(JSON.stringify(specifications)) as object) : undefined
 
     // Build customFields with boxContents, relatedProducts, bufferTime, tags
     const existingCustomFields = (existing?.customFields as Record<string, unknown> | null) ?? {}
@@ -104,9 +102,10 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
     if (product.tags) customFieldsMerged.tags = product.tags
     if (product.bufferTime != null) customFieldsMerged.bufferTime = product.bufferTime
     if (product.relatedProducts) customFieldsMerged.relatedEquipmentIds = product.relatedProducts
-    const customFieldsValue = Object.keys(customFieldsMerged).length > 0
-      ? (JSON.parse(JSON.stringify(customFieldsMerged)) as object)
-      : undefined
+    const customFieldsValue =
+      Object.keys(customFieldsMerged).length > 0
+        ? (JSON.parse(JSON.stringify(customFieldsMerged)) as object)
+        : undefined
 
     const equipmentUpdateData: Record<string, unknown> = {
       sku,
@@ -232,8 +231,7 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
     throw new Error('Equipment must have a brand to sync to Product')
   }
 
-  const featuredImage =
-    equipment.media[0]?.url ?? 'https://placehold.co/400x300?text=Equipment'
+  const featuredImage = equipment.media[0]?.url ?? 'https://placehold.co/400x300?text=Equipment'
   const galleryUrls = equipment.media.map((m) => m.url)
   // Only use real gallery images — no padding with duplicates
   const galleryImages: string[] = [...galleryUrls]
@@ -316,14 +314,22 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
 
       // Use existing translation data if available, fallback to equipment Translation table, then generic defaults
       const resolvedName = existing?.get('name') || name
-      const resolvedShortDesc = existingPT?.shortDescription || existing?.get('shortDescription') || fallbackShortDesc
-      const resolvedLongDesc = existingPT?.longDescription || existing?.get('longDescription') || fallbackLongDesc
+      const resolvedShortDesc =
+        existingPT?.shortDescription || existing?.get('shortDescription') || fallbackShortDesc
+      const resolvedLongDesc =
+        existingPT?.longDescription || existing?.get('longDescription') || fallbackLongDesc
       const resolvedSeoTitle = existingPT?.seoTitle || existing?.get('seoTitle') || fallbackSeoTitle
-      const resolvedSeoDesc = existingPT?.seoDescription || existing?.get('seoDescription') || fallbackSeoDesc
-      const resolvedSeoKeywords = existingPT?.seoKeywords || existing?.get('seoKeywords') || fallbackSeoKeywords
+      const resolvedSeoDesc =
+        existingPT?.seoDescription || existing?.get('seoDescription') || fallbackSeoDesc
+      const resolvedSeoKeywords =
+        existingPT?.seoKeywords || existing?.get('seoKeywords') || fallbackSeoKeywords
 
       // Preserve specs from existing ProductTranslation
-      const resolvedSpecs = existingPT?.specifications ?? (equipment.specifications ? JSON.parse(JSON.stringify(equipment.specifications)) : undefined)
+      const resolvedSpecs =
+        existingPT?.specifications ??
+        (equipment.specifications
+          ? JSON.parse(JSON.stringify(equipment.specifications))
+          : undefined)
 
       await tx.productTranslation.upsert({
         where: {

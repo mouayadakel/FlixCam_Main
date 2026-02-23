@@ -14,10 +14,7 @@ export interface ValidationResult {
 /**
  * Validate AI-generated short description.
  */
-export function validateShortDescription(
-  text: string,
-  _locale: string
-): ValidationResult {
+export function validateShortDescription(text: string, _locale: string): ValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
   const trimmed = text?.trim() ?? ''
@@ -41,10 +38,7 @@ export function validateShortDescription(
 /**
  * Validate AI-generated long description.
  */
-export function validateLongDescription(
-  text: string,
-  _locale: string
-): ValidationResult {
+export function validateLongDescription(text: string, _locale: string): ValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
   const trimmed = text?.trim() ?? ''
@@ -82,7 +76,10 @@ export function validateSEO(seo: {
   if (title.length > 65) errors.push('seoTitle too long (max 65)')
   if (desc.length < 100) errors.push('seoDescription too short (min 100)')
   if (desc.length > 165) errors.push('seoDescription too long (max 165)')
-  const kwList = keywords.split(',').map((k) => k.trim()).filter(Boolean)
+  const kwList = keywords
+    .split(',')
+    .map((k) => k.trim())
+    .filter(Boolean)
   if (kwList.length < 3) errors.push('Need at least 3 keywords')
   if (kwList.length > 15) warnings.push('Many keywords')
   return {

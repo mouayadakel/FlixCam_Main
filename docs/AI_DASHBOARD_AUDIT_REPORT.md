@@ -8,33 +8,33 @@
 
 ## 1. Files Discovered
 
-| # | Path | Lines | Purpose | Issues Found |
-|---|------|-------|---------|--------------|
-| 1 | `ai-dashboard/page.tsx` | 55 | Main page with 4-tab layout | None |
-| 2 | `ai-dashboard/error.tsx` | 38 | Error boundary | None |
-| 3 | `ai-dashboard/_components/overview-tab.tsx` | 756→420 | Quality gauge, donut, trend chart, bottom-20, goals | **DRY violation**, SSR localStorage, Recharts types |
-| 4 | `ai-dashboard/_components/content-health-tab.tsx` | 507→310 | Content gap scanner + product table | **DRY violation**, Prisma types |
-| 5 | `ai-dashboard/_components/image-review-tab.tsx` | 401→310 | Image review grid + lightbox | Keyboard conflict with inputs, Dialog race |
-| 6 | `ai-dashboard/_components/analytics-tab.tsx` | 389→240 | Job history + cost chart + KPIs | **DRY violation**, Recharts custom tooltip types |
-| 7 | `ai-dashboard/_utils/ai-dashboard.utils.ts` | 0→190 | **NEW** — Shared utilities | Created to fix DRY |
-| 8 | `api/admin/ai/backfill/route.ts` | 166 | POST backfill trigger + GET status | Concurrency guard (OK) |
-| 9 | `api/admin/ai/content-health/route.ts` | 70 | Content health scan | None |
-| 10 | `api/admin/ai/jobs/route.ts` | 59 | Job listing with pagination | None |
-| 11 | `api/admin/ai/quality/products/route.ts` | 63 | Products by quality score | None |
-| 12 | `api/admin/ai/quality/summary/route.ts` | 79 | Quality summary stats | None |
-| 13 | `api/admin/ai/quality/trend/route.ts` | 38 | Quality trend | None |
-| 14 | `api/admin/ai/pending-images/route.ts` | 76 | Pending images list | None |
-| 15 | `api/admin/ai/pending-images/[id]/route.ts` | 93 | Approve/reject image | None |
-| 16 | `api/admin/ai/pending-images/bulk/route.ts` | 92 | Bulk approve/reject | None |
-| 17 | `api/admin/ai/analytics/route.ts` | 122 | Analytics aggregation | None |
-| 18 | `api/admin/ai/spend-summary/route.ts` | 36 | Cost summary | None |
-| 19 | `lib/services/content-health.service.ts` | 282 | Content gap detection | **Prisma type unsafe** (Record<string, unknown>) |
-| 20 | `lib/services/quality-scorer.service.ts` | 407 | Quality scoring + caching | Pre-existing TS errors (6) |
-| 21 | `lib/services/ai.service.ts` | 1493 | AI service (risk, pricing, chat) | Large file (not in scope) |
-| 22 | `lib/types/backfill.types.ts` | 212 | Backfill type definitions | None |
-| 23 | `lib/queue/backfill.queue.ts` | 105 | BullMQ queue setup | None |
-| 24 | `lib/queue/backfill.worker.ts` | 381 | BullMQ worker | None |
-| 25 | `components/admin/ai-floating-widget.tsx` | 205 | AI chatbot widget | None |
+| #   | Path                                              | Lines   | Purpose                                             | Issues Found                                        |
+| --- | ------------------------------------------------- | ------- | --------------------------------------------------- | --------------------------------------------------- |
+| 1   | `ai-dashboard/page.tsx`                           | 55      | Main page with 4-tab layout                         | None                                                |
+| 2   | `ai-dashboard/error.tsx`                          | 38      | Error boundary                                      | None                                                |
+| 3   | `ai-dashboard/_components/overview-tab.tsx`       | 756→420 | Quality gauge, donut, trend chart, bottom-20, goals | **DRY violation**, SSR localStorage, Recharts types |
+| 4   | `ai-dashboard/_components/content-health-tab.tsx` | 507→310 | Content gap scanner + product table                 | **DRY violation**, Prisma types                     |
+| 5   | `ai-dashboard/_components/image-review-tab.tsx`   | 401→310 | Image review grid + lightbox                        | Keyboard conflict with inputs, Dialog race          |
+| 6   | `ai-dashboard/_components/analytics-tab.tsx`      | 389→240 | Job history + cost chart + KPIs                     | **DRY violation**, Recharts custom tooltip types    |
+| 7   | `ai-dashboard/_utils/ai-dashboard.utils.ts`       | 0→190   | **NEW** — Shared utilities                          | Created to fix DRY                                  |
+| 8   | `api/admin/ai/backfill/route.ts`                  | 166     | POST backfill trigger + GET status                  | Concurrency guard (OK)                              |
+| 9   | `api/admin/ai/content-health/route.ts`            | 70      | Content health scan                                 | None                                                |
+| 10  | `api/admin/ai/jobs/route.ts`                      | 59      | Job listing with pagination                         | None                                                |
+| 11  | `api/admin/ai/quality/products/route.ts`          | 63      | Products by quality score                           | None                                                |
+| 12  | `api/admin/ai/quality/summary/route.ts`           | 79      | Quality summary stats                               | None                                                |
+| 13  | `api/admin/ai/quality/trend/route.ts`             | 38      | Quality trend                                       | None                                                |
+| 14  | `api/admin/ai/pending-images/route.ts`            | 76      | Pending images list                                 | None                                                |
+| 15  | `api/admin/ai/pending-images/[id]/route.ts`       | 93      | Approve/reject image                                | None                                                |
+| 16  | `api/admin/ai/pending-images/bulk/route.ts`       | 92      | Bulk approve/reject                                 | None                                                |
+| 17  | `api/admin/ai/analytics/route.ts`                 | 122     | Analytics aggregation                               | None                                                |
+| 18  | `api/admin/ai/spend-summary/route.ts`             | 36      | Cost summary                                        | None                                                |
+| 19  | `lib/services/content-health.service.ts`          | 282     | Content gap detection                               | **Prisma type unsafe** (Record<string, unknown>)    |
+| 20  | `lib/services/quality-scorer.service.ts`          | 407     | Quality scoring + caching                           | Pre-existing TS errors (6)                          |
+| 21  | `lib/services/ai.service.ts`                      | 1493    | AI service (risk, pricing, chat)                    | Large file (not in scope)                           |
+| 22  | `lib/types/backfill.types.ts`                     | 212     | Backfill type definitions                           | None                                                |
+| 23  | `lib/queue/backfill.queue.ts`                     | 105     | BullMQ queue setup                                  | None                                                |
+| 24  | `lib/queue/backfill.worker.ts`                    | 381     | BullMQ worker                                       | None                                                |
+| 25  | `components/admin/ai-floating-widget.tsx`         | 205     | AI chatbot widget                                   | None                                                |
 
 ---
 
@@ -42,28 +42,28 @@
 
 ### TypeScript Compilation (`npx tsc --noEmit`)
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Errors in `ai-dashboard/` files | 2 (Recharts formatter types) | **0** |
+| Metric                                | Before                        | After                  |
+| ------------------------------------- | ----------------------------- | ---------------------- |
+| Errors in `ai-dashboard/` files       | 2 (Recharts formatter types)  | **0**                  |
 | Errors in `content-health.service.ts` | 0 (but runtime-unsafe Prisma) | **0** (properly typed) |
-| Errors in other files (pre-existing) | 32 | 32 (unchanged) |
+| Errors in other files (pre-existing)  | 32                            | 32 (unchanged)         |
 
 ### ESLint / Linter
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Lint errors in dashboard files | 0 | **0** |
-| `console.log` in dashboard files | 0 | **0** |
+| Metric                           | Before | After |
+| -------------------------------- | ------ | ----- |
+| Lint errors in dashboard files   | 0      | **0** |
+| `console.log` in dashboard files | 0      | **0** |
 
 ### Browser Verification
 
-| Tab | Status | Notes |
-|-----|--------|-------|
-| نظرة عامة (Overview) | ✅ Renders | KPI cards, gauge, donut, trend, goal tracking, quick actions |
-| صحة المحتوى (Content Health) | ✅ Renders | Gap cards, actions bar, search, product table, pagination |
-| مراجعة الصور (Image Review) | ✅ Renders | Filter dropdown, empty state (green success card) |
-| التحليلات (Analytics) | ✅ Renders | KPI cards, cost chart, job table, filters, CSV export |
-| Console errors | ✅ None | Only dev-mode warnings (Fast Refresh, React DevTools) |
+| Tab                          | Status     | Notes                                                        |
+| ---------------------------- | ---------- | ------------------------------------------------------------ |
+| نظرة عامة (Overview)         | ✅ Renders | KPI cards, gauge, donut, trend, goal tracking, quick actions |
+| صحة المحتوى (Content Health) | ✅ Renders | Gap cards, actions bar, search, product table, pagination    |
+| مراجعة الصور (Image Review)  | ✅ Renders | Filter dropdown, empty state (green success card)            |
+| التحليلات (Analytics)        | ✅ Renders | KPI cards, cost chart, job table, filters, CSV export        |
+| Console errors               | ✅ None    | Only dev-mode warnings (Fast Refresh, React DevTools)        |
 
 ---
 
@@ -74,6 +74,7 @@
 **Created:** `_utils/ai-dashboard.utils.ts` (190 lines)
 
 Extracted from 3 files:
+
 - `GAP_LABELS` — gap type labels (Arabic)
 - `GAP_LABELS_DETAILED` — content-health specific labels
 - `GAP_COLORS` — donut chart colors
@@ -198,17 +199,17 @@ pollCleanupRef.current = pollJobProgress(
 
 All 4 tabs updated with mobile-first responsive patterns:
 
-| Element | Before | After |
-|---------|--------|-------|
-| KPI grids | `md:grid-cols-2 lg:grid-cols-4` | `grid-cols-2 lg:grid-cols-4` |
-| Buttons | Fixed width | `w-full sm:w-auto` |
-| Tables | Overflow hidden | `overflow-x-auto` + `hidden sm:table-cell` |
-| Card headers | Row-only | `flex-col sm:flex-row` |
-| Image grid | `sm:grid-cols-2 lg:grid-cols-3` | `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` |
-| Product names | Overflow | `truncate max-w-[120px] sm:max-w-none` |
-| Dialogs | Fixed width | `max-w-[95vw] sm:max-w-2xl` |
-| Filter dropdowns | Fixed width | `w-full sm:w-[220px]` |
-| Image action buttons | Full text | `<span className="hidden sm:inline">` |
+| Element              | Before                          | After                                       |
+| -------------------- | ------------------------------- | ------------------------------------------- |
+| KPI grids            | `md:grid-cols-2 lg:grid-cols-4` | `grid-cols-2 lg:grid-cols-4`                |
+| Buttons              | Fixed width                     | `w-full sm:w-auto`                          |
+| Tables               | Overflow hidden                 | `overflow-x-auto` + `hidden sm:table-cell`  |
+| Card headers         | Row-only                        | `flex-col sm:flex-row`                      |
+| Image grid           | `sm:grid-cols-2 lg:grid-cols-3` | `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` |
+| Product names        | Overflow                        | `truncate max-w-[120px] sm:max-w-none`      |
+| Dialogs              | Fixed width                     | `max-w-[95vw] sm:max-w-2xl`                 |
+| Filter dropdowns     | Fixed width                     | `w-full sm:w-[220px]`                       |
+| Image action buttons | Full text                       | `<span className="hidden sm:inline">`       |
 
 ---
 
@@ -216,14 +217,14 @@ All 4 tabs updated with mobile-first responsive patterns:
 
 ### Code Reduction Summary
 
-| File | Before (lines) | After (lines) | Reduction |
-|------|----------------|---------------|-----------|
-| overview-tab.tsx | 756 | 420 | -44% |
-| content-health-tab.tsx | 507 | 310 | -39% |
-| image-review-tab.tsx | 401 | 310 | -23% |
-| analytics-tab.tsx | 389 | 240 | -38% |
-| **NEW** ai-dashboard.utils.ts | 0 | 190 | — |
-| **Total** | 2053 | 1470 | **-28%** |
+| File                          | Before (lines) | After (lines) | Reduction |
+| ----------------------------- | -------------- | ------------- | --------- |
+| overview-tab.tsx              | 756            | 420           | -44%      |
+| content-health-tab.tsx        | 507            | 310           | -39%      |
+| image-review-tab.tsx          | 401            | 310           | -23%      |
+| analytics-tab.tsx             | 389            | 240           | -38%      |
+| **NEW** ai-dashboard.utils.ts | 0              | 190           | —         |
+| **Total**                     | 2053           | 1470          | **-28%**  |
 
 ### Dependency Graph (Shared Utils)
 
@@ -242,28 +243,28 @@ ai-dashboard.utils.ts
 
 ## 5. Pre-Existing Issues (Not from AI Dashboard)
 
-| File | Errors | Status |
-|------|--------|--------|
+| File                        | Errors                        | Status                             |
+| --------------------------- | ----------------------------- | ---------------------------------- |
 | `quality-scorer.service.ts` | 6 TS errors (type mismatches) | Pre-existing, not from our changes |
-| `spec-parser.service.ts` | 5 TS errors (property access) | Pre-existing, not from our changes |
-| Various other services | ~21 TS errors | Pre-existing, not from our changes |
+| `spec-parser.service.ts`    | 5 TS errors (property access) | Pre-existing, not from our changes |
+| Various other services      | ~21 TS errors                 | Pre-existing, not from our changes |
 
 ---
 
 ## 6. Final Verification
 
-| Check | Result |
-|-------|--------|
-| `npx tsc --noEmit` — AI dashboard files | ✅ 0 errors |
-| `ReadLints` — all 6 modified files | ✅ 0 linter errors |
-| `console.log` in dashboard | ✅ None found |
-| Browser: Login → Dashboard | ✅ Successful |
-| Browser: Overview tab | ✅ Renders correctly |
-| Browser: Content Health tab | ✅ Renders correctly |
-| Browser: Image Review tab | ✅ Renders correctly |
-| Browser: Analytics tab | ✅ Renders correctly |
-| Browser: Console errors | ✅ None from our code |
-| Dev server: `npm run dev` | ✅ Running on port 3001 |
+| Check                                   | Result                  |
+| --------------------------------------- | ----------------------- |
+| `npx tsc --noEmit` — AI dashboard files | ✅ 0 errors             |
+| `ReadLints` — all 6 modified files      | ✅ 0 linter errors      |
+| `console.log` in dashboard              | ✅ None found           |
+| Browser: Login → Dashboard              | ✅ Successful           |
+| Browser: Overview tab                   | ✅ Renders correctly    |
+| Browser: Content Health tab             | ✅ Renders correctly    |
+| Browser: Image Review tab               | ✅ Renders correctly    |
+| Browser: Analytics tab                  | ✅ Renders correctly    |
+| Browser: Console errors                 | ✅ None from our code   |
+| Dev server: `npm run dev`               | ✅ Running on port 3001 |
 
 ---
 
@@ -271,19 +272,19 @@ ai-dashboard.utils.ts
 
 These items were identified in the strategic review but are out of scope for this audit:
 
-| Priority | Item | Effort |
-|----------|------|--------|
-| 🔴 High | Replace polling with SSE for real-time job progress | 2-3 days |
-| 🔴 High | Granular permissions (ai.view/run/review/configure) | 1-2 days |
-| 🔴 High | AI job audit trail (userId, route, reason) | 1 day |
-| 🟠 Medium | Budget integration (daily/monthly caps) | 2 days |
-| 🟠 Medium | Scoped fill flow (filter by gap type, score range) | 1-2 days |
-| 🟠 Medium | Quality score breakdown per product | 1 day |
-| 🟡 Low | AI suggestions panel | 1 day |
-| 🟡 Low | Estimated impact calculator | 1 day |
-| 🟡 Low | Image auto-approve threshold | 0.5 days |
-| 🔵 Future | BI layer (quality vs bookings/revenue correlation) | 3-5 days |
-| 🔵 Future | AI Auto Mode (daily micro-fix scheduling) | 3-5 days |
+| Priority  | Item                                                | Effort   |
+| --------- | --------------------------------------------------- | -------- |
+| 🔴 High   | Replace polling with SSE for real-time job progress | 2-3 days |
+| 🔴 High   | Granular permissions (ai.view/run/review/configure) | 1-2 days |
+| 🔴 High   | AI job audit trail (userId, route, reason)          | 1 day    |
+| 🟠 Medium | Budget integration (daily/monthly caps)             | 2 days   |
+| 🟠 Medium | Scoped fill flow (filter by gap type, score range)  | 1-2 days |
+| 🟠 Medium | Quality score breakdown per product                 | 1 day    |
+| 🟡 Low    | AI suggestions panel                                | 1 day    |
+| 🟡 Low    | Estimated impact calculator                         | 1 day    |
+| 🟡 Low    | Image auto-approve threshold                        | 0.5 days |
+| 🔵 Future | BI layer (quality vs bookings/revenue correlation)  | 3-5 days |
+| 🔵 Future | AI Auto Mode (daily micro-fix scheduling)           | 3-5 days |
 
 ---
 

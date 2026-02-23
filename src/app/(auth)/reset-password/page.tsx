@@ -51,7 +51,11 @@ function ResetPasswordForm() {
 
   const onSubmit = async (data: FormData) => {
     if (!token) {
-      toast({ title: i18n('auth.invalidLink'), description: i18n('auth.missingToken'), variant: 'destructive' })
+      toast({
+        title: i18n('auth.invalidLink'),
+        description: i18n('auth.missingToken'),
+        variant: 'destructive',
+      })
       return
     }
     try {
@@ -89,9 +93,7 @@ function ResetPasswordForm() {
     return (
       <>
         <h1 className="mb-4 text-2xl font-bold">{i18n('auth.invalidLink')}</h1>
-        <p className="mb-6 text-muted-foreground">
-          {i18n('auth.missingToken')}
-        </p>
+        <p className="mb-6 text-muted-foreground">{i18n('auth.missingToken')}</p>
         <Button asChild variant="outline">
           <Link href="/forgot-password">{i18n('auth.requestResetLink')}</Link>
         </Button>

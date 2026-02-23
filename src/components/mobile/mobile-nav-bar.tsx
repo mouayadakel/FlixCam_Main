@@ -6,13 +6,18 @@ import { House, Camera, ShoppingCart, Building2, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCartStore } from '@/lib/stores/cart.store'
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  href: string
+  label: string
+  icon: typeof House
+  showBadge?: boolean
+}[] = [
   { href: '/', label: 'Home', icon: House },
   { href: '/equipment', label: 'Equipment', icon: Camera },
   { href: '/cart', label: 'Cart', icon: ShoppingCart, showBadge: true },
   { href: '/studios', label: 'Studios', icon: Building2 },
   { href: '/portal/dashboard', label: 'Account', icon: User },
-] as const
+]
 
 /**
  * Fixed bottom navigation bar for PUBLIC site only. 5 items.
@@ -32,17 +37,10 @@ function MobileNavBar() {
         'pb-[env(safe-area-inset-bottom)]'
       )}
     >
-      <div
-        className={cn(
-          'flex h-16 items-center justify-around',
-          'rtl:flex-row-reverse'
-        )}
-      >
+      <div className={cn('flex h-16 items-center justify-around', 'rtl:flex-row-reverse')}>
         {NAV_ITEMS.map(({ href, label, icon: Icon, showBadge }) => {
-          const isActive =
-            href === '/'
-              ? pathname === '/'
-              : pathname === href || pathname.startsWith(href + '/')
+          const p = pathname ?? ''
+          const isActive = href === '/' ? p === '/' : p === href || p.startsWith(href + '/')
           const count = showBadge ? cartCount : 0
           return (
             <Link
@@ -56,10 +54,7 @@ function MobileNavBar() {
               aria-label={label}
             >
               <span className="relative inline-block">
-                <Icon
-                  className={cn('h-6 w-6', isActive && 'text-primary')}
-                  aria-hidden
-                />
+                <Icon className={cn('h-6 w-6', isActive && 'text-primary')} aria-hidden />
                 {showBadge && count > 0 && (
                   <span
                     className="absolute -end-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground"

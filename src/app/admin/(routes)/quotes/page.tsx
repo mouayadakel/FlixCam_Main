@@ -188,31 +188,44 @@ export default function QuotesPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('draft')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('draft')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">مسودة</p>
             <p className="text-2xl font-bold">{summary.draft}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('sent')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('sent')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">مرسل</p>
             <p className="text-2xl font-bold text-blue-600">{summary.sent}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('accepted')}>
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('accepted')}
+        >
           <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">مقبول</p>
             <p className="text-2xl font-bold text-green-600">{summary.accepted}</p>
           </CardContent>
         </Card>
-        <Card className={`cursor-pointer hover:border-primary/50 ${summary.expiringSoon > 0 ? 'border-amber-300' : ''}`}>
+        <Card
+          className={`cursor-pointer hover:border-primary/50 ${summary.expiringSoon > 0 ? 'border-amber-300' : ''}`}
+        >
           <CardContent className="pb-3 pt-4">
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3 text-amber-500" />
               <p className="text-sm text-muted-foreground">تنتهي قريباً</p>
             </div>
-            <p className={`text-2xl font-bold ${summary.expiringSoon > 0 ? 'text-amber-600' : ''}`}>{summary.expiringSoon}</p>
+            <p className={`text-2xl font-bold ${summary.expiringSoon > 0 ? 'text-amber-600' : ''}`}>
+              {summary.expiringSoon}
+            </p>
           </CardContent>
         </Card>
         <Card>

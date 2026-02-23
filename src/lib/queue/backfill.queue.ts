@@ -48,7 +48,14 @@ export interface BackfillJobData {
   previewMode?: boolean
 }
 
-export type BackfillTrigger = 'manual' | 'cron' | 'scan' | 'single' | 'event' | 'scheduled' | 'import'
+export type BackfillTrigger =
+  | 'manual'
+  | 'cron'
+  | 'scan'
+  | 'single'
+  | 'event'
+  | 'scheduled'
+  | 'import'
 
 /**
  * Add a backfill job to the queue and create AiJob record (new schema: AiJobType, JobStatus, totalItems).
@@ -74,7 +81,13 @@ export async function addBackfillJob(
   const triggeredByUserId = options?.triggeredBy ?? options?.createdBy
 
   const jobType: AiJobType =
-    types.length === 3 ? AiJobType.FULL_BACKFILL : types.includes('photo') ? AiJobType.PHOTO_BACKFILL : types.includes('spec') ? AiJobType.SPEC_BACKFILL : AiJobType.TEXT_BACKFILL
+    types.length === 3
+      ? AiJobType.FULL_BACKFILL
+      : types.includes('photo')
+        ? AiJobType.PHOTO_BACKFILL
+        : types.includes('spec')
+          ? AiJobType.SPEC_BACKFILL
+          : AiJobType.TEXT_BACKFILL
 
   const aiJob = await prisma.aiJob.create({
     data: {

@@ -23,7 +23,8 @@ function ShareBookingButton({
   t: (key: string) => string
 }) {
   const [copied, setCopied] = useState(false)
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/booking/confirmation/${id}` : ''
+  const shareUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/booking/confirmation/${id}` : ''
 
   const handleShare = async () => {
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -55,7 +56,7 @@ function ShareBookingButton({
       size="lg"
     >
       <Share2 className="h-4 w-4" />
-      {copied ? t('common.copied') ?? 'Copied!' : t('common.share') ?? 'Share'}
+      {copied ? (t('common.copied') ?? 'Copied!') : (t('common.share') ?? 'Share')}
     </Button>
   )
 }
@@ -145,10 +146,10 @@ export default function BookingConfirmationPage() {
     return (
       <main className="container mx-auto max-w-lg px-4 py-16 text-center">
         <h1 className="mb-4 text-2xl font-bold">{t('checkout.bookingConfirmed')}</h1>
-        <p className="mb-2 text-muted-foreground">{t('checkout.bookingNumber').replace('{number}', id)}</p>
-        <p className="mb-6 text-sm text-muted-foreground">
-          {t('checkout.bookingLoginPrompt')}
+        <p className="mb-2 text-muted-foreground">
+          {t('checkout.bookingNumber').replace('{number}', id)}
         </p>
+        <p className="mb-6 text-sm text-muted-foreground">{t('checkout.bookingLoginPrompt')}</p>
         <div className="flex flex-wrap justify-center gap-4">
           <Button asChild>
             <Link href="/login">{t('nav.login')}</Link>
@@ -166,7 +167,9 @@ export default function BookingConfirmationPage() {
       <div className="mb-8 text-center">
         <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-600" />
         <h1 className="mb-2 text-2xl font-bold">{t('checkout.bookingConfirmed')}</h1>
-        <p className="text-muted-foreground">{t('checkout.bookingNumber').replace('{number}', booking.bookingNumber)}</p>
+        <p className="text-muted-foreground">
+          {t('checkout.bookingNumber').replace('{number}', booking.bookingNumber)}
+        </p>
       </div>
 
       <div className="mb-6 space-y-4 rounded-lg border bg-card p-6">
@@ -181,23 +184,36 @@ export default function BookingConfirmationPage() {
             {booking.studioStartTime && booking.studioEndTime && (
               <p>
                 <strong>{t('checkout.bookingAppointment')}:</strong>{' '}
-                {new Date(booking.studioStartTime).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date(booking.studioStartTime).toLocaleDateString('ar-SA', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
                 {' · '}
-                {new Date(booking.studioStartTime).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(booking.studioStartTime).toLocaleTimeString('ar-SA', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
                 {' – '}
-                {new Date(booking.studioEndTime).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(booking.studioEndTime).toLocaleTimeString('ar-SA', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </p>
             )}
           </>
         )}
         {!booking.studio && (
           <p>
-            <strong>{t('checkout.bookingDates')}:</strong> {new Date(booking.startDate).toLocaleDateString('ar-SA')} –{' '}
+            <strong>{t('checkout.bookingDates')}:</strong>{' '}
+            {new Date(booking.startDate).toLocaleDateString('ar-SA')} –{' '}
             {new Date(booking.endDate).toLocaleDateString('ar-SA')}
           </p>
         )}
         <p>
-          <strong>{t('checkout.bookingTotal')}:</strong> {Number(booking.totalAmount).toLocaleString()} SAR
+          <strong>{t('checkout.bookingTotal')}:</strong>{' '}
+          {Number(booking.totalAmount).toLocaleString()} SAR
         </p>
         {booking.equipment?.length ? (
           <p>
@@ -214,7 +230,12 @@ export default function BookingConfirmationPage() {
             {t('checkout.downloadInvoice')}
           </a>
         </Button>
-        <Button variant="outline" onClick={addToCalendar} className="h-12 w-full gap-2 sm:w-auto" size="lg">
+        <Button
+          variant="outline"
+          onClick={addToCalendar}
+          className="h-12 w-full gap-2 sm:w-auto"
+          size="lg"
+        >
           <Calendar className="h-4 w-4" />
           {t('checkout.addToCalendar')}
         </Button>

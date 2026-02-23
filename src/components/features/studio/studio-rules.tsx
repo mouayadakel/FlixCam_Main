@@ -24,9 +24,14 @@ export function StudioRules({ studio }: StudioRulesProps) {
   if (!hasRules) return null
 
   return (
-    <section className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card" dir="rtl">
+    <section
+      className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card"
+      dir="rtl"
+    >
       <h3 className="text-lg font-semibold text-text-heading">{t('studios.rules')}</h3>
-      {studio.rulesText && <p className="text-sm leading-relaxed text-text-body">{studio.rulesText}</p>}
+      {studio.rulesText && (
+        <p className="text-sm leading-relaxed text-text-body">{studio.rulesText}</p>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {studio.smokingPolicy && (
@@ -43,7 +48,9 @@ export function StudioRules({ studio }: StudioRulesProps) {
         )}
         {studio.equipmentCarePolicy && (
           <div className="rounded-xl bg-surface-light p-3">
-            <p className="mb-1 text-xs font-semibold text-text-muted">{t('studios.equipmentCare')}</p>
+            <p className="mb-1 text-xs font-semibold text-text-muted">
+              {t('studios.equipmentCare')}
+            </p>
             <p className="text-sm text-text-body">{studio.equipmentCarePolicy}</p>
           </div>
         )}

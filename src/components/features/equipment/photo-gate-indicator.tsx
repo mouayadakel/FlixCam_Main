@@ -12,7 +12,11 @@ interface PhotoGateIndicatorProps {
 
 const MIN_PHOTOS = 4
 
-export function PhotoGateIndicator({ photoCount, required = MIN_PHOTOS, className }: PhotoGateIndicatorProps) {
+export function PhotoGateIndicator({
+  photoCount,
+  required = MIN_PHOTOS,
+  className,
+}: PhotoGateIndicatorProps) {
   const percentage = Math.min(100, Math.round((photoCount / required) * 100))
   const isUnlocked = photoCount >= required
   const remaining = Math.max(0, required - photoCount)
@@ -30,7 +34,9 @@ export function PhotoGateIndicator({ photoCount, required = MIN_PHOTOS, classNam
           ) : (
             <Lock className="h-3.5 w-3.5 text-amber-600" />
           )}
-          <span className={cn('text-xs font-medium', isUnlocked ? 'text-green-600' : 'text-amber-600')}>
+          <span
+            className={cn('text-xs font-medium', isUnlocked ? 'text-green-600' : 'text-amber-600')}
+          >
             {photoCount}/{required}
           </span>
         </div>
@@ -43,14 +49,11 @@ export function PhotoGateIndicator({ photoCount, required = MIN_PHOTOS, classNam
       )}
       {!isUnlocked && photoCount > 0 && (
         <p className="text-xs text-muted-foreground">
-          {remaining === 1 ? 'صورة واحدة إضافية' : `${remaining} صور إضافية`} مطلوبة لتفعيل الملء الذكي
+          {remaining === 1 ? 'صورة واحدة إضافية' : `${remaining} صور إضافية`} مطلوبة لتفعيل الملء
+          الذكي
         </p>
       )}
-      {isUnlocked && (
-        <p className="text-xs text-green-600">
-          الملء الذكي متاح
-        </p>
-      )}
+      {isUnlocked && <p className="text-xs text-green-600">الملء الذكي متاح</p>}
     </div>
   )
 }

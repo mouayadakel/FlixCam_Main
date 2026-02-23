@@ -34,12 +34,7 @@ export interface ProductGapSummary {
 
 // ─── Backfill job & options ──────────────────────────────────────────────────
 
-export type JobStatus =
-  | 'PENDING'
-  | 'RUNNING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED'
+export type JobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
 
 export interface BackfillOptions {
   types: Array<'text' | 'photo' | 'spec'>

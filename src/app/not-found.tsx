@@ -10,21 +10,11 @@ import { NotFoundSearch } from './not-found-search'
 
 export default function NotFound() {
   return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center px-4"
-      dir="rtl"
-    >
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4" dir="rtl">
       <div className="flex flex-col items-center text-center">
-        <Camera
-          className="mb-4 h-16 w-16 text-muted-foreground"
-          aria-hidden
-        />
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-          عذراً، الصفحة غير موجودة
-        </h1>
-        <p className="mt-2 max-w-md text-muted-foreground">
-          404 — Page Not Found
-        </p>
+        <Camera className="mb-4 h-16 w-16 text-muted-foreground" aria-hidden />
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">عذراً، الصفحة غير موجودة</h1>
+        <p className="mt-2 max-w-md text-muted-foreground">404 — Page Not Found</p>
         <p className="mt-1 max-w-md text-sm text-muted-foreground">
           لم نتمكن من العثور على الصفحة التي تبحث عنها.
         </p>

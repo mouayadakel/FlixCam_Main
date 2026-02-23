@@ -71,7 +71,10 @@ export function FrequentlyRentedTogether({ equipmentId }: FrequentlyRentedTogeth
       {loading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="overflow-hidden rounded-xl border border-border-light/50 bg-white">
+            <div
+              key={i}
+              className="overflow-hidden rounded-xl border border-border-light/50 bg-white"
+            >
               <div className="aspect-[4/3] animate-pulse bg-border-light/40" />
               <div className="space-y-2 p-3">
                 <div className="h-3 w-16 animate-pulse rounded bg-border-light/50" />
@@ -159,7 +162,11 @@ export function FrequentlyRentedTogether({ equipmentId }: FrequentlyRentedTogeth
                 setAddingAll(false)
               }}
             >
-              {addingAll ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="me-2 h-4 w-4" />}
+              {addingAll ? (
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="me-2 h-4 w-4" />
+              )}
               {t('common.addAllToCart')}
             </Button>
           </div>

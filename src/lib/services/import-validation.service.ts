@@ -35,7 +35,15 @@ export type ValidationResult = {
 
 const NAME_KEYS = ['Name', 'name', '*', 'Product Name', 'Product', 'اسم', 'item name', 'title']
 const SKU_KEYS = ['SKU', 'sku', 'Barcode', 'barcode', 'Internal Reference', 'Product Code']
-const PRICE_KEYS = ['Daily Price', 'Price Daily', 'daily_price', 'Sales Price', 'Price', 'price', 'السعر اليومي']
+const PRICE_KEYS = [
+  'Daily Price',
+  'Price Daily',
+  'daily_price',
+  'Sales Price',
+  'Price',
+  'price',
+  'السعر اليومي',
+]
 const IMAGE_KEYS = ['Featured Image', 'featured_image', 'featured', 'صورة', 'Image']
 const GALLERY_KEYS = ['Gallery', 'gallery_images', 'Gallery Images', 'photos']
 
@@ -69,7 +77,10 @@ function countImages(row: Record<string, unknown>): number {
  * When dryRun is true, also checks against existing database records.
  */
 export async function validateImportRows(
-  rows: Array<{ rowNumber: number; payload: { sheetName?: string; excelRowNumber?: number; row: Record<string, unknown> } }>,
+  rows: Array<{
+    rowNumber: number
+    payload: { sheetName?: string; excelRowNumber?: number; row: Record<string, unknown> }
+  }>,
   options?: { dryRun?: boolean; photoGateEnabled?: boolean }
 ): Promise<ValidationResult> {
   const errors: ValidationError[] = []
@@ -86,7 +97,13 @@ export async function validateImportRows(
 
     const name = getField(row, NAME_KEYS)
     if (!name) {
-      errors.push({ rowNumber: rn, sheetName: sn, field: 'Name', message: 'Name is required', severity: 'error' })
+      errors.push({
+        rowNumber: rn,
+        sheetName: sn,
+        field: 'Name',
+        message: 'Name is required',
+        severity: 'error',
+      })
       errorRowNumbers.add(rn)
       continue
     }
@@ -103,22 +120,53 @@ export async function validateImportRows(
     if (priceStr) {
       const price = Number(priceStr)
       if (!Number.isFinite(price)) {
-        errors.push({ rowNumber: rn, sheetName: sn, field: 'Price', message: `Invalid price value: "${priceStr}"`, severity: 'error' })
+        errors.push({
+          rowNumber: rn,
+          sheetName: sn,
+          field: 'Price',
+          message: `Invalid price value: "${priceStr}"`,
+          severity: 'error',
+        })
         errorRowNumbers.add(rn)
       } else if (price > 10_000_000 && Number.isInteger(price) && String(price).length >= 9) {
         const skuCol = getField(row, SKU_KEYS)
         const hint = skuCol
           ? `The SKU/Barcode column already has "${skuCol}". This value (${price}) looks like a barcode, not a price.`
           : `This value (${price}) looks like a barcode in the price column. Will be imported as DRAFT (price = 0).`
-        warnings.push({ rowNumber: rn, sheetName: sn, excelRowNumber: item.payload?.excelRowNumber, field: 'Price', message: hint, severity: 'warning' })
+        warnings.push({
+          rowNumber: rn,
+          sheetName: sn,
+          excelRowNumber: item.payload?.excelRowNumber,
+          field: 'Price',
+          message: hint,
+          severity: 'warning',
+        })
       } else if (price > MAX_PRICE) {
-        errors.push({ rowNumber: rn, sheetName: sn, field: 'Price', message: `Price ${price} exceeds maximum (${MAX_PRICE}).`, severity: 'error' })
+        errors.push({
+          rowNumber: rn,
+          sheetName: sn,
+          field: 'Price',
+          message: `Price ${price} exceeds maximum (${MAX_PRICE}).`,
+          severity: 'error',
+        })
         errorRowNumbers.add(rn)
       } else if (price < 0) {
-        errors.push({ rowNumber: rn, sheetName: sn, field: 'Price', message: `Negative price: ${price}`, severity: 'error' })
+        errors.push({
+          rowNumber: rn,
+          sheetName: sn,
+          field: 'Price',
+          message: `Negative price: ${price}`,
+          severity: 'error',
+        })
         errorRowNumbers.add(rn)
       } else if (price === 0) {
-        warnings.push({ rowNumber: rn, sheetName: sn, field: 'Price', message: 'Price is 0 — product will be saved as DRAFT', severity: 'warning' })
+        warnings.push({
+          rowNumber: rn,
+          sheetName: sn,
+          field: 'Price',
+          message: 'Price is 0 — product will be saved as DRAFT',
+          severity: 'warning',
+        })
       }
     }
 

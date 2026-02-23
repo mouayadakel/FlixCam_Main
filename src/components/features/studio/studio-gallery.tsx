@@ -58,18 +58,17 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
   return (
     <section className="space-y-4" dir="rtl">
       {/* ── Bento Grid ── */}
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-2xl" style={{ minHeight: '360px' }}>
+      <div
+        className="grid grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-2xl"
+        style={{ minHeight: '360px' }}
+      >
         {media.slice(0, Math.min(displayCount, 5)).map((m, i) => (
           <button
             key={m.id}
             type="button"
             onClick={() => openLightbox(i)}
             className={`group relative cursor-pointer overflow-hidden bg-muted focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              i === 0
-                ? 'col-span-2 row-span-2'
-                : media.length === 2
-                  ? 'col-span-2 row-span-2'
-                  : ''
+              i === 0 ? 'col-span-2 row-span-2' : media.length === 2 ? 'col-span-2 row-span-2' : ''
             }`}
           >
             <Image
@@ -85,8 +84,7 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
             {i === Math.min(displayCount, 5) - 1 && hasMore && !showAll && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                 <span className="flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-text-heading shadow-lg">
-                  <Grid3X3 className="h-4 w-4" />
-                  +{media.length - 5}
+                  <Grid3X3 className="h-4 w-4" />+{media.length - 5}
                 </span>
               </div>
             )}
@@ -96,11 +94,7 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
 
       {/* Show all button */}
       {hasMore && !showAll && (
-        <Button
-          variant="outline"
-          onClick={() => setShowAll(true)}
-          className="rounded-xl"
-        >
+        <Button variant="outline" onClick={() => setShowAll(true)} className="rounded-xl">
           <Grid3X3 className="me-2 h-4 w-4" />
           {t('studios.viewAllPhotos')} ({media.length})
         </Button>
@@ -130,27 +124,30 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
       )}
 
       {/* ── Video ── */}
-      {studio.videoUrl && (() => {
-        let embedUrl = studio.videoUrl
-        const ytMatch = studio.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/)
-        if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`
-        return (
-          <div className="relative overflow-hidden rounded-2xl">
-            <div className="absolute start-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-              <Play className="h-3 w-3" />
-              {t('studios.videoTitle')}
+      {studio.videoUrl &&
+        (() => {
+          let embedUrl = studio.videoUrl
+          const ytMatch = studio.videoUrl.match(
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/
+          )
+          if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`
+          return (
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="absolute start-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                <Play className="h-3 w-3" />
+                {t('studios.videoTitle')}
+              </div>
+              <iframe
+                src={embedUrl}
+                title={t('studios.videoTitle')}
+                className="aspect-video w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
             </div>
-            <iframe
-              src={embedUrl}
-              title={t('studios.videoTitle')}
-              className="aspect-video w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-        )
-      })()}
+          )
+        })()}
 
       {studio.galleryDisclaimer && (
         <p className="text-xs text-muted-foreground">{studio.galleryDisclaimer}</p>
@@ -175,7 +172,10 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); prevImage() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              prevImage()
+            }}
             className="absolute start-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
             aria-label="Previous"
           >
@@ -183,16 +183,16 @@ export function StudioGallery({ studio }: StudioGalleryProps) {
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); nextImage() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              nextImage()
+            }}
             className="absolute end-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
             aria-label="Next"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <div
-            className="relative max-h-[85vh] max-w-[90vw]"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative max-h-[85vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
             <Image
               src={media[lightboxIndex].url}
               alt={`${studio.name} - ${lightboxIndex + 1}`}

@@ -2,7 +2,11 @@
  * Unit tests for content-health.service
  */
 
-import { calculateQualityScore, findProductsWithGaps, getProductIdsWithGaps } from '../content-health.service'
+import {
+  calculateQualityScore,
+  findProductsWithGaps,
+  getProductIdsWithGaps,
+} from '../content-health.service'
 import { prisma } from '@/lib/db/prisma'
 
 jest.mock('@/lib/db/prisma', () => ({
@@ -36,9 +40,36 @@ describe('content-health.service', () => {
         featuredImage: 'https://example.com/1.jpg',
         galleryImages: ['a', 'b', 'c', 'd'],
         translations: [
-          { locale: 'ar', name: 'اسم', shortDescription: 'وصف قصير', longDescription: 'وصف طويل جداً جداً', seoTitle: 's', seoDescription: 'd', seoKeywords: 'k', specifications: { a: '1', b: '2' } },
-          { locale: 'en', name: 'Name', shortDescription: 'Short', longDescription: 'Long desc', seoTitle: 's', seoDescription: 'd', seoKeywords: 'k', specifications: { a: '1', b: '2' } },
-          { locale: 'zh', name: '名', shortDescription: '短', longDescription: '长描述', seoTitle: 's', seoDescription: 'd', seoKeywords: 'k', specifications: { a: '1', b: '2' } },
+          {
+            locale: 'ar',
+            name: 'اسم',
+            shortDescription: 'وصف قصير',
+            longDescription: 'وصف طويل جداً جداً',
+            seoTitle: 's',
+            seoDescription: 'd',
+            seoKeywords: 'k',
+            specifications: { a: '1', b: '2' },
+          },
+          {
+            locale: 'en',
+            name: 'Name',
+            shortDescription: 'Short',
+            longDescription: 'Long desc',
+            seoTitle: 's',
+            seoDescription: 'd',
+            seoKeywords: 'k',
+            specifications: { a: '1', b: '2' },
+          },
+          {
+            locale: 'zh',
+            name: '名',
+            shortDescription: '短',
+            longDescription: '长描述',
+            seoTitle: 's',
+            seoDescription: 'd',
+            seoKeywords: 'k',
+            specifications: { a: '1', b: '2' },
+          },
         ],
       } as any)
       const result = await calculateQualityScore('p1')
@@ -73,7 +104,18 @@ describe('content-health.service', () => {
             id: 'p1',
             featuredImage: null,
             galleryImages: [],
-            translations: [{ locale: 'en', name: 'x', shortDescription: null, longDescription: null, seoTitle: null, seoDescription: null, seoKeywords: null, specifications: null }],
+            translations: [
+              {
+                locale: 'en',
+                name: 'x',
+                shortDescription: null,
+                longDescription: null,
+                seoTitle: null,
+                seoDescription: null,
+                seoKeywords: null,
+                specifications: null,
+              },
+            ],
           } as any,
         ])
         .mockResolvedValueOnce([])

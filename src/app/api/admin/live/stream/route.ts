@@ -33,7 +33,9 @@ export async function GET() {
           heartbeatTimer = null
         }
         if (subscriber) {
-          subscriber.unsubscribe(ADMIN_LIVE_CHANNEL).catch((err) => console.error('[live-stream] unsubscribe failed', err))
+          subscriber
+            .unsubscribe(ADMIN_LIVE_CHANNEL)
+            .catch((err) => console.error('[live-stream] unsubscribe failed', err))
           subscriber.quit().catch((err) => console.error('[live-stream] quit failed', err))
           subscriber = null
         }
@@ -84,7 +86,9 @@ export async function GET() {
         heartbeatTimer = null
       }
       if (subscriber) {
-        subscriber.unsubscribe(ADMIN_LIVE_CHANNEL).catch((err) => console.error('[live-stream] unsubscribe failed', err))
+        subscriber
+          .unsubscribe(ADMIN_LIVE_CHANNEL)
+          .catch((err) => console.error('[live-stream] unsubscribe failed', err))
         subscriber.quit().catch((err) => console.error('[live-stream] quit failed', err))
         subscriber = null
       }

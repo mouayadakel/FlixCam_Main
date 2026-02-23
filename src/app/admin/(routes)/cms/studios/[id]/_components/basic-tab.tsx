@@ -28,12 +28,7 @@ interface BasicTabProps {
   saving: boolean
 }
 
-export function CmsStudioBasicTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: BasicTabProps) {
+export function CmsStudioBasicTab({ studio, onSave, onDirtyChange, saving }: BasicTabProps) {
   const [form, setForm] = useState({
     name: '',
     nameEn: '',
@@ -124,8 +119,8 @@ export function CmsStudioBasicTab({
               <TabsTrigger value="en">English</TabsTrigger>
               <TabsTrigger value="zh">中文</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="ar" className="space-y-4 mt-4">
+
+            <TabsContent value="ar" className="mt-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">الاسم *</Label>
                 <Input
@@ -159,7 +154,7 @@ export function CmsStudioBasicTab({
               </div>
             </TabsContent>
 
-            <TabsContent value="en" className="space-y-4 mt-4">
+            <TabsContent value="en" className="mt-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nameEn">Name (English)</Label>
                 <Input
@@ -191,7 +186,7 @@ export function CmsStudioBasicTab({
               </div>
             </TabsContent>
 
-            <TabsContent value="zh" className="space-y-4 mt-4">
+            <TabsContent value="zh" className="mt-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nameZh">名称 (中文)</Label>
                 <Input

@@ -10,33 +10,37 @@
 
 The **AI Dashboard** is the admin command center for content quality, AI-backed scanning, auto-fill (backfill), and job history. It is a client-rendered page (`'use client'`) with four tabs:
 
-| Tab (AR)       | Tab (EN)        | Purpose |
-|----------------|-----------------|--------|
-| نظرة عامة      | Overview        | Quality score KPIs, gauge, gap donut, trend chart, bottom-20 products, goal tracking, quick actions |
-| صحة المحتوى    | Content Health  | Gap-type cards, scan/fill actions, paginated products table with selection |
-| مراجعة الصور   | Image Review    | Grid of AI-generated images pending approval/reject (single + bulk) |
-| التحليلات      | Analytics       | Job history table + cost-by-day chart |
+| Tab (AR)     | Tab (EN)       | Purpose                                                                                             |
+| ------------ | -------------- | --------------------------------------------------------------------------------------------------- |
+| نظرة عامة    | Overview       | Quality score KPIs, gauge, gap donut, trend chart, bottom-20 products, goal tracking, quick actions |
+| صحة المحتوى  | Content Health | Gap-type cards, scan/fill actions, paginated products table with selection                          |
+| مراجعة الصور | Image Review   | Grid of AI-generated images pending approval/reject (single + bulk)                                 |
+| التحليلات    | Analytics      | Job history table + cost-by-day chart                                                               |
 
 ---
 
 ## 2. User Stories
 
 ### US1 — Content steward
+
 **As a** content steward (admin with `ai.use`),  
 **I want** to see an overview of catalog quality (scores, gaps, trend) and the worst 20 products,  
 **So that** I can decide what to improve and trigger AI fill for specific items.
 
 ### US2 — Bulk quality operator
+
 **As an** admin with `ai.use`,  
 **I want** to run a content-health scan, see products by gap type (translations, SEO, description, photos, specs), and run “fill all” or “fill selected” with AI,  
 **So that** I can fix content gaps at scale and track job progress.
 
 ### US3 — Image moderator
+
 **As an** admin with `ai.use`,  
 **I want** to review AI-generated images (approve/reject) per product or in bulk,  
 **So that** only approved images go live and quality is controlled.
 
 ### US4 — Cost and ops viewer
+
 **As an** admin with `ai.use`,  
 **I want** to see AI job history (type, status, processed count, errors, cost) and cost-by-day,  
 **So that** I can monitor usage and cost.
@@ -45,19 +49,19 @@ The **AI Dashboard** is the admin command center for content quality, AI-backed 
 
 ## 3. Use Cases
 
-| ID   | Use case              | Actor        | Precondition              | Flow summary |
-|------|------------------------|-------------|---------------------------|--------------|
-| UC1  | View quality overview  | Admin (ai.use) | Logged in, on AI Dashboard | Open dashboard → Overview tab loads → Calls summary, trend, bottom-20 APIs → Renders cards, gauge, donut, line chart, table, goal tracker, quick actions. |
-| UC2  | Fill single product (Overview) | Admin (ai.use) | Overview loaded, bottom-20 list visible | Click “ملء الآن” on a row → POST backfill with `productIds: [id]` → Toast + row removed from list. |
-| UC3  | Set quality goal       | Admin (ai.use) | Overview loaded | Change target % (0–100) → “منتج تحتاج تحسين” count updates (derived from distribution vs target). |
-| UC4  | Content health scan    | Admin (ai.use) | Content Health tab | “فحص الكل” → GET content-health (current page) → Table and gap cards refresh. |
-| UC5  | Fill all (Content Health) | Admin (ai.use) | Content Health tab | “ملء الكل بالذكاء الاصطناعي” → POST backfill `fillAll: true` → Job ID returned, polling starts → Progress bar, then refresh. |
-| UC6  | Fill selected products | Admin (ai.use) | Products selected in table | Select rows (or “select all”) → “ملء المحدد (n)” → POST backfill `productIds: [...]` → Job polling, then refresh. |
-| UC7  | Fill one product (Content Health) | Admin (ai.use) | Content Health table | “ملء الآن” on row → POST backfill for that id → Toast; if jobId returned, polling for that job. |
-| UC8  | Review single image    | Admin (ai.use) | Image Review tab, list loaded | Approve or Reject on one image → PATCH pending-images/:id with `action` → Item removed, toast. |
-| UC9  | Bulk approve/reject images | Admin (ai.use) | Images selected | Select images (or “select all”) → “موافقة على المحدد” or “رفض المحدد” → POST pending-images/bulk → List and selection clear, toast. |
-| UC10 | Filter images by product | Admin (ai.use) | Image Review tab | Choose product from dropdown → GET pending-images?productId=… → Grid updates. |
-| UC11 | View job history and cost | Admin (ai.use) | Analytics tab | Tab loads → GET jobs?limit=30 → Table + cost-by-day chart (from job costUsd). |
+| ID   | Use case                          | Actor          | Precondition                            | Flow summary                                                                                                                                              |
+| ---- | --------------------------------- | -------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UC1  | View quality overview             | Admin (ai.use) | Logged in, on AI Dashboard              | Open dashboard → Overview tab loads → Calls summary, trend, bottom-20 APIs → Renders cards, gauge, donut, line chart, table, goal tracker, quick actions. |
+| UC2  | Fill single product (Overview)    | Admin (ai.use) | Overview loaded, bottom-20 list visible | Click “ملء الآن” on a row → POST backfill with `productIds: [id]` → Toast + row removed from list.                                                        |
+| UC3  | Set quality goal                  | Admin (ai.use) | Overview loaded                         | Change target % (0–100) → “منتج تحتاج تحسين” count updates (derived from distribution vs target).                                                         |
+| UC4  | Content health scan               | Admin (ai.use) | Content Health tab                      | “فحص الكل” → GET content-health (current page) → Table and gap cards refresh.                                                                             |
+| UC5  | Fill all (Content Health)         | Admin (ai.use) | Content Health tab                      | “ملء الكل بالذكاء الاصطناعي” → POST backfill `fillAll: true` → Job ID returned, polling starts → Progress bar, then refresh.                              |
+| UC6  | Fill selected products            | Admin (ai.use) | Products selected in table              | Select rows (or “select all”) → “ملء المحدد (n)” → POST backfill `productIds: [...]` → Job polling, then refresh.                                         |
+| UC7  | Fill one product (Content Health) | Admin (ai.use) | Content Health table                    | “ملء الآن” on row → POST backfill for that id → Toast; if jobId returned, polling for that job.                                                           |
+| UC8  | Review single image               | Admin (ai.use) | Image Review tab, list loaded           | Approve or Reject on one image → PATCH pending-images/:id with `action` → Item removed, toast.                                                            |
+| UC9  | Bulk approve/reject images        | Admin (ai.use) | Images selected                         | Select images (or “select all”) → “موافقة على المحدد” or “رفض المحدد” → POST pending-images/bulk → List and selection clear, toast.                       |
+| UC10 | Filter images by product          | Admin (ai.use) | Image Review tab                        | Choose product from dropdown → GET pending-images?productId=… → Grid updates.                                                                             |
+| UC11 | View job history and cost         | Admin (ai.use) | Analytics tab                           | Tab loads → GET jobs?limit=30 → Table + cost-by-day chart (from job costUsd).                                                                             |
 
 ---
 
@@ -80,18 +84,18 @@ GET /admin/ai-dashboard
 
 ### API routes used by the dashboard
 
-| Method | Path | Used by | Purpose |
-|--------|------|---------|--------|
-| GET    | `/api/admin/ai/quality/summary` | Overview | Total products, avg score, distribution (excellent/good/fair/poor), gaps (missingTranslations, missingSeo, missingDescription, missingPhotos, missingSpecs), scannedAt |
-| GET    | `/api/admin/ai/quality/trend?days=84` | Overview | Time series: date, avgScore, totalProducts (12 weeks) |
-| GET    | `/api/admin/ai/quality/products?sort=score&order=asc&limit=20` | Overview | Bottom 20 products by quality score (id, name, score) |
-| POST   | `/api/admin/ai/backfill` | Overview, Content Health | Start backfill: body `{ productIds?: string[], fillAll?: boolean }` → `{ jobId?, queued?, message? }` |
-| GET    | `/api/admin/ai/backfill?jobId=...` | Content Health | Job progress: status, progress, processed, total, errors (polling every 2s) |
-| GET    | `/api/admin/ai/content-health?page=&limit=20` | Content Health | total, byGapType, products (id, name, qualityScore, missingFields[]) |
-| GET    | `/api/admin/ai/pending-images?productId=...` | Image Review | items[] (id, url, imageSource, qualityScore, productId, productName, createdAt) |
-| PATCH  | `/api/admin/ai/pending-images/:id` | Image Review | body `{ action: 'approve' \| 'reject' }` |
-| POST   | `/api/admin/ai/pending-images/bulk` | Image Review | body `{ action, ids[] }` |
-| GET    | `/api/admin/ai/jobs?limit=30` | Analytics | jobs[] (id, type, status, total, processed, errors, costUsd, startedAt, completedAt) |
+| Method | Path                                                           | Used by                  | Purpose                                                                                                                                                                |
+| ------ | -------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/admin/ai/quality/summary`                                | Overview                 | Total products, avg score, distribution (excellent/good/fair/poor), gaps (missingTranslations, missingSeo, missingDescription, missingPhotos, missingSpecs), scannedAt |
+| GET    | `/api/admin/ai/quality/trend?days=84`                          | Overview                 | Time series: date, avgScore, totalProducts (12 weeks)                                                                                                                  |
+| GET    | `/api/admin/ai/quality/products?sort=score&order=asc&limit=20` | Overview                 | Bottom 20 products by quality score (id, name, score)                                                                                                                  |
+| POST   | `/api/admin/ai/backfill`                                       | Overview, Content Health | Start backfill: body `{ productIds?: string[], fillAll?: boolean }` → `{ jobId?, queued?, message? }`                                                                  |
+| GET    | `/api/admin/ai/backfill?jobId=...`                             | Content Health           | Job progress: status, progress, processed, total, errors (polling every 2s)                                                                                            |
+| GET    | `/api/admin/ai/content-health?page=&limit=20`                  | Content Health           | total, byGapType, products (id, name, qualityScore, missingFields[])                                                                                                   |
+| GET    | `/api/admin/ai/pending-images?productId=...`                   | Image Review             | items[] (id, url, imageSource, qualityScore, productId, productName, createdAt)                                                                                        |
+| PATCH  | `/api/admin/ai/pending-images/:id`                             | Image Review             | body `{ action: 'approve' \| 'reject' }`                                                                                                                               |
+| POST   | `/api/admin/ai/pending-images/bulk`                            | Image Review             | body `{ action, ids[] }`                                                                                                                                               |
+| GET    | `/api/admin/ai/jobs?limit=30`                                  | Analytics                | jobs[] (id, type, status, total, processed, errors, costUsd, startedAt, completedAt)                                                                                   |
 
 All above API routes enforce `ai.use` (403 if missing).
 
@@ -236,15 +240,15 @@ All above API routes enforce `ai.use` (403 if missing).
 
 ## 9. File Reference
 
-| File | Role |
-|------|------|
-| `src/app/admin/(routes)/ai-dashboard/page.tsx` | Dashboard page, tab shell |
-| `src/app/admin/(routes)/ai-dashboard/_components/overview-tab.tsx` | Overview tab |
-| `src/app/admin/(routes)/ai-dashboard/_components/content-health-tab.tsx` | Content Health tab |
-| `src/app/admin/(routes)/ai-dashboard/_components/image-review-tab.tsx` | Image Review tab |
-| `src/app/admin/(routes)/ai-dashboard/_components/analytics-tab.tsx` | Analytics tab |
-| `src/components/layouts/admin-sidebar.tsx` | Sidebar entry (ai-dashboard, ai.use) |
-| `src/components/auth/protected-route.tsx` | Route → permission (e.g. /admin/ai → ai.use) |
-| `src/app/api/admin/ai/*` | All AI API routes (quality, backfill, content-health, pending-images, jobs) |
+| File                                                                     | Role                                                                        |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `src/app/admin/(routes)/ai-dashboard/page.tsx`                           | Dashboard page, tab shell                                                   |
+| `src/app/admin/(routes)/ai-dashboard/_components/overview-tab.tsx`       | Overview tab                                                                |
+| `src/app/admin/(routes)/ai-dashboard/_components/content-health-tab.tsx` | Content Health tab                                                          |
+| `src/app/admin/(routes)/ai-dashboard/_components/image-review-tab.tsx`   | Image Review tab                                                            |
+| `src/app/admin/(routes)/ai-dashboard/_components/analytics-tab.tsx`      | Analytics tab                                                               |
+| `src/components/layouts/admin-sidebar.tsx`                               | Sidebar entry (ai-dashboard, ai.use)                                        |
+| `src/components/auth/protected-route.tsx`                                | Route → permission (e.g. /admin/ai → ai.use)                                |
+| `src/app/api/admin/ai/*`                                                 | All AI API routes (quality, backfill, content-health, pending-images, jobs) |
 
 This report can be used for onboarding, QA test cases, and product/UX improvements (e.g. wiring quick actions, last-scan time, explicit route permission).

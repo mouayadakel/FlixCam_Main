@@ -5,23 +5,27 @@ Thank you for your interest in contributing to FlixCam.rent. Please follow these
 ## Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/flixcam-rent.git
    cd flixcam-rent
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration (DATABASE_URL, NEXTAUTH_SECRET, etc.)
    ```
 
 4. **Set up the database**
+
    ```bash
    npx prisma migrate dev
    npm run db:seed

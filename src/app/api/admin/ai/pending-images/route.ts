@@ -13,7 +13,13 @@ import { aiRateLimitResponse } from '@/lib/utils/rate-limit-upstash'
 import { prisma } from '@/lib/db/prisma'
 import type { Prisma } from '@prisma/client'
 
-const VALID_IMAGE_SOURCES = ['UPLOAD', 'BRAND_ASSET', 'AI_GENERATED', 'STOCK_PHOTO', 'WEB_SCRAPED'] as const
+const VALID_IMAGE_SOURCES = [
+  'UPLOAD',
+  'BRAND_ASSET',
+  'AI_GENERATED',
+  'STOCK_PHOTO',
+  'WEB_SCRAPED',
+] as const
 
 export const dynamic = 'force-dynamic'
 
@@ -84,7 +90,12 @@ export async function GET(request: NextRequest) {
     const list = items.map((img) => {
       const ar = img.product.translations.find((t) => t.locale === 'ar')
       const en = img.product.translations.find((t) => t.locale === 'en')
-      const productName = ar?.name ?? en?.name ?? img.product.translations[0]?.name ?? img.product.sku ?? img.product.id
+      const productName =
+        ar?.name ??
+        en?.name ??
+        img.product.translations[0]?.name ??
+        img.product.sku ??
+        img.product.id
       return {
         id: img.id,
         url: img.url,

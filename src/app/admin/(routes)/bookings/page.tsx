@@ -373,22 +373,22 @@ export default function BookingsPage() {
       </div>
 
       <div className="hidden lg:block">
-      <TableFilters
-        searchPlaceholder="بحث بالرقم، العميل..."
-        statusOptions={statuses}
-        onSearchChange={(value) => {
-          setSearch(value)
-          // Debounce search
-          setTimeout(() => {
-            if (value === search) {
-              loadBookings()
-            }
-          }, 500)
-        }}
-        onStatusChange={(value) => {
-          setStatusFilter(value)
-        }}
-      />
+        <TableFilters
+          searchPlaceholder="بحث بالرقم، العميل..."
+          statusOptions={statuses}
+          onSearchChange={(value) => {
+            setSearch(value)
+            // Debounce search
+            setTimeout(() => {
+              if (value === search) {
+                loadBookings()
+              }
+            }, 500)
+          }}
+          onStatusChange={(value) => {
+            setStatusFilter(value)
+          }}
+        />
       </div>
 
       {/* Mobile: card list */}
@@ -566,14 +566,12 @@ export default function BookingsPage() {
         </Table>
       </div>
 
-      <BottomSheet
-        open={filterSheetOpen}
-        onOpenChange={setFilterSheetOpen}
-        title="فلترة وترتيب"
-      >
+      <BottomSheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen} title="فلترة وترتيب">
         <div className="space-y-4 p-4">
           <div>
-            <label htmlFor="bookings-filter-search" className="mb-1 block text-sm font-medium">بحث</label>
+            <label htmlFor="bookings-filter-search" className="mb-1 block text-sm font-medium">
+              بحث
+            </label>
             <input
               id="bookings-filter-search"
               type="search"
@@ -585,7 +583,9 @@ export default function BookingsPage() {
             />
           </div>
           <div>
-            <label htmlFor="bookings-filter-status" className="mb-1 block text-sm font-medium">الحالة</label>
+            <label htmlFor="bookings-filter-status" className="mb-1 block text-sm font-medium">
+              الحالة
+            </label>
             <select
               id="bookings-filter-status"
               value={statusFilter}
@@ -594,12 +594,16 @@ export default function BookingsPage() {
               aria-label="فلترة حسب الحالة"
             >
               {statuses.map((s) => (
-                <option key={s} value={s}>{s === 'All' ? 'الكل' : getStatusLabel(s as BookingStatus)}</option>
+                <option key={s} value={s}>
+                  {s === 'All' ? 'الكل' : getStatusLabel(s as BookingStatus)}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="bookings-filter-date-from" className="mb-1 block text-sm font-medium">من تاريخ</label>
+            <label htmlFor="bookings-filter-date-from" className="mb-1 block text-sm font-medium">
+              من تاريخ
+            </label>
             <input
               id="bookings-filter-date-from"
               type="date"
@@ -610,7 +614,9 @@ export default function BookingsPage() {
             />
           </div>
           <div>
-            <label htmlFor="bookings-filter-date-to" className="mb-1 block text-sm font-medium">إلى تاريخ</label>
+            <label htmlFor="bookings-filter-date-to" className="mb-1 block text-sm font-medium">
+              إلى تاريخ
+            </label>
             <input
               id="bookings-filter-date-to"
               type="date"

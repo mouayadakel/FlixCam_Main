@@ -12,10 +12,7 @@ import { prisma } from '@/lib/db/prisma'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ jobId: string }> }
-) {
+export async function GET(req: NextRequest, context: { params: Promise<{ jobId: string }> }) {
   const session = await auth()
   if (!session?.user) {
     return new Response('Unauthorized', { status: 401 })
@@ -30,8 +27,7 @@ export async function GET(
 
   const stream = new ReadableStream({
     async start(controller) {
-      const encode = (data: object) =>
-        new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)
+      const encode = (data: object) => new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)
 
       const poll = async () => {
         try {

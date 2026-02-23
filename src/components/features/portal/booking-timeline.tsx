@@ -67,9 +67,7 @@ export function BookingTimeline({
         <XCircle className="h-6 w-6 shrink-0 text-red-500" />
         <div>
           <p className="font-medium text-red-800">تم إلغاء الحجز</p>
-          <p className="text-sm text-red-600">
-            تم الإنشاء في {formatDate(createdAt)}
-          </p>
+          <p className="text-sm text-red-600">تم الإنشاء في {formatDate(createdAt)}</p>
         </div>
       </div>
     )
@@ -112,7 +110,11 @@ export function BookingTimeline({
               <span
                 className={cn(
                   'mt-2 text-center text-[11px] font-medium leading-tight',
-                  isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                  isCurrent
+                    ? 'text-primary'
+                    : isCompleted
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
                 )}
               >
                 {step.label}
@@ -127,9 +129,7 @@ export function BookingTimeline({
         <span>تاريخ الإنشاء: {formatDate(createdAt)}</span>
         <span>بداية الحجز: {formatDate(startDate)}</span>
         <span>نهاية الحجز: {formatDate(endDate)}</span>
-        {actualReturnDate && (
-          <span>تاريخ الإرجاع: {formatDate(actualReturnDate)}</span>
-        )}
+        {actualReturnDate && <span>تاريخ الإرجاع: {formatDate(actualReturnDate)}</span>}
       </div>
     </div>
   )

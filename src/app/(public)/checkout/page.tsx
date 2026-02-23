@@ -116,8 +116,11 @@ export default function CheckoutPage() {
 
   const stepLabels = isStudioOnly ? STEP_LABELS_STUDIO_ONLY : STEP_LABELS_FULL
   const stepsWithLabels = stepLabels.map((s) => ({ id: s.id, label: t(s.labelKey) }))
-  const currentStepIndex = isStudioOnly ? Math.max(0, Math.min(step - 3, stepsWithLabels.length - 1)) : step - 1
-  const handleStepClick = (index: number) => setStep((isStudioOnly ? index + 3 : index + 1) as 1 | 2 | 3 | 4 | 5 | 6)
+  const currentStepIndex = isStudioOnly
+    ? Math.max(0, Math.min(step - 3, stepsWithLabels.length - 1))
+    : step - 1
+  const handleStepClick = (index: number) =>
+    setStep((isStudioOnly ? index + 3 : index + 1) as 1 | 2 | 3 | 4 | 5 | 6)
 
   if (status === 'loading') {
     return (
@@ -140,9 +143,7 @@ export default function CheckoutPage() {
     return (
       <main className="container mx-auto max-w-xl px-4 py-12">
         <p className="text-muted-foreground">{t('common.loading')}</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t('checkout.completeProfile')}
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{t('checkout.completeProfile')}</p>
       </main>
     )
   }
@@ -175,14 +176,14 @@ export default function CheckoutPage() {
           )}
           {step === 6 && <CheckoutStepConfirm depositAmount={depositAmount} />}
         </div>
-        <div className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+        <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
           <OrderSummary holdExpiresAt={holdExpiresAt} depositAmount={depositAmount} />
         </div>
       </div>
 
       {/* Mobile: sticky Pay button on step 6 (full-width, total amount) */}
       {step === 6 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
           <Button
             size="lg"
             className="h-12 w-full rounded-xl bg-brand-primary font-semibold"

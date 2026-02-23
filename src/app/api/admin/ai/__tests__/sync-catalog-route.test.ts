@@ -76,10 +76,7 @@ describe('POST /api/admin/ai/sync-catalog', () => {
   it('returns 200 with synced count and calls sync per equipment', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as any)
     mockHasAIPermission.mockResolvedValue(true)
-    mockFindMany.mockResolvedValue([
-      { id: 'eq-1' },
-      { id: 'eq-2' },
-    ])
+    mockFindMany.mockResolvedValue([{ id: 'eq-1' }, { id: 'eq-2' }])
     mockSync.mockResolvedValue(undefined)
     const res = await POST()
     expect(res.status).toBe(200)
@@ -94,13 +91,8 @@ describe('POST /api/admin/ai/sync-catalog', () => {
   it('continues on sync error and reports errors in response', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as any)
     mockHasAIPermission.mockResolvedValue(true)
-    mockFindMany.mockResolvedValue([
-      { id: 'eq-1' },
-      { id: 'eq-2' },
-    ])
-    mockSync
-      .mockRejectedValueOnce(new Error('No brand'))
-      .mockResolvedValueOnce(undefined)
+    mockFindMany.mockResolvedValue([{ id: 'eq-1' }, { id: 'eq-2' }])
+    mockSync.mockRejectedValueOnce(new Error('No brand')).mockResolvedValueOnce(undefined)
     const res = await POST()
     expect(res.status).toBe(200)
     const data = await res.json()

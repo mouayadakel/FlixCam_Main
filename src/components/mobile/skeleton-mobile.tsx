@@ -51,10 +51,7 @@ function BookingRowSkeleton({ className }: { className?: string }) {
 function AdminTableRowSkeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        'flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4',
-        className
-      )}
+      className={cn('flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4', className)}
     >
       <Skeleton className="h-4 w-full sm:w-1/4" />
       <Skeleton className="h-4 w-full sm:w-1/4" />
@@ -69,21 +66,11 @@ function AdminTableRowSkeleton({ className }: { className?: string }) {
  */
 function StatCardSkeleton({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'rounded-xl border border-border bg-card p-4 shadow-card',
-        className
-      )}
-    >
+    <div className={cn('rounded-xl border border-border bg-card p-4 shadow-card', className)}>
       <Skeleton className="mb-2 h-8 w-16" />
       <Skeleton className="h-4 w-24" />
     </div>
   )
 }
 
-export {
-  EquipmentCardSkeleton,
-  BookingRowSkeleton,
-  AdminTableRowSkeleton,
-  StatCardSkeleton,
-}
+export { EquipmentCardSkeleton, BookingRowSkeleton, AdminTableRowSkeleton, StatCardSkeleton }

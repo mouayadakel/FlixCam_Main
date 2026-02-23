@@ -182,7 +182,8 @@ export function AIPreviewDialog({
 
       if (field.startsWith('seo_ar_')) {
         const key = field.replace('seo_ar_', '')
-        const existing = (current as any).seoByLocale || suggestions[index]?.aiSuggestions.seoByLocale
+        const existing =
+          (current as any).seoByLocale || suggestions[index]?.aiSuggestions.seoByLocale
         return {
           ...prev,
           [index]: {
@@ -190,11 +191,12 @@ export function AIPreviewDialog({
             seoByLocale: {
               ...(existing || {}),
               ar: {
-                ...(existing?.ar || suggestions[index]?.aiSuggestions.seoByLocale?.ar || {
-                  metaTitle: '',
-                  metaDescription: '',
-                  metaKeywords: '',
-                }),
+                ...(existing?.ar ||
+                  suggestions[index]?.aiSuggestions.seoByLocale?.ar || {
+                    metaTitle: '',
+                    metaDescription: '',
+                    metaKeywords: '',
+                  }),
                 [key]: value,
               },
             },
@@ -203,7 +205,8 @@ export function AIPreviewDialog({
       }
       if (field.startsWith('seo_zh_')) {
         const key = field.replace('seo_zh_', '')
-        const existing = (current as any).seoByLocale || suggestions[index]?.aiSuggestions.seoByLocale
+        const existing =
+          (current as any).seoByLocale || suggestions[index]?.aiSuggestions.seoByLocale
         return {
           ...prev,
           [index]: {
@@ -211,11 +214,12 @@ export function AIPreviewDialog({
             seoByLocale: {
               ...(existing || {}),
               zh: {
-                ...(existing?.zh || suggestions[index]?.aiSuggestions.seoByLocale?.zh || {
-                  metaTitle: '',
-                  metaDescription: '',
-                  metaKeywords: '',
-                }),
+                ...(existing?.zh ||
+                  suggestions[index]?.aiSuggestions.seoByLocale?.zh || {
+                    metaTitle: '',
+                    metaDescription: '',
+                    metaKeywords: '',
+                  }),
                 [key]: value,
               },
             },
@@ -324,11 +328,11 @@ export function AIPreviewDialog({
                       ...edit,
                       translations: edit.translations || suggestion.aiSuggestions.translations,
                       seo: edit.seo || suggestion.aiSuggestions.seo,
-                      seoByLocale: (edit as any).seoByLocale || suggestion.aiSuggestions.seoByLocale,
+                      seoByLocale:
+                        (edit as any).seoByLocale || suggestion.aiSuggestions.seoByLocale,
                       specifications:
                         edit.specifications ?? suggestion.aiSuggestions.specifications ?? {},
-                      boxContents:
-                        edit.boxContents ?? suggestion.aiSuggestions.boxContents ?? '',
+                      boxContents: edit.boxContents ?? suggestion.aiSuggestions.boxContents ?? '',
                       tags: (edit as any).tags ?? suggestion.aiSuggestions.tags ?? '',
                     }
                   : suggestion.aiSuggestions
@@ -429,11 +433,7 @@ export function AIPreviewDialog({
                         <div>
                           <Label>Specifications (JSON)</Label>
                           <Textarea
-                            value={JSON.stringify(
-                              finalSuggestion.specifications ?? {},
-                              null,
-                              2
-                            )}
+                            value={JSON.stringify(finalSuggestion.specifications ?? {}, null, 2)}
                             onChange={(e) => handleEdit(idx, 'specifications', e.target.value)}
                             rows={8}
                             className="font-mono text-xs"
@@ -480,14 +480,18 @@ export function AIPreviewDialog({
                                   <Label>SEO Title (Arabic)</Label>
                                   <Input
                                     value={finalSuggestion.seoByLocale.ar.metaTitle}
-                                    onChange={(e) => handleEdit(idx, 'seo_ar_metaTitle', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_ar_metaTitle', e.target.value)
+                                    }
                                   />
                                 </div>
                                 <div>
                                   <Label>SEO Description (Arabic)</Label>
                                   <Textarea
                                     value={finalSuggestion.seoByLocale.ar.metaDescription}
-                                    onChange={(e) => handleEdit(idx, 'seo_ar_metaDescription', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_ar_metaDescription', e.target.value)
+                                    }
                                     rows={3}
                                   />
                                 </div>
@@ -495,7 +499,9 @@ export function AIPreviewDialog({
                                   <Label>SEO Keywords (Arabic)</Label>
                                   <Input
                                     value={finalSuggestion.seoByLocale.ar.metaKeywords}
-                                    onChange={(e) => handleEdit(idx, 'seo_ar_metaKeywords', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_ar_metaKeywords', e.target.value)
+                                    }
                                   />
                                 </div>
                               </>
@@ -542,14 +548,18 @@ export function AIPreviewDialog({
                                   <Label>SEO Title (Chinese)</Label>
                                   <Input
                                     value={finalSuggestion.seoByLocale.zh.metaTitle}
-                                    onChange={(e) => handleEdit(idx, 'seo_zh_metaTitle', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_zh_metaTitle', e.target.value)
+                                    }
                                   />
                                 </div>
                                 <div>
                                   <Label>SEO Description (Chinese)</Label>
                                   <Textarea
                                     value={finalSuggestion.seoByLocale.zh.metaDescription}
-                                    onChange={(e) => handleEdit(idx, 'seo_zh_metaDescription', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_zh_metaDescription', e.target.value)
+                                    }
                                     rows={3}
                                   />
                                 </div>
@@ -557,7 +567,9 @@ export function AIPreviewDialog({
                                   <Label>SEO Keywords (Chinese)</Label>
                                   <Input
                                     value={finalSuggestion.seoByLocale.zh.metaKeywords}
-                                    onChange={(e) => handleEdit(idx, 'seo_zh_metaKeywords', e.target.value)}
+                                    onChange={(e) =>
+                                      handleEdit(idx, 'seo_zh_metaKeywords', e.target.value)
+                                    }
                                   />
                                 </div>
                               </>

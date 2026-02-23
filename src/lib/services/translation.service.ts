@@ -216,7 +216,9 @@ export function setCachedTranslation(key: string, value: string): void {
   translationCache.set(key, value)
   try {
     const redis = getRedisClient()
-    redis.setex(TRANSLATION_CACHE_PREFIX + key, CACHE_TTL_SEC, value).catch((err) => console.error('[translation] cache set failed', err))
+    redis
+      .setex(TRANSLATION_CACHE_PREFIX + key, CACHE_TTL_SEC, value)
+      .catch((err) => console.error('[translation] cache set failed', err))
   } catch (err) {
     console.error('[translation] Redis setex failed', err)
   }

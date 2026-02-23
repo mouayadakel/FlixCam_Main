@@ -200,7 +200,10 @@ export async function generateSEO(context: SEOContext, provider?: SEOProvider): 
 
   // Prefer DB key if present and valid (not masked placeholder)
   let apiKey: string | null =
-    settings?.enabled && settings?.apiKey && settings.apiKey.length >= 10 && !settings.apiKey.startsWith('****')
+    settings?.enabled &&
+    settings?.apiKey &&
+    settings.apiKey.length >= 10 &&
+    !settings.apiKey.startsWith('****')
       ? settings.apiKey
       : null
   if (!apiKey) {
@@ -235,7 +238,10 @@ export async function generateSEOBatch(
   const settings = await getAISettings(effectiveProvider)
 
   let apiKey: string | null =
-    settings?.enabled && settings?.apiKey && settings.apiKey.length >= 10 && !settings.apiKey.startsWith('****')
+    settings?.enabled &&
+    settings?.apiKey &&
+    settings.apiKey.length >= 10 &&
+    !settings.apiKey.startsWith('****')
       ? settings.apiKey
       : null
   if (!apiKey) {

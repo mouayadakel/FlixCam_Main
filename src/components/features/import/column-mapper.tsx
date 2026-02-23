@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfidenceBadge } from '@/components/shared/confidence-badge'
@@ -61,10 +67,14 @@ function getColorForField(value: string): string {
   const field = SYSTEM_FIELDS.find((f) => f.value === value)
   if (!field) return ''
   switch (field.color) {
-    case 'green': return 'border-r-green-500'
-    case 'yellow': return 'border-r-yellow-500'
-    case 'blue': return 'border-r-blue-500'
-    default: return ''
+    case 'green':
+      return 'border-r-green-500'
+    case 'yellow':
+      return 'border-r-yellow-500'
+    case 'blue':
+      return 'border-r-blue-500'
+    default:
+      return ''
   }
 }
 
@@ -76,7 +86,8 @@ export function ColumnMapper({
   onSaveTemplate,
 }: ColumnMapperProps) {
   const [mappings, setMappings] = useState<MappedColumn[]>(
-    initialMappings || headers.map((h) => ({ sourceHeader: h, mappedField: null, confidence: 0, method: 'skip' }))
+    initialMappings ||
+      headers.map((h) => ({ sourceHeader: h, mappedField: null, confidence: 0, method: 'skip' }))
   )
 
   useEffect(() => {
@@ -112,7 +123,11 @@ export function ColumnMapper({
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" /> اختياري
             </div>
             {onSaveTemplate && (
-              <Button variant="outline" size="sm" onClick={() => onSaveTemplate('default', mappings)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSaveTemplate('default', mappings)}
+              >
                 <Save className="ml-1 h-3 w-3" />
                 حفظ القالب
               </Button>
@@ -122,7 +137,7 @@ export function ColumnMapper({
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          <div className="grid grid-cols-[1fr_1fr_80px] gap-2 text-xs font-medium text-muted-foreground px-2 pb-1 border-b">
+          <div className="grid grid-cols-[1fr_1fr_80px] gap-2 border-b px-2 pb-1 text-xs font-medium text-muted-foreground">
             <span>عمود Excel</span>
             <span>يربط بـ</span>
             <span>الثقة</span>
@@ -131,12 +146,12 @@ export function ColumnMapper({
             <div
               key={mapping.sourceHeader}
               className={cn(
-                'grid grid-cols-[1fr_1fr_80px] gap-2 items-center rounded-md px-2 py-1.5 border-r-4',
+                'grid grid-cols-[1fr_1fr_80px] items-center gap-2 rounded-md border-r-4 px-2 py-1.5',
                 getColorForField(mapping.mappedField || 'skip'),
                 !mapping.mappedField && 'border-r-gray-200 bg-muted/30'
               )}
             >
-              <span className="text-sm font-mono truncate" title={mapping.sourceHeader}>
+              <span className="truncate font-mono text-sm" title={mapping.sourceHeader}>
                 {mapping.sourceHeader}
               </span>
               <Select
@@ -151,7 +166,11 @@ export function ColumnMapper({
                     <SelectItem
                       key={field.value}
                       value={field.value}
-                      disabled={field.value !== 'skip' && usedFields.has(field.value) && mapping.mappedField !== field.value}
+                      disabled={
+                        field.value !== 'skip' &&
+                        usedFields.has(field.value) &&
+                        mapping.mappedField !== field.value
+                      }
                     >
                       {field.label}
                     </SelectItem>
@@ -162,7 +181,9 @@ export function ColumnMapper({
                 {mapping.confidence > 0 ? (
                   <ConfidenceBadge confidence={mapping.confidence} showLabel={false} />
                 ) : (
-                  <Badge variant="outline" className="text-xs text-muted-foreground">--</Badge>
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                    --
+                  </Badge>
                 )}
               </div>
             </div>
@@ -171,7 +192,7 @@ export function ColumnMapper({
 
         {sampleRows && sampleRows.length > 0 && (
           <div className="mt-4 border-t pt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
               معاينة البيانات المربوطة ({Math.min(sampleRows.length, 3)} صفوف)
             </p>
             <div className="overflow-x-auto">
@@ -183,7 +204,8 @@ export function ColumnMapper({
                       .slice(0, 6)
                       .map((m) => (
                         <th key={m.sourceHeader} className="px-2 py-1 text-right font-medium">
-                          {SYSTEM_FIELDS.find((f) => f.value === m.mappedField)?.label || m.mappedField}
+                          {SYSTEM_FIELDS.find((f) => f.value === m.mappedField)?.label ||
+                            m.mappedField}
                         </th>
                       ))}
                   </tr>
@@ -195,7 +217,7 @@ export function ColumnMapper({
                         .filter((m) => m.mappedField)
                         .slice(0, 6)
                         .map((m) => (
-                          <td key={m.sourceHeader} className="px-2 py-1 truncate max-w-[150px]">
+                          <td key={m.sourceHeader} className="max-w-[150px] truncate px-2 py-1">
                             {String(row[m.sourceHeader] ?? '--')}
                           </td>
                         ))}

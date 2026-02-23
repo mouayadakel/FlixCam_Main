@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,12 +21,7 @@ interface DiscountTabProps {
   saving: boolean
 }
 
-export function CmsStudioDiscountTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: DiscountTabProps) {
+export function CmsStudioDiscountTab({ studio, onSave, onDirtyChange, saving }: DiscountTabProps) {
   const [form, setForm] = useState({
     discountPercent: '',
     discountMessage: '',
@@ -82,8 +71,12 @@ export function CmsStudioDiscountTab({
           {/* Active toggle */}
           <div className="flex items-center justify-between rounded-xl border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="discountActive" className="text-base font-medium">تفعيل العرض</Label>
-              <p className="text-sm text-muted-foreground">عند التفعيل سيظهر شريط الخصم على صفحة الاستوديو</p>
+              <Label htmlFor="discountActive" className="text-base font-medium">
+                تفعيل العرض
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                عند التفعيل سيظهر شريط الخصم على صفحة الاستوديو
+              </p>
             </div>
             <Switch
               id="discountActive"
@@ -109,9 +102,7 @@ export function CmsStudioDiscountTab({
                 placeholder="مثال: 15"
                 dir="ltr"
               />
-              <p className="text-xs text-muted-foreground">
-                أدخل رقم بين 0 و 100
-              </p>
+              <p className="text-xs text-muted-foreground">أدخل رقم بين 0 و 100</p>
             </div>
 
             {/* Message */}
@@ -141,7 +132,7 @@ export function CmsStudioDiscountTab({
               <div className="overflow-hidden rounded-2xl border" dir="rtl">
                 <div className="flex items-center justify-between bg-gradient-to-l from-primary/10 via-primary/5 to-transparent px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-primary text-white text-sm px-3 py-1">
+                    <Badge className="bg-primary px-3 py-1 text-sm text-white">
                       خصم {previewPercent}%
                     </Badge>
                     <span className="text-sm font-medium text-text-heading">

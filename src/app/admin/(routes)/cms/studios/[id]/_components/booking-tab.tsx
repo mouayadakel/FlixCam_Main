@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,12 +27,7 @@ interface BookingTabProps {
   saving: boolean
 }
 
-export function CmsStudioBookingTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: BookingTabProps) {
+export function CmsStudioBookingTab({ studio, onSave, onDirtyChange, saving }: BookingTabProps) {
   const [form, setForm] = useState({
     slotDurationMinutes: 60,
     setupBuffer: 30,

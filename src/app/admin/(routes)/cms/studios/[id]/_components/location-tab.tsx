@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,12 +19,7 @@ interface LocationTabProps {
   saving: boolean
 }
 
-export function CmsStudioLocationTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: LocationTabProps) {
+export function CmsStudioLocationTab({ studio, onSave, onDirtyChange, saving }: LocationTabProps) {
   const [form, setForm] = useState({
     address: '',
     googleMapsUrl: '',

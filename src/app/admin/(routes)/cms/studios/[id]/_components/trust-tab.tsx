@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,12 +19,7 @@ interface TrustTabProps {
   saving: boolean
 }
 
-export function CmsStudioTrustTab({
-  studio,
-  onSave,
-  onDirtyChange,
-  saving,
-}: TrustTabProps) {
+export function CmsStudioTrustTab({ studio, onSave, onDirtyChange, saving }: TrustTabProps) {
   const [form, setForm] = useState({
     reviewsText: '',
     whatsappNumber: '',
@@ -41,7 +30,8 @@ export function CmsStudioTrustTab({
     setForm({
       reviewsText: (studio.reviewsText as string) ?? '',
       whatsappNumber: (studio.whatsappNumber as string) ?? '',
-      bookingCountDisplay: studio.bookingCountDisplay != null ? String(studio.bookingCountDisplay) : '',
+      bookingCountDisplay:
+        studio.bookingCountDisplay != null ? String(studio.bookingCountDisplay) : '',
     })
   }, [studio])
 
@@ -99,7 +89,9 @@ export function CmsStudioTrustTab({
               placeholder="مثال: 100"
               dir="ltr"
             />
-            <p className="text-xs text-muted-foreground">سيظهر كـ “+100 حجز ناجح” في صفحة الاستوديو</p>
+            <p className="text-xs text-muted-foreground">
+              سيظهر كـ “+100 حجز ناجح” في صفحة الاستوديو
+            </p>
           </div>
           <Button type="submit" disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

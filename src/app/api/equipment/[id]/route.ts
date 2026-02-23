@@ -88,10 +88,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     const parsed = updateEquipmentSchema.safeParse({ id: params.id, ...rest })
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
     const equipment = await EquipmentService.updateEquipment({

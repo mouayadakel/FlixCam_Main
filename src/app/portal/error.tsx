@@ -23,15 +23,10 @@ export default function PortalError({
   }, [error])
 
   return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center px-4"
-      dir="rtl"
-    >
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4" dir="rtl">
       <div className="flex flex-col items-center text-center">
         <AlertTriangle className="mb-4 h-16 w-16 text-destructive" aria-hidden />
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-          حدث خطأ
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">حدث خطأ</h1>
         <p className="mt-2 max-w-md text-muted-foreground">
           واجه البوابة مشكلة. يرجى المحاولة مرة أخرى أو العودة للوحة التحكم.
         </p>

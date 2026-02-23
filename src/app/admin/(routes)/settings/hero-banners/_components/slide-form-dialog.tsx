@@ -239,7 +239,7 @@ export function SlideFormDialog({
                 sizes="(max-width: 640px) 100vw, 672px"
               />
               <div
-                className="absolute inset-0 bg-black transition-opacity hero-slide-overlay"
+                className="hero-slide-overlay absolute inset-0 bg-black transition-opacity"
                 style={{ ['--overlay-opacity' as string]: String(form.overlayOpacity) }}
               />
               <div
@@ -435,7 +435,9 @@ export function SlideFormDialog({
               <Switch checked={form.isActive} onCheckedChange={(v) => update({ isActive: v })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hero-slide-overlay-opacity">شفافية الغطاء (0–1): {form.overlayOpacity}</Label>
+              <Label htmlFor="hero-slide-overlay-opacity">
+                شفافية الغطاء (0–1): {form.overlayOpacity}
+              </Label>
               <input
                 id="hero-slide-overlay-opacity"
                 type="range"

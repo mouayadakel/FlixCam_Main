@@ -17,14 +17,24 @@ import { Activity, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const RESOURCE_TYPE_LABELS: Record<string, string> = {
-  booking: 'حجز', payment: 'دفعة', equipment: 'معدة', user: 'مستخدم',
-  contract: 'عقد', invoice: 'فاتورة', role: 'دور', vendor: 'مورد',
-  studio: 'استوديو', category: 'فئة', setting: 'إعداد',
+  booking: 'حجز',
+  payment: 'دفعة',
+  equipment: 'معدة',
+  user: 'مستخدم',
+  contract: 'عقد',
+  invoice: 'فاتورة',
+  role: 'دور',
+  vendor: 'مورد',
+  studio: 'استوديو',
+  category: 'فئة',
+  setting: 'إعداد',
 }
 
 function getActionColor(action: string): string {
-  if (action.includes('created') || action.includes('signed') || action.includes('approved')) return 'bg-green-100 text-green-800'
-  if (action.includes('deleted') || action.includes('rejected') || action.includes('cancelled')) return 'bg-red-100 text-red-800'
+  if (action.includes('created') || action.includes('signed') || action.includes('approved'))
+    return 'bg-green-100 text-green-800'
+  if (action.includes('deleted') || action.includes('rejected') || action.includes('cancelled'))
+    return 'bg-red-100 text-red-800'
   if (action.includes('updated') || action.includes('modified')) return 'bg-blue-100 text-blue-800'
   if (action.includes('login') || action.includes('logout')) return 'bg-purple-100 text-purple-800'
   return 'bg-gray-100 text-gray-800'
@@ -54,10 +64,15 @@ export default function DashboardActivityPage() {
       })
       .then((data) => setLogs(data.logs ?? []))
       .catch((e) => setError(e.message))
-      .finally(() => { setLoading(false); setRefreshing(false) })
+      .finally(() => {
+        setLoading(false)
+        setRefreshing(false)
+      })
   }
 
-  useEffect(() => { loadActivity() }, [])
+  useEffect(() => {
+    loadActivity()
+  }, [])
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -71,7 +86,10 @@ export default function DashboardActivityPage() {
             variant="outline"
             size="sm"
             disabled={refreshing}
-            onClick={() => { setRefreshing(true); loadActivity() }}
+            onClick={() => {
+              setRefreshing(true)
+              loadActivity()
+            }}
           >
             <RefreshCw className={`ml-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             تحديث
@@ -123,7 +141,10 @@ export default function DashboardActivityPage() {
                     {log.user?.name || log.user?.email || 'نظام'}
                   </span>
                   <time dateTime={log.timestamp} className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: arSA })}
+                    {formatDistanceToNow(new Date(log.timestamp), {
+                      addSuffix: true,
+                      locale: arSA,
+                    })}
                   </time>
                 </li>
               ))}

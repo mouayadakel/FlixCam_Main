@@ -182,16 +182,13 @@ export default async function EquipmentDetailPage({
       name: equipmentName,
       url: `${BASE_URL}/equipment/${equipmentSlug}`,
       image: equipment.media?.[0]?.url
-        ? (equipment.media[0].url.startsWith('http')
-            ? equipment.media[0].url
-            : `${BASE_URL}${equipment.media[0].url}`)
+        ? equipment.media[0].url.startsWith('http')
+          ? equipment.media[0].url
+          : `${BASE_URL}${equipment.media[0].url}`
         : undefined,
       description:
-        equipment.shortDescription ||
-        `تأجير ${equipmentName} – معدات تصوير سينمائي في الرياض`,
-      brand: equipment.brand
-        ? { '@type': 'Brand', name: equipment.brand.name }
-        : undefined,
+        equipment.shortDescription || `تأجير ${equipmentName} – معدات تصوير سينمائي في الرياض`,
+      brand: equipment.brand ? { '@type': 'Brand', name: equipment.brand.name } : undefined,
       category: equipment.category?.name,
       sku: equipment.sku,
       offers: {
@@ -212,14 +209,21 @@ export default async function EquipmentDetailPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <EquipmentDetail equipment={{
-      ...equipment,
-      category: equipment.category ? { name: equipment.category.name, slug: equipment.category.slug ?? '' } : null,
-      brand: equipment.brand ? { name: equipment.brand.name, slug: equipment.brand.slug ?? '' } : null,
-      shortDescription: equipment.shortDescription ?? null,
-      longDescription: equipment.longDescription ?? null,
-      boxContents: (equipment as any).boxContents ?? null,
-    }} recommendations={recommendations} />
+        <EquipmentDetail
+          equipment={{
+            ...equipment,
+            category: equipment.category
+              ? { name: equipment.category.name, slug: equipment.category.slug ?? '' }
+              : null,
+            brand: equipment.brand
+              ? { name: equipment.brand.name, slug: equipment.brand.slug ?? '' }
+              : null,
+            shortDescription: equipment.shortDescription ?? null,
+            longDescription: equipment.longDescription ?? null,
+            boxContents: (equipment as any).boxContents ?? null,
+          }}
+          recommendations={recommendations}
+        />
       </main>
     )
   } catch (err) {

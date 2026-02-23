@@ -35,48 +35,48 @@ export function HomeTestimonials() {
             {t('home.testimonialsSubtitle')}
           </p>
         </div>
-        <div className="-mx-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 sm:mx-0 sm:px-0 md:overflow-visible md:snap-none">
+        <div className="scrollbar-hide -mx-4 snap-x snap-mandatory overflow-x-auto px-4 sm:mx-0 sm:px-0 md:snap-none md:overflow-visible">
           <div className="flex gap-6 pb-2 sm:grid sm:grid-cols-3 md:gap-8 md:pb-0">
             {testimonials.slice(0, 3).map((item, index) => (
               <div
                 key={index}
-                className="group relative flex w-[85vw] min-w-[280px] shrink-0 snap-center flex-1 flex-col rounded-2xl border border-border-light/60 bg-surface-light/30 p-6 transition-all duration-300 hover:border-brand-primary/10 hover:bg-white hover:shadow-card-hover sm:min-w-0 sm:w-full md:p-8"
+                className="group relative flex w-[85vw] min-w-[280px] flex-1 shrink-0 snap-center flex-col rounded-2xl border border-border-light/60 bg-surface-light/30 p-6 transition-all duration-300 hover:border-brand-primary/10 hover:bg-white hover:shadow-card-hover sm:w-full sm:min-w-0 md:p-8"
               >
-              {/* Quotation mark */}
-              <Quote className="mb-4 h-8 w-8 text-brand-primary/20 transition-colors group-hover:text-brand-primary/40" />
+                {/* Quotation mark */}
+                <Quote className="mb-4 h-8 w-8 text-brand-primary/20 transition-colors group-hover:text-brand-primary/40" />
 
-              {/* Quote text */}
-              <p className="flex-1 text-body-main leading-relaxed text-text-body">
-                &ldquo;{item.quote}&rdquo;
-              </p>
+                {/* Quote text */}
+                <p className="flex-1 text-body-main leading-relaxed text-text-body">
+                  &ldquo;{item.quote}&rdquo;
+                </p>
 
-              {/* Rating stars */}
-              <div className="mt-4 flex gap-0.5" aria-hidden>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`text-lg ${
-                      i < (item.rating ?? 5) ? 'text-warning-500' : 'text-border-light'
-                    }`}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-
-              {/* Author */}
-              <div className="mt-4 flex items-center gap-3 border-t border-border-light/60 pt-4">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-brand-primary/10">
-                  <Image
-                    src={AVATAR_PLACEHOLDER}
-                    alt={item.authorName}
-                    fill
-                    className="object-cover"
-                    sizes="40px"
-                  />
+                {/* Rating stars */}
+                <div className="mt-4 flex gap-0.5" aria-hidden>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`text-lg ${
+                        i < (item.rating ?? 5) ? 'text-warning-500' : 'text-border-light'
+                      }`}
+                    >
+                      ★
+                    </span>
+                  ))}
                 </div>
-                <span className="text-sm font-semibold text-text-heading">{item.authorName}</span>
-              </div>
+
+                {/* Author */}
+                <div className="mt-4 flex items-center gap-3 border-t border-border-light/60 pt-4">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-2 ring-brand-primary/10">
+                    <Image
+                      src={AVATAR_PLACEHOLDER}
+                      alt={item.authorName}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-text-heading">{item.authorName}</span>
+                </div>
               </div>
             ))}
           </div>

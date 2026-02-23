@@ -40,7 +40,8 @@ const MAX_PACKAGES = 15
 
 function toNum(v: unknown): number {
   if (typeof v === 'number') return v
-  if (v && typeof v === 'object' && 'toNumber' in v) return (v as { toNumber: () => number }).toNumber()
+  if (v && typeof v === 'object' && 'toNumber' in v)
+    return (v as { toNumber: () => number }).toNumber()
   return 0
 }
 
@@ -392,10 +393,7 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
             <p className="text-sm text-muted-foreground">لا توجد باكجات</p>
           ) : (
             packages.map((pkg, i) => (
-              <div
-                key={pkg.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
+              <div key={pkg.id} className="flex items-center justify-between rounded-lg border p-3">
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col gap-0">
                     <Button
@@ -429,7 +427,9 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
                         </span>
                       )}
                       {!(pkg as any).isActive && (
-                        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">غير نشط</span>
+                        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">
+                          غير نشط
+                        </span>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -440,12 +440,7 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openEdit(pkg)}
-                  >
+                  <Button type="button" variant="ghost" size="icon" onClick={() => openEdit(pkg)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button

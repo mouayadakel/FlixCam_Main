@@ -95,9 +95,7 @@ async function processQueue() {
 
   try {
     const now = new Date()
-    const batch = queue
-      .filter((n) => !n.scheduledAt || n.scheduledAt <= now)
-      .slice(0, BATCH_SIZE)
+    const batch = queue.filter((n) => !n.scheduledAt || n.scheduledAt <= now).slice(0, BATCH_SIZE)
 
     for (const notification of batch) {
       try {
@@ -150,7 +148,9 @@ async function sendNotification(notification: QueuedNotification): Promise<void>
   switch (notification.channel) {
     case 'email':
       // Delegate to email service (e.g., Resend, SendGrid)
-      console.log(`[NotificationQueue] Sending email to ${notification.recipient}: ${notification.subject}`)
+      console.log(
+        `[NotificationQueue] Sending email to ${notification.recipient}: ${notification.subject}`
+      )
       // await EmailService.send({ to: notification.recipient, subject: notification.subject, body: notification.body })
       break
     case 'sms':

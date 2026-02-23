@@ -9,7 +9,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
-import { mapColumns, type ColumnMapping, AI_FILLABLE_FIELDS } from '@/lib/services/column-mapper.service'
+import {
+  mapColumns,
+  type ColumnMapping,
+  AI_FILLABLE_FIELDS,
+} from '@/lib/services/column-mapper.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,14 +61,31 @@ function resolveField(
 
 const REQUIRED_FIELDS = ['name', 'daily_price']
 const CORE_FIELDS = [
-  'name', 'brand', 'model', 'sku', 'barcode',
-  'daily_price', 'weekly_price', 'monthly_price', 'deposit',
-  'quantity', 'condition', 'warehouse_location',
-  'short_description', 'long_description',
-  'seo_title', 'seo_description', 'seo_keywords',
-  'featured_image', 'gallery', 'video',
-  'specifications', 'box_contents', 'tags',
-  'buffer_time', 'buffer_time_unit',
+  'name',
+  'brand',
+  'model',
+  'sku',
+  'barcode',
+  'daily_price',
+  'weekly_price',
+  'monthly_price',
+  'deposit',
+  'quantity',
+  'condition',
+  'warehouse_location',
+  'short_description',
+  'long_description',
+  'seo_title',
+  'seo_description',
+  'seo_keywords',
+  'featured_image',
+  'gallery',
+  'video',
+  'specifications',
+  'box_contents',
+  'tags',
+  'buffer_time',
+  'buffer_time_unit',
 ]
 
 export async function POST(request: NextRequest) {
@@ -129,15 +150,30 @@ export async function POST(request: NextRequest) {
         .filter((m) => !m.mappedField || m.confidence < 50)
         .map((m) => m.sourceHeader)
 
-      const aiFillableSet = new Set(AI_FILLABLE_FIELDS ?? [
-        'short_description', 'long_description',
-        'seo_title', 'seo_description', 'seo_keywords',
-        'specifications', 'box_contents', 'tags',
-        'name_ar', 'short_desc_ar', 'long_desc_ar',
-        'seo_title_ar', 'seo_desc_ar', 'seo_keywords_ar',
-        'name_zh', 'short_desc_zh', 'long_desc_zh',
-        'seo_title_zh', 'seo_desc_zh', 'seo_keywords_zh',
-      ])
+      const aiFillableSet = new Set(
+        AI_FILLABLE_FIELDS ?? [
+          'short_description',
+          'long_description',
+          'seo_title',
+          'seo_description',
+          'seo_keywords',
+          'specifications',
+          'box_contents',
+          'tags',
+          'name_ar',
+          'short_desc_ar',
+          'long_desc_ar',
+          'seo_title_ar',
+          'seo_desc_ar',
+          'seo_keywords_ar',
+          'name_zh',
+          'short_desc_zh',
+          'long_desc_zh',
+          'seo_title_zh',
+          'seo_desc_zh',
+          'seo_keywords_zh',
+        ]
+      )
 
       const previewRows: PreviewRow[] = []
       const previewSlice = data.slice(0, PREVIEW_ROWS)

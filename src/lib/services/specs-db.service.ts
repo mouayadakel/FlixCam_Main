@@ -20,12 +20,15 @@ export interface SpecMatch {
 }
 
 const CURATED_DB = curatedSpecs as Record<string, Record<string, string>>
-const DEEP_DB = deepSpecs as Record<string, {
-  marketing_highlights?: string
-  technical_specs: Record<string, string>
-  web_references?: Record<string, string>
-  box_contents?: string[]
-}>
+const DEEP_DB = deepSpecs as Record<
+  string,
+  {
+    marketing_highlights?: string
+    technical_specs: Record<string, string>
+    web_references?: Record<string, string>
+    box_contents?: string[]
+  }
+>
 
 const MODEL_KEYS = Object.keys(CURATED_DB)
 const DEEP_KEYS = Object.keys(DEEP_DB)
@@ -59,24 +62,16 @@ function similarity(a: string, b: string): number {
  * E.g., "sony a7siii Full Frame Camera" -> tries to match "Sony A7S III"
  */
 function normalizeProductName(name: string): string {
-  return name
-    .replace(/\s+/g, ' ')
-    .replace(/[-_]+/g, ' ')
-    .trim()
+  return name.replace(/\s+/g, ' ').replace(/[-_]+/g, ' ').trim()
 }
 
 /**
  * Look up curated specs for a product by name.
  * Returns null if no match found above threshold (0.6).
  */
-export function lookupCuratedSpecs(
-  productName: string,
-  brandName?: string
-): SpecMatch | null {
+export function lookupCuratedSpecs(productName: string, brandName?: string): SpecMatch | null {
   const normalized = normalizeProductName(productName)
-  const searchString = brandName
-    ? `${brandName} ${normalized}`
-    : normalized
+  const searchString = brandName ? `${brandName} ${normalized}` : normalized
 
   let bestMatch: string | null = null
   let bestScore = 0
@@ -111,10 +106,7 @@ export function lookupCuratedSpecs(
  * Look up deep specs (expanded format with box contents, marketing, and web references).
  * Falls back to basic curated lookup if no deep match.
  */
-export function lookupDeepSpecs(
-  productName: string,
-  brandName?: string
-): SpecMatch | null {
+export function lookupDeepSpecs(productName: string, brandName?: string): SpecMatch | null {
   const normalized = normalizeProductName(productName)
   const searchString = brandName ? `${brandName} ${normalized}` : normalized
 
@@ -165,9 +157,7 @@ export function getKnownModels(): string[] {
  * Check if a specific model exists in the curated database
  */
 export function hasModel(modelName: string): boolean {
-  return MODEL_KEYS.some(
-    (key) => key.toLowerCase() === modelName.toLowerCase()
-  )
+  return MODEL_KEYS.some((key) => key.toLowerCase() === modelName.toLowerCase())
 }
 
 /**

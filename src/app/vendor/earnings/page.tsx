@@ -40,7 +40,9 @@ export default async function VendorEarningsPage() {
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
   const thisMonthPayouts = payouts.filter((p) => new Date(p.createdAt) >= startOfThisMonth)
-  const lastMonthPayouts = payouts.filter((p) => new Date(p.createdAt) >= startOfLastMonth && new Date(p.createdAt) <= endOfLastMonth)
+  const lastMonthPayouts = payouts.filter(
+    (p) => new Date(p.createdAt) >= startOfLastMonth && new Date(p.createdAt) <= endOfLastMonth
+  )
 
   const thisMonthNet = thisMonthPayouts.reduce((s, p) => s + Number(p.netAmount), 0)
   const lastMonthNet = lastMonthPayouts.reduce((s, p) => s + Number(p.netAmount), 0)
@@ -67,7 +69,9 @@ export default async function VendorEarningsPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.totalGrossRevenue')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('ar', 'vendor.totalGrossRevenue')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.gross)}</div>
@@ -76,12 +80,17 @@ export default async function VendorEarningsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.platformCommission')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('ar', 'vendor.platformCommission')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.commission)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t('ar', 'vendor.commissionRate').replace('{rate}', String(Number(vendor.commissionRate)))}
+              {t('ar', 'vendor.commissionRate').replace(
+                '{rate}',
+                String(Number(vendor.commissionRate))
+              )}
             </p>
           </CardContent>
         </Card>
@@ -101,7 +110,8 @@ export default async function VendorEarningsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(thisMonthNet)}</div>
             <p className={`mt-1 text-xs ${growthPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {growthPct >= 0 ? '+' : ''}{t('ar', 'vendor.vsLastMonth').replace('{pct}', growthPct.toFixed(1))}
+              {growthPct >= 0 ? '+' : ''}
+              {t('ar', 'vendor.vsLastMonth').replace('{pct}', growthPct.toFixed(1))}
             </p>
           </CardContent>
         </Card>

@@ -21,7 +21,9 @@ export function publishAdminLive(event: string, payload: Record<string, unknown>
   try {
     const redis = getRedisClient()
     const message: AdminLiveEvent = { event, payload, t: Date.now() }
-    redis.publish(CHANNEL, JSON.stringify(message)).catch((err) => console.error('[live-admin] publish failed', err))
+    redis
+      .publish(CHANNEL, JSON.stringify(message))
+      .catch((err) => console.error('[live-admin] publish failed', err))
   } catch (err) {
     console.error('[live-admin] Redis publish error', err)
   }

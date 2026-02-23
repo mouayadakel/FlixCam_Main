@@ -236,9 +236,7 @@ export default function FeaturesPage() {
                                   </Badge>
                                 )}
                               </CardTitle>
-                              <CardDescription>
-                                {flag.description || 'لا يوجد وصف'}
-                              </CardDescription>
+                              <CardDescription>{flag.description || 'لا يوجد وصف'}</CardDescription>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
                               {toggling[flag.id] && (

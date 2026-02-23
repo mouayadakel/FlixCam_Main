@@ -11,11 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import Image from 'next/image'
@@ -31,13 +33,29 @@ function isAllowedImageUrl(url: string): boolean {
   }
 }
 
-function PendingImage({ src, alt, fill, className, sizes }: { src: string; alt: string; fill?: boolean; className?: string; sizes?: string }) {
+function PendingImage({
+  src,
+  alt,
+  fill,
+  className,
+  sizes,
+}: {
+  src: string
+  alt: string
+  fill?: boolean
+  className?: string
+  sizes?: string
+}) {
   const [error, setError] = useState(false)
   const unoptimized = !isAllowedImageUrl(src)
   if (error) {
     return (
       <div
-        className={fill ? `absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground ${className ?? ''}` : undefined}
+        className={
+          fill
+            ? `absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground ${className ?? ''}`
+            : undefined
+        }
         style={fill ? undefined : { minHeight: 120 }}
       >
         <ImageIcon className="h-8 w-8" />
@@ -79,7 +97,9 @@ export function ImageReviewTab() {
   const [filterProductId, setFilterProductId] = useState<string>('all')
   const [lightboxImage, setLightboxImage] = useState<PendingImageItem | null>(null)
   const [page, setPage] = useState(1)
-  const [meta, setMeta] = useState<{ total: number; totalPages: number; limit: number } | null>(null)
+  const [meta, setMeta] = useState<{ total: number; totalPages: number; limit: number } | null>(
+    null
+  )
 
   const lightboxRef = useRef<PendingImageItem | null>(null)
   lightboxRef.current = lightboxImage
@@ -96,35 +116,53 @@ export function ImageReviewTab() {
       setMeta(data.meta ?? null)
       setSelectedIds(new Set())
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تحميل قائمة الصور', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تحميل قائمة الصور',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
   }, [toast, filterProductId, page])
 
-  useEffect(() => { fetchList() }, [fetchList])
+  useEffect(() => {
+    fetchList()
+  }, [fetchList])
 
-  useEffect(() => { setPage(1) }, [filterProductId])
+  useEffect(() => {
+    setPage(1)
+  }, [filterProductId])
 
-  const handleAction = useCallback(async (id: string, action: 'approve' | 'reject') => {
-    setActingId(id)
-    try {
-      const res = await fetch(`/api/admin/ai/pending-images/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'فشل التنفيذ')
-      toast({ title: action === 'approve' ? 'تمت الموافقة' : 'تم الرفض', description: data.message })
-      setItems((prev) => prev.filter((i) => i.id !== id))
-      if (lightboxRef.current?.id === id) setLightboxImage(null)
-    } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل التنفيذ', variant: 'destructive' })
-    } finally {
-      setActingId(null)
-    }
-  }, [toast])
+  const handleAction = useCallback(
+    async (id: string, action: 'approve' | 'reject') => {
+      setActingId(id)
+      try {
+        const res = await fetch(`/api/admin/ai/pending-images/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'فشل التنفيذ')
+        toast({
+          title: action === 'approve' ? 'تمت الموافقة' : 'تم الرفض',
+          description: data.message,
+        })
+        setItems((prev) => prev.filter((i) => i.id !== id))
+        if (lightboxRef.current?.id === id) setLightboxImage(null)
+      } catch (e) {
+        toast({
+          title: 'خطأ',
+          description: e instanceof Error ? e.message : 'فشل التنفيذ',
+          variant: 'destructive',
+        })
+      } finally {
+        setActingId(null)
+      }
+    },
+    [toast]
+  )
 
   // Keyboard shortcuts — only fire when lightbox is open, skip if target is interactive
   useEffect(() => {
@@ -134,14 +172,22 @@ export function ImageReviewTab() {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 
-      if (e.key === 'a' || e.key === 'A') { e.preventDefault(); handleAction(current.id, 'approve') }
-      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); handleAction(current.id, 'reject') }
+      if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault()
+        handleAction(current.id, 'approve')
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault()
+        handleAction(current.id, 'reject')
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleAction])
 
-  const [allProductOptions, setAllProductOptions] = useState<Array<[string, { name: string; count: number }]>>([])
+  const [allProductOptions, setAllProductOptions] = useState<
+    Array<[string, { name: string; count: number }]>
+  >([])
 
   useEffect(() => {
     async function fetchFilterOptions() {
@@ -156,10 +202,10 @@ export function ImageReviewTab() {
           if (existing) existing.count++
           else map.set(i.productId, { name: i.productName, count: 1 })
         })
-        setAllProductOptions(
-          Array.from(map.entries()).sort((a, b) => b[1].count - a[1].count)
-        )
-      } catch { /* non-critical */ }
+        setAllProductOptions(Array.from(map.entries()).sort((a, b) => b[1].count - a[1].count))
+      } catch {
+        /* non-critical */
+      }
     }
     fetchFilterOptions()
   }, [])
@@ -167,7 +213,12 @@ export function ImageReviewTab() {
   const productOptions = allProductOptions
 
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
   const toggleSelectAll = () => {
     if (selectedIds.size === items.length) setSelectedIds(new Set())
@@ -176,7 +227,10 @@ export function ImageReviewTab() {
 
   const handleBulkAction = async (action: 'approve' | 'reject') => {
     const ids = Array.from(selectedIds)
-    if (ids.length === 0) { toast({ title: 'اختر صوراً', variant: 'destructive' }); return }
+    if (ids.length === 0) {
+      toast({ title: 'اختر صوراً', variant: 'destructive' })
+      return
+    }
     setBulkActing(true)
     try {
       const res = await fetch('/api/admin/ai/pending-images/bulk', {
@@ -186,11 +240,18 @@ export function ImageReviewTab() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'فشل التنفيذ')
-      toast({ title: action === 'approve' ? 'تمت الموافقة على المحدد' : 'تم رفض المحدد', description: data.message })
+      toast({
+        title: action === 'approve' ? 'تمت الموافقة على المحدد' : 'تم رفض المحدد',
+        description: data.message,
+      })
       setItems((prev) => prev.filter((i) => !selectedIds.has(i.id)))
       setSelectedIds(new Set())
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل التنفيذ', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل التنفيذ',
+        variant: 'destructive',
+      })
     } finally {
       setBulkActing(false)
     }
@@ -203,10 +264,14 @@ export function ImageReviewTab() {
   if (loading) {
     return (
       <Card>
-        <CardHeader><CardTitle>مراجعة الصور</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>مراجعة الصور</CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48 rounded-lg" />)}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 rounded-lg" />
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -218,13 +283,17 @@ export function ImageReviewTab() {
       <Card>
         <CardHeader>
           <CardTitle>مراجعة الصور المُنشأة بالذكاء الاصطناعي</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            {meta?.total === 0 || (items.length === 0 && !meta) ? 'لا توجد صور في انتظار المراجعة' : `${meta?.total ?? items.length} صورة في انتظار المراجعة`}
+          <p className="text-sm text-muted-foreground">
+            {meta?.total === 0 || (items.length === 0 && !meta)
+              ? 'لا توجد صور في انتظار المراجعة'
+              : `${meta?.total ?? items.length} صورة في انتظار المراجعة`}
           </p>
           {items.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-1">A للموافقة | R للرفض | Space للتحديد (عند فتح الصورة)</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A للموافقة | R للرفض | Space للتحديد (عند فتح الصورة)
+            </p>
           )}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-4">
             <Select value={filterProductId} onValueChange={setFilterProductId}>
               <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="المنتج" />
@@ -232,25 +301,42 @@ export function ImageReviewTab() {
               <SelectContent>
                 <SelectItem value="all">كل المنتجات</SelectItem>
                 {productOptions.map(([id, { name, count }]) => (
-                  <SelectItem key={id} value={id}>{name} ({count})</SelectItem>
+                  <SelectItem key={id} value={id}>
+                    {name} ({count})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {items.length > 0 && (
               <>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={selectedIds.size === items.length && items.length > 0} onCheckedChange={toggleSelectAll} />
+                  <Checkbox
+                    checked={selectedIds.size === items.length && items.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
                   <span className="text-sm text-muted-foreground">تحديد الكل</span>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button size="sm" variant="default" disabled={bulkActing || selectedIds.size === 0} onClick={() => handleBulkAction('approve')} className="flex-1 sm:flex-none">
-                    {bulkActing && <Loader2 className="h-4 w-4 animate-spin ml-1" />}
-                    <CheckCircle className="h-4 w-4 ml-1" />
+                <div className="flex w-full gap-2 sm:w-auto">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    disabled={bulkActing || selectedIds.size === 0}
+                    onClick={() => handleBulkAction('approve')}
+                    className="flex-1 sm:flex-none"
+                  >
+                    {bulkActing && <Loader2 className="ml-1 h-4 w-4 animate-spin" />}
+                    <CheckCircle className="ml-1 h-4 w-4" />
                     موافقة ({selectedIds.size})
                   </Button>
-                  <Button size="sm" variant="outline" disabled={bulkActing || selectedIds.size === 0} onClick={() => handleBulkAction('reject')} className="flex-1 sm:flex-none">
-                    {bulkActing && <Loader2 className="h-4 w-4 animate-spin ml-1" />}
-                    <XCircle className="h-4 w-4 ml-1" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkActing || selectedIds.size === 0}
+                    onClick={() => handleBulkAction('reject')}
+                    className="flex-1 sm:flex-none"
+                  >
+                    {bulkActing && <Loader2 className="ml-1 h-4 w-4 animate-spin" />}
+                    <XCircle className="ml-1 h-4 w-4" />
                     رفض ({selectedIds.size})
                   </Button>
                 </div>
@@ -261,37 +347,89 @@ export function ImageReviewTab() {
         <CardContent>
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-green-300 bg-green-50/50 py-16 text-center">
-              <Camera className="h-12 w-12 mb-4 text-green-500" />
+              <Camera className="mb-4 h-12 w-12 text-green-500" />
               <p className="text-lg font-medium text-green-700">لا توجد صور في انتظار المراجعة</p>
-              <p className="text-sm text-green-600 mt-1">جميع الصور تمت مراجعتها ✓</p>
+              <p className="mt-1 text-sm text-green-600">جميع الصور تمت مراجعتها ✓</p>
             </div>
           ) : (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {items.map((img) => (
-                <div key={img.id} className="rounded-lg border bg-card p-3 space-y-2" tabIndex={0}
+                <div
+                  key={img.id}
+                  className="space-y-2 rounded-lg border bg-card p-3"
+                  tabIndex={0}
                   onKeyDown={(e) => {
                     const tag = (e.target as HTMLElement)?.tagName
                     if (tag === 'INPUT' || tag === 'TEXTAREA') return
-                    if (e.key === ' ') { e.preventDefault(); toggleSelect(img.id) }
-                    if (e.key === 'a' || e.key === 'A') { e.preventDefault(); handleAction(img.id, 'approve') }
-                    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); handleAction(img.id, 'reject') }
+                    if (e.key === ' ') {
+                      e.preventDefault()
+                      toggleSelect(img.id)
+                    }
+                    if (e.key === 'a' || e.key === 'A') {
+                      e.preventDefault()
+                      handleAction(img.id, 'approve')
+                    }
+                    if (e.key === 'r' || e.key === 'R') {
+                      e.preventDefault()
+                      handleAction(img.id, 'reject')
+                    }
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <Checkbox checked={selectedIds.has(img.id)} onCheckedChange={() => toggleSelect(img.id)} />
-                    <button type="button" aria-label={`عرض صورة ${img.productName}`} className="aspect-square flex-1 rounded-md bg-muted overflow-hidden min-w-0 cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none relative" onClick={() => setLightboxImage(img)}>
-                      <PendingImage src={img.url} alt={img.productName} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                    <Checkbox
+                      checked={selectedIds.has(img.id)}
+                      onCheckedChange={() => toggleSelect(img.id)}
+                    />
+                    <button
+                      type="button"
+                      aria-label={`عرض صورة ${img.productName}`}
+                      className="relative aspect-square min-w-0 flex-1 cursor-pointer overflow-hidden rounded-md bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                      onClick={() => setLightboxImage(img)}
+                    >
+                      <PendingImage
+                        src={img.url}
+                        alt={img.productName}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
                     </button>
                   </div>
-                  <p className="font-medium text-sm truncate" title={img.productName}>{img.productName}</p>
-                  {img.qualityScore != null && <p className="text-muted-foreground text-xs">جودة: {Math.round(img.qualityScore * 100)}%</p>}
+                  <p className="truncate text-sm font-medium" title={img.productName}>
+                    {img.productName}
+                  </p>
+                  {img.qualityScore != null && (
+                    <p className="text-xs text-muted-foreground">
+                      جودة: {Math.round(img.qualityScore * 100)}%
+                    </p>
+                  )}
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="default" className="flex-1" disabled={actingId === img.id} onClick={() => handleAction(img.id, 'approve')}>
-                      {actingId === img.id ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : <CheckCircle className="h-4 w-4 ml-1" />}
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
+                      disabled={actingId === img.id}
+                      onClick={() => handleAction(img.id, 'approve')}
+                    >
+                      {actingId === img.id ? (
+                        <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="ml-1 h-4 w-4" />
+                      )}
                       <span className="hidden sm:inline">موافقة</span>
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1" disabled={actingId === img.id} onClick={() => handleAction(img.id, 'reject')}>
-                      {actingId === img.id ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : <XCircle className="h-4 w-4 ml-1" />}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      disabled={actingId === img.id}
+                      onClick={() => handleAction(img.id, 'reject')}
+                    >
+                      {actingId === img.id ? (
+                        <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                      ) : (
+                        <XCircle className="ml-1 h-4 w-4" />
+                      )}
                       <span className="hidden sm:inline">رفض</span>
                     </Button>
                   </div>
@@ -300,12 +438,24 @@ export function ImageReviewTab() {
             </div>
           )}
           {meta && meta.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t mt-4">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <div className="mt-4 flex items-center justify-between border-t pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
                 السابق
               </Button>
-              <span className="text-sm text-muted-foreground">صفحة {page} من {meta.totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page >= meta.totalPages} onClick={() => setPage((p) => p + 1)}>
+              <span className="text-sm text-muted-foreground">
+                صفحة {page} من {meta.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= meta.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
                 التالي
               </Button>
             </div>
@@ -321,23 +471,53 @@ export function ImageReviewTab() {
           </DialogHeader>
           {lightboxImage && (
             <div className="space-y-4">
-              <div className="rounded-lg overflow-hidden bg-muted relative w-full h-[60vh] min-h-[280px] max-h-[600px]">
-                <PendingImage src={lightboxImage.url} alt={lightboxImage.productName} fill className="object-contain" sizes="95vw" />
+              <div className="relative h-[60vh] max-h-[600px] min-h-[280px] w-full overflow-hidden rounded-lg bg-muted">
+                <PendingImage
+                  src={lightboxImage.url}
+                  alt={lightboxImage.productName}
+                  fill
+                  className="object-contain"
+                  sizes="95vw"
+                />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
-                  {lightboxImage.qualityScore != null && <p>جودة: {Math.round(lightboxImage.qualityScore * 100)}%</p>}
-                  <p>التاريخ: {format(new Date(lightboxImage.createdAt), 'dd/MM/yyyy HH:mm', { locale: arSA })}</p>
+                  {lightboxImage.qualityScore != null && (
+                    <p>جودة: {Math.round(lightboxImage.qualityScore * 100)}%</p>
+                  )}
+                  <p>
+                    التاريخ:{' '}
+                    {format(new Date(lightboxImage.createdAt), 'dd/MM/yyyy HH:mm', {
+                      locale: arSA,
+                    })}
+                  </p>
                 </div>
                 <p className="text-xs">A للموافقة | R للرفض</p>
               </div>
               <div className="flex gap-2">
-                <Button className="flex-1" disabled={actingId === lightboxImage.id} onClick={() => handleAction(lightboxImage.id, 'approve')}>
-                  {actingId === lightboxImage.id ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <CheckCircle className="h-4 w-4 ml-2" />}
+                <Button
+                  className="flex-1"
+                  disabled={actingId === lightboxImage.id}
+                  onClick={() => handleAction(lightboxImage.id, 'approve')}
+                >
+                  {actingId === lightboxImage.id ? (
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="ml-2 h-4 w-4" />
+                  )}
                   موافقة
                 </Button>
-                <Button variant="outline" className="flex-1" disabled={actingId === lightboxImage.id} onClick={() => handleAction(lightboxImage.id, 'reject')}>
-                  {actingId === lightboxImage.id ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <XCircle className="h-4 w-4 ml-2" />}
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={actingId === lightboxImage.id}
+                  onClick={() => handleAction(lightboxImage.id, 'reject')}
+                >
+                  {actingId === lightboxImage.id ? (
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <XCircle className="ml-2 h-4 w-4" />
+                  )}
                   رفض
                 </Button>
               </div>

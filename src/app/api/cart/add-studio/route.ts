@@ -46,16 +46,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Studio not found' }, { status: 404 })
   }
 
-  const startDate = body.start.includes('T') ? new Date(body.start) : new Date(`${body.date}T${body.start}`)
+  const startDate = body.start.includes('T')
+    ? new Date(body.start)
+    : new Date(`${body.date}T${body.start}`)
   if (Number.isNaN(startDate.getTime())) {
     return NextResponse.json({ error: 'Invalid start time' }, { status: 400 })
   }
   const endDate = new Date(startDate.getTime() + body.duration * 60 * 60 * 1000)
 
   let total = 0
-  const selectedPkg = body.package
-    ? studio.packages.find((p) => p.id === body.package)
-    : null
+  const selectedPkg = body.package ? studio.packages.find((p) => p.id === body.package) : null
   if (selectedPkg) {
     total = Number(selectedPkg.price)
   } else {

@@ -40,7 +40,7 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   const { t, locale } = useLocale()
   const [imageFailed, setImageFailed] = useState(false)
   const handleImageError = useCallback(() => setImageFailed(true), [])
-  
+
   // Get localized name, fallback to model or SKU
   const displayName = getLocalizedName(item as any, locale) || item.model || item.sku || item.id
 

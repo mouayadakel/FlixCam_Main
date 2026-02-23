@@ -6,14 +6,14 @@ Use this checklist to verify the mobile overhaul (plan: Mobile Responsive Overha
 
 Test at these viewports:
 
-| Device        | Width × Height |
-|---------------|----------------|
-| iPhone SE     | 375 × 667      |
-| iPhone 14     | 390 × 844      |
-| iPhone 11/XR  | 414 × 896      |
-| iPad          | 768 × 1024     |
-| Pixel 4       | 360 × 800      |
-| Pixel 6       | 412 × 915      |
+| Device       | Width × Height |
+| ------------ | -------------- |
+| iPhone SE    | 375 × 667      |
+| iPhone 14    | 390 × 844      |
+| iPhone 11/XR | 414 × 896      |
+| iPad         | 768 × 1024     |
+| Pixel 4      | 360 × 800      |
+| Pixel 6      | 412 × 915      |
 
 ## Per-page checklist
 
@@ -38,12 +38,12 @@ For every page in Phase 2 (public) and Phase 3 (admin):
 
 Run Lighthouse in Chrome (mobile mode) on key pages:
 
-| Metric            | Target |
-|-------------------|--------|
-| Performance       | ≥ 80   |
-| Accessibility     | ≥ 90   |
-| Best Practices    | ≥ 90   |
-| SEO               | ≥ 90   |
+| Metric         | Target |
+| -------------- | ------ |
+| Performance    | ≥ 80   |
+| Accessibility  | ≥ 90   |
+| Best Practices | ≥ 90   |
+| SEO            | ≥ 90   |
 
 ## Definition of done
 

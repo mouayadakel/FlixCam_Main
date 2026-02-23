@@ -15,10 +15,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/admin/imports/[id]/errors.csv
  * Download CSV error report
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

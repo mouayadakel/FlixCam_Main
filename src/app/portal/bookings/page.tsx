@@ -145,21 +145,25 @@ export default async function PortalBookingsPage({
                 >
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="text-lg font-medium">{t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}</span>
+                      <span className="text-lg font-medium">
+                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
+                      </span>
                       {getStatusBadge(booking.status)}
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div>
                         <span className="font-medium">{t('ar', 'portal.dates')}:</span>{' '}
-                        {t('ar', 'portal.fromTo').replace('{from}', formatDate(booking.startDate)).replace('{to}', formatDate(booking.endDate))}
+                        {t('ar', 'portal.fromTo')
+                          .replace('{from}', formatDate(booking.startDate))
+                          .replace('{to}', formatDate(booking.endDate))}
                       </div>
                       <div>
                         <span className="font-medium">{t('ar', 'portal.amount')}:</span>{' '}
                         {formatCurrency(booking.totalAmount.toNumber())}
                       </div>
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.equipmentCount')}:</span> {booking.equipment.length}{' '}
-                        {t('ar', 'portal.itemUnit')}
+                        <span className="font-medium">{t('ar', 'portal.equipmentCount')}:</span>{' '}
+                        {booking.equipment.length} {t('ar', 'portal.itemUnit')}
                       </div>
                     </div>
                   </div>

@@ -58,9 +58,7 @@ export default function ForgotPasswordPage() {
     return (
       <main className="container mx-auto max-w-md px-4 py-12">
         <h1 className="mb-4 text-2xl font-bold">{i18n('auth.checkYourEmail')}</h1>
-        <p className="mb-6 text-muted-foreground">
-          {i18n('auth.resetLinkSent')}
-        </p>
+        <p className="mb-6 text-muted-foreground">{i18n('auth.resetLinkSent')}</p>
         <Button asChild variant="outline">
           <Link href="/login">{i18n('auth.backToLogin')}</Link>
         </Button>
@@ -71,9 +69,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="container mx-auto max-w-md px-4 py-12">
       <h1 className="mb-4 text-2xl font-bold">{i18n('auth.forgotPassword')}</h1>
-      <p className="mb-6 text-muted-foreground">
-        {i18n('auth.forgotPasswordDesc')}
-      </p>
+      <p className="mb-6 text-muted-foreground">{i18n('auth.forgotPasswordDesc')}</p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="email">{i18n('auth.email')}</Label>

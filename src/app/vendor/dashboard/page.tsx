@@ -82,18 +82,24 @@ export default async function VendorDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">{t('ar', 'vendor.dashboard')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('ar', 'vendor.welcome').replace('{name}', vendor.companyName)}</p>
+        <p className="mt-2 text-muted-foreground">
+          {t('ar', 'vendor.welcome').replace('{name}', vendor.companyName)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.listedEquipment')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('ar', 'vendor.listedEquipment')}
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{equipmentCount}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.activeEquipment')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('ar', 'vendor.activeEquipment')}
+            </p>
           </CardContent>
         </Card>
 
@@ -115,7 +121,9 @@ export default async function VendorDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(monthNet)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.netAfterCommission')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('ar', 'vendor.netAfterCommission')}
+            </p>
           </CardContent>
         </Card>
 

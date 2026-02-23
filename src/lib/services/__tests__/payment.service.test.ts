@@ -44,28 +44,30 @@ describe('PaymentService', () => {
     })
 
     it('throws NotFoundError when booking does not exist', async () => {
-      (mockPrisma.booking.findFirst as jest.Mock).mockResolvedValue(null)
+      ;(mockPrisma.booking.findFirst as jest.Mock).mockResolvedValue(null)
       await expect(PaymentService.create(validInput)).rejects.toThrow(NotFoundError)
     })
 
     it('throws ValidationError when booking is not in PAYMENT_PENDING state', async () => {
-      (mockPrisma.booking.findFirst as jest.Mock).mockResolvedValue({
-        id: 'booking-1',
-        status: BookingStatus.DRAFT,
-      } as any)
-      (mockPrisma.payment.findFirst as jest.Mock).mockResolvedValue(null)
+      ;(mockPrisma.booking.findFirst as jest.Mock)
+        .mockResolvedValue({
+          id: 'booking-1',
+          status: BookingStatus.DRAFT,
+        } as any)(mockPrisma.payment.findFirst as jest.Mock)
+        .mockResolvedValue(null)
       await expect(PaymentService.create(validInput)).rejects.toThrow(ValidationError)
     })
 
     it('throws ValidationError when payment already exists for booking', async () => {
-      (mockPrisma.booking.findFirst as jest.Mock).mockResolvedValue({
-        id: 'booking-1',
-        status: BookingStatus.PAYMENT_PENDING,
-      } as any)
-      (mockPrisma.payment.findFirst as jest.Mock).mockResolvedValue({
-        id: 'pay-1',
-        status: PaymentStatus.PENDING,
-      } as any)
+      ;(mockPrisma.booking.findFirst as jest.Mock)
+        .mockResolvedValue({
+          id: 'booking-1',
+          status: BookingStatus.PAYMENT_PENDING,
+        } as any)(mockPrisma.payment.findFirst as jest.Mock)
+        .mockResolvedValue({
+          id: 'pay-1',
+          status: PaymentStatus.PENDING,
+        } as any)
       await expect(PaymentService.create(validInput)).rejects.toThrow(ValidationError)
     })
   })

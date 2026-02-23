@@ -12,15 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  ExternalLink,
-  RefreshCw,
-  Loader2,
-  Filter,
-} from 'lucide-react'
+import { Bell, Check, CheckCheck, ExternalLink, RefreshCw, Loader2, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocale } from '@/hooks/use-locale'
 
@@ -81,9 +73,7 @@ export default function PortalNotificationsPage() {
   const markAsRead = async (id: string) => {
     await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' }).catch(() => {})
     setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n
-      )
+      prev.map((n) => (n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n))
     )
     setUnreadCount((c) => Math.max(0, c - 1))
   }
@@ -214,11 +204,11 @@ export default function PortalNotificationsPage() {
           ) : notifications.length === 0 ? (
             <div className="py-12 text-center">
               <Bell className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
-              <p className="text-lg font-medium text-muted-foreground">{t('portal.noNotifications')}</p>
+              <p className="text-lg font-medium text-muted-foreground">
+                {t('portal.noNotifications')}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {filter === 'unread'
-                  ? t('portal.allRead')
-                  : t('portal.notificationsWillAppear')}
+                {filter === 'unread' ? t('portal.allRead') : t('portal.notificationsWillAppear')}
               </p>
             </div>
           ) : (
@@ -277,9 +267,7 @@ export default function PortalNotificationsPage() {
                             <ExternalLink className="h-3 w-3" />
                           </Link>
                         )}
-                        {!n.read && (
-                          <span className="h-2 w-2 rounded-full bg-primary" />
-                        )}
+                        {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
                       </div>
                     </div>
                   </div>
@@ -295,9 +283,7 @@ export default function PortalNotificationsPage() {
                     onClick={() => fetchNotifications(notifications.length, true)}
                     disabled={loadingMore}
                   >
-                    {loadingMore ? (
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    ) : null}
+                    {loadingMore ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : null}
                     {t('portal.loadMore')}
                   </Button>
                 </div>

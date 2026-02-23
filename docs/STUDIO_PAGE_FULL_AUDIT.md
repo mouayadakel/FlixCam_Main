@@ -9,20 +9,20 @@
 
 ### 1.1 Public Routes
 
-| Route | Type | Data Source | Feature Flag |
-|-------|------|-------------|--------------|
-| `/studios` | Server | `prisma.studio.findMany` direct | `enable_studios` |
+| Route             | Type   | Data Source                     | Feature Flag     |
+| ----------------- | ------ | ------------------------------- | ---------------- |
+| `/studios`        | Server | `prisma.studio.findMany` direct | `enable_studios` |
 | `/studios/[slug]` | Server | `StudioService.getBySlugPublic` | `enable_studios` |
 
 ### 1.2 APIs
 
-| Endpoint | Auth | Purpose |
-|----------|------|---------|
-| `GET /api/public/studios` | None | List studios (cached) |
-| `GET /api/public/studios/[slug]` | None | Single studio by slug (cached) |
-| `POST /api/public/studios/[slug]/availability` | None | Available time slots for date |
-| `POST /api/cart/add-studio` | Optional | Add studio to cart from URL params |
-| `GET/PUT /api/admin/studios/*` | Admin | CMS CRUD |
+| Endpoint                                       | Auth     | Purpose                            |
+| ---------------------------------------------- | -------- | ---------------------------------- |
+| `GET /api/public/studios`                      | None     | List studios (cached)              |
+| `GET /api/public/studios/[slug]`               | None     | Single studio by slug (cached)     |
+| `POST /api/public/studios/[slug]/availability` | None     | Available time slots for date      |
+| `POST /api/cart/add-studio`                    | Optional | Add studio to cart from URL params |
+| `GET/PUT /api/admin/studios/*`                 | Admin    | CMS CRUD                           |
 
 ### 1.3 Components
 
@@ -77,12 +77,21 @@ const bookings = await prisma.booking.findMany({
 **Problem:** For studio bookings, the actual slot is stored in `studioStartTime` and `studioEndTime`. The `StudioService.checkAvailability` correctly uses these fields. The public availability API should use `studioStartTime`/`studioEndTime` when present, or `startDate`/`endDate` as fallback.
 
 **Recommendation:** Use `OR` condition:
+
 ```typescript
 OR: [
-  { studioStartTime: { not: null }, studioEndTime: { not: null },
-    studioStartTime: { lt: dayEnd }, studioEndTime: { gt: dayStart } },
-  { studioStartTime: null, studioEndTime: null,
-    startDate: { lt: dayEnd }, endDate: { gt: dayStart } }
+  {
+    studioStartTime: { not: null },
+    studioEndTime: { not: null },
+    studioStartTime: { lt: dayEnd },
+    studioEndTime: { gt: dayStart },
+  },
+  {
+    studioStartTime: null,
+    studioEndTime: null,
+    startDate: { lt: dayEnd },
+    endDate: { gt: dayStart },
+  },
 ]
 ```
 
@@ -157,6 +166,7 @@ OR: [
 ### 4.1 Duplicate Studio Systems
 
 **Issue:** Two admin flows exist:
+
 - `/admin/studios` – uses `GET /api/studios` (legacy)
 - `/admin/cms/studios` – uses `GET /api/admin/studios` (CMS)
 
@@ -251,12 +261,12 @@ The sidebar has both "الاستوديوهات" (`/admin/studios`) and "CMS > ا
 
 ## 7. Summary Table
 
-| Severity | Count | Top Items |
-|----------|-------|-----------|
-| Critical | 3 | Studio-only checkout broken, availability API wrong fields, no error feedback in CartStudioSync |
-| High | 5 | List page cache, cache invalidation, same-day booking, package duration bug, sortOrder nulls |
-| Medium | 5 | Duplicate admin systems, wrong permissions, loading state, API shape, durationOptions |
-| Low | 4 | Sitemap slugs, placeholder, timezone, a11y |
+| Severity | Count | Top Items                                                                                       |
+| -------- | ----- | ----------------------------------------------------------------------------------------------- |
+| Critical | 3     | Studio-only checkout broken, availability API wrong fields, no error feedback in CartStudioSync |
+| High     | 5     | List page cache, cache invalidation, same-day booking, package duration bug, sortOrder nulls    |
+| Medium   | 5     | Duplicate admin systems, wrong permissions, loading state, API shape, durationOptions           |
+| Low      | 4     | Sitemap slugs, placeholder, timezone, a11y                                                      |
 
 ---
 

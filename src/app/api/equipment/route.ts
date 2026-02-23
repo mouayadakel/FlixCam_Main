@@ -58,10 +58,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const skipRaw = parseInt(searchParams.get('skip') ?? searchParams.get('page') ?? '0', 10)
-    const takeRaw = parseInt(
-      searchParams.get('take') ?? searchParams.get('limit') ?? '50',
-      10
-    )
+    const takeRaw = parseInt(searchParams.get('take') ?? searchParams.get('limit') ?? '50', 10)
     const skip = Number.isNaN(skipRaw) || skipRaw < 0 ? 0 : Math.min(skipRaw, 10000)
     const take = Number.isNaN(takeRaw) || takeRaw < 1 ? 50 : Math.min(takeRaw, 500)
 
@@ -119,10 +116,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = createEquipmentSchema.safeParse(rest)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
 
     const equipment = await EquipmentService.createEquipment({

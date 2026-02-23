@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -104,7 +98,9 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
     let list = addOns
     if (search.trim()) {
       const q = search.toLowerCase()
-      list = list.filter((a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q))
+      list = list.filter(
+        (a) => a.name.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q)
+      )
     }
     if (catFilter !== 'all') {
       list = list.filter((a) => a.category === catFilter)
@@ -266,7 +262,9 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
                   <Label>التصنيف</Label>
                   <Select
                     value={form.category || 'none'}
-                    onValueChange={(v) => setForm((f) => ({ ...f, category: v === 'none' ? '' : v }))}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, category: v === 'none' ? '' : v }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر تصنيف" />
@@ -274,7 +272,9 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
                     <SelectContent>
                       <SelectItem value="none">— بدون تصنيف</SelectItem>
                       {ADDON_CATEGORIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -300,7 +300,15 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
                   dir="ltr"
                 />
                 <p className="text-xs text-muted-foreground">
-                  اسم الأيقونة من مكتبة Lucide — <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer" className="text-primary underline">عرض الأيقونات</a>
+                  اسم الأيقونة من مكتبة Lucide —{' '}
+                  <a
+                    href="https://lucide.dev/icons"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
+                  >
+                    عرض الأيقونات
+                  </a>
                 </p>
               </div>
               <div className="space-y-2">
@@ -351,7 +359,9 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
             <SelectContent>
               <SelectItem value="all">جميع التصنيفات</SelectItem>
               {ADDON_CATEGORIES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -376,13 +386,25 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{a.name}</p>
-                      {catLabel && <Badge variant="outline" className="text-[10px]">{catLabel}</Badge>}
-                      {!a.isActive && <Badge variant="secondary" className="text-[10px]">معطّل</Badge>}
-                      {hasSale && <Badge className="bg-success-50 text-success-700 text-[10px]">عرض</Badge>}
+                      {catLabel && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {catLabel}
+                        </Badge>
+                      )}
+                      {!a.isActive && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          معطّل
+                        </Badge>
+                      )}
+                      {hasSale && (
+                        <Badge className="bg-success-50 text-[10px] text-success-700">عرض</Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       {hasSale && <span className="line-through">{a.originalPrice} ر.س</span>}
-                      <span className={hasSale ? 'font-semibold text-primary' : ''}>{a.price} ر.س</span>
+                      <span className={hasSale ? 'font-semibold text-primary' : ''}>
+                        {a.price} ر.س
+                      </span>
                       {a.description && <span className="truncate">— {a.description}</span>}
                     </div>
                   </div>

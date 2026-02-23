@@ -63,10 +63,7 @@ export async function POST(request: NextRequest) {
     } else if (productIds?.length) {
       ids = productIds
     } else {
-      return NextResponse.json(
-        { error: 'Provide productIds or fillAll: true' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Provide productIds or fillAll: true' }, { status: 400 })
     }
 
     if (ids.length === 0) {
@@ -90,7 +87,9 @@ export async function POST(request: NextRequest) {
       if (activeJob) {
         const now = Date.now()
         const triggeredAge = now - new Date(activeJob.triggeredAt).getTime()
-        const startedAge = activeJob.startedAt ? now - new Date(activeJob.startedAt).getTime() : Infinity
+        const startedAge = activeJob.startedAt
+          ? now - new Date(activeJob.startedAt).getTime()
+          : Infinity
         const isStale =
           (activeJob.status === JobStatus.PENDING && triggeredAge > STALE_PENDING_MS) ||
           (activeJob.status === JobStatus.RUNNING && startedAge > STALE_RUNNING_MS)
@@ -100,7 +99,12 @@ export async function POST(request: NextRequest) {
             data: {
               status: JobStatus.FAILED,
               completedAt: new Date(),
-              errorLog: [{ error: 'Auto-cleaned: stale job exceeded timeout', timestamp: new Date().toISOString() }] as object,
+              errorLog: [
+                {
+                  error: 'Auto-cleaned: stale job exceeded timeout',
+                  timestamp: new Date().toISOString(),
+                },
+              ] as object,
             },
           })
           // Stale job cleared — proceed to create new job below
@@ -174,11 +178,10 @@ export async function POST(request: NextRequest) {
     console.error('Backfill trigger failed:', error)
     const message = isQueueConnectionError(error)
       ? 'قائمة المعالجة غير متاحة. تأكد من تشغيل Redis.'
-      : error instanceof Error ? error.message : 'فشل تشغيل الملء'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+      : error instanceof Error
+        ? error.message
+        : 'فشل تشغيل الملء'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -230,7 +233,8 @@ export async function GET(request: NextRequest) {
         ? noStack.slice(0, MAX_ERROR_MESSAGE_LENGTH) + '…'
         : noStack
     }
-    const rawLog = (job.errorLog as Array<{ productId?: string; error?: unknown; timestamp?: string }>) ?? []
+    const rawLog =
+      (job.errorLog as Array<{ productId?: string; error?: unknown; timestamp?: string }>) ?? []
     const errorLog = rawLog.map((entry) => ({
       ...entry,
       error: entry.error != null ? sanitizeError(entry.error) : undefined,

@@ -70,7 +70,11 @@ export function OrderSummary({ holdExpiresAt, depositAmount, className }: OrderS
         {items.map((item) => (
           <li key={item.id} className="flex justify-between text-sm">
             <span className="text-text-heading">
-              {(item as any).name || ({ EQUIPMENT: 'معدة', STUDIO: 'استوديو', ADDON: 'إضافة', PACKAGE: 'باقة' }[item.itemType] ?? item.itemType)}
+              {(item as any).name ||
+                ({ EQUIPMENT: 'معدة', STUDIO: 'استوديو', ADDON: 'إضافة', PACKAGE: 'باقة' }[
+                  item.itemType
+                ] ??
+                  item.itemType)}
               {item.quantity > 1 && ` × ${item.quantity}`}
               {item.startDate && item.endDate && (
                 <span className="block text-xs text-text-muted">

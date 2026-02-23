@@ -56,9 +56,7 @@ async function getFeaturedDisplayCount(): Promise<number> {
   if (row?.value == null) return FEATURED_DISPLAY_COUNT_DEFAULT
   const n = parseInt(row.value, 10)
   const allowed = FEATURED_DISPLAY_COUNT_ALLOWED as readonly number[]
-  return Number.isNaN(n) || !allowed.includes(n)
-    ? FEATURED_DISPLAY_COUNT_DEFAULT
-    : n
+  return Number.isNaN(n) || !allowed.includes(n) ? FEATURED_DISPLAY_COUNT_DEFAULT : n
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -205,7 +203,16 @@ export default async function PublicHomePage() {
   let showKitTeaser = false
   let showStudios = false
   try {
-    ;[featured, newArrivals, categories, stats, heroBanner, heroImageUrl, showKitTeaser, showStudios] = await Promise.all([
+    ;[
+      featured,
+      newArrivals,
+      categories,
+      stats,
+      heroBanner,
+      heroImageUrl,
+      showKitTeaser,
+      showStudios,
+    ] = await Promise.all([
       getFeaturedEquipment(),
       getNewArrivals(),
       getCategoriesForHome(),

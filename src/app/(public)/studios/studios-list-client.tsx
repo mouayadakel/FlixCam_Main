@@ -3,7 +3,16 @@
 import { useState, useMemo } from 'react'
 import { useLocale } from '@/hooks/use-locale'
 import { StudioCard } from '@/components/features/studio/studio-card'
-import { Search, SlidersHorizontal, Building2, Sparkles, MapPin, Users, DollarSign, X } from 'lucide-react'
+import {
+  Search,
+  SlidersHorizontal,
+  Building2,
+  Sparkles,
+  MapPin,
+  Users,
+  DollarSign,
+  X,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -153,9 +162,7 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
             {t('nav.studios')}
           </div>
           <h1 className="mb-3 text-hero-title text-white">{t('nav.studios')}</h1>
-          <p className="text-body-main text-white/85">
-            {t('studios.heroSubtitle')}
-          </p>
+          <p className="text-body-main text-white/85">{t('studios.heroSubtitle')}</p>
           <div className="mt-6 flex items-center gap-3 sm:justify-center">
             <Badge className="border-white/20 bg-white/15 text-white backdrop-blur-sm">
               <Sparkles className="mr-1 h-3 w-3" />
@@ -225,7 +232,9 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   >
                     <option value="all">{t('studios.filterAllTypes')}</option>
                     {studioTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -242,7 +251,9 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 >
                   {PRICE_RANGES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -258,7 +269,9 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 >
                   {CAPACITY_RANGES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -276,7 +289,9 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   >
                     <option value="all">{t('studios.filterAllLocations')}</option>
                     {locations.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -284,7 +299,12 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
             </div>
             {activeFilterCount > 0 && (
               <div className="mt-3 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-xs text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="gap-1.5 text-xs text-muted-foreground"
+                >
                   <X className="h-3 w-3" />
                   {t('studios.clearFilters')}
                 </Button>
@@ -321,9 +341,7 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
             <Building2 className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="mb-1 text-lg font-semibold text-foreground">{t('common.noResults')}</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            {t('studios.noResultsHint')}
-          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('studios.noResultsHint')}</p>
         </div>
       )}
     </div>

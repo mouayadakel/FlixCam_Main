@@ -106,7 +106,8 @@ function matchSheetToCategory(
 ): { categoryId: string; subCategoryId: string | null } {
   if (!categories.length || !sheetName.trim()) return { categoryId: '', subCategoryId: null }
   const sheetNorm = normalizeForMatch(sheetName)
-  if (!sheetNorm || sheetNorm.length < MIN_MATCH_LENGTH) return { categoryId: '', subCategoryId: null }
+  if (!sheetNorm || sheetNorm.length < MIN_MATCH_LENGTH)
+    return { categoryId: '', subCategoryId: null }
 
   const roots = categories.filter((c) => !c.parentId)
   const children = categories.filter((c) => c.parentId)
@@ -262,18 +263,16 @@ export default function ImportPage() {
 
       // Auto-match sheet names to categories/subcategories
       const categories = lookups?.categories ?? []
-      const initialMapping: SheetMapping[] = sheets.map(
-        (sheet: SheetMetadata, index: number) => {
-          const matched = matchSheetToCategory(sheet.name, categories)
-          return {
-            sheetName: sheet.name,
-            categoryId: matched.categoryId,
-            subCategoryId: matched.subCategoryId,
-            selected: index === 0,
-            selectedRows: [],
-          }
+      const initialMapping: SheetMapping[] = sheets.map((sheet: SheetMetadata, index: number) => {
+        const matched = matchSheetToCategory(sheet.name, categories)
+        return {
+          sheetName: sheet.name,
+          categoryId: matched.categoryId,
+          subCategoryId: matched.subCategoryId,
+          selected: index === 0,
+          selectedRows: [],
         }
-      )
+      })
       setMapping(initialMapping)
       setSkippedNameRows({})
 
@@ -458,7 +457,13 @@ export default function ImportPage() {
           previewRows.push({
             name,
             shortDescription:
-              row['Short Description'] ?? row['short_description'] ?? row['Description'] ?? row['Discription '] ?? row['Discription'] ?? row['وصف مختصر'] ?? '',
+              row['Short Description'] ??
+              row['short_description'] ??
+              row['Description'] ??
+              row['Discription '] ??
+              row['Discription'] ??
+              row['وصف مختصر'] ??
+              '',
             longDescription:
               row['Long Description'] ?? row['long_description'] ?? row['وصف طويل'] ?? '',
             category: m.categoryId,
@@ -466,7 +471,11 @@ export default function ImportPage() {
             brand: row['Brand'] ?? row['brand'] ?? row['Manufacturer'] ?? row['الماركة'] ?? '',
             specifications: row['Specifications'] ?? row['specifications'] ?? {},
             boxContents:
-              row['WITB'] ?? row['Box Contents'] ?? row['box_contents'] ?? row["What's in the box"] ?? '',
+              row['WITB'] ??
+              row['Box Contents'] ??
+              row['box_contents'] ??
+              row["What's in the box"] ??
+              '',
             sheetName: m.sheetName,
             excelRowNumber: excelRowNum,
           })
@@ -476,7 +485,8 @@ export default function ImportPage() {
     if (previewRows.length === 0) {
       toast({
         title: 'No rows to preview',
-        description: 'Select a category for the sheet and ensure rows have a name (Name / Product Name / اسم).',
+        description:
+          'Select a category for the sheet and ensure rows have a name (Name / Product Name / اسم).',
         variant: 'destructive',
       })
       return
@@ -622,7 +632,15 @@ export default function ImportPage() {
   //   }
   // }, [jobId])
 
-  const currentStep = !file ? 0 : sheetsMetadata.length === 0 ? 0 : jobId ? 3 : allSheetsMapped ? 2 : 1
+  const currentStep = !file
+    ? 0
+    : sheetsMetadata.length === 0
+      ? 0
+      : jobId
+        ? 3
+        : allSheetsMapped
+          ? 2
+          : 1
   const stepLabels = ['رفع الملف', 'ربط الأعمدة', 'معاينة واستيراد', 'النتائج']
 
   return (
@@ -630,30 +648,42 @@ export default function ImportPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">استيراد المعدات</h1>
-          <p className="text-muted-foreground mt-1">استيراد ذكي من Excel مع ملء تلقائي بالذكاء الاصطناعي</p>
+          <p className="mt-1 text-muted-foreground">
+            استيراد ذكي من Excel مع ملء تلقائي بالذكاء الاصطناعي
+          </p>
         </div>
       </div>
 
       {/* Step indicator */}
       <nav className="flex items-center gap-1">
         {stepLabels.map((label, i) => (
-          <div key={i} className="flex items-center gap-1 flex-1">
-            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium w-full transition-colors ${
-              i === currentStep ? 'bg-primary text-primary-foreground shadow-sm' :
-              i < currentStep ? 'bg-green-100 text-green-800' :
-              'bg-muted text-muted-foreground/50'
-            }`}>
-              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                i < currentStep ? 'bg-green-200 text-green-800' :
-                i === currentStep ? 'bg-primary-foreground/20 text-primary-foreground' :
-                'bg-background text-muted-foreground'
-              }`}>
+          <div key={i} className="flex flex-1 items-center gap-1">
+            <div
+              className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                i === currentStep
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : i < currentStep
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-muted text-muted-foreground/50'
+              }`}
+            >
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  i < currentStep
+                    ? 'bg-green-200 text-green-800'
+                    : i === currentStep
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'bg-background text-muted-foreground'
+                }`}
+              >
                 {i < currentStep ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
               </span>
-              <span className="hidden sm:inline truncate">{label}</span>
+              <span className="hidden truncate sm:inline">{label}</span>
             </div>
             {i < stepLabels.length - 1 && (
-              <div className={`h-0.5 w-4 shrink-0 ${i < currentStep ? 'bg-green-400' : 'bg-muted'}`} />
+              <div
+                className={`h-0.5 w-4 shrink-0 ${i < currentStep ? 'bg-green-400' : 'bg-muted'}`}
+              />
             )}
           </div>
         ))}
@@ -666,42 +696,47 @@ export default function ImportPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>وضع الاستيراد</Label>
-            <Select
-              value={importMode}
-              onValueChange={(v) => setImportMode(v as ImportMode)}
-            >
+            <Select value={importMode} onValueChange={(v) => setImportMode(v as ImportMode)}>
               <SelectTrigger className="max-w-md">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="preview_edit">{IMPORT_MODE_LABELS.preview_edit}</SelectItem>
-                <SelectItem value="import_then_fill">{IMPORT_MODE_LABELS.import_then_fill}</SelectItem>
-                <SelectItem value="import_autofill">{IMPORT_MODE_LABELS.import_autofill}</SelectItem>
+                <SelectItem value="import_then_fill">
+                  {IMPORT_MODE_LABELS.import_then_fill}
+                </SelectItem>
+                <SelectItem value="import_autofill">
+                  {IMPORT_MODE_LABELS.import_autofill}
+                </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              {importMode === 'preview_edit' && 'تحليل بالذكاء الاصطناعي، مراجعة وتعديل، ثم استيراد.'}
+              {importMode === 'preview_edit' &&
+                'تحليل بالذكاء الاصطناعي، مراجعة وتعديل، ثم استيراد.'}
               {importMode === 'import_then_fill' && 'استيراد كما هو. شغل الملء من لوحة AI لاحقاً.'}
-              {importMode === 'import_autofill' && 'استيراد ثم ملء تلقائي بالذكاء الاصطناعي لجميع المنتجات.'}
+              {importMode === 'import_autofill' &&
+                'استيراد ثم ملء تلقائي بالذكاء الاصطناعي لجميع المنتجات.'}
             </p>
           </div>
           <DropZone
             file={file}
             onFileSelect={(f) => {
               setFile(f)
-              const fakeEvent = { target: { files: [f] } } as unknown as React.ChangeEvent<HTMLInputElement>
+              const fakeEvent = {
+                target: { files: [f] },
+              } as unknown as React.ChangeEvent<HTMLInputElement>
               handleFileChange(fakeEvent)
             }}
-onClear={() => {
-                        setFile(null)
-                        setSheetsMetadata([])
-                        setMapping([])
-                        setValidationResults({})
-                        setValidationSummary(null)
-                        setJobId('')
-                        setSkippedNameRows({})
-                        setApprovedSuggestions([])
-                      }}
+            onClear={() => {
+              setFile(null)
+              setSheetsMetadata([])
+              setMapping([])
+              setValidationResults({})
+              setValidationSummary(null)
+              setJobId('')
+              setSkippedNameRows({})
+              setApprovedSuggestions([])
+            }}
             disabled={parsing}
           />
           {/* Hidden file input kept for backward compatibility */}
@@ -873,10 +908,14 @@ onClear={() => {
                           headers={sheet.columns}
                           initialMappings={columnMappings[sheet.name]}
                           sampleRows={sheet.previewRows.slice(0, 3).map((r) => {
-                            const { rowNumber: _, ...rest } = r as Record<string, unknown> & { rowNumber?: number }
+                            const { rowNumber: _, ...rest } = r as Record<string, unknown> & {
+                              rowNumber?: number
+                            }
                             return rest
                           })}
-                          onMappingsChange={(mappings) => updateColumnMappings(sheet.name, mappings)}
+                          onMappingsChange={(mappings) =>
+                            updateColumnMappings(sheet.name, mappings)
+                          }
                         />
 
                         {/* Row Selection */}
@@ -993,9 +1032,7 @@ onClear={() => {
               })}
             </Accordion>
 
-            {validationSummary && (
-              <ValidationReport result={validationSummary} />
-            )}
+            {validationSummary && <ValidationReport result={validationSummary} />}
 
             {!allSheetsMapped && (
               <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">

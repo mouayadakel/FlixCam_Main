@@ -20,7 +20,7 @@ export async function loadLocaleMessages(locale: Locale): Promise<Messages> {
 
   // Dynamic import based on locale
   let messages: Messages
-  
+
   try {
     switch (locale) {
       case 'ar':

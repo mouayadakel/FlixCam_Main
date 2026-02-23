@@ -219,7 +219,10 @@ async function main() {
       if (!parsed.success) {
         stats.validationErrors++
         const flat = parsed.error.flatten().fieldErrors
-        console.error(`[Import] Validation error sheet="${sheetName}" row=${rowNumber} sku=${sku}`, flat)
+        console.error(
+          `[Import] Validation error sheet="${sheetName}" row=${rowNumber} sku=${sku}`,
+          flat
+        )
         continue
       }
 

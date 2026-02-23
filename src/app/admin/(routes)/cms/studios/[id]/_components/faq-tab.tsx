@@ -288,10 +288,7 @@ export function CmsStudioFaqTab({ studioId, onRefresh }: FaqTabProps) {
             <p className="text-sm text-muted-foreground">لا توجد أسئلة</p>
           ) : (
             faqs.map((faq, i) => (
-              <div
-                key={faq.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
+              <div key={faq.id} className="flex items-center justify-between rounded-lg border p-3">
                 <div className="flex items-center gap-2">
                   <div className="flex flex-col gap-0">
                     <Button
@@ -321,12 +318,7 @@ export function CmsStudioFaqTab({ studioId, onRefresh }: FaqTabProps) {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openEdit(faq)}
-                  >
+                  <Button type="button" variant="ghost" size="icon" onClick={() => openEdit(faq)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button

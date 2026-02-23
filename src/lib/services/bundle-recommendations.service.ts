@@ -57,7 +57,10 @@ export const bundleRecommendationsService = {
         })
 
         // Count occurrences and deduplicate
-        const countMap = new Map<string, { count: number; item: (typeof coItems)[0]['equipment'] }>()
+        const countMap = new Map<
+          string,
+          { count: number; item: (typeof coItems)[0]['equipment'] }
+        >()
         for (const ci of coItems) {
           const existing = countMap.get(ci.equipmentId)
           if (existing) {
@@ -84,9 +87,7 @@ export const bundleRecommendationsService = {
               category: item.category
                 ? { name: item.category.name, slug: item.category.slug ?? '' }
                 : null,
-              brand: item.brand
-                ? { name: item.brand.name, slug: item.brand.slug ?? '' }
-                : null,
+              brand: item.brand ? { name: item.brand.name, slug: item.brand.slug ?? '' } : null,
               media: item.media,
             })),
           }
@@ -144,12 +145,8 @@ export const bundleRecommendationsService = {
         model: e.model,
         dailyPrice: e.dailyPrice ? Number(e.dailyPrice) : 0,
         quantityAvailable: e.quantityAvailable ?? 0,
-        category: e.category
-          ? { name: e.category.name, slug: e.category.slug ?? '' }
-          : null,
-        brand: e.brand
-          ? { name: e.brand.name, slug: e.brand.slug ?? '' }
-          : null,
+        category: e.category ? { name: e.category.name, slug: e.category.slug ?? '' } : null,
+        brand: e.brand ? { name: e.brand.name, slug: e.brand.slug ?? '' } : null,
         media: e.media,
       })),
     }

@@ -135,7 +135,9 @@ export default function ContentReviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Content Review</h1>
-        <p className="text-muted-foreground">Review and regenerate AI-generated content for products with gaps.</p>
+        <p className="text-muted-foreground">
+          Review and regenerate AI-generated content for products with gaps.
+        </p>
       </div>
 
       <Card>
@@ -152,7 +154,10 @@ export default function ContentReviewPage() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : drafts.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">No pending suggestions. Run backfill with &quot;Preview before applying&quot; to create drafts.</p>
+            <p className="py-6 text-center text-muted-foreground">
+              No pending suggestions. Run backfill with &quot;Preview before applying&quot; to
+              create drafts.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -167,7 +172,10 @@ export default function ContentReviewPage() {
                 {drafts.map((d) => (
                   <TableRow key={d.id}>
                     <TableCell>
-                      <Link href={`/admin/inventory/products/${d.productId}/review`} className="text-primary hover:underline">
+                      <Link
+                        href={`/admin/inventory/products/${d.productId}/review`}
+                        className="text-primary hover:underline"
+                      >
                         {d.product?.translations?.[0]?.name ?? d.product?.sku ?? d.productId}
                       </Link>
                     </TableCell>
@@ -185,7 +193,11 @@ export default function ContentReviewPage() {
                         onClick={() => handleApproveDraft(d.id)}
                         disabled={actingDraftId === d.id}
                       >
-                        {actingDraftId === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Approve'}
+                        {actingDraftId === d.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Approve'
+                        )}
                       </Button>
                       <Button
                         variant="ghost"
@@ -216,7 +228,7 @@ export default function ContentReviewPage() {
                   checked={previewBeforeApply}
                   onCheckedChange={(v) => setPreviewBeforeApply(v === true)}
                 />
-                <Label htmlFor="preview-mode" className="text-sm font-normal cursor-pointer">
+                <Label htmlFor="preview-mode" className="cursor-pointer text-sm font-normal">
                   Preview before applying (create drafts)
                 </Label>
               </div>
@@ -246,12 +258,19 @@ export default function ContentReviewPage() {
                 {products.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
-                      <Link href={`/admin/inventory/products/${p.id}/review`} className="text-primary hover:underline">
+                      <Link
+                        href={`/admin/inventory/products/${p.id}/review`}
+                        className="text-primary hover:underline"
+                      >
                         {p.name}
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={p.score >= 60 ? 'secondary' : p.score >= 40 ? 'outline' : 'destructive'}>
+                      <Badge
+                        variant={
+                          p.score >= 60 ? 'secondary' : p.score >= 40 ? 'outline' : 'destructive'
+                        }
+                      >
                         {p.score}
                       </Badge>
                     </TableCell>

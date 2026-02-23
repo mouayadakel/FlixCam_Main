@@ -63,8 +63,10 @@ const RESOURCE_TYPE_AR: Record<string, string> = Object.fromEntries(
 function getActionColor(action: string): string {
   if (action.includes('created') || action.includes('signed')) return 'bg-green-100 text-green-800'
   if (action.includes('confirmed') || action.includes('success')) return 'bg-blue-100 text-blue-800'
-  if (action.includes('cancelled') || action.includes('deleted') || action.includes('failed')) return 'bg-red-100 text-red-800'
-  if (action.includes('updated') || action.includes('risk_check')) return 'bg-yellow-100 text-yellow-800'
+  if (action.includes('cancelled') || action.includes('deleted') || action.includes('failed'))
+    return 'bg-red-100 text-red-800'
+  if (action.includes('updated') || action.includes('risk_check'))
+    return 'bg-yellow-100 text-yellow-800'
   if (action.includes('refund')) return 'bg-orange-100 text-orange-800'
   return 'bg-gray-100 text-gray-800'
 }
@@ -313,11 +315,18 @@ export default function AuditLogPage() {
                             {log.user ? log.user.name || log.user.email : (log.userId ?? '—')}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary" className={`font-mono text-xs ${getActionColor(log.action)}`}>
+                            <Badge
+                              variant="secondary"
+                              className={`font-mono text-xs ${getActionColor(log.action)}`}
+                            >
                               {log.action}
                             </Badge>
                           </TableCell>
-                          <TableCell>{log.resourceType ? (RESOURCE_TYPE_AR[log.resourceType] ?? log.resourceType) : '—'}</TableCell>
+                          <TableCell>
+                            {log.resourceType
+                              ? (RESOURCE_TYPE_AR[log.resourceType] ?? log.resourceType)
+                              : '—'}
+                          </TableCell>
                           <TableCell>
                             {link && log.resourceId ? (
                               <Link

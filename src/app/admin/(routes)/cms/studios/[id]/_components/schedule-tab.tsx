@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -26,15 +20,7 @@ interface ScheduleEntry {
   isClosed: boolean
 }
 
-const DAY_LABELS = [
-  'الأحد',
-  'الإثنين',
-  'الثلاثاء',
-  'الأربعاء',
-  'الخميس',
-  'الجمعة',
-  'السبت',
-]
+const DAY_LABELS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 
 interface ScheduleTabProps {
   studioId: string
@@ -75,9 +61,7 @@ export function CmsStudioScheduleTab({ studioId }: ScheduleTabProps) {
 
   const updateDay = (dayOfWeek: number, field: keyof ScheduleEntry, value: string | boolean) => {
     setSchedule((prev) =>
-      prev.map((entry) =>
-        entry.dayOfWeek === dayOfWeek ? { ...entry, [field]: value } : entry
-      )
+      prev.map((entry) => (entry.dayOfWeek === dayOfWeek ? { ...entry, [field]: value } : entry))
     )
   }
 
@@ -132,9 +116,7 @@ export function CmsStudioScheduleTab({ studioId }: ScheduleTabProps) {
               entry.isClosed ? 'bg-muted/50 opacity-60' : ''
             }`}
           >
-            <div className="w-20 shrink-0 text-sm font-medium">
-              {DAY_LABELS[entry.dayOfWeek]}
-            </div>
+            <div className="w-20 shrink-0 text-sm font-medium">{DAY_LABELS[entry.dayOfWeek]}</div>
 
             <div className="flex items-center gap-2">
               <Switch

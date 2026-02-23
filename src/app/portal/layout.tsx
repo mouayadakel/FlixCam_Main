@@ -24,13 +24,13 @@ export default async function PortalLayout({ children }: { children: React.React
       <aside className="hidden lg:block">
         <PortalSidebar />
       </aside>
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border-light bg-white px-4 lg:px-6">
-          <Link href="/portal/dashboard" className="text-lg font-bold text-brand-primary truncate">
+          <Link href="/portal/dashboard" className="truncate text-lg font-bold text-brand-primary">
             FlixCam.rent
           </Link>
-          <div className="flex items-center gap-2 lg:gap-4 shrink-0">
-            <span className="hidden text-sm text-text-muted sm:inline truncate max-w-[120px] lg:max-w-none">
+          <div className="flex shrink-0 items-center gap-2 lg:gap-4">
+            <span className="hidden max-w-[120px] truncate text-sm text-text-muted sm:inline lg:max-w-none">
               {session.user?.name || session.user?.email}
             </span>
             <form
@@ -40,7 +40,12 @@ export default async function PortalLayout({ children }: { children: React.React
                 redirect('/login')
               }}
             >
-              <Button type="submit" variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0">
+              <Button
+                type="submit"
+                variant="ghost"
+                size="sm"
+                className="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0"
+              >
                 <LogOut className="ml-2 h-4 w-4" />
                 <span className="hidden lg:inline">تسجيل الخروج</span>
               </Button>

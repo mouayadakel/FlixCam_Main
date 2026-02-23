@@ -13,14 +13,7 @@ import { siteConfig } from '@/config/site.config'
 import { getWhatsAppUrl } from '@/lib/utils/whatsapp-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Mail,
-  Phone,
-  ArrowRight,
-  Instagram,
-  MessageCircle,
-  CreditCard,
-} from 'lucide-react'
+import { Mail, Phone, ArrowRight, Instagram, MessageCircle, CreditCard } from 'lucide-react'
 
 const CATEGORY_LINKS = [
   { href: '/equipment', key: 'nav.equipment' },
@@ -97,7 +90,7 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
               aria-label={siteConfig.brandName}
             >
               <span
-                className="block h-8 w-[120px] shrink-0 bg-no-repeat bg-[length:200%_100%] bg-[position:100%_0]"
+                className="block h-8 w-[120px] shrink-0 bg-[length:200%_100%] bg-[position:100%_0] bg-no-repeat"
                 style={{ backgroundImage: `url(${siteConfig.logoInverted})` }}
                 aria-hidden
               />

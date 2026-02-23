@@ -8,7 +8,10 @@ export default function BookingsLoading() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-      <TableSkeleton rowCount={10} headers={['رقم', 'العميل', 'الحالة', 'التواريخ', 'المبلغ', '']} />
+      <TableSkeleton
+        rowCount={10}
+        headers={['رقم', 'العميل', 'الحالة', 'التواريخ', 'المبلغ', '']}
+      />
     </div>
   )
 }

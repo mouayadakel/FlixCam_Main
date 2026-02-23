@@ -11,7 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Settings, BarChart3, History, DollarSign, ToggleLeft, CheckCircle, ExternalLink, Save } from 'lucide-react'
+import {
+  Loader2,
+  Settings,
+  BarChart3,
+  History,
+  DollarSign,
+  ToggleLeft,
+  CheckCircle,
+  ExternalLink,
+  Save,
+} from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { ProviderSettingsCard } from '@/components/features/import/provider-settings-card'
@@ -89,7 +99,12 @@ export default function AISettingsPage() {
 
   // AI Feature toggles state
   const AI_FEATURES = [
-    { id: 'ai_backfill', flag: 'ai_backfill', label: 'ملء المحتوى التلقائي', desc: 'نص، SEO، ترجمات' },
+    {
+      id: 'ai_backfill',
+      flag: 'ai_backfill',
+      label: 'ملء المحتوى التلقائي',
+      desc: 'نص، SEO، ترجمات',
+    },
     { id: 'ai_kit', flag: 'ai_kit_builder', label: 'اقتراح الأطقم', desc: 'منشئ الأطقم' },
     { id: 'ai_pricing', flag: 'ai_pricing', label: 'اقتراح التسعير', desc: 'تحليل الأسعار' },
     { id: 'ai_demand', flag: 'ai_demand_forecast', label: 'توقع الطلب', desc: 'التوقعات' },
@@ -133,7 +148,9 @@ export default function AISettingsPage() {
       }
       setFeatureStates(states)
       setFeatureFlagIds(ids)
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
     setFeaturesLoaded(true)
   }
 
@@ -364,12 +381,17 @@ export default function AISettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>تفعيل الميزات</CardTitle>
-              <CardDescription>تشغيل أو إيقاف ميزات الذكاء الاصطناعي. التغييرات تُحفظ فوراً.</CardDescription>
+              <CardDescription>
+                تشغيل أو إيقاف ميزات الذكاء الاصطناعي. التغييرات تُحفظ فوراً.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {AI_FEATURES.map((f) => (
-                  <div key={f.id} className="flex items-center justify-between rounded-lg border p-4">
+                  <div
+                    key={f.id}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
                     <div>
                       <p className="font-medium">{f.label}</p>
                       <p className="text-sm text-muted-foreground">{f.desc}</p>
@@ -387,32 +409,47 @@ export default function AISettingsPage() {
         </TabsContent>
 
         <TabsContent value="costs" className="space-y-4">
-          {spendSummary && (() => {
-            const thresh = Number(alertThreshold) || 80
-            const dailyOver = spendSummary.daily.remaining != null && spendSummary.daily.remaining <= 0
-            const monthlyOver = spendSummary.monthly.remaining != null && spendSummary.monthly.remaining <= 0
-            const dailyNear = spendSummary.daily.budget != null && spendSummary.daily.remaining != null &&
-              spendSummary.daily.remaining <= (spendSummary.daily.budget * (100 - thresh)) / 100 && !dailyOver
-            const monthlyNear = spendSummary.monthly.budget != null && spendSummary.monthly.remaining != null &&
-              spendSummary.monthly.remaining <= (spendSummary.monthly.budget * (100 - thresh)) / 100 && !monthlyOver
-            return (dailyOver || monthlyOver || dailyNear || monthlyNear) ? (
-              <Alert variant={dailyOver || monthlyOver ? 'destructive' : 'default'}>
-                {dailyOver || monthlyOver ? (
-                  <AlertCircle className="h-4 w-4" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4" />
-                )}
-                <AlertTitle>
-                  {dailyOver || monthlyOver ? 'تجاوز حد الإنفاق' : 'اقتراب من حد الإنفاق'}
-                </AlertTitle>
-                <AlertDescription>
-                  {dailyOver && `إنفاقك اليومي ($${spendSummary.daily.spent.toFixed(2)}) تجاوز الحد.`}
-                  {monthlyOver && ` إنفاقك الشهري ($${spendSummary.monthly.spent.toFixed(2)}) تجاوز الحد.`}
-                  {!dailyOver && !monthlyOver && `أنت عند ${thresh}% أو أكثر من حد الإنفاق اليومي أو الشهري.`}
-                </AlertDescription>
-              </Alert>
-            ) : null
-          })()}
+          {spendSummary &&
+            (() => {
+              const thresh = Number(alertThreshold) || 80
+              const dailyOver =
+                spendSummary.daily.remaining != null && spendSummary.daily.remaining <= 0
+              const monthlyOver =
+                spendSummary.monthly.remaining != null && spendSummary.monthly.remaining <= 0
+              const dailyNear =
+                spendSummary.daily.budget != null &&
+                spendSummary.daily.remaining != null &&
+                spendSummary.daily.remaining <=
+                  (spendSummary.daily.budget * (100 - thresh)) / 100 &&
+                !dailyOver
+              const monthlyNear =
+                spendSummary.monthly.budget != null &&
+                spendSummary.monthly.remaining != null &&
+                spendSummary.monthly.remaining <=
+                  (spendSummary.monthly.budget * (100 - thresh)) / 100 &&
+                !monthlyOver
+              return dailyOver || monthlyOver || dailyNear || monthlyNear ? (
+                <Alert variant={dailyOver || monthlyOver ? 'destructive' : 'default'}>
+                  {dailyOver || monthlyOver ? (
+                    <AlertCircle className="h-4 w-4" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4" />
+                  )}
+                  <AlertTitle>
+                    {dailyOver || monthlyOver ? 'تجاوز حد الإنفاق' : 'اقتراب من حد الإنفاق'}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {dailyOver &&
+                      `إنفاقك اليومي ($${spendSummary.daily.spent.toFixed(2)}) تجاوز الحد.`}
+                    {monthlyOver &&
+                      ` إنفاقك الشهري ($${spendSummary.monthly.spent.toFixed(2)}) تجاوز الحد.`}
+                    {!dailyOver &&
+                      !monthlyOver &&
+                      `أنت عند ${thresh}% أو أكثر من حد الإنفاق اليومي أو الشهري.`}
+                  </AlertDescription>
+                </Alert>
+              ) : null
+            })()}
           <Card>
             <CardHeader>
               <CardTitle>التكاليف والحدود</CardTitle>
@@ -426,7 +463,8 @@ export default function AISettingsPage() {
                     <p className="text-2xl font-bold">${spendSummary.daily.spent.toFixed(2)}</p>
                     {spendSummary.daily.budget != null && (
                       <p className="text-xs text-muted-foreground">
-                        الحد: ${spendSummary.daily.budget} — المتبقي: ${(spendSummary.daily.remaining ?? 0).toFixed(2)}
+                        الحد: ${spendSummary.daily.budget} — المتبقي: $
+                        {(spendSummary.daily.remaining ?? 0).toFixed(2)}
                       </p>
                     )}
                   </div>
@@ -435,7 +473,8 @@ export default function AISettingsPage() {
                     <p className="text-2xl font-bold">${spendSummary.monthly.spent.toFixed(2)}</p>
                     {spendSummary.monthly.budget != null && (
                       <p className="text-xs text-muted-foreground">
-                        الحد: ${spendSummary.monthly.budget} — المتبقي: ${(spendSummary.monthly.remaining ?? 0).toFixed(2)}
+                        الحد: ${spendSummary.monthly.budget} — المتبقي: $
+                        {(spendSummary.monthly.remaining ?? 0).toFixed(2)}
                       </p>
                     )}
                   </div>
@@ -475,7 +514,11 @@ export default function AISettingsPage() {
                 </div>
                 <div className="flex items-end">
                   <Button onClick={saveBudget} disabled={savingBudget} className="w-full">
-                    {savingBudget ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <Save className="ml-2 h-4 w-4" />}
+                    {savingBudget ? (
+                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="ml-2 h-4 w-4" />
+                    )}
                     حفظ الحدود
                   </Button>
                 </div>
@@ -489,7 +532,12 @@ export default function AISettingsPage() {
                       <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip />
-                      <Line type="monotone" dataKey="تكلفة" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      <Line
+                        type="monotone"
+                        dataKey="تكلفة"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -533,7 +581,11 @@ export default function AISettingsPage() {
                         <TableCell>
                           <Badge
                             variant={
-                              j.status === 'COMPLETED' ? 'default' : j.status === 'FAILED' ? 'destructive' : 'secondary'
+                              j.status === 'COMPLETED'
+                                ? 'default'
+                                : j.status === 'FAILED'
+                                  ? 'destructive'
+                                  : 'secondary'
                             }
                           >
                             {j.status}

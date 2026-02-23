@@ -38,39 +38,86 @@ interface ScrapedPage {
 }
 
 const SPEC_FIELDS_PRIORITY = [
-  'Resolution', 'Max Resolution', 'Sensor', 'Sensor Size', 'Sensor Type',
-  'Frame Rates', 'Max Frame Rate', 'Mount', 'Lens Mount', 'Mount Type',
-  'ISO Range', 'ISO', 'Dynamic Range',
-  'Bit Depth', 'Color Depth', 'Chroma Subsampling',
-  'Recording Codec', 'Codecs', 'Recording Format',
-  'Recording Media', 'Media Slots', 'Card Slots',
-  'Internal ND', 'ND Filter',
-  'Autofocus', 'AF System', 'Focus System',
-  'Stabilization', 'IBIS', 'Image Stabilization',
-  'SDI Output', 'HDMI Output', 'Video Output',
-  'Audio Inputs', 'Audio', 'Mic Input',
-  'Power', 'Power Draw', 'Battery Type', 'Battery Life',
-  'Weight', 'Body Weight', 'Weight (Body Only)',
+  'Resolution',
+  'Max Resolution',
+  'Sensor',
+  'Sensor Size',
+  'Sensor Type',
+  'Frame Rates',
+  'Max Frame Rate',
+  'Mount',
+  'Lens Mount',
+  'Mount Type',
+  'ISO Range',
+  'ISO',
+  'Dynamic Range',
+  'Bit Depth',
+  'Color Depth',
+  'Chroma Subsampling',
+  'Recording Codec',
+  'Codecs',
+  'Recording Format',
+  'Recording Media',
+  'Media Slots',
+  'Card Slots',
+  'Internal ND',
+  'ND Filter',
+  'Autofocus',
+  'AF System',
+  'Focus System',
+  'Stabilization',
+  'IBIS',
+  'Image Stabilization',
+  'SDI Output',
+  'HDMI Output',
+  'Video Output',
+  'Audio Inputs',
+  'Audio',
+  'Mic Input',
+  'Power',
+  'Power Draw',
+  'Battery Type',
+  'Battery Life',
+  'Weight',
+  'Body Weight',
+  'Weight (Body Only)',
   'Dimensions',
-  'Connectivity', 'Wireless', 'Wi-Fi', 'Bluetooth',
-  'Color Science', 'Color Space',
-  'Screen', 'LCD', 'Viewfinder',
-  'Weather Sealing', 'Operating Temperature',
-  'Polar Pattern', 'Frequency Response', 'Sensitivity', 'Self Noise',
-  'Channels', 'Sample Rate', 'Phantom Power',
-  'Output Power', 'CRI', 'TLCI', 'Color Temperature',
-  'Dimming', 'Beam Angle',
-  'Max Payload', 'Stabilization Axes',
+  'Connectivity',
+  'Wireless',
+  'Wi-Fi',
+  'Bluetooth',
+  'Color Science',
+  'Color Space',
+  'Screen',
+  'LCD',
+  'Viewfinder',
+  'Weather Sealing',
+  'Operating Temperature',
+  'Polar Pattern',
+  'Frequency Response',
+  'Sensitivity',
+  'Self Noise',
+  'Channels',
+  'Sample Rate',
+  'Phantom Power',
+  'Output Power',
+  'CRI',
+  'TLCI',
+  'Color Temperature',
+  'Dimming',
+  'Beam Angle',
+  'Max Payload',
+  'Stabilization Axes',
 ]
 
 const ARABIC_SPEC_TRANSLATIONS: Record<string, string> = {
-  'Resolution': 'الدقة',
+  Resolution: 'الدقة',
   'Max Resolution': 'الدقة القصوى',
-  'Sensor': 'المستشعر',
+  Sensor: 'المستشعر',
   'Sensor Size': 'حجم المستشعر',
   'Sensor Type': 'نوع المستشعر',
   'Frame Rates': 'معدل الإطارات',
-  'Mount': 'نوع التركيب',
+  Mount: 'نوع التركيب',
   'Lens Mount': 'تركيب العدسة',
   'ISO Range': 'نطاق ISO',
   'Dynamic Range': 'المدى الديناميكي',
@@ -78,25 +125,25 @@ const ARABIC_SPEC_TRANSLATIONS: Record<string, string> = {
   'Recording Codec': 'صيغة التسجيل',
   'Recording Media': 'وسائط التسجيل',
   'Internal ND': 'فلتر ND داخلي',
-  'Autofocus': 'التركيز التلقائي',
-  'Stabilization': 'التثبيت',
+  Autofocus: 'التركيز التلقائي',
+  Stabilization: 'التثبيت',
   'SDI Output': 'مخرج SDI',
   'HDMI Output': 'مخرج HDMI',
   'Audio Inputs': 'مداخل الصوت',
   'Power Draw': 'استهلاك الطاقة',
   'Battery Life': 'عمر البطارية',
-  'Weight': 'الوزن',
-  'Dimensions': 'الأبعاد',
+  Weight: 'الوزن',
+  Dimensions: 'الأبعاد',
   'Color Science': 'علم الألوان',
-  'Screen': 'الشاشة',
+  Screen: 'الشاشة',
   'Weather Sealing': 'مقاومة الطقس',
   'Polar Pattern': 'نمط القطبية',
   'Frequency Response': 'الاستجابة الترددية',
-  'Sensitivity': 'الحساسية',
+  Sensitivity: 'الحساسية',
   'Self Noise': 'الضوضاء الذاتية',
-  'Channels': 'القنوات',
+  Channels: 'القنوات',
   'Output Power': 'طاقة الخرج',
-  'CRI': 'مؤشر تجسيد اللون',
+  CRI: 'مؤشر تجسيد اللون',
   'Color Temperature': 'حرارة اللون',
   'Max Payload': 'الحمولة القصوى',
 }
@@ -185,7 +232,7 @@ async function fetchPage(url: string): Promise<string | null> {
     let fetchUrl = url
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      'Accept': 'text/html,application/xhtml+xml',
+      Accept: 'text/html,application/xhtml+xml',
     }
 
     if (proxyService === 'scrapingbee' && proxyApiKey) {
@@ -252,7 +299,8 @@ async function scrapeProductPage(url: string): Promise<ScrapedPage | null> {
   const title = titleMatch?.[1]?.trim() || ''
 
   const highlights: string[] = []
-  const highlightPattern = /<li[^>]*class="[^"]*(?:feature|highlight|key-feature)[^"]*"[^>]*>([^<]+)<\/li>/gi
+  const highlightPattern =
+    /<li[^>]*class="[^"]*(?:feature|highlight|key-feature)[^"]*"[^>]*>([^<]+)<\/li>/gi
   let match
   while ((match = highlightPattern.exec(html)) !== null) {
     const h = match[1].trim()
@@ -345,14 +393,14 @@ function normalizeSpecKeys(specs: Record<string, string>): Record<string, string
     'approx. weight': 'Weight',
     'card slot': 'Recording Media',
     'memory card': 'Recording Media',
-    'battery': 'Battery Type',
+    battery: 'Battery Type',
     'continuous shooting': 'Frame Rates',
     'af system': 'Autofocus',
     'focus type': 'Autofocus',
     'image stabilization': 'Stabilization',
-    'monitor': 'Screen',
+    monitor: 'Screen',
     'lcd monitor': 'Screen',
-    'wireless': 'Connectivity',
+    wireless: 'Connectivity',
   }
 
   const normalized: Record<string, string> = {}
@@ -394,7 +442,10 @@ function delay(ms: number): Promise<void> {
  * Cache research results in Redis to avoid redundant scraping.
  * Key format: research:{brand}:{productName}
  */
-async function getCachedResearch(productName: string, brand: string): Promise<WebResearchResult | null> {
+async function getCachedResearch(
+  productName: string,
+  brand: string
+): Promise<WebResearchResult | null> {
   try {
     const redis = (await import('@/lib/queue/redis.client')).getRedisClient()
     const key = `research:${brand.toLowerCase()}:${productName.toLowerCase().replace(/\s+/g, '_')}`
@@ -406,7 +457,11 @@ async function getCachedResearch(productName: string, brand: string): Promise<We
   return null
 }
 
-async function setCachedResearch(productName: string, brand: string, result: WebResearchResult): Promise<void> {
+async function setCachedResearch(
+  productName: string,
+  brand: string,
+  result: WebResearchResult
+): Promise<void> {
   try {
     const redis = (await import('@/lib/queue/redis.client')).getRedisClient()
     const key = `research:${brand.toLowerCase()}:${productName.toLowerCase().replace(/\s+/g, '_')}`
@@ -438,7 +493,11 @@ export async function researchProduct(
   let allBoxContents: string[] = []
   let allHighlights: string[] = []
 
-  const searchTargets: Array<{ site: string; provider: 'bhphoto' | 'amazon' | 'manufacturer'; priority: number }> = [
+  const searchTargets: Array<{
+    site: string
+    provider: 'bhphoto' | 'amazon' | 'manufacturer'
+    priority: number
+  }> = [
     { site: 'bhphotovideo.com', provider: 'bhphoto', priority: 3 },
     { site: 'amazon.com', provider: 'amazon', priority: 1 },
   ]
@@ -469,7 +528,14 @@ export async function researchProduct(
   }
 
   // Sequential with rate limiting to mimic human behavior and avoid bans
-  const searchResults: Array<PromiseSettledResult<{ provider: 'bhphoto' | 'amazon' | 'manufacturer'; page: ScrapedPage; priority: number; site: string } | null>> = []
+  const searchResults: Array<
+    PromiseSettledResult<{
+      provider: 'bhphoto' | 'amazon' | 'manufacturer'
+      page: ScrapedPage
+      priority: number
+      site: string
+    } | null>
+  > = []
   for (const target of searchTargets) {
     try {
       const url = await searchProductPage(productName, brand, target.site)
@@ -511,9 +577,7 @@ export async function researchProduct(
   }
 
   const mergedSpecs = mergeSpecs(allSpecs)
-  const conflicts = detectConflicts(
-    allSpecs.map((s) => ({ provider: s.provider, specs: s.specs }))
-  )
+  const conflicts = detectConflicts(allSpecs.map((s) => ({ provider: s.provider, specs: s.specs })))
 
   // Auto-resolve conflicts: use highest-priority source value
   for (const conflict of conflicts) {
@@ -536,11 +600,13 @@ export async function researchProduct(
           specs: dbMatch.specs,
           boxContents: dbMatch.boxContents || [],
           marketingHighlights: dbMatch.marketingHighlights ? [dbMatch.marketingHighlights] : [],
-          sources: [{
-            provider: 'ai_inference',
-            specsFound: Object.keys(dbMatch.specs).length,
-            timestamp: Date.now(),
-          }],
+          sources: [
+            {
+              provider: 'ai_inference',
+              specsFound: Object.keys(dbMatch.specs).length,
+              timestamp: Date.now(),
+            },
+          ],
           confidence: dbMatch.confidence,
           conflicts: [],
         }
@@ -584,9 +650,7 @@ export function getArabicSpecName(englishName: string): string {
 /**
  * Translate all spec keys to Arabic
  */
-export function translateSpecsToArabic(
-  specs: Record<string, string>
-): Record<string, string> {
+export function translateSpecsToArabic(specs: Record<string, string>): Record<string, string> {
   const translated: Record<string, string> = {}
   for (const [key, value] of Object.entries(specs)) {
     const arabicKey = getArabicSpecName(key)

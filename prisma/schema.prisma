@@ -8,48 +8,48 @@ datasource db {
 }
 
 model Product {
-  id              String               @id @default(cuid())
-  status          ProductStatus        @default(DRAFT)
-  productType     ProductType          @default(RENTAL)
-  sku             String?              @unique
-  brandId         String
-  categoryId      String
-  subCategoryId   String?
-  priceDaily      Decimal              @db.Decimal(10, 2)
-  priceWeekly     Decimal?             @db.Decimal(10, 2)
-  priceMonthly    Decimal?             @db.Decimal(10, 2)
-  depositAmount   Decimal?             @db.Decimal(10, 2)
-  bufferTime      Int                  @default(0)
-  boxContents     String?
-  featuredImage   String
-  galleryImages   Json?
-  videoUrl        String?
-  relatedProducts Json?
-  tags            String?
-  createdAt       DateTime             @default(now())
-  createdBy       String?
-  updatedAt       DateTime             @updatedAt
-  updatedBy       String?
-  deletedAt       DateTime?
-  deletedBy       String?
-  quantity        Int?
+  id                  String               @id @default(cuid())
+  status              ProductStatus        @default(DRAFT)
+  productType         ProductType          @default(RENTAL)
+  sku                 String?              @unique
+  brandId             String
+  categoryId          String
+  subCategoryId       String?
+  priceDaily          Decimal              @db.Decimal(10, 2)
+  priceWeekly         Decimal?             @db.Decimal(10, 2)
+  priceMonthly        Decimal?             @db.Decimal(10, 2)
+  depositAmount       Decimal?             @db.Decimal(10, 2)
+  bufferTime          Int                  @default(0)
+  boxContents         String?
+  featuredImage       String
+  galleryImages       Json?
+  videoUrl            String?
+  relatedProducts     Json?
+  tags                String?
+  createdAt           DateTime             @default(now())
+  createdBy           String?
+  updatedAt           DateTime             @updatedAt
+  updatedBy           String?
+  deletedAt           DateTime?
+  deletedBy           String?
+  quantity            Int?
   contentQualityScore Int?
-  contentScore    Int?                 // 0-100 quality score, cached (plan v2.0)
-  contentScoreAt  DateTime?            // when score was last calculated
-  lastAiRunAt     DateTime?
-  aiRunCount      Int                  @default(0)
-  needsAiReview   Boolean              @default(false) // flagged when AI fails
-  aiReviewReason String?              // why it needs review
-  aiContentFlags  Json?                // { fields[], lastRun, provider, costs }
-  photoStatus     String?              @default("unknown") // unknown | sufficient | needs_sourcing | reviewing
-  inventoryItems  InventoryItem[]
-  brand           Brand                @relation(fields: [brandId], references: [id])
-  category        Category             @relation("ProductCategory", fields: [categoryId], references: [id])
-  subCategory     Category?            @relation("ProductSubCategory", fields: [subCategoryId], references: [id])
-  translations    ProductTranslation[]
-  productImages   ProductImage[]       // per-image tracking for AI workflow
-  equipment       Equipment?           // optional 1:1 sync to Equipment (import/AI flow)
-  aiContentDrafts AiContentDraft[]    // pending AI suggestions (preview workflow)
+  contentScore        Int? // 0-100 quality score, cached (plan v2.0)
+  contentScoreAt      DateTime? // when score was last calculated
+  lastAiRunAt         DateTime?
+  aiRunCount          Int                  @default(0)
+  needsAiReview       Boolean              @default(false) // flagged when AI fails
+  aiReviewReason      String? // why it needs review
+  aiContentFlags      Json? // { fields[], lastRun, provider, costs }
+  photoStatus         String?              @default("unknown") // unknown | sufficient | needs_sourcing | reviewing
+  inventoryItems      InventoryItem[]
+  brand               Brand                @relation(fields: [brandId], references: [id])
+  category            Category             @relation("ProductCategory", fields: [categoryId], references: [id])
+  subCategory         Category?            @relation("ProductSubCategory", fields: [subCategoryId], references: [id])
+  translations        ProductTranslation[]
+  productImages       ProductImage[] // per-image tracking for AI workflow
+  equipment           Equipment? // optional 1:1 sync to Equipment (import/AI flow)
+  aiContentDrafts     AiContentDraft[] // pending AI suggestions (preview workflow)
 
   @@index([status])
   @@index([brandId])
@@ -67,18 +67,18 @@ enum ImageSource {
 }
 
 model ProductImage {
-  id             String       @id @default(cuid())
-  productId      String
-  url            String
-  imageSource    ImageSource  @default(UPLOAD)
-  pendingReview  Boolean      @default(false)
-  qualityScore   Float?       // 0-1 from vision model check
-  reviewedAt     DateTime?
-  reviewedBy     String?
-  isDeleted      Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+  id            String      @id @default(cuid())
+  productId     String
+  url           String
+  imageSource   ImageSource @default(UPLOAD)
+  pendingReview Boolean     @default(false)
+  qualityScore  Float? // 0-1 from vision model check
+  reviewedAt    DateTime?
+  reviewedBy    String?
+  isDeleted     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
 
-  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([pendingReview])
@@ -190,24 +190,24 @@ model AIProcessingJob {
 }
 
 model AISettings {
-  id                   String    @id @default(cuid())
-  provider             String    @unique
-  apiKey               String
-  batchSize            Int       @default(50)
-  timeout              Int       @default(30000)
-  fallbackStrategy     String    @default("mark_for_review")
-  enabled              Boolean   @default(true)
+  id                  String    @id @default(cuid())
+  provider            String    @unique
+  apiKey              String
+  batchSize           Int       @default(50)
+  timeout             Int       @default(30000)
+  fallbackStrategy    String    @default("mark_for_review")
+  enabled             Boolean   @default(true)
   dailyBudgetUsd      Decimal?  @db.Decimal(10, 2)
-  monthlyBudgetUsd     Decimal?  @db.Decimal(10, 2)
-  currentDailySpend    Decimal?  @db.Decimal(10, 4)  @default(0)
-  currentMonthlySpend  Decimal?  @db.Decimal(10, 4)  @default(0)
-  spendResetDate       DateTime?
-  monthlyResetDate     DateTime?
-  backfillEnabled      Boolean   @default(true)
-  nightlyCronEnabled   Boolean   @default(true)
-  nightlyCronTime      String?   @default("02:00")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  monthlyBudgetUsd    Decimal?  @db.Decimal(10, 2)
+  currentDailySpend   Decimal?  @default(0) @db.Decimal(10, 4)
+  currentMonthlySpend Decimal?  @default(0) @db.Decimal(10, 4)
+  spendResetDate      DateTime?
+  monthlyResetDate    DateTime?
+  backfillEnabled     Boolean   @default(true)
+  nightlyCronEnabled  Boolean   @default(true)
+  nightlyCronTime     String?   @default("02:00")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([enabled])
 }
@@ -229,23 +229,23 @@ enum JobStatus {
 }
 
 model AiJob {
-  id             String      @id @default(cuid())
-  type           AiJobType
-  status         JobStatus   @default(PENDING)
-  triggeredBy    String      // "manual" | "cron" | "event" | "import"
-  triggeredAt    DateTime    @default(now())
-  startedAt      DateTime?
-  completedAt    DateTime?
-  totalItems     Int         @default(0)
-  processed      Int         @default(0)
-  succeeded      Int         @default(0)
-  failed         Int         @default(0)
-  skipped        Int         @default(0)
-  costUsd        Float       @default(0)
-  errorLog       Json?       // [{ productId, error, timestamp }]
-  metadata       Json?
+  id          String    @id @default(cuid())
+  type        AiJobType
+  status      JobStatus @default(PENDING)
+  triggeredBy String // "manual" | "cron" | "event" | "import"
+  triggeredAt DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  totalItems  Int       @default(0)
+  processed   Int       @default(0)
+  succeeded   Int       @default(0)
+  failed      Int       @default(0)
+  skipped     Int       @default(0)
+  costUsd     Float     @default(0)
+  errorLog    Json? // [{ productId, error, timestamp }]
+  metadata    Json?
 
-  items          AiJobItem[]
+  items AiJobItem[]
 
   @@index([status])
   @@index([type])
@@ -253,20 +253,20 @@ model AiJob {
 }
 
 model AiJobItem {
-  id             String    @id @default(cuid())
-  jobId          String
-  productId      String
-  itemType       String    // 'text' | 'photo' | 'spec' | 'seo' | 'translation'
-  status         String    @default("pending")
-  error          String?
-  costIncurred   Float?
-  provider       String?   // 'gemini' | 'openai' | 'dalle' | 'pexels'
-  fieldsUpdated  Json?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  createdAt      DateTime  @default(now())
+  id            String    @id @default(cuid())
+  jobId         String
+  productId     String
+  itemType      String // 'text' | 'photo' | 'spec' | 'seo' | 'translation'
+  status        String    @default("pending")
+  error         String?
+  costIncurred  Float?
+  provider      String? // 'gemini' | 'openai' | 'dalle' | 'pexels'
+  fieldsUpdated Json?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
 
-  job            AiJob     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job AiJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([productId])
@@ -276,10 +276,10 @@ model AiJobItem {
 model AiAuditLog {
   id           String   @id @default(cuid())
   userId       String
-  action       String   // e.g. "backfill.trigger", "image.approve", "image.reject", "settings.update"
-  resourceType String?  // "AiJob" | "ProductImage" | "AiSettings"
+  action       String // e.g. "backfill.trigger", "image.approve", "image.reject", "settings.update"
+  resourceType String? // "AiJob" | "ProductImage" | "AiSettings"
   resourceId   String?
-  metadata     Json?    // { jobId?, productId?, imageId?, trigger?, options? }
+  metadata     Json? // { jobId?, productId?, imageId?, trigger?, options? }
   createdAt    DateTime @default(now())
 
   @@index([userId])
@@ -290,8 +290,8 @@ model AiAuditLog {
 model AiContentDraft {
   id            String    @id @default(cuid())
   productId     String
-  type          String    // "text" | "spec" | "photo"
-  suggestedData Json      // suggested content (translations, specs, image URLs, etc.)
+  type          String // "text" | "spec" | "photo"
+  suggestedData Json // suggested content (translations, specs, image URLs, etc.)
   status        String    @default("pending") // "pending" | "approved" | "rejected"
   createdAt     DateTime  @default(now())
   reviewedAt    DateTime?
@@ -305,21 +305,21 @@ model AiContentDraft {
 }
 
 model CatalogQualitySnapshot {
-  id             String   @id @default(cuid())
-  date           DateTime @unique // date only (midnight UTC)
-  avgScore       Float    // 0-100
-  totalProducts  Int
-  gapCounts      Json     // { translations: N, seo: N, photos: N, specs: N }
+  id            String   @id @default(cuid())
+  date          DateTime @unique // date only (midnight UTC)
+  avgScore      Float // 0-100
+  totalProducts Int
+  gapCounts     Json // { translations: N, seo: N, photos: N, specs: N }
 
   @@index([date])
 }
 
 model AiDailyCost {
-  id        String   @id @default(cuid())
-  date      DateTime
-  feature   String   // "text_backfill" | "photo_generation" | "spec_inference" | "chatbot" | "embeddings"
-  costUsd   Float    @default(0)
-  jobCount  Int      @default(0)
+  id       String   @id @default(cuid())
+  date     DateTime
+  feature  String // "text_backfill" | "photo_generation" | "spec_inference" | "chatbot" | "embeddings"
+  costUsd  Float    @default(0)
+  jobCount Int      @default(0)
 
   @@unique([date, feature])
   @@index([date])
@@ -726,8 +726,8 @@ model Equipment {
   slug                     String?                   @unique // SEO-friendly URL slug (auto-generated from model/sku)
   productId                String?                   @unique // link to Product for import/AI sync
   model                    String?
-  nameEn                   String?                   // English name
-  nameZh                   String?                   // Chinese name
+  nameEn                   String? // English name
+  nameZh                   String? // Chinese name
   descriptionEn            String?                   @db.Text // English description
   descriptionZh            String?                   @db.Text // Chinese description
   categoryId               String
@@ -744,11 +744,11 @@ model Equipment {
   barcode                  String?
   specifications           Json?
   customFields             Json?
-  specSource               String?                   // "manual" | "ai" | "import" | "migrated"
-  specConfidence           Float?                    // 0-1 from last AI inference
+  specSource               String? // "manual" | "ai" | "import" | "migrated"
+  specConfidence           Float? // 0-1 from last AI inference
   specLastInferredAt       DateTime?
-  aiSuggestions            Json?                     // { fieldName: { value, unit, confidence, reasoning } }
-  specBlacklist            Json?                     // ["field1", "field2"] — don't suggest again
+  aiSuggestions            Json? // { fieldName: { value, unit, confidence, reasoning } }
+  specBlacklist            Json? // ["field1", "field2"] — don't suggest again
   createdAt                DateTime                  @default(now())
   createdBy                String?
   updatedAt                DateTime                  @updatedAt
@@ -857,95 +857,95 @@ model ShootTypeRecommendation {
 }
 
 model Studio {
-  id             String               @id @default(cuid())
+  id             String  @id @default(cuid())
   name           String
-  nameEn         String?              // English name
-  nameZh         String?              // Chinese name
-  slug           String               @unique
+  nameEn         String? // English name
+  nameZh         String? // Chinese name
+  slug           String  @unique
   description    String?
-  descriptionEn  String?              @db.Text // English description
-  descriptionZh  String?              @db.Text // Chinese description
+  descriptionEn  String? @db.Text // English description
+  descriptionZh  String? @db.Text // Chinese description
   capacity       Int?
-  hourlyRate     Decimal              @db.Decimal(10, 2)
-  setupBuffer    Int                  @default(30)
-  cleaningBuffer Int                  @default(30)
-  resetTime      Int                  @default(15)
-  isActive       Boolean              @default(true)
+  hourlyRate     Decimal @db.Decimal(10, 2)
+  setupBuffer    Int     @default(30)
+  cleaningBuffer Int     @default(30)
+  resetTime      Int     @default(15)
+  isActive       Boolean @default(true)
 
   // CMS: Header
-  heroTagline          String?
-  heroTaglineEn        String?        // English tagline
-  heroTaglineZh        String?        // Chinese tagline
-  areaSqm              Int?
-  studioType           String?
-  bestUse              String?
+  heroTagline            String?
+  heroTaglineEn          String? // English tagline
+  heroTaglineZh          String? // Chinese tagline
+  areaSqm                Int?
+  studioType             String?
+  bestUse                String?
   availabilityConfidence String? // "available_now" | "requires_review"
 
   // CMS: Gallery
-  videoUrl             String?
-  galleryDisclaimer    String?
+  videoUrl          String?
+  galleryDisclaimer String?
 
   // CMS: Location
-  address              String?
-  googleMapsUrl        String?
+  address               String?
+  googleMapsUrl         String?
   arrivalTimeFromCenter String?
-  parkingNotes         String?
+  parkingNotes          String?
 
   // CMS: Booking
-  slotDurationMinutes  Int                  @default(60)
-  dailyRate            Decimal?             @db.Decimal(10, 2)
-  minHours             Int                  @default(1)
-  durationOptions      String?              // JSON: [1,2,3,"half_day","full_day"]
-  bookingDisclaimer    String?
-  vatIncluded          Boolean              @default(false)
+  slotDurationMinutes Int      @default(60)
+  dailyRate           Decimal? @db.Decimal(10, 2)
+  minHours            Int      @default(1)
+  durationOptions     String? // JSON: [1,2,3,"half_day","full_day"]
+  bookingDisclaimer   String?
+  vatIncluded         Boolean  @default(false)
 
   // CMS: What's included
-  whatsIncluded        String?              // JSON array of strings
-  notIncluded         String?
-  hasElectricity       Boolean              @default(true)
-  hasAC                Boolean              @default(true)
-  hasChangingRooms     Boolean              @default(false)
-  hasWifi              Boolean              @default(true)
+  whatsIncluded    String? // JSON array of strings
+  notIncluded      String?
+  hasElectricity   Boolean @default(true)
+  hasAC            Boolean @default(true)
+  hasChangingRooms Boolean @default(false)
+  hasWifi          Boolean @default(true)
 
   // CMS: Rules
-  rulesText            String?
-  smokingPolicy        String?
-  foodPolicy           String?
-  equipmentCarePolicy  String?
+  rulesText               String?
+  smokingPolicy           String?
+  foodPolicy              String?
+  equipmentCarePolicy     String?
   cancellationPolicyShort String?
   cancellationPolicyLink  String?
 
   // CMS: Discount / Promotion
-  discountPercent      Int?                 // e.g. 15 = 15% off
-  discountMessage      String?              // e.g. "خصم خاص لفترة محدودة"
-  discountActive       Boolean              @default(false)
+  discountPercent Int? // e.g. 15 = 15% off
+  discountMessage String? // e.g. "خصم خاص لفترة محدودة"
+  discountActive  Boolean @default(false)
 
   // CMS: Trust & Contact
-  reviewsText          String?
-  whatsappNumber       String?
-  bookingCountDisplay  Int?                 // Social proof: "100+ حجز"
+  reviewsText         String?
+  whatsappNumber      String?
+  bookingCountDisplay Int? // Social proof: "100+ حجز"
 
   // CMS: SEO
-  metaTitle            String?
-  metaDescription      String?
+  metaTitle       String?
+  metaDescription String?
 
-  createdAt      DateTime             @default(now())
-  createdBy      String?
-  updatedAt      DateTime             @updatedAt
-  updatedBy      String?
-  deletedAt      DateTime?
-  deletedBy      String?
-  bookings       Booking[]
-  damageClaims   DamageClaim[]
-  media          Media[]
-  quotes         Quote[]
-  addOns         StudioAddOn[]
-  blackoutDates  StudioBlackoutDate[]
-  packages       StudioPackage[]
-  faqs           StudioFaq[]
-  testimonials   StudioTestimonial[]
-  schedules      StudioSchedule[]
-  cartItems      CartItem[]
+  createdAt     DateTime             @default(now())
+  createdBy     String?
+  updatedAt     DateTime             @updatedAt
+  updatedBy     String?
+  deletedAt     DateTime?
+  deletedBy     String?
+  bookings      Booking[]
+  damageClaims  DamageClaim[]
+  media         Media[]
+  quotes        Quote[]
+  addOns        StudioAddOn[]
+  blackoutDates StudioBlackoutDate[]
+  packages      StudioPackage[]
+  faqs          StudioFaq[]
+  testimonials  StudioTestimonial[]
+  schedules     StudioSchedule[]
+  cartItems     CartItem[]
 
   @@index([slug])
   @@index([isActive])
@@ -953,29 +953,29 @@ model Studio {
 }
 
 model StudioPackage {
-  id          String   @id @default(cuid())
-  studioId    String
-  name        String
-  nameAr      String?
-  nameZh      String?
-  description String?
-  descriptionAr String?
-  includes    String?  // JSON: ["bullet1","bullet2","bullet3"]
-  price       Decimal  @db.Decimal(10, 2)
-  originalPrice Decimal? @db.Decimal(10, 2)
+  id              String    @id @default(cuid())
+  studioId        String
+  name            String
+  nameAr          String?
+  nameZh          String?
+  description     String?
+  descriptionAr   String?
+  includes        String? // JSON: ["bullet1","bullet2","bullet3"]
+  price           Decimal   @db.Decimal(10, 2)
+  originalPrice   Decimal?  @db.Decimal(10, 2)
   discountPercent Int?
-  hours       Int?
-  recommended Boolean  @default(false)
-  badgeText   String?
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  createdBy   String?
-  updatedAt   DateTime @updatedAt
-  updatedBy   String?
-  deletedAt   DateTime?
-  deletedBy   String?
-  studio      Studio   @relation(fields: [studioId], references: [id])
+  hours           Int?
+  recommended     Boolean   @default(false)
+  badgeText       String?
+  order           Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  createdBy       String?
+  updatedAt       DateTime  @updatedAt
+  updatedBy       String?
+  deletedAt       DateTime?
+  deletedBy       String?
+  studio          Studio    @relation(fields: [studioId], references: [id])
 
   @@index([studioId])
   @@index([order])
@@ -983,7 +983,7 @@ model StudioPackage {
 }
 
 model StudioFaq {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   studioId   String
   questionAr String
   questionEn String?
@@ -991,15 +991,15 @@ model StudioFaq {
   answerAr   String
   answerEn   String?
   answerZh   String?
-  order      Int      @default(0)
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  order      Int       @default(0)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
   createdBy  String?
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime  @updatedAt
   updatedBy  String?
   deletedAt  DateTime?
   deletedBy  String?
-  studio     Studio   @relation(fields: [studioId], references: [id])
+  studio     Studio    @relation(fields: [studioId], references: [id])
 
   @@index([studioId])
   @@index([order])
@@ -1007,22 +1007,22 @@ model StudioFaq {
 }
 
 model StudioTestimonial {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   studioId  String
   name      String
   role      String?
   text      String
-  rating    Int      @default(5)
+  rating    Int       @default(5)
   avatarUrl String?
-  order     Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  order     Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
   createdBy String?
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
   updatedBy String?
   deletedAt DateTime?
   deletedBy String?
-  studio    Studio   @relation(fields: [studioId], references: [id])
+  studio    Studio    @relation(fields: [studioId], references: [id])
 
   @@index([studioId])
   @@index([order])
@@ -1051,9 +1051,9 @@ model StudioBlackoutDate {
 model StudioSchedule {
   id        String   @id @default(cuid())
   studioId  String
-  dayOfWeek Int      // 0=Sunday, 1=Monday, ..., 6=Saturday
-  openTime  String   // "09:00" (HH:mm)
-  closeTime String   // "22:00" (HH:mm)
+  dayOfWeek Int // 0=Sunday, 1=Monday, ..., 6=Saturday
+  openTime  String // "09:00" (HH:mm)
+  closeTime String // "22:00" (HH:mm)
   isClosed  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1070,8 +1070,8 @@ model StudioAddOn {
   description   String?
   price         Decimal   @db.Decimal(10, 2)
   originalPrice Decimal?  @db.Decimal(10, 2)
-  category      String?   // e.g. "equipment", "lighting", "props", "crew", "catering"
-  iconName      String?   // lucide icon name e.g. "Camera", "Lightbulb"
+  category      String? // e.g. "equipment", "lighting", "props", "crew", "catering"
+  iconName      String? // lucide icon name e.g. "Camera", "Lightbulb"
   sortOrder     Int       @default(0)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -1210,8 +1210,8 @@ model RecurringSeries {
 model Kit {
   id              String         @id @default(cuid())
   name            String
-  nameEn          String?        // English name
-  nameZh          String?        // Chinese name
+  nameEn          String? // English name
+  nameZh          String? // Chinese name
   slug            String         @unique
   description     String?
   descriptionEn   String?        @db.Text // English description
@@ -1503,27 +1503,27 @@ model ApprovalRequest {
 }
 
 model Media {
-  id             String     @id @default(cuid())
-  url            String
-  type           String
-  filename       String
-  mimeType       String
-  size           Int?
-  equipmentId    String?
-  studioId       String?
-  sortOrder      Int?       @default(0)
-  altText        String?
-  pendingReview  Boolean    @default(false)
-  imageSource    String?    // "upload" | "ai" | "stock" | "brand"
-  qualityScore   Float?
-  createdAt      DateTime   @default(now())
-  createdBy      String?
-  updatedAt      DateTime   @updatedAt
-  updatedBy      String?
-  deletedAt      DateTime?
-  deletedBy      String?
-  equipment      Equipment? @relation(fields: [equipmentId], references: [id])
-  studio         Studio?    @relation(fields: [studioId], references: [id])
+  id            String     @id @default(cuid())
+  url           String
+  type          String
+  filename      String
+  mimeType      String
+  size          Int?
+  equipmentId   String?
+  studioId      String?
+  sortOrder     Int?       @default(0)
+  altText       String?
+  pendingReview Boolean    @default(false)
+  imageSource   String? // "upload" | "ai" | "stock" | "brand"
+  qualityScore  Float?
+  createdAt     DateTime   @default(now())
+  createdBy     String?
+  updatedAt     DateTime   @updatedAt
+  updatedBy     String?
+  deletedAt     DateTime?
+  deletedBy     String?
+  equipment     Equipment? @relation(fields: [equipmentId], references: [id])
+  studio        Studio?    @relation(fields: [studioId], references: [id])
 
   @@index([equipmentId])
   @@index([studioId])

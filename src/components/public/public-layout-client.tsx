@@ -35,7 +35,7 @@ export function PublicLayoutClient({ children, flags }: PublicLayoutClientProps)
       {/* Top padding compensates for removed category bar; bottom padding for mobile nav bar */}
       <main
         id="main-content"
-        className="flex min-h-[calc(100vh-theme(spacing.14)-1px)] flex-col pt-4 pb-[64px] md:pt-10 lg:pb-0"
+        className="flex min-h-[calc(100vh-theme(spacing.14)-1px)] flex-col pb-[64px] pt-4 md:pt-10 lg:pb-0"
       >
         {children}
       </main>

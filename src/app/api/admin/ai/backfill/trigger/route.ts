@@ -13,7 +13,10 @@ import { z } from 'zod'
 export const dynamic = 'force-dynamic'
 
 const bodySchema = z.object({
-  types: z.array(z.enum(['text', 'photo', 'spec'])).min(1).default(['text']),
+  types: z
+    .array(z.enum(['text', 'photo', 'spec']))
+    .min(1)
+    .default(['text']),
   forceReprocess: z.boolean().optional(),
   productIds: z.array(z.string().cuid()).optional(),
   minQualityScore: z.number().int().min(0).max(100).optional(),
@@ -54,7 +57,10 @@ export async function POST(request: NextRequest) {
       action: 'backfill.trigger',
       resourceType: 'AiJob',
       resourceId: jobId ?? undefined,
-      metadata: { totalProducts: report.totalProducts, productsQueued: report.products?.length ?? 0 },
+      metadata: {
+        totalProducts: report.totalProducts,
+        productsQueued: report.products?.length ?? 0,
+      },
     })
     return NextResponse.json({
       data: {

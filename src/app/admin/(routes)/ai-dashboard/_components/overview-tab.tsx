@@ -146,7 +146,7 @@ function SyncCatalogButton({ onSuccess }: { onSuccess: () => void }) {
       disabled={syncing}
       className="mt-2"
     >
-      {syncing ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
+      {syncing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : null}
       إنشاء منتجات من المعدات
     </Button>
   )
@@ -186,7 +186,11 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
         toast({ title: 'تم', description: `اكتمل ملء ${d.processed} منتج بنجاح` })
         notifyJobComplete(d.processed)
       } else {
-        toast({ title: 'فشل', description: 'فشلت بعض العناصر أثناء المعالجة', variant: 'destructive' })
+        toast({
+          title: 'فشل',
+          description: 'فشلت بعض العناصر أثناء المعالجة',
+          variant: 'destructive',
+        })
       }
     },
     onError: () => {
@@ -226,7 +230,9 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       const [summaryRes, trendRes, productsRes, spendRes] = await Promise.all([
         fetch('/api/admin/ai/quality/summary'),
         fetch('/api/admin/ai/quality/trend?days=84'),
-        fetch(`/api/admin/ai/quality/products?sort=${sortBottomByRevenue ? 'revenue' : 'score'}&order=${sortBottomByRevenue ? 'desc' : 'asc'}&limit=20`),
+        fetch(
+          `/api/admin/ai/quality/products?sort=${sortBottomByRevenue ? 'revenue' : 'score'}&order=${sortBottomByRevenue ? 'desc' : 'asc'}&limit=20`
+        ),
         fetch('/api/admin/ai/spend-summary'),
       ])
       if (summaryRes.ok) {
@@ -248,7 +254,11 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       }
       if (trendRes.ok) {
         const t = await trendRes.json()
-        const arr = (t.data ?? t) as Array<{ date: string; avgScore: number; totalProducts: number }>
+        const arr = (t.data ?? t) as Array<{
+          date: string
+          avgScore: number
+          totalProducts: number
+        }>
         setTrend(Array.isArray(arr) ? arr : [])
       }
       if (productsRes.ok) {
@@ -268,12 +278,16 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
     }
   }, [toast, sortBottomByRevenue])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  useEffect(() => {
+    fetchAll()
+  }, [fetchAll])
 
   const isOverBudget =
     spendSummary &&
-    ((spendSummary.daily.budget != null && spendSummary.daily.spent >= spendSummary.daily.budget * 0.95) ||
-      (spendSummary.monthly.budget != null && spendSummary.monthly.spent >= spendSummary.monthly.budget * 0.95))
+    ((spendSummary.daily.budget != null &&
+      spendSummary.daily.spent >= spendSummary.daily.budget * 0.95) ||
+      (spendSummary.monthly.budget != null &&
+        spendSummary.monthly.spent >= spendSummary.monthly.budget * 0.95))
 
   useEffect(() => {
     async function fetchCost() {
@@ -291,7 +305,9 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
           }
         }
         if (totalProcessed > 0) setAvgCostPerProduct(totalCost / totalProcessed)
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
     fetchCost()
   }, [])
@@ -329,13 +345,23 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
         toast({ title: 'تم', description: data.message })
         setIsFillAllRunning(false)
       } else {
-        setFillAllProgress({ status: 'running', progress: 0, processed: 0, total: data.queued ?? 0, errors: 0 })
+        setFillAllProgress({
+          status: 'running',
+          progress: 0,
+          processed: 0,
+          total: data.queued ?? 0,
+          errors: 0,
+        })
         toast({ title: 'تم', description: `تم إدراج ${data.queued} منتج في قائمة المعالجة` })
         if (data.jobId) setActiveJobId(data.jobId)
       }
     } catch (e) {
       setIsFillAllRunning(false)
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تشغيل الملء', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تشغيل الملء',
+        variant: 'destructive',
+      })
     }
   }, [fetchAll, toast])
 
@@ -355,7 +381,11 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       })
       setBottomProducts((prev) => prev.filter((p) => p.id !== productId))
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تشغيل الملء', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تشغيل الملء',
+        variant: 'destructive',
+      })
     } finally {
       setFillingId(null)
     }
@@ -383,16 +413,20 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       .then((data) => {
         if (!cancelled && typeof data?.count === 'number') setFillEstimateCount(data.count)
       })
-      .catch(() => { if (!cancelled) setFillEstimateCount(null) })
-      .finally(() => { if (!cancelled) setFillEstimateLoading(false) })
-    return () => { cancelled = true }
+      .catch(() => {
+        if (!cancelled) setFillEstimateCount(null)
+      })
+      .finally(() => {
+        if (!cancelled) setFillEstimateLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [showFillAllDialog, revenueWeighted, minQualityScore])
 
   const fillCount = fillEstimateCount ?? summary?.totalProducts ?? 0
   const scopedEstimatedCost =
-    avgCostPerProduct != null && fillCount > 0
-      ? (fillCount * avgCostPerProduct).toFixed(2)
-      : null
+    avgCostPerProduct != null && fillCount > 0 ? (fillCount * avgCostPerProduct).toFixed(2) : null
 
   const donutData = summary?.gaps
     ? Object.entries(summary.gaps)
@@ -427,8 +461,10 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
         </div>
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
@@ -443,9 +479,10 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
         <Alert className="border-amber-200 bg-amber-50">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">لا توجد منتجات في الكتالوج</AlertTitle>
-          <AlertDescription className="text-amber-700 space-y-2">
+          <AlertDescription className="space-y-2 text-amber-700">
             <span className="block">
-              لوحة الذكاء الاصطناعي تعرض بيانات من جدول <strong>Product</strong> (المنتجات). إذا كان لديك معدات (Equipment) فقط، انقر أدناه لإنشاء سجلات المنتجات منها ثم حدّث الصفحة.
+              لوحة الذكاء الاصطناعي تعرض بيانات من جدول <strong>Product</strong> (المنتجات). إذا كان
+              لديك معدات (Equipment) فقط، انقر أدناه لإنشاء سجلات المنتجات منها ثم حدّث الصفحة.
             </span>
             <SyncCatalogButton onSuccess={fetchAll} />
           </AlertDescription>
@@ -453,7 +490,7 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       )}
 
       {/* KPI Cards — 2-col on mobile, 4-col on desktop */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي المنتجات</CardTitle>
@@ -479,7 +516,9 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(summary?.distribution?.good ?? 0) + (summary?.distribution?.fair ?? 0) + (summary?.distribution?.poor ?? 0)}
+              {(summary?.distribution?.good ?? 0) +
+                (summary?.distribution?.fair ?? 0) +
+                (summary?.distribution?.poor ?? 0)}
             </div>
           </CardContent>
         </Card>
@@ -498,40 +537,58 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       </div>
 
       {/* Budget status bar */}
-      {spendSummary && (spendSummary.monthly.budget != null || spendSummary.daily.budget != null) && (
-        <Card className="border-muted">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">ميزانية الذكاء الاصطناعي</CardTitle>
-            <CardDescription>
-              شهري: ${spendSummary.monthly.spent.toFixed(2)}
-              {spendSummary.monthly.budget != null && ` / $${spendSummary.monthly.budget.toFixed(2)}`}
-              {' • '}
-              يومي: ${spendSummary.daily.spent.toFixed(2)}
-              {spendSummary.daily.budget != null && ` / $${spendSummary.daily.budget.toFixed(2)}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {spendSummary.monthly.budget != null && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span>الشهري</span>
-                  <span>{Math.round((spendSummary.monthly.spent / spendSummary.monthly.budget) * 100)}%</span>
+      {spendSummary &&
+        (spendSummary.monthly.budget != null || spendSummary.daily.budget != null) && (
+          <Card className="border-muted">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">ميزانية الذكاء الاصطناعي</CardTitle>
+              <CardDescription>
+                شهري: ${spendSummary.monthly.spent.toFixed(2)}
+                {spendSummary.monthly.budget != null &&
+                  ` / $${spendSummary.monthly.budget.toFixed(2)}`}
+                {' • '}
+                يومي: ${spendSummary.daily.spent.toFixed(2)}
+                {spendSummary.daily.budget != null && ` / $${spendSummary.daily.budget.toFixed(2)}`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {spendSummary.monthly.budget != null && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>الشهري</span>
+                    <span>
+                      {Math.round((spendSummary.monthly.spent / spendSummary.monthly.budget) * 100)}
+                      %
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(
+                      100,
+                      (spendSummary.monthly.spent / spendSummary.monthly.budget) * 100
+                    )}
+                    className={
+                      spendSummary.monthly.remaining != null && spendSummary.monthly.remaining <= 0
+                        ? '[&>div]:bg-red-500'
+                        : spendSummary.monthly.remaining != null &&
+                            spendSummary.monthly.remaining < spendSummary.monthly.budget * 0.2
+                          ? '[&>div]:bg-amber-500'
+                          : undefined
+                    }
+                  />
                 </div>
-                <Progress
-                  value={Math.min(100, (spendSummary.monthly.spent / spendSummary.monthly.budget) * 100)}
-                  className={spendSummary.monthly.remaining != null && spendSummary.monthly.remaining <= 0 ? ' [&>div]:bg-red-500' : spendSummary.monthly.remaining != null && spendSummary.monthly.remaining < spendSummary.monthly.budget * 0.2 ? ' [&>div]:bg-amber-500' : undefined}
-                />
-              </div>
-            )}
-            {isOverBudget && (
-              <Alert variant="destructive" className="py-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>تم استنفاد الميزانية. لا يمكن تشغيل ملء الكل حتى إعادة تعيين الميزانية أو زيادة الحد.</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              )}
+              {isOverBudget && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    تم استنفاد الميزانية. لا يمكن تشغيل ملء الكل حتى إعادة تعيين الميزانية أو زيادة
+                    الحد.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       {/* Fill-all job progress */}
       {isFillAllRunning && fillAllProgress && (
@@ -543,7 +600,10 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
                 <span className="font-medium">جاري الملء بالذكاء الاصطناعي</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>{fillAllProgress.processed} / {fillAllProgress.total} منتج ({fillAllProgress.progress}%)</span>
+                <span>
+                  {fillAllProgress.processed} / {fillAllProgress.total} منتج (
+                  {fillAllProgress.progress}%)
+                </span>
               </div>
               <Progress value={fillAllProgress.progress} />
               <p className="text-xs text-muted-foreground">يرجى الانتظار حتى تكتمل العملية...</p>
@@ -553,12 +613,14 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
       )}
 
       {/* Gauge + Donut — stack on mobile */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>مقياس الجودة الإجمالي</CardTitle>
             <CardDescription>
-              متوسط نقاط المحتوى عبر الكتالوج. الصيغة: ترجمات (25) + سيو (20) + وصف قصير (10) + وصف طويل ≥100 حرف (15) + 4+ صور (30) = 100. إذا كانت النتيجة ~63 فغالباً ينقص وصف طويل كافٍ أو صور كافية.
+              متوسط نقاط المحتوى عبر الكتالوج. الصيغة: ترجمات (25) + سيو (20) + وصف قصير (10) + وصف
+              طويل ≥100 حرف (15) + 4+ صور (30) = 100. إذا كانت النتيجة ~63 فغالباً ينقص وصف طويل
+              كافٍ أو صور كافية.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
@@ -574,15 +636,27 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
             {donutData.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={donutData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: ${value}`}>
-                    {donutData.map((_, i) => <Cell key={i} fill={GAP_COLORS[i % GAP_COLORS.length]} />)}
+                  <Pie
+                    data={donutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {donutData.map((_, i) => (
+                      <Cell key={i} fill={GAP_COLORS[i % GAP_COLORS.length]} />
+                    ))}
                   </Pie>
                   <Tooltip formatter={(v) => [v, 'منتج']} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">لا توجد فجوات مسجلة</p>
+              <p className="py-8 text-center text-muted-foreground">لا توجد فجوات مسجلة</p>
             )}
           </CardContent>
         </Card>
@@ -602,7 +676,13 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
                 <XAxis dataKey="date" />
                 <YAxis domain={[0, 100]} />
                 <Tooltip formatter={(value) => [`${value}%`, 'متوسط النقاط']} />
-                <Line type="monotone" dataKey="avgScore" stroke="#1F87E8" strokeWidth={2} name="نقاط الجودة" />
+                <Line
+                  type="monotone"
+                  dataKey="avgScore"
+                  stroke="#1F87E8"
+                  strokeWidth={2}
+                  name="نقاط الجودة"
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -611,7 +691,7 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
 
       {/* Goal tracking */}
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>تتبع الهدف</CardTitle>
             <CardDescription>حدد هدف نقاط الجودة واعرف كم منتج يحتاج تحسين</CardDescription>
@@ -641,16 +721,24 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             {pointsNeeded > 0 && (
-              <span><span className="font-bold text-primary">{Math.ceil(pointsNeeded)}</span> نقاط مطلوبة</span>
+              <span>
+                <span className="font-bold text-primary">{Math.ceil(pointsNeeded)}</span> نقاط
+                مطلوبة
+              </span>
             )}
-            <span><span className="font-bold text-primary">{productsToReachTarget}</span> منتج يحتاج تحسين</span>
+            <span>
+              <span className="font-bold text-primary">{productsToReachTarget}</span> منتج يحتاج
+              تحسين
+            </span>
           </div>
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
             <span className="text-2xl">{milestone.emoji}</span>
             <div>
               <p className="font-medium">المستوى الحالي: {milestone.label}</p>
               {milestone.next && (
-                <p className="text-xs text-muted-foreground">التالي: {milestone.next} ({milestone.nextAt}%+)</p>
+                <p className="text-xs text-muted-foreground">
+                  التالي: {milestone.next} ({milestone.nextAt}%+)
+                </p>
               )}
             </div>
           </div>
@@ -659,30 +747,35 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
 
       {/* Bottom-20 products — responsive overflow on mobile */}
       <Card data-testid="overview-bottom-20">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>أقل 20 منتجاً من حيث الجودة</CardTitle>
             <CardDescription>ملء الآن بالذكاء الاصطناعي لكل منتج</CardDescription>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <Switch
               id="sort-bottom-revenue"
               checked={sortBottomByRevenue}
               onCheckedChange={setSortBottomByRevenue}
               data-testid="sort-bottom-by-revenue"
             />
-            <Label htmlFor="sort-bottom-revenue" className="cursor-pointer text-sm whitespace-nowrap">
+            <Label
+              htmlFor="sort-bottom-revenue"
+              className="cursor-pointer whitespace-nowrap text-sm"
+            >
               ترتيب حسب الإيرادات
             </Label>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {bottomProducts.length === 0 ? (
-            <div className="text-center py-12 space-y-2">
+            <div className="space-y-2 py-12 text-center">
               <p className="text-muted-foreground">لا توجد منتجات في القائمة</p>
               {(summary?.totalProducts ?? 0) === 0 && (
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  لوحة الذكاء الاصطناعي تعرض بيانات من كتالوج <strong>المنتجات (Product)</strong>. إذا كان الكتالوج فارغاً فلن تظهر أي عناصر. أضف أو استورد منتجات من قسم المخزون/المنتجات لرؤية البيانات هنا.
+                <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                  لوحة الذكاء الاصطناعي تعرض بيانات من كتالوج <strong>المنتجات (Product)</strong>.
+                  إذا كان الكتالوج فارغاً فلن تظهر أي عناصر. أضف أو استورد منتجات من قسم
+                  المخزون/المنتجات لرؤية البيانات هنا.
                 </p>
               )}
             </div>
@@ -704,22 +797,46 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
                       <TableRow key={p.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium truncate max-w-[120px] sm:max-w-none">{p.name}</span>
-                            <Link href={`/admin/inventory/equipment/${p.id}`} target="_blank" className="text-muted-foreground hover:text-primary shrink-0" title="فتح صفحة المنتج">
+                            <span className="max-w-[120px] truncate font-medium sm:max-w-none">
+                              {p.name}
+                            </span>
+                            <Link
+                              href={`/admin/inventory/equipment/${p.id}`}
+                              target="_blank"
+                              className="shrink-0 text-muted-foreground hover:text-primary"
+                              title="فتح صفحة المنتج"
+                            >
                               <ExternalLink className="h-3.5 w-3.5" />
                             </Link>
                           </div>
                         </TableCell>
-                        <TableCell><span className="font-mono">{p.score}%</span></TableCell>
+                        <TableCell>
+                          <span className="font-mono">{p.score}%</span>
+                        </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <div className="flex flex-wrap gap-1">
-                            {gaps.map((g) => <Badge key={g} variant="secondary" className="text-xs">{GAP_LABELS[g] ?? g}</Badge>)}
-                            {gaps.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                            {gaps.map((g) => (
+                              <Badge key={g} variant="secondary" className="text-xs">
+                                {GAP_LABELS[g] ?? g}
+                              </Badge>
+                            ))}
+                            {gaps.length === 0 && (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-left">
-                          <Button size="sm" variant="outline" disabled={fillingId === p.id || isFillAllRunning} onClick={() => handleFillNow(p.id)}>
-                            {fillingId === p.id ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : <Sparkles className="h-4 w-4 ml-1" />}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={fillingId === p.id || isFillAllRunning}
+                            onClick={() => handleFillNow(p.id)}
+                          >
+                            {fillingId === p.id ? (
+                              <Loader2 className="ml-1 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Sparkles className="ml-1 h-4 w-4" />
+                            )}
                             {fillingId === p.id ? 'جاري...' : 'ملء'}
                           </Button>
                         </TableCell>
@@ -743,8 +860,17 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline" className="w-full sm:w-auto" disabled={isRefreshing} onClick={handleRefresh}>
-            {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            disabled={isRefreshing}
+            onClick={handleRefresh}
+          >
+            {isRefreshing ? (
+              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="ml-2 h-4 w-4" />
+            )}
             تحديث البيانات
           </Button>
           <Button
@@ -762,14 +888,22 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
               })
             }
           >
-            <FileDown className="h-4 w-4 ml-2" />
+            <FileDown className="ml-2 h-4 w-4" />
             تصدير PDF
           </Button>
-          <Button className="w-full sm:w-auto" disabled={isFillAllRunning || !!isOverBudget} onClick={() => setShowFillAllDialog(true)}>
-            {isFillAllRunning && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+          <Button
+            className="w-full sm:w-auto"
+            disabled={isFillAllRunning || !!isOverBudget}
+            onClick={() => setShowFillAllDialog(true)}
+          >
+            {isFillAllRunning && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
             ملء الكل بالذكاء الاصطناعي
           </Button>
-          <Button variant="secondary" className="w-full sm:w-auto" onClick={() => onSwitchTab('analytics')}>
+          <Button
+            variant="secondary"
+            className="w-full sm:w-auto"
+            onClick={() => onSwitchTab('analytics')}
+          >
             عرض سجل المهام
           </Button>
         </CardContent>
@@ -780,35 +914,59 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>ملء الكل بالذكاء الاصطناعي</DialogTitle>
-            <DialogDescription>هل أنت متأكد؟ سيتم ملء جميع المنتجات بالذكاء الاصطناعي.</DialogDescription>
+            <DialogDescription>
+              هل أنت متأكد؟ سيتم ملء جميع المنتجات بالذكاء الاصطناعي.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-between rounded-lg border p-4">
-            <Label htmlFor="revenue-weighted" className="cursor-pointer flex-1">
+            <Label htmlFor="revenue-weighted" className="flex-1 cursor-pointer">
               ترتيب حسب الإيرادات (ملء الأعلى إيراداً أولاً)
             </Label>
-            <Switch id="revenue-weighted" checked={revenueWeighted} onCheckedChange={setRevenueWeighted} />
+            <Switch
+              id="revenue-weighted"
+              checked={revenueWeighted}
+              onCheckedChange={setRevenueWeighted}
+            />
           </div>
           <div className="space-y-2 rounded-lg border p-4">
             <Label>نوع الملء</Label>
             <div className="flex flex-wrap gap-4 pt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <Checkbox
                   checked={fillTypes.includes('text')}
-                  onCheckedChange={(c) => setFillTypes((prev) => (c === true ? [...prev.filter((t) => t !== 'text'), 'text'] : prev.filter((t) => t !== 'text')))}
+                  onCheckedChange={(c) =>
+                    setFillTypes((prev) =>
+                      c === true
+                        ? [...prev.filter((t) => t !== 'text'), 'text']
+                        : prev.filter((t) => t !== 'text')
+                    )
+                  }
                 />
                 <span>نص (وصف، SEO)</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <Checkbox
                   checked={fillTypes.includes('photo')}
-                  onCheckedChange={(c) => setFillTypes((prev) => (c === true ? [...prev.filter((t) => t !== 'photo'), 'photo'] : prev.filter((t) => t !== 'photo')))}
+                  onCheckedChange={(c) =>
+                    setFillTypes((prev) =>
+                      c === true
+                        ? [...prev.filter((t) => t !== 'photo'), 'photo']
+                        : prev.filter((t) => t !== 'photo')
+                    )
+                  }
                 />
                 <span>صور</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <Checkbox
                   checked={fillTypes.includes('spec')}
-                  onCheckedChange={(c) => setFillTypes((prev) => (c === true ? [...prev.filter((t) => t !== 'spec'), 'spec'] : prev.filter((t) => t !== 'spec')))}
+                  onCheckedChange={(c) =>
+                    setFillTypes((prev) =>
+                      c === true
+                        ? [...prev.filter((t) => t !== 'spec'), 'spec']
+                        : prev.filter((t) => t !== 'spec')
+                    )
+                  }
                 />
                 <span>مواصفات</span>
               </label>
@@ -824,13 +982,17 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
               step={5}
               className="w-full"
             />
-            <p className="text-xs text-muted-foreground">المنتجات ذات النقاط أقل من {minQualityScore} فقط</p>
+            <p className="text-xs text-muted-foreground">
+              المنتجات ذات النقاط أقل من {minQualityScore} فقط
+            </p>
           </div>
           {isOverBudget && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>الميزانية مستنفدة</AlertTitle>
-              <AlertDescription>لا يمكن تشغيل ملء الكل لأن الميزانية اليومية أو الشهرية قد استُنفدت.</AlertDescription>
+              <AlertDescription>
+                لا يمكن تشغيل ملء الكل لأن الميزانية اليومية أو الشهرية قد استُنفدت.
+              </AlertDescription>
             </Alert>
           )}
           <Alert variant="default" className="border-amber-200 bg-amber-50">
@@ -846,7 +1008,7 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
                 <>
                   <p>سيتم معالجة {fillCount} منتج</p>
                   <p className="font-medium">التكلفة التقديرية: ~${scopedEstimatedCost}</p>
-                  <p className="text-xs mt-1">هذه العملية قد تستغرق وقتاً ولا يمكن إيقافها</p>
+                  <p className="mt-1 text-xs">هذه العملية قد تستغرق وقتاً ولا يمكن إيقافها</p>
                 </>
               ) : (
                 <p>التكلفة غير معروفة — راجع إعدادات الذكاء الاصطناعي</p>
@@ -854,8 +1016,12 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
             </AlertDescription>
           </Alert>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowFillAllDialog(false)}>إلغاء</Button>
-            <Button onClick={handleFillAllConfirm} disabled={!!isOverBudget}>تأكيد</Button>
+            <Button variant="outline" onClick={() => setShowFillAllDialog(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={handleFillAllConfirm} disabled={!!isOverBudget}>
+              تأكيد
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

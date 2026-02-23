@@ -17,17 +17,8 @@ export const dynamic = 'force-dynamic'
 const jobsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(30),
   page: z.coerce.number().int().min(1).default(1),
-  type: z
-    .enum([
-      'FULL_BACKFILL',
-      'TEXT_BACKFILL',
-      'PHOTO_BACKFILL',
-      'SPEC_BACKFILL',
-    ])
-    .optional(),
-  status: z
-    .enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'PAUSED'])
-    .optional(),
+  type: z.enum(['FULL_BACKFILL', 'TEXT_BACKFILL', 'PHOTO_BACKFILL', 'SPEC_BACKFILL']).optional(),
+  status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'PAUSED']).optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
 })
@@ -57,7 +48,11 @@ export async function GET(request: NextRequest) {
   const { limit, page, type, status, dateFrom, dateTo } = parsed.data
 
   try {
-    const where: { type?: AiJobType; status?: JobStatus; triggeredAt?: { gte?: Date; lte?: Date } } = {}
+    const where: {
+      type?: AiJobType
+      status?: JobStatus
+      triggeredAt?: { gte?: Date; lte?: Date }
+    } = {}
     if (type) where.type = type as AiJobType
     if (status) where.status = status as JobStatus
     if (dateFrom || dateTo) {

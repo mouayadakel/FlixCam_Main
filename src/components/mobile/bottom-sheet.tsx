@@ -17,13 +17,7 @@ export interface BottomSheetProps {
  * Mobile slide-up drawer for filters, actions, detail panels.
  * Uses Shadcn Sheet with side="bottom". RTL-aware (close button positioned with end-4).
  */
-function BottomSheet({
-  open,
-  onOpenChange,
-  title,
-  children,
-  className,
-}: BottomSheetProps) {
+function BottomSheet({ open, onOpenChange, title, children, className }: BottomSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -40,7 +34,7 @@ function BottomSheet({
             <SheetTitle className="text-lg font-semibold">{title}</SheetTitle>
           </SheetHeader>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto -webkit-overflow-scrolling-touch">
+        <div className="-webkit-overflow-scrolling-touch min-h-0 flex-1 overflow-y-auto">
           {children}
         </div>
       </SheetContent>

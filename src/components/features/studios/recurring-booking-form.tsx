@@ -66,12 +66,13 @@ export function RecurringBookingForm({
   ]
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border-light/60 bg-white p-6 shadow-card">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 rounded-2xl border border-border-light/60 bg-white p-6 shadow-card"
+    >
       <div className="flex items-center gap-2">
         <Repeat className="h-5 w-5 text-brand-primary" />
-        <h3 className="text-lg font-semibold text-text-heading">
-          {t('studios.recurringBooking')}
-        </h3>
+        <h3 className="text-lg font-semibold text-text-heading">{t('studios.recurringBooking')}</h3>
       </div>
 
       <p className="text-sm text-text-muted">{studioName}</p>
@@ -127,7 +128,9 @@ export function RecurringBookingForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-text-muted">{t('studios.hoursPerSession')}</Label>
+          <Label className="text-xs font-medium text-text-muted">
+            {t('studios.hoursPerSession')}
+          </Label>
           <Input
             type="number"
             value={hoursPerSession}
@@ -155,7 +158,9 @@ export function RecurringBookingForm({
             ))}
           </div>
           <div className="mt-3 flex items-baseline gap-2 border-t border-border-light/50 pt-3">
-            <span className="text-sm text-text-muted">{totalHours} {t('studios.totalHours')}</span>
+            <span className="text-sm text-text-muted">
+              {totalHours} {t('studios.totalHours')}
+            </span>
             <span className="text-lg font-bold text-brand-primary">
               {totalCost.toLocaleString()} SAR
             </span>

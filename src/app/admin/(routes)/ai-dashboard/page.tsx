@@ -28,19 +28,36 @@ export default function AIDashboardPage() {
   return (
     <div className="space-y-6" dir="rtl" data-testid="ai-dashboard-page">
       <div>
-        <h1 className="text-3xl font-bold" data-testid="ai-dashboard-title">لوحة الذكاء الاصطناعي</h1>
+        <h1 className="text-3xl font-bold" data-testid="ai-dashboard-title">
+          لوحة الذكاء الاصطناعي
+        </h1>
         <p className="mt-2 text-muted-foreground">
           نظرة عامة على صحة المحتوى، والمسح، والملء التلقائي، وسجل المهام
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4" data-testid="ai-dashboard-tabs">
-        <TabsList className="grid w-full grid-cols-5 max-w-3xl" data-testid="ai-dashboard-tablist">
-          <TabsTrigger value="overview" data-testid="ai-tab-overview">نظرة عامة</TabsTrigger>
-          <TabsTrigger value="content-health" data-testid="ai-tab-content-health">صحة المحتوى</TabsTrigger>
-          <TabsTrigger value="content-review" data-testid="ai-tab-content-review">مراجعة المحتوى</TabsTrigger>
-          <TabsTrigger value="image-review" data-testid="ai-tab-image-review">مراجعة الصور</TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="ai-tab-analytics">التحليلات</TabsTrigger>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+        data-testid="ai-dashboard-tabs"
+      >
+        <TabsList className="grid w-full max-w-3xl grid-cols-5" data-testid="ai-dashboard-tablist">
+          <TabsTrigger value="overview" data-testid="ai-tab-overview">
+            نظرة عامة
+          </TabsTrigger>
+          <TabsTrigger value="content-health" data-testid="ai-tab-content-health">
+            صحة المحتوى
+          </TabsTrigger>
+          <TabsTrigger value="content-review" data-testid="ai-tab-content-review">
+            مراجعة المحتوى
+          </TabsTrigger>
+          <TabsTrigger value="image-review" data-testid="ai-tab-image-review">
+            مراجعة الصور
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="ai-tab-analytics">
+            التحليلات
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" data-testid="ai-tabpanel-overview">

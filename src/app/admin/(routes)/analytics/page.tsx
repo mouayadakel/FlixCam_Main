@@ -199,20 +199,30 @@ export default function AnalyticsPage() {
     try {
       const res = await fetch(`/api/analytics/bookings?days=${bookingDays}`)
       if (res.ok) setBookingAnalytics(await res.json())
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }, [bookingDays])
 
   const loadCustomerInsights = useCallback(async () => {
     try {
       const res = await fetch(`/api/analytics/customers?days=${customerDays}`)
       if (res.ok) setCustomerInsights(await res.json())
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }, [customerDays])
 
   useEffect(() => {
     const run = async () => {
       setLoading(true)
-      await Promise.all([loadExecutive(), loadTrends(), loadUtilization(), loadBookingAnalytics(), loadCustomerInsights()])
+      await Promise.all([
+        loadExecutive(),
+        loadTrends(),
+        loadUtilization(),
+        loadBookingAnalytics(),
+        loadCustomerInsights(),
+      ])
       setLoading(false)
     }
     run()
@@ -236,7 +246,13 @@ export default function AnalyticsPage() {
 
   const handleRefresh = () => {
     setLoading(true)
-    Promise.all([loadExecutive(), loadTrends(), loadUtilization(), loadBookingAnalytics(), loadCustomerInsights()]).finally(() => setLoading(false))
+    Promise.all([
+      loadExecutive(),
+      loadTrends(),
+      loadUtilization(),
+      loadBookingAnalytics(),
+      loadCustomerInsights(),
+    ]).finally(() => setLoading(false))
   }
 
   const exportCsv = (filename: string, headers: string[], rows: string[][]) => {
@@ -590,7 +606,9 @@ export default function AnalyticsPage() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">{formatCurrency(bookingAnalytics.totalRevenue)}</p>
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(bookingAnalytics.totalRevenue)}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -599,7 +617,9 @@ export default function AnalyticsPage() {
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">{formatCurrency(bookingAnalytics.avgBookingValue)}</p>
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(bookingAnalytics.avgBookingValue)}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -615,13 +635,16 @@ export default function AnalyticsPage() {
                       <ResponsiveContainer width="100%" height={280}>
                         <PieChart>
                           <Pie
-                            data={bookingAnalytics.byStatus.map((s) => ({ ...s, label: STATUS_LABELS[s.status] ?? s.status }))}
+                            data={bookingAnalytics.byStatus.map((s) => ({
+                              ...s,
+                              label: STATUS_LABELS[s.status] ?? s.status,
+                            }))}
                             dataKey="count"
                             nameKey="label"
                             cx="50%"
                             cy="50%"
                             outerRadius={100}
-                            label={({ label, count }) => `${label}: ${count}`}
+                            label={({ name, value }) => `${name}: ${value}`}
                           >
                             {bookingAnalytics.byStatus.map((_, i) => (
                               <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -655,8 +678,18 @@ export default function AnalyticsPage() {
                             ]}
                           />
                           <Legend />
-                          <Bar dataKey="count" fill="#1F87E8" name="الحجوزات" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="revenue" fill="#10B981" name="الإيرادات" radius={[4, 4, 0, 0]} />
+                          <Bar
+                            dataKey="count"
+                            fill="#1F87E8"
+                            name="الحجوزات"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <Bar
+                            dataKey="revenue"
+                            fill="#10B981"
+                            name="الإيرادات"
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
@@ -691,7 +724,12 @@ export default function AnalyticsPage() {
                   exportCsv(
                     `top-customers-${customerDays}d.csv`,
                     ['الاسم', 'البريد', 'عدد الحجوزات', 'إجمالي الإنفاق'],
-                    ci.topCustomers.map((c) => [c.name, c.email, String(c.bookingCount), String(c.totalSpend)])
+                    ci.topCustomers.map((c) => [
+                      c.name,
+                      c.email,
+                      String(c.bookingCount),
+                      String(c.totalSpend),
+                    ])
                   )
                 }}
               >
@@ -730,7 +768,9 @@ export default function AnalyticsPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-2xl font-bold">{customerInsights.repeatCustomers}</p>
-                    <p className="text-xs text-muted-foreground">نسبة التكرار: {customerInsights.repeatRate}%</p>
+                    <p className="text-xs text-muted-foreground">
+                      نسبة التكرار: {customerInsights.repeatRate}%
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -741,7 +781,8 @@ export default function AnalyticsPage() {
                   <CardContent>
                     <p className="text-2xl font-bold">
                       {customerInsights.acquisition.length > 0
-                        ? customerInsights.acquisition[customerInsights.acquisition.length - 1].count
+                        ? customerInsights.acquisition[customerInsights.acquisition.length - 1]
+                            .count
                         : 0}
                     </p>
                     <p className="text-xs text-muted-foreground">مستخدم جديد هذا الشهر</p>
@@ -772,10 +813,14 @@ export default function AnalyticsPage() {
                               <TableCell className="font-medium">{i + 1}</TableCell>
                               <TableCell>
                                 <div>{c.name}</div>
-                                <div className="text-xs text-muted-foreground" dir="ltr">{c.email}</div>
+                                <div className="text-xs text-muted-foreground" dir="ltr">
+                                  {c.email}
+                                </div>
                               </TableCell>
                               <TableCell>{c.bookingCount}</TableCell>
-                              <TableCell className="font-medium">{formatCurrency(c.totalSpend)}</TableCell>
+                              <TableCell className="font-medium">
+                                {formatCurrency(c.totalSpend)}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -800,7 +845,12 @@ export default function AnalyticsPage() {
                           <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                           <YAxis />
                           <Tooltip formatter={(v) => [v, 'مستخدم جديد']} />
-                          <Bar dataKey="count" fill="#8B5CF6" name="مستخدمين جدد" radius={[4, 4, 0, 0]} />
+                          <Bar
+                            dataKey="count"
+                            fill="#8B5CF6"
+                            name="مستخدمين جدد"
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (

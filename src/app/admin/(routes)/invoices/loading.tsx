@@ -8,7 +8,10 @@ export default function InvoicesLoading() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-      <TableSkeleton rowCount={8} headers={['رقم الفاتورة', 'العميل', 'المبلغ', 'الحالة', 'تاريخ الاستحقاق', '']} />
+      <TableSkeleton
+        rowCount={8}
+        headers={['رقم الفاتورة', 'العميل', 'المبلغ', 'الحالة', 'تاريخ الاستحقاق', '']}
+      />
     </div>
   )
 }

@@ -50,9 +50,7 @@ export const CartMergeService = {
           where: { id: existingItem.id },
           data: {
             quantity: existingItem.quantity + sessionItem.quantity,
-            subtotal: new Decimal(
-              Number(existingItem.subtotal) + Number(sessionItem.subtotal)
-            ),
+            subtotal: new Decimal(Number(existingItem.subtotal) + Number(sessionItem.subtotal)),
           },
         })
         // Delete the duplicate session item

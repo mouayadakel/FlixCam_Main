@@ -10,7 +10,16 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
-import { Eye, FileText, CheckCircle, XCircle, Download, PenTool, Clock, AlertTriangle } from 'lucide-react'
+import {
+  Eye,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Download,
+  PenTool,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -123,7 +132,13 @@ export default function ContractsPage() {
   }, [contracts])
 
   const statusSummary = useMemo(() => {
-    const counts: Record<string, number> = { draft: 0, pending_signature: 0, signed: 0, expired: 0, cancelled: 0 }
+    const counts: Record<string, number> = {
+      draft: 0,
+      pending_signature: 0,
+      signed: 0,
+      expired: 0,
+      cancelled: 0,
+    }
     for (const c of contracts) counts[c.status] = (counts[c.status] || 0) + 1
     return counts
   }, [contracts])
@@ -177,8 +192,11 @@ export default function ContractsPage() {
 
       {/* Status Summary */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('draft')}>
-          <CardContent className="pt-4 pb-3">
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('draft')}
+        >
+          <CardContent className="pb-3 pt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">مسودة</p>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -186,17 +204,27 @@ export default function ContractsPage() {
             <p className="text-2xl font-bold">{statusSummary.draft}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('pending_signature')}>
-          <CardContent className="pt-4 pb-3">
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('pending_signature')}
+        >
+          <CardContent className="pb-3 pt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">بانتظار التوقيع</p>
               <PenTool className="h-4 w-4 text-amber-500" />
             </div>
-            <p className={`text-2xl font-bold ${statusSummary.pending_signature > 0 ? 'text-amber-600' : ''}`}>{statusSummary.pending_signature}</p>
+            <p
+              className={`text-2xl font-bold ${statusSummary.pending_signature > 0 ? 'text-amber-600' : ''}`}
+            >
+              {statusSummary.pending_signature}
+            </p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('signed')}>
-          <CardContent className="pt-4 pb-3">
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('signed')}
+        >
+          <CardContent className="pb-3 pt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">موقّع</p>
               <CheckCircle className="h-4 w-4 text-green-500" />
@@ -204,17 +232,25 @@ export default function ContractsPage() {
             <p className="text-2xl font-bold text-green-600">{statusSummary.signed}</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('expired')}>
-          <CardContent className="pt-4 pb-3">
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('expired')}
+        >
+          <CardContent className="pb-3 pt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">منتهي</p>
               <Clock className="h-4 w-4 text-red-400" />
             </div>
-            <p className={`text-2xl font-bold ${statusSummary.expired > 0 ? 'text-red-600' : ''}`}>{statusSummary.expired}</p>
+            <p className={`text-2xl font-bold ${statusSummary.expired > 0 ? 'text-red-600' : ''}`}>
+              {statusSummary.expired}
+            </p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-primary/50" onClick={() => setStatusFilter('cancelled')}>
-          <CardContent className="pt-4 pb-3">
+        <Card
+          className="cursor-pointer hover:border-primary/50"
+          onClick={() => setStatusFilter('cancelled')}
+        >
+          <CardContent className="pb-3 pt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">ملغي</p>
               <XCircle className="h-4 w-4 text-gray-400" />

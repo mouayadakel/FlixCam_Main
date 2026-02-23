@@ -51,9 +51,7 @@ export default async function VendorBookingsPage() {
   })
 
   const now = new Date()
-  const lateReturns = bookings.filter(
-    (b) => b.status === 'ACTIVE' && new Date(b.endDate) < now
-  )
+  const lateReturns = bookings.filter((b) => b.status === 'ACTIVE' && new Date(b.endDate) < now)
   const activeCount = bookings.filter((b) => b.status === 'ACTIVE').length
   const confirmedCount = bookings.filter((b) => b.status === 'CONFIRMED').length
   const totalRevenue = bookings
@@ -71,7 +69,9 @@ export default async function VendorBookingsPage() {
         <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
           <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
           <div>
-            <p className="font-medium text-red-800">{t('ar', 'vendor.lateReturns').replace('{count}', String(lateReturns.length))}</p>
+            <p className="font-medium text-red-800">
+              {t('ar', 'vendor.lateReturns').replace('{count}', String(lateReturns.length))}
+            </p>
             <p className="text-sm text-red-700">{t('ar', 'vendor.lateReturnsDesc')}</p>
           </div>
         </div>
@@ -79,25 +79,25 @@ export default async function VendorBookingsPage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
-          <CardContent className="pt-4 pb-3">
+          <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">{t('ar', 'vendor.totalBookings')}</p>
             <p className="text-2xl font-bold">{bookings.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3">
+          <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">{t('ar', 'vendor.active')}</p>
             <p className="text-2xl font-bold text-green-600">{activeCount}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3">
+          <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">{t('ar', 'vendor.confirmed')}</p>
             <p className="text-2xl font-bold text-blue-600">{confirmedCount}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4 pb-3">
+          <CardContent className="pb-3 pt-4">
             <p className="text-sm text-muted-foreground">{t('ar', 'vendor.totalRevenue')}</p>
             <p className="text-xl font-bold">{formatCurrency(totalRevenue)}</p>
           </CardContent>
@@ -110,7 +110,9 @@ export default async function VendorBookingsPage() {
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">{t('ar', 'vendor.noBookingsYet')}</p>
+            <p className="py-12 text-center text-muted-foreground">
+              {t('ar', 'vendor.noBookingsYet')}
+            </p>
           ) : (
             <div className="space-y-4">
               {bookings.map((b) => (

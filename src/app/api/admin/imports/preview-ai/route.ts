@@ -92,8 +92,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Rows array is required' }, { status: 400 })
     }
 
-    const provider =
-      bodyProvider ?? ((process.env.AI_PROVIDER as 'openai' | 'gemini') || 'gemini')
+    const provider = bodyProvider ?? ((process.env.AI_PROVIDER as 'openai' | 'gemini') || 'gemini')
 
     const previewRows = rows.slice(0, 10)
 
@@ -220,8 +219,7 @@ export async function POST(request: NextRequest) {
     console.error('AI preview failed:', error)
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Failed to generate AI preview',
+        error: error instanceof Error ? error.message : 'Failed to generate AI preview',
       },
       { status: 500 }
     )

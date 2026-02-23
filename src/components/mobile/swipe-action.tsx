@@ -24,7 +24,9 @@ function SwipeActionItem({ children, actions, className }: SwipeActionItemProps)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    setSwipeDirection(typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 1 : -1)
+    setSwipeDirection(
+      typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? 1 : -1
+    )
   }, [])
 
   const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
@@ -58,13 +60,13 @@ function SwipeActionItem({ children, actions, className }: SwipeActionItemProps)
       <div
         className={cn(
           'absolute inset-y-0 flex items-center justify-end',
-          'rtl:justify-start rtl:left-0 rtl:right-auto'
+          'rtl:left-0 rtl:right-auto rtl:justify-start'
         )}
       >
         <div className="flex h-full items-stretch">{actions}</div>
       </div>
       <div
-        className="relative z-10 bg-background transition-transform duration-150 swipe-content"
+        className="swipe-content relative z-10 bg-background transition-transform duration-150"
         style={{
           ['--swipe-offset' as string]: `${offset}px`,
           ['--swipe-direction' as string]: String(swipeDirection),

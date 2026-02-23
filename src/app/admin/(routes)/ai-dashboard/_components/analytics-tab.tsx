@@ -10,14 +10,29 @@ import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from 'recharts'
 import { format } from 'date-fns'
 import { arSA } from 'date-fns/locale'
@@ -112,7 +127,8 @@ export function AnalyticsTab() {
       try {
         const params = new URLSearchParams({ limit: String(limit), page: String(page) })
         if (debouncedType !== 'all') params.set('type', debouncedType)
-        if (debouncedStatus !== 'all') params.set('status', STATUS_TO_API[debouncedStatus] ?? debouncedStatus)
+        if (debouncedStatus !== 'all')
+          params.set('status', STATUS_TO_API[debouncedStatus] ?? debouncedStatus)
         const res = await fetch(`/api/admin/ai/jobs?${params.toString()}`)
         if (res.ok) {
           const data = await res.json()
@@ -154,8 +170,10 @@ export function AnalyticsTab() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
         </div>
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
@@ -166,34 +184,44 @@ export function AnalyticsTab() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي المهام</CardTitle>
             <ListTodo className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{totalJobs}</div></CardContent>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalJobs}</div>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">المهام المكتملة</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-600">{doneJobs}</div></CardContent>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{doneJobs}</div>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">المهام الفاشلة</CardTitle>
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
-          <CardContent><div className={`text-2xl font-bold ${failedJobs > 0 ? 'text-red-600' : ''}`}>{failedJobs}</div></CardContent>
+          <CardContent>
+            <div className={`text-2xl font-bold ${failedJobs > 0 ? 'text-red-600' : ''}`}>
+              {failedJobs}
+            </div>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي التكلفة</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">${totalCost.toFixed(4)}</div></CardContent>
+          <CardContent>
+            <div className="text-2xl font-bold">${totalCost.toFixed(4)}</div>
+          </CardContent>
         </Card>
       </div>
 
@@ -202,16 +230,15 @@ export function AnalyticsTab() {
         <Card>
           <CardHeader>
             <CardTitle>مقارنة مقدمي الخدمة</CardTitle>
-            <CardDescription>Gemini vs OpenAI — الوظائف، التكلفة، معدل الموافقة، الوقت والأخطاء</CardDescription>
+            <CardDescription>
+              Gemini vs OpenAI — الوظائف، التكلفة، معدل الموافقة، الوقت والأخطاء
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {providerStats.map((p) => (
-                <div
-                  key={p.provider}
-                  className="rounded-lg border bg-muted/30 p-4 space-y-2"
-                >
-                  <p className="font-semibold capitalize text-lg">{p.provider}</p>
+                <div key={p.provider} className="space-y-2 rounded-lg border bg-muted/30 p-4">
+                  <p className="text-lg font-semibold capitalize">{p.provider}</p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     <span className="text-muted-foreground">المهام:</span>
                     <span className="font-medium">{p.totalJobs}</span>
@@ -235,7 +262,9 @@ export function AnalyticsTab() {
       <Card>
         <CardHeader>
           <CardTitle>التكلفة حسب اليوم</CardTitle>
-          {chartData.length > 0 && <CardDescription>إجمالي: ${totalCost.toFixed(4)}</CardDescription>}
+          {chartData.length > 0 && (
+            <CardDescription>إجمالي: ${totalCost.toFixed(4)}</CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
@@ -249,7 +278,7 @@ export function AnalyticsTab() {
                     if (!payload?.length) return null
                     const entry = payload[0]?.payload as { cost: number; count: number } | undefined
                     return (
-                      <div className="rounded border bg-background p-2 shadow text-sm">
+                      <div className="rounded border bg-background p-2 text-sm shadow">
                         <p className="font-medium">{label}</p>
                         <p>التكلفة: {(entry?.cost ?? 0).toFixed(4)} USD</p>
                         <p>عدد المهام: {entry?.count ?? 0}</p>
@@ -257,18 +286,26 @@ export function AnalyticsTab() {
                     )
                   }}
                 />
-                <Line type="monotone" dataKey="cost" stroke="#1F87E8" strokeWidth={2} name="التكلفة" />
+                <Line
+                  type="monotone"
+                  dataKey="cost"
+                  stroke="#1F87E8"
+                  strokeWidth={2}
+                  name="التكلفة"
+                />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center py-16 text-muted-foreground">لا توجد بيانات تكلفة بعد</div>
+            <div className="flex items-center justify-center py-16 text-muted-foreground">
+              لا توجد بيانات تكلفة بعد
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Job history table */}
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>سجل المهام</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -277,7 +314,11 @@ export function AnalyticsTab() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">كل الأنواع</SelectItem>
-                {JOB_TYPES.map((t) => <SelectItem key={t} value={t}>{JOB_TYPE_LABELS[t] ?? t}</SelectItem>)}
+                {JOB_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {JOB_TYPE_LABELS[t] ?? t}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -292,8 +333,13 @@ export function AnalyticsTab() {
                 <SelectItem value="pending">قيد الانتظار</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => exportJobsToCSV(jobs)} className="w-full sm:w-auto">
-              <Download className="h-4 w-4 ml-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportJobsToCSV(jobs)}
+              className="w-full sm:w-auto"
+            >
+              <Download className="ml-1 h-4 w-4" />
               تصدير CSV
             </Button>
           </div>
@@ -315,29 +361,66 @@ export function AnalyticsTab() {
                 {jobs.map((j) => {
                   const nStatus = normalizeJobStatus(j.status)
                   return (
-                    <TableRow key={j.id} className={nStatus === 'failed' ? 'bg-red-50/50' : undefined}>
-                      <TableCell className="whitespace-nowrap">{format(new Date(j.startedAt), 'dd/MM/yyyy HH:mm', { locale: arSA })}</TableCell>
+                    <TableRow
+                      key={j.id}
+                      className={nStatus === 'failed' ? 'bg-red-50/50' : undefined}
+                    >
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(j.startedAt), 'dd/MM/yyyy HH:mm', { locale: arSA })}
+                      </TableCell>
                       <TableCell>{JOB_TYPE_LABELS[j.type] ?? j.type}</TableCell>
                       <TableCell>
-                        <Badge variant={nStatus === 'done' ? 'default' : nStatus === 'failed' ? 'destructive' : 'secondary'}>
+                        <Badge
+                          variant={
+                            nStatus === 'done'
+                              ? 'default'
+                              : nStatus === 'failed'
+                                ? 'destructive'
+                                : 'secondary'
+                          }
+                        >
                           {JOB_STATUS_LABELS[j.status] ?? j.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{j.processed} / {j.total ?? j.totalItems ?? 0}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{j.failed ?? j.errors ?? 0}</TableCell>
-                      <TableCell>{j.costUsd != null ? `${j.costUsd.toFixed(4)} USD` : '—'}</TableCell>
+                      <TableCell>
+                        {j.processed} / {j.total ?? j.totalItems ?? 0}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {j.failed ?? j.errors ?? 0}
+                      </TableCell>
+                      <TableCell>
+                        {j.costUsd != null ? `${j.costUsd.toFixed(4)} USD` : '—'}
+                      </TableCell>
                     </TableRow>
                   )
                 })}
               </TableBody>
             </Table>
           </div>
-          {jobs.length === 0 && <div className="py-8 text-center text-muted-foreground">لا توجد مهام حتى الآن</div>}
+          {jobs.length === 0 && (
+            <div className="py-8 text-center text-muted-foreground">لا توجد مهام حتى الآن</div>
+          )}
           {totalPages > 1 && (
             <div className="flex justify-between p-4">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>السابق</Button>
-              <span className="text-sm text-muted-foreground">صفحة {page} من {totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>التالي</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                السابق
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                صفحة {page} من {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                التالي
+              </Button>
             </div>
           )}
         </CardContent>

@@ -30,14 +30,22 @@ export function StudioTrust({ studio }: StudioTrustProps) {
   if (!studio.reviewsText && !studio.whatsappNumber) return null
 
   return (
-    <section className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card" dir="rtl">
+    <section
+      className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card"
+      dir="rtl"
+    >
       <h3 className="text-lg font-semibold text-text-heading">{t('studios.trust')}</h3>
       {studio.reviewsText && (
         <p className="text-sm leading-relaxed text-text-body">{studio.reviewsText}</p>
       )}
       <div className="flex flex-wrap gap-2.5">
         {studio.whatsappNumber && (
-          <Button variant="outline" size="sm" asChild className="rounded-xl border-brand-secondary-accent/30 text-brand-secondary-accent hover:bg-brand-secondary-accent/5">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="rounded-xl border-brand-secondary-accent/30 text-brand-secondary-accent hover:bg-brand-secondary-accent/5"
+          >
             <a
               href={`https://wa.me/${studio.whatsappNumber.replace(/\D/g, '')}`}
               target="_blank"
@@ -49,7 +57,12 @@ export function StudioTrust({ studio }: StudioTrustProps) {
             </a>
           </Button>
         )}
-        <Button variant="ghost" size="sm" onClick={copyLink} className="inline-flex items-center gap-2 rounded-xl">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={copyLink}
+          className="inline-flex items-center gap-2 rounded-xl"
+        >
           <Share2 className="h-4 w-4" />
           {t('studios.copyLink')}
         </Button>

@@ -67,7 +67,7 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">مراجعة المنتجات</CardTitle>
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border">
@@ -80,7 +80,7 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
                     'px-3 py-1 text-xs font-medium transition-colors',
                     locale === l
                       ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground'
+                      : 'text-muted-foreground hover:bg-muted'
                   )}
                 >
                   {l === 'en' ? 'EN' : l === 'ar' ? 'AR' : 'ZH'}
@@ -91,20 +91,14 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={handleSelectAll}
-            />
+            <Checkbox checked={allSelected} onCheckedChange={handleSelectAll} />
             <span className="text-xs text-muted-foreground">تحديد الكل</span>
           </div>
           <div className="flex items-center gap-2">
             {selected.size > 0 && onApproveSelected && (
-              <Button
-                size="sm"
-                onClick={() => onApproveSelected(Array.from(selected))}
-              >
+              <Button size="sm" onClick={() => onApproveSelected(Array.from(selected))}>
                 <CheckCircle2 className="ml-1 h-3.5 w-3.5" />
                 اعتماد المحدد ({selected.size})
               </Button>
@@ -116,7 +110,7 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
         </div>
 
         <div className="space-y-1">
-          <div className="grid grid-cols-[32px_1fr_100px_80px_120px_80px] gap-2 text-xs font-medium text-muted-foreground px-2 pb-1 border-b">
+          <div className="grid grid-cols-[32px_1fr_100px_80px_120px_80px] gap-2 border-b px-2 pb-1 text-xs font-medium text-muted-foreground">
             <span />
             <span>المنتج</span>
             <span>السعر</span>
@@ -129,8 +123,8 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
             <div key={row.id}>
               <div
                 className={cn(
-                  'grid grid-cols-[32px_1fr_100px_80px_120px_80px] gap-2 items-center rounded-md px-2 py-2 hover:bg-muted/50 cursor-pointer',
-                  row.status === 'NEEDS_REVIEW' && 'bg-amber-50 border-r-2 border-r-amber-400',
+                  'grid cursor-pointer grid-cols-[32px_1fr_100px_80px_120px_80px] items-center gap-2 rounded-md px-2 py-2 hover:bg-muted/50',
+                  row.status === 'NEEDS_REVIEW' && 'border-r-2 border-r-amber-400 bg-amber-50',
                   row.status === 'DRAFT' && 'bg-muted/20',
                   selected.has(row.id) && 'bg-primary/5'
                 )}
@@ -142,20 +136,35 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
                   onClick={(e) => e.stopPropagation()}
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{row.name}</p>
+                  <p className="truncate text-sm font-medium">{row.name}</p>
                   <p className="text-xs text-muted-foreground">{row.brand}</p>
                 </div>
                 <span className="text-sm">
-                  {row.price ? `${row.price} SAR` : <span className="text-muted-foreground">--</span>}
+                  {row.price ? (
+                    `${row.price} SAR`
+                  ) : (
+                    <span className="text-muted-foreground">--</span>
+                  )}
                 </span>
-                <span className={cn('text-xs', row.imageCount < 4 ? 'text-amber-600 font-medium' : 'text-green-600')}>
+                <span
+                  className={cn(
+                    'text-xs',
+                    row.imageCount < 4 ? 'font-medium text-amber-600' : 'text-green-600'
+                  )}
+                >
                   {row.imageCount}/4
                 </span>
                 <div className="min-w-0">
                   {row.aiDescription ? (
                     <div className="flex items-center gap-1">
-                      <span className="text-xs truncate">{row.aiDescription.slice(0, 30)}...</span>
-                      {row.aiConfidence && <ConfidenceBadge confidence={row.aiConfidence} showLabel={false} size="sm" />}
+                      <span className="truncate text-xs">{row.aiDescription.slice(0, 30)}...</span>
+                      {row.aiConfidence && (
+                        <ConfidenceBadge
+                          confidence={row.aiConfidence}
+                          showLabel={false}
+                          size="sm"
+                        />
+                      )}
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">--</span>
@@ -172,7 +181,7 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
               </div>
 
               {expandedRow === row.id && (
-                <div className="mx-8 mb-2 p-3 rounded-md border bg-muted/30 space-y-2">
+                <div className="mx-8 mb-2 space-y-2 rounded-md border bg-muted/30 p-3">
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="text-muted-foreground">الفئة:</span>{' '}
@@ -180,12 +189,16 @@ export function ReviewGrid({ rows, onApproveSelected, onEditRow, className }: Re
                     </div>
                     <div>
                       <span className="text-muted-foreground">الصور:</span>{' '}
-                      <span className={row.imageCount < 4 ? 'text-amber-600' : ''}>{row.imageCount} صور</span>
+                      <span className={row.imageCount < 4 ? 'text-amber-600' : ''}>
+                        {row.imageCount} صور
+                      </span>
                     </div>
                   </div>
                   {row.aiDescription && (
                     <div className="text-xs">
-                      <span className="text-muted-foreground">وصف AI ({locale.toUpperCase()}):</span>
+                      <span className="text-muted-foreground">
+                        وصف AI ({locale.toUpperCase()}):
+                      </span>
                       <p className="mt-1">{row.aiDescription}</p>
                     </div>
                   )}

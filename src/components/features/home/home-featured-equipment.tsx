@@ -78,9 +78,7 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
               ))}
             </div>
             <div className="mt-8 text-center">
-              <p className="mb-3 text-sm text-text-muted">
-                {t('home.featuredEmptyMessage')}
-              </p>
+              <p className="mb-3 text-sm text-text-muted">{t('home.featuredEmptyMessage')}</p>
               <Link
                 href="/equipment"
                 className="inline-flex items-center gap-1 font-semibold text-brand-primary transition-colors hover:text-brand-primary-hover"
@@ -93,14 +91,14 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
         ) : (
           <>
             {/* Mobile: horizontal scroll carousel; desktop: grid */}
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none md:gap-6 lg:grid-cols-4">
+            <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 md:gap-6 lg:grid-cols-4">
               {items.map((item, index) => {
                 const soldOut = (item.quantityAvailable ?? 0) <= 0
                 return (
                   <Link
                     key={item.id}
                     href={`/equipment/${item.id}`}
-                    className="group flex w-[75vw] shrink-0 snap-start animate-fade-in-up flex-col overflow-hidden rounded-2xl border border-border-light/60 bg-white opacity-0 shadow-card transition-all duration-350 hover:-translate-y-1.5 hover:shadow-card-hover sm:w-full sm:animate-none sm:opacity-100"
+                    className="group flex w-[75vw] shrink-0 animate-fade-in-up snap-start flex-col overflow-hidden rounded-2xl border border-border-light/60 bg-white opacity-0 shadow-card transition-all duration-350 hover:-translate-y-1.5 hover:shadow-card-hover sm:w-full sm:animate-none sm:opacity-100"
                     style={{ animationDelay: `${0.1 * index}s` }}
                   >
                     <div className="relative aspect-[4/3] shrink-0 overflow-hidden bg-surface-light">
@@ -113,7 +111,9 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                           fill
                           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+                          unoptimized={
+                            !item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)
+                          }
                           onError={() => handleImageError(item.id)}
                         />
                       )}
@@ -150,7 +150,9 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                             : '—'}
                         </span>
                         {item.dailyPrice > 0 && (
-                          <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+                          <span className="text-sm text-text-muted">
+                            / {t('common.pricePerDay')}
+                          </span>
                         )}
                       </div>
                     </div>

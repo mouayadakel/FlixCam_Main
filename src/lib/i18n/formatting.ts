@@ -24,7 +24,7 @@ function getIntlLocale(locale: Locale): string {
 export function formatDate(date: Date | string, locale: Locale): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.DateTimeFormat(intlLocale, {
     year: 'numeric',
     month: 'long',
@@ -38,7 +38,7 @@ export function formatDate(date: Date | string, locale: Locale): string {
 export function formatTime(time: Date | string, locale: Locale): string {
   const timeObj = typeof time === 'string' ? new Date(time) : time
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.DateTimeFormat(intlLocale, {
     hour: '2-digit',
     minute: '2-digit',
@@ -51,7 +51,7 @@ export function formatTime(time: Date | string, locale: Locale): string {
 export function formatDateTime(dateTime: Date | string, locale: Locale): string {
   const dateTimeObj = typeof dateTime === 'string' ? new Date(dateTime) : dateTime
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.DateTimeFormat(intlLocale, {
     year: 'numeric',
     month: 'long',
@@ -67,7 +67,7 @@ export function formatDateTime(dateTime: Date | string, locale: Locale): string 
 export function formatShortDate(date: Date | string, locale: Locale): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.DateTimeFormat(intlLocale, {
     year: 'numeric',
     month: '2-digit',
@@ -80,7 +80,7 @@ export function formatShortDate(date: Date | string, locale: Locale): string {
  */
 export function formatCurrency(amount: number, locale: Locale): string {
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.NumberFormat(intlLocale, {
     style: 'currency',
     currency: 'SAR',
@@ -94,7 +94,7 @@ export function formatCurrency(amount: number, locale: Locale): string {
  */
 export function formatNumber(num: number, locale: Locale): string {
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.NumberFormat(intlLocale).format(num)
 }
 
@@ -103,7 +103,7 @@ export function formatNumber(num: number, locale: Locale): string {
  */
 export function formatPercentage(num: number, locale: Locale, decimals: number = 0): string {
   const intlLocale = getIntlLocale(locale)
-  
+
   return new Intl.NumberFormat(intlLocale, {
     style: 'percent',
     minimumFractionDigits: decimals,
@@ -123,9 +123,9 @@ export function formatRelativeTime(date: Date | string, locale: Locale): string 
   const diffMin = Math.round(diffSec / 60)
   const diffHour = Math.round(diffMin / 60)
   const diffDay = Math.round(diffHour / 24)
-  
+
   const rtf = new Intl.RelativeTimeFormat(intlLocale, { numeric: 'auto' })
-  
+
   if (Math.abs(diffDay) >= 1) {
     return rtf.format(diffDay, 'day')
   } else if (Math.abs(diffHour) >= 1) {
@@ -144,11 +144,11 @@ export function formatFileSize(bytes: number, locale: Locale): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   let size = bytes
   let unitIndex = 0
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024
     unitIndex++
   }
-  
+
   return `${formatNumber(Math.round(size * 100) / 100, locale)} ${units[unitIndex]}`
 }

@@ -11,10 +11,7 @@ import { syncProductToEquipment } from '@/lib/services/product-equipment-sync.se
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!(await hasAIPermission(session.user.id, 'run'))) {
@@ -26,16 +23,25 @@ export async function POST(
     where: { id, status: 'pending' },
     include: { product: { include: { translations: true } } },
   })
-  if (!draft) return NextResponse.json({ error: 'Draft not found or already processed' }, { status: 404 })
+  if (!draft)
+    return NextResponse.json({ error: 'Draft not found or already processed' }, { status: 404 })
 
   const data = draft.suggestedData as Record<string, unknown>
   const productId = draft.productId
 
   if (draft.type === 'text') {
-    const seo = data.seo as { metaTitle?: string; metaDescription?: string; metaKeywords?: string } | undefined
-    const seoByLocale = data.seoByLocale as Record<string, { metaTitle?: string; metaDescription?: string; metaKeywords?: string }> | undefined
-    const genEn = data.generatedEnDescription as { shortDescription?: string; longDescription?: string } | undefined
-    const translations = data.translations as Record<string, { name: string; shortDescription: string; longDescription: string }> | undefined
+    const seo = data.seo as
+      | { metaTitle?: string; metaDescription?: string; metaKeywords?: string }
+      | undefined
+    const seoByLocale = data.seoByLocale as
+      | Record<string, { metaTitle?: string; metaDescription?: string; metaKeywords?: string }>
+      | undefined
+    const genEn = data.generatedEnDescription as
+      | { shortDescription?: string; longDescription?: string }
+      | undefined
+    const translations = data.translations as
+      | Record<string, { name: string; shortDescription: string; longDescription: string }>
+      | undefined
 
     if (genEn || seo) {
       const enUpdate: Record<string, unknown> = {}
@@ -82,9 +88,18 @@ export async function POST(
       }
     }
 
-    if (data.boxContents != null) await prisma.product.update({ where: { id: productId }, data: { boxContents: String(data.boxContents) } })
-    if (data.tags != null) await prisma.product.update({ where: { id: productId }, data: { tags: String(data.tags) } })
-    if (data.relatedProducts != null) await prisma.product.update({ where: { id: productId }, data: { relatedProducts: data.relatedProducts as object } })
+    if (data.boxContents != null)
+      await prisma.product.update({
+        where: { id: productId },
+        data: { boxContents: String(data.boxContents) },
+      })
+    if (data.tags != null)
+      await prisma.product.update({ where: { id: productId }, data: { tags: String(data.tags) } })
+    if (data.relatedProducts != null)
+      await prisma.product.update({
+        where: { id: productId },
+        data: { relatedProducts: data.relatedProducts as object },
+      })
   } else if (draft.type === 'spec' && data.specifications) {
     await prisma.productTranslation.updateMany({
       where: { productId, locale: 'en' },

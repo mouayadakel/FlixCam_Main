@@ -7,15 +7,7 @@ import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
 import { Badge } from '@/components/ui/badge'
 import { getLocalizedName, getLocalizedDescription } from '@/lib/i18n/content-helper'
-import {
-  Building2,
-  Users,
-  Maximize2,
-  Zap,
-  Wind,
-  ArrowLeft,
-  MapPin,
-} from 'lucide-react'
+import { Building2, Users, Maximize2, Zap, Wind, ArrowLeft, MapPin } from 'lucide-react'
 
 interface StudioCardProps {
   studio: {
@@ -44,7 +36,7 @@ interface StudioCardProps {
 export function StudioCard({ studio }: StudioCardProps) {
   const { t, locale } = useLocale()
   const isAvailable = studio.availabilityConfidence === 'available_now'
-  
+
   const displayName = getLocalizedName(studio as any, locale) || studio.name
   const displayDescription = getLocalizedDescription(studio as any, locale) || studio.description
 
@@ -97,7 +89,7 @@ export function StudioCard({ studio }: StudioCardProps) {
 
       {/* ── Content ── */}
       <div className="flex flex-1 flex-col p-5" dir="rtl">
-        <h2 className="mb-1.5 text-card-title text-text-heading line-clamp-1 group-hover:text-primary transition-colors">
+        <h2 className="mb-1.5 line-clamp-1 text-card-title text-text-heading transition-colors group-hover:text-primary">
           {displayName}
         </h2>
 
@@ -118,7 +110,9 @@ export function StudioCard({ studio }: StudioCardProps) {
           {studio.address && (
             <span className="inline-flex items-center gap-1 truncate">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{studio.address.length > 30 ? studio.address.slice(0, 30) + '...' : studio.address}</span>
+              <span className="truncate">
+                {studio.address.length > 30 ? studio.address.slice(0, 30) + '...' : studio.address}
+              </span>
             </span>
           )}
         </div>
@@ -146,9 +140,7 @@ export function StudioCard({ studio }: StudioCardProps) {
         )}
 
         {/* Best use tag */}
-        {studio.bestUse && (
-          <p className="mb-3 text-xs text-primary/80">{studio.bestUse}</p>
-        )}
+        {studio.bestUse && <p className="mb-3 text-xs text-primary/80">{studio.bestUse}</p>}
 
         {/* ── Footer: Price + CTA ── */}
         <div className="mt-auto flex items-end justify-between border-t border-border-light/40 pt-3">
@@ -158,9 +150,7 @@ export function StudioCard({ studio }: StudioCardProps) {
                 <span className="text-price-tag text-text-heading">
                   {Number(studio.hourlyRate).toLocaleString()}
                 </span>
-                <span className="ms-1 text-xs text-text-muted">
-                  {t('studios.perHour')}
-                </span>
+                <span className="ms-1 text-xs text-text-muted">{t('studios.perHour')}</span>
               </>
             ) : (
               <span className="text-sm text-text-muted">—</span>

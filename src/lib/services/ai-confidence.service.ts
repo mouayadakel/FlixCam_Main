@@ -181,15 +181,15 @@ export async function logFeedback(data: {
 /**
  * Get provider performance comparison for analytics dashboard
  */
-export async function getProviderComparison(
-  categoryId?: string
-): Promise<Array<{
-  provider: string
-  totalSamples: number
-  approvalRate: number
-  rejectionRate: number
-  editRate: number
-}>> {
+export async function getProviderComparison(categoryId?: string): Promise<
+  Array<{
+    provider: string
+    totalSamples: number
+    approvalRate: number
+    rejectionRate: number
+    editRate: number
+  }>
+> {
   try {
     const where: Record<string, unknown> = {}
     if (categoryId) where.categoryId = categoryId

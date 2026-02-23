@@ -27,7 +27,9 @@ function getImageCount(product: {
   featuredImage?: string | null
 }): number {
   if (product.productImages && product.productImages.length > 0) {
-    const nonDeleted = product.productImages.filter((i) => !(i as { isDeleted?: boolean }).isDeleted)
+    const nonDeleted = product.productImages.filter(
+      (i) => !(i as { isDeleted?: boolean }).isDeleted
+    )
     return nonDeleted.length
   }
   let count = isFilled(product.featuredImage) ? 1 : 0
@@ -67,14 +69,10 @@ export async function scoreProduct(
   )
   if (seoOk) score += 20
 
-  const shortDescOk = product.translations.some(
-    (t) => (t.shortDescription?.length ?? 0) >= 20
-  )
+  const shortDescOk = product.translations.some((t) => (t.shortDescription?.length ?? 0) >= 20)
   if (shortDescOk) score += 10
 
-  const longDescOk = product.translations.some(
-    (t) => (t.longDescription?.length ?? 0) >= 100
-  )
+  const longDescOk = product.translations.some((t) => (t.longDescription?.length ?? 0) >= 100)
   if (longDescOk) score += 15
 
   const imageCount = getImageCount(product)
@@ -123,14 +121,10 @@ function scoreProductInMemory(product: {
   )
   if (seoOk) score += 20
 
-  const shortDescOk = translations.some(
-    (t) => (t.shortDescription?.length ?? 0) >= 20
-  )
+  const shortDescOk = translations.some((t) => (t.shortDescription?.length ?? 0) >= 20)
   if (shortDescOk) score += 10
 
-  const longDescOk = translations.some(
-    (t) => (t.longDescription?.length ?? 0) >= 100
-  )
+  const longDescOk = translations.some((t) => (t.longDescription?.length ?? 0) >= 100)
   if (longDescOk) score += 15
 
   const imageCount = getImageCount(product)
@@ -233,11 +227,15 @@ export async function getProductsWithGaps(
       const first = trans[0]?.specifications
       if (first && typeof first === 'object') {
         const keys = Object.keys(first)
-        hasGap = keys.length > 0 && keys.filter((k) => isFilled((first as Record<string, unknown>)[k])).length / keys.length < 0.5
+        hasGap =
+          keys.length > 0 &&
+          keys.filter((k) => isFilled((first as Record<string, unknown>)[k])).length / keys.length <
+            0.5
       }
     }
     if (hasGap) {
-      const name = trans.find((t) => t.locale === 'en')?.name ?? trans[0]?.name ?? product.sku ?? product.id
+      const name =
+        trans.find((t) => t.locale === 'en')?.name ?? trans[0]?.name ?? product.sku ?? product.id
       const score = scoreProductInMemory(product)
       results.push({ id: product.id, name, score, gap: gapType })
       if (results.length >= limit) break
@@ -345,7 +343,11 @@ async function runFullScan(): Promise<{
       gaps.push('translations')
       byGapType.missingTranslations++
     }
-    if (!p.translations.some((t) => isFilled(t.seoTitle) && isFilled(t.seoDescription) && isFilled(t.seoKeywords))) {
+    if (
+      !p.translations.some(
+        (t) => isFilled(t.seoTitle) && isFilled(t.seoDescription) && isFilled(t.seoKeywords)
+      )
+    ) {
       gaps.push('seo')
       byGapType.missingSeo++
     }
@@ -370,7 +372,11 @@ async function runFullScan(): Promise<{
       }
     }
     const contentScore = scoreProductInMemory(p)
-    const name = p.translations.find((t) => t.locale === 'en')?.name ?? p.translations[0]?.name ?? p.sku ?? p.id
+    const name =
+      p.translations.find((t) => t.locale === 'en')?.name ??
+      p.translations[0]?.name ??
+      p.sku ??
+      p.id
     const priceDaily = Number(p.priceDaily ?? 0)
     summaries.push({
       id: p.id,

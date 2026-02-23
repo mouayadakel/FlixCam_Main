@@ -15,7 +15,12 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -103,13 +108,19 @@ export function ContentHealthTab() {
       setScanData({ total: data.total, byGapType: data.byGapType, products: data.products ?? [] })
       setScannedAt(data.scannedAt || new Date().toISOString())
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تحميل البيانات', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تحميل البيانات',
+        variant: 'destructive',
+      })
     } finally {
       setIsScanning(false)
     }
   }, [page, debouncedSearch, toast])
 
-  useEffect(() => { fetchScan() }, [fetchScan])
+  useEffect(() => {
+    fetchScan()
+  }, [fetchScan])
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
@@ -117,7 +128,9 @@ export function ContentHealthTab() {
       setDebouncedSearch(searchTerm)
       setPage(1)
     }, 300)
-    return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current) }
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    }
   }, [searchTerm])
 
   useEffect(() => {
@@ -125,7 +138,10 @@ export function ContentHealthTab() {
       autoRefreshRef.current = setInterval(fetchScan, 30000)
     }
     return () => {
-      if (autoRefreshRef.current) { clearInterval(autoRefreshRef.current); autoRefreshRef.current = null }
+      if (autoRefreshRef.current) {
+        clearInterval(autoRefreshRef.current)
+        autoRefreshRef.current = null
+      }
     }
   }, [autoRefresh, fetchScan])
 
@@ -135,7 +151,9 @@ export function ContentHealthTab() {
       await fetchScan()
       setScannedAt(new Date().toISOString())
       toast({ title: 'تم', description: 'تم تحديث الفحص' })
-    } finally { setIsScanning(false) }
+    } finally {
+      setIsScanning(false)
+    }
   }
 
   const handleFillAll = async () => {
@@ -146,24 +164,41 @@ export function ContentHealthTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fillAll: true }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error ?? 'فشل البدء') }
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? 'فشل البدء')
+      }
       const data = await res.json()
       if (data.queued === 0 && data.message) {
-        toast({ title: 'تم', description: data.message }); setIsRunning(false)
+        toast({ title: 'تم', description: data.message })
+        setIsRunning(false)
       } else {
-        setJobProgress({ status: 'running', progress: 0, processed: 0, total: data.queued ?? 0, errors: 0 })
+        setJobProgress({
+          status: 'running',
+          progress: 0,
+          processed: 0,
+          total: data.queued ?? 0,
+          errors: 0,
+        })
         toast({ title: 'تم', description: `تم إدراج ${data.queued} منتج في قائمة المعالجة` })
         if (data.jobId) setActiveJobId(data.jobId)
       }
     } catch (e) {
       setIsRunning(false)
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل تشغيل الملء', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تشغيل الملء',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleFillSelected = async () => {
     if (allPagesSelected) return handleFillAll()
-    if (selectedIds.length === 0) { toast({ title: 'تنبيه', description: 'اختر منتجات أولاً', variant: 'destructive' }); return }
+    if (selectedIds.length === 0) {
+      toast({ title: 'تنبيه', description: 'اختر منتجات أولاً', variant: 'destructive' })
+      return
+    }
     setIsRunning(true)
     try {
       const res = await fetch('/api/admin/ai/backfill', {
@@ -171,17 +206,31 @@ export function ContentHealthTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productIds: selectedIds }),
       })
-      if (!res.ok) { const err = await res.json(); throw new Error(err.error ?? 'فشل البدء') }
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? 'فشل البدء')
+      }
       const data = await res.json()
-      setSelectedIds([]); setAllPagesSelected(false)
+      setSelectedIds([])
+      setAllPagesSelected(false)
       if (data.jobId) {
-        setJobProgress({ status: 'running', progress: 0, processed: 0, total: data.queued ?? 0, errors: 0 })
+        setJobProgress({
+          status: 'running',
+          progress: 0,
+          processed: 0,
+          total: data.queued ?? 0,
+          errors: 0,
+        })
         setActiveJobId(data.jobId)
       }
       toast({ title: 'تم', description: data.message ?? `تم إدراج ${data.queued} منتج` })
     } catch (e) {
       setIsRunning(false)
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -198,29 +247,48 @@ export function ContentHealthTab() {
       toast({ title: 'تم', description: 'تم إدراج المنتج في المعالجة' })
       if (data.jobId) setActiveJobId(data.jobId)
     } catch (e) {
-      toast({ title: 'خطأ', description: e instanceof Error ? e.message : 'فشل الملء', variant: 'destructive' })
-    } finally { setFillingRowId(null) }
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل الملء',
+        variant: 'destructive',
+      })
+    } finally {
+      setFillingRowId(null)
+    }
   }
 
   const toggleSelect = (id: string) => {
     setAllPagesSelected(false)
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
   const toggleSelectAll = () => {
     if (!scanData?.products.length) return
     setAllPagesSelected(false)
-    setSelectedIds((prev) => prev.length === scanData.products.length ? [] : scanData.products.map((p) => p.id))
+    setSelectedIds((prev) =>
+      prev.length === scanData.products.length ? [] : scanData.products.map((p) => p.id)
+    )
   }
-  const handleSelectAllPages = () => { setAllPagesSelected(true); if (scanData?.products) setSelectedIds(scanData.products.map((p) => p.id)) }
-  const handleDeselectAllPages = () => { setAllPagesSelected(false); setSelectedIds([]) }
+  const handleSelectAllPages = () => {
+    setAllPagesSelected(true)
+    if (scanData?.products) setSelectedIds(scanData.products.map((p) => p.id))
+  }
+  const handleDeselectAllPages = () => {
+    setAllPagesSelected(false)
+    setSelectedIds([])
+  }
 
   const displayedCount = allPagesSelected ? (scanData?.total ?? 0) : selectedIds.length
-  const showSelectAllPagesBanner = !allPagesSelected && scanData && scanData.total > limit && selectedIds.length === scanData.products.length && scanData.products.length > 0
+  const showSelectAllPagesBanner =
+    !allPagesSelected &&
+    scanData &&
+    scanData.total > limit &&
+    selectedIds.length === scanData.products.length &&
+    scanData.products.length > 0
 
   return (
     <div className="space-y-6">
       {/* Gap cards — 2-col mobile, 4-col desktop */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {(Object.keys(GAP_LABELS_DETAILED) as GapType[]).map((key) => (
           <Card key={key}>
             <CardHeader className="pb-2">
@@ -235,27 +303,39 @@ export function ContentHealthTab() {
 
       {/* Actions bar — stack on mobile */}
       <div className="flex flex-wrap items-center gap-2">
-        <Button onClick={handleScanAll} disabled={isScanning} variant="outline" className="w-full sm:w-auto">
-          {isScanning && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+        <Button
+          onClick={handleScanAll}
+          disabled={isScanning}
+          variant="outline"
+          className="w-full sm:w-auto"
+        >
+          {isScanning && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
           فحص الكل
         </Button>
-        <Button onClick={handleFillAll} disabled={isRunning} className="w-full sm:w-auto gap-2">
+        <Button onClick={handleFillAll} disabled={isRunning} className="w-full gap-2 sm:w-auto">
           {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>✨</span>}
           ملء ذكي للكل
-          {scanData && (
-            <span className="text-xs opacity-80">
-              ({scanData.total} منتج)
-            </span>
-          )}
+          {scanData && <span className="text-xs opacity-80">({scanData.total} منتج)</span>}
         </Button>
-        <Button onClick={handleFillSelected} disabled={isRunning || displayedCount === 0} variant="secondary" className="w-full sm:w-auto">
-          {isRunning && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+        <Button
+          onClick={handleFillSelected}
+          disabled={isRunning || displayedCount === 0}
+          variant="secondary"
+          className="w-full sm:w-auto"
+        >
+          {isRunning && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
           ملء المحدد ({displayedCount})
         </Button>
-        {scannedAt && <span className="text-muted-foreground text-sm">آخر فحص: {getRelativeTime(scannedAt)}</span>}
+        {scannedAt && (
+          <span className="text-sm text-muted-foreground">
+            آخر فحص: {getRelativeTime(scannedAt)}
+          </span>
+        )}
         <div className="flex items-center gap-2 sm:mr-auto">
           <Switch id="auto-refresh" checked={autoRefresh} onCheckedChange={setAutoRefresh} />
-          <Label htmlFor="auto-refresh" className="text-sm cursor-pointer">تحديث تلقائي</Label>
+          <Label htmlFor="auto-refresh" className="cursor-pointer text-sm">
+            تحديث تلقائي
+          </Label>
         </div>
       </div>
 
@@ -267,7 +347,9 @@ export function ContentHealthTab() {
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm">جاري المعالجة...</span>
-                <span className="text-sm mr-auto">{jobProgress.processed} / {jobProgress.total} ({jobProgress.progress}%)</span>
+                <span className="mr-auto text-sm">
+                  {jobProgress.processed} / {jobProgress.total} ({jobProgress.progress}%)
+                </span>
               </div>
               <Progress value={jobProgress.progress} />
             </div>
@@ -277,31 +359,54 @@ export function ContentHealthTab() {
 
       {/* Product search */}
       <div className="relative max-w-sm">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="ابحث عن منتج..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-10" />
+        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="ابحث عن منتج..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pr-10"
+        />
       </div>
 
       {/* Products table */}
       <Card>
-        <CardHeader><CardTitle>المنتجات</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>المنتجات</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
           {showSelectAllPagesBanner && (
-            <div className="bg-blue-50 border-b px-4 py-2 text-center text-sm">
+            <div className="border-b bg-blue-50 px-4 py-2 text-center text-sm">
               تم تحديد {scanData.products.length} منتجاً في هذه الصفحة.{' '}
-              <button className="text-primary font-medium underline" onClick={handleSelectAllPages}>تحديد جميع {scanData.total} منتج</button>
+              <button className="font-medium text-primary underline" onClick={handleSelectAllPages}>
+                تحديد جميع {scanData.total} منتج
+              </button>
             </div>
           )}
           {allPagesSelected && (
-            <div className="bg-blue-50 border-b px-4 py-2 text-center text-sm">
+            <div className="border-b bg-blue-50 px-4 py-2 text-center text-sm">
               تم تحديد جميع {scanData?.total ?? 0} منتج عبر كل الصفحات.{' '}
-              <button className="text-primary font-medium underline" onClick={handleDeselectAllPages}>إلغاء التحديد</button>
+              <button
+                className="font-medium text-primary underline"
+                onClick={handleDeselectAllPages}
+              >
+                إلغاء التحديد
+              </button>
             </div>
           )}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10"><Checkbox checked={scanData?.products.length ? selectedIds.length === scanData.products.length : false} onCheckedChange={toggleSelectAll} /></TableHead>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={
+                        scanData?.products.length
+                          ? selectedIds.length === scanData.products.length
+                          : false
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>الجودة</TableHead>
                   <TableHead>المنتج</TableHead>
                   <TableHead className="hidden sm:table-cell">الناقص</TableHead>
@@ -311,22 +416,56 @@ export function ContentHealthTab() {
               <TableBody>
                 {scanData?.products.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell><Checkbox checked={selectedIds.includes(p.id) || allPagesSelected} onCheckedChange={() => toggleSelect(p.id)} disabled={allPagesSelected} /></TableCell>
-                    <TableCell><span className={p.qualityScore >= 70 ? 'text-green-600' : p.qualityScore >= 40 ? 'text-amber-600' : 'text-red-600'}>{p.qualityScore}</span></TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(p.id) || allPagesSelected}
+                        onCheckedChange={() => toggleSelect(p.id)}
+                        disabled={allPagesSelected}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={
+                          p.qualityScore >= 70
+                            ? 'text-green-600'
+                            : p.qualityScore >= 40
+                              ? 'text-amber-600'
+                              : 'text-red-600'
+                        }
+                      >
+                        {p.qualityScore}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="truncate max-w-[120px] sm:max-w-none">{p.name}</span>
-                        <Link href={`/admin/inventory/equipment/${p.id}`} target="_blank" className="text-muted-foreground hover:text-primary shrink-0" title="فتح صفحة المنتج"><ExternalLink className="h-3.5 w-3.5" /></Link>
+                        <span className="max-w-[120px] truncate sm:max-w-none">{p.name}</span>
+                        <Link
+                          href={`/admin/inventory/equipment/${p.id}`}
+                          target="_blank"
+                          className="shrink-0 text-muted-foreground hover:text-primary"
+                          title="فتح صفحة المنتج"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {p.missingFields.map((g) => <Badge key={g} variant="secondary" className="text-xs">{GAP_LABELS_DETAILED[g]}</Badge>)}
+                        {p.missingFields.map((g) => (
+                          <Badge key={g} variant="secondary" className="text-xs">
+                            {GAP_LABELS_DETAILED[g]}
+                          </Badge>
+                        ))}
                       </div>
                     </TableCell>
                     <TableCell className="text-left">
-                      <Button size="sm" variant="outline" onClick={() => handleFillOne(p.id)} disabled={isRunning || fillingRowId === p.id}>
-                        {fillingRowId === p.id && <Loader2 className="h-4 w-4 animate-spin ml-1" />}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleFillOne(p.id)}
+                        disabled={isRunning || fillingRowId === p.id}
+                      >
+                        {fillingRowId === p.id && <Loader2 className="ml-1 h-4 w-4 animate-spin" />}
                         {fillingRowId === p.id ? 'جاري...' : 'ملء'}
                       </Button>
                     </TableCell>
@@ -337,14 +476,38 @@ export function ContentHealthTab() {
           </div>
           {scanData?.products.length === 0 && !isScanning && (
             <div className="py-8 text-center text-muted-foreground">
-              {debouncedSearch ? `لا توجد نتائج لـ '${debouncedSearch}'` : 'لا توجد منتجات في هذه الصفحة'}
+              {debouncedSearch
+                ? `لا توجد نتائج لـ '${debouncedSearch}'`
+                : 'لا توجد منتجات في هذه الصفحة'}
             </div>
           )}
           {scanData && scanData.total > limit && (
             <div className="flex justify-between p-4">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { setPage((p) => p - 1); setAllPagesSelected(false) }}>السابق</Button>
-              <span className="text-sm text-muted-foreground">صفحة {page} من {Math.ceil(scanData.total / limit)}</span>
-              <Button variant="outline" size="sm" disabled={page >= Math.ceil(scanData.total / limit)} onClick={() => { setPage((p) => p + 1); setAllPagesSelected(false) }}>التالي</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => {
+                  setPage((p) => p - 1)
+                  setAllPagesSelected(false)
+                }}
+              >
+                السابق
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                صفحة {page} من {Math.ceil(scanData.total / limit)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= Math.ceil(scanData.total / limit)}
+                onClick={() => {
+                  setPage((p) => p + 1)
+                  setAllPagesSelected(false)
+                }}
+              >
+                التالي
+              </Button>
             </div>
           )}
         </CardContent>

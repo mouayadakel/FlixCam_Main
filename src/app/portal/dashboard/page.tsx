@@ -156,7 +156,9 @@ export default async function PortalDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'portal.upcomingReturns')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('ar', 'portal.upcomingReturns')}
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -184,12 +186,16 @@ export default async function PortalDashboardPage() {
                 >
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="font-medium">{t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}</span>
+                      <span className="font-medium">
+                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
+                      </span>
                       {getStatusBadge(booking.status)}
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div>
-                        {t('ar', 'portal.fromTo').replace('{from}', formatDate(booking.startDate)).replace('{to}', formatDate(booking.endDate))}
+                        {t('ar', 'portal.fromTo')
+                          .replace('{from}', formatDate(booking.startDate))
+                          .replace('{to}', formatDate(booking.endDate))}
                       </div>
                       <div>{formatCurrency(booking.totalAmount.toNumber())}</div>
                     </div>
@@ -226,12 +232,16 @@ export default async function PortalDashboardPage() {
                 >
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="font-medium">{t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}</span>
+                      <span className="font-medium">
+                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
+                      </span>
                       {getStatusBadge(booking.status)}
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div>
-                        {t('ar', 'portal.fromTo').replace('{from}', formatDate(booking.startDate)).replace('{to}', formatDate(booking.endDate))}
+                        {t('ar', 'portal.fromTo')
+                          .replace('{from}', formatDate(booking.startDate))
+                          .replace('{to}', formatDate(booking.endDate))}
                       </div>
                       <div>{formatCurrency(booking.totalAmount.toNumber())}</div>
                     </div>

@@ -12,16 +12,16 @@ const BASE_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://fli
  */
 export function generateHreflangLinks(path: string = '/') {
   const languages: Record<string, string> = {}
-  
+
   // Add all supported locales
   for (const locale of LOCALES) {
     const url = `${BASE_URL}${path}${path.includes('?') ? '&' : '?'}locale=${locale}`
     languages[locale] = url
   }
-  
+
   // Add x-default (points to Arabic as default)
   languages['x-default'] = `${BASE_URL}${path}`
-  
+
   return languages
 }
 

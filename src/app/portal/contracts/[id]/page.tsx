@@ -72,7 +72,9 @@ export default async function PortalContractDetailPage({ params }: { params: { i
             <ArrowRight className="h-4 w-4" />
             {t('ar', 'portal.backToContracts')}
           </Link>
-          <h1 className="text-3xl font-bold">{t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}</h1>
+          <h1 className="text-3xl font-bold">
+            {t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
+          </h1>
         </div>
         <Badge variant={contract.signedAt ? 'default' : 'secondary'}>
           {contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}
@@ -104,7 +106,9 @@ export default async function PortalContractDetailPage({ params }: { params: { i
           )}
           <div>
             <div className="text-sm text-muted-foreground">{t('ar', 'portal.status')}</div>
-            <div className="font-medium">{contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}</div>
+            <div className="font-medium">
+              {contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}
+            </div>
           </div>
         </CardContent>
       </Card>

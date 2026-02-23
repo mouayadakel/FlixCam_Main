@@ -90,7 +90,9 @@ export default function AIRecommendationsPage() {
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
-  const [historyRequests, setHistoryRequests] = useState<{ equipmentId: string; name: string }[]>([])
+  const [historyRequests, setHistoryRequests] = useState<{ equipmentId: string; name: string }[]>(
+    []
+  )
 
   const [riskAssessment, setRiskAssessment] = useState<RiskAssessment | null>(null)
   const [riskLoading, setRiskLoading] = useState(false)
@@ -100,7 +102,9 @@ export default function AIRecommendationsPage() {
     rentalDuration: '',
     totalValue: '',
   })
-  const [customers, setCustomers] = useState<{ id: string; name: string | null; email: string }[]>([])
+  const [customers, setCustomers] = useState<{ id: string; name: string | null; email: string }[]>(
+    []
+  )
 
   const [compatibleEquipmentId, setCompatibleEquipmentId] = useState<string>('')
   const [targetCategoryId, setTargetCategoryId] = useState<string>('')
@@ -153,7 +157,13 @@ export default function AIRecommendationsPage() {
       const data = await res.json()
       const list = data.categories ?? data.data ?? []
       const flat = Array.isArray(list) ? list : []
-      setCategories(flat.map((c: { id: string; name: string; slug?: string }) => ({ id: c.id, name: c.name, slug: c.slug ?? c.id })))
+      setCategories(
+        flat.map((c: { id: string; name: string; slug?: string }) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug ?? c.id,
+        }))
+      )
     } catch {
       setCategories([])
     }
@@ -183,8 +193,13 @@ export default function AIRecommendationsPage() {
       }
       const data = await res.json()
       setRecommendations(data.recommendations ?? [])
-      const name = equipment.find((e) => e.id === selectedEquipmentId)?.model || equipment.find((e) => e.id === selectedEquipmentId)?.sku || selectedEquipmentId
-      setHistoryRequests((prev) => [{ equipmentId: selectedEquipmentId, name: name ?? '' }, ...prev].slice(0, 10))
+      const name =
+        equipment.find((e) => e.id === selectedEquipmentId)?.model ||
+        equipment.find((e) => e.id === selectedEquipmentId)?.sku ||
+        selectedEquipmentId
+      setHistoryRequests((prev) =>
+        [{ equipmentId: selectedEquipmentId, name: name ?? '' }, ...prev].slice(0, 10)
+      )
       if ((data.recommendations ?? []).length === 0) {
         toast({ title: 'لا بدائل', description: 'لم يتم العثور على بدائل في نفس الفئة' })
       }
@@ -214,7 +229,10 @@ export default function AIRecommendationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: riskForm.customerId || undefined,
-          equipmentIds: riskForm.equipmentIds.split(',').map((id) => id.trim()).filter(Boolean),
+          equipmentIds: riskForm.equipmentIds
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean),
           rentalDuration: parseInt(riskForm.rentalDuration, 10),
           totalValue: parseFloat(riskForm.totalValue),
         }),
@@ -268,11 +286,16 @@ export default function AIRecommendationsPage() {
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-green-500'
-      case 'medium': return 'bg-yellow-500'
-      case 'high': return 'bg-orange-500'
-      case 'critical': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'low':
+        return 'bg-green-500'
+      case 'medium':
+        return 'bg-yellow-500'
+      case 'high':
+        return 'bg-orange-500'
+      case 'critical':
+        return 'bg-red-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
@@ -290,9 +313,7 @@ export default function AIRecommendationsPage() {
             <Sparkles className="h-8 w-8 text-primary" />
             توصيات الذكاء الاصطناعي
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            بدائل معدات، تقييم مخاطر، ومعدات متوافقة
-          </p>
+          <p className="mt-1 text-muted-foreground">بدائل معدات، تقييم مخاطر، ومعدات متوافقة</p>
         </div>
       </div>
 
@@ -307,7 +328,9 @@ export default function AIRecommendationsPage() {
           <Card>
             <CardHeader>
               <CardTitle>بدائل المعدات</CardTitle>
-              <CardDescription>اختر معدّة غير متاحة لرؤية بدائل مقترحة من نفس الفئة</CardDescription>
+              <CardDescription>
+                اختر معدّة غير متاحة لرؤية بدائل مقترحة من نفس الفئة
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {equipmentLoading ? (
@@ -334,7 +357,10 @@ export default function AIRecommendationsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleGetAlternatives} disabled={loading || !selectedEquipmentId}>
+                  <Button
+                    onClick={handleGetAlternatives}
+                    disabled={loading || !selectedEquipmentId}
+                  >
                     {loading ? (
                       <>
                         <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
@@ -469,7 +495,12 @@ export default function AIRecommendationsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>العميل (اختياري)</Label>
-                  <Select value={riskForm.customerId || '_none'} onValueChange={(v) => setRiskForm({ ...riskForm, customerId: v === '_none' ? '' : v })}>
+                  <Select
+                    value={riskForm.customerId || '_none'}
+                    onValueChange={(v) =>
+                      setRiskForm({ ...riskForm, customerId: v === '_none' ? '' : v })
+                    }
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="اختر عميلاً" />
                     </SelectTrigger>
@@ -546,10 +577,18 @@ export default function AIRecommendationsPage() {
                 <div>
                   <Label>التوصية:</Label>
                   <div className="mt-1 flex items-center gap-2">
-                    {riskAssessment.recommendation === 'approve' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                    {riskAssessment.recommendation === 'review' && <Info className="h-4 w-4 text-yellow-500" />}
-                    {riskAssessment.recommendation === 'reject' && <XCircle className="h-4 w-4 text-red-500" />}
-                    {riskAssessment.recommendation === 'require_deposit' && <AlertCircle className="h-4 w-4 text-orange-500" />}
+                    {riskAssessment.recommendation === 'approve' && (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                    {riskAssessment.recommendation === 'review' && (
+                      <Info className="h-4 w-4 text-yellow-500" />
+                    )}
+                    {riskAssessment.recommendation === 'reject' && (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    {riskAssessment.recommendation === 'require_deposit' && (
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                    )}
                     <span className="font-medium capitalize">
                       {riskAssessment.recommendation.replace('_', ' ')}
                     </span>
@@ -571,24 +610,38 @@ export default function AIRecommendationsPage() {
                   <div>
                     <Label>عوامل المخاطر:</Label>
                     <div className="mt-2 space-y-2">
-                      {riskAssessment.factors.map((factor: { name: string; weight?: number; impact?: string; description?: string }, index: number) => (
-                        <div key={index} className="flex items-start gap-2 rounded bg-muted p-2">
-                          <span className="font-medium">{factor.name}</span>
-                          {factor.weight != null && (
-                            <Badge variant="outline" className="text-xs">
-                              الوزن: {factor.weight}%
-                            </Badge>
-                          )}
-                          {factor.impact && (
-                            <Badge variant={factor.impact === 'negative' ? 'destructive' : 'secondary'}>
-                              {factor.impact}
-                            </Badge>
-                          )}
-                          {factor.description && (
-                            <p className="mt-1 text-sm text-muted-foreground">{factor.description}</p>
-                          )}
-                        </div>
-                      ))}
+                      {riskAssessment.factors.map(
+                        (
+                          factor: {
+                            name: string
+                            weight?: number
+                            impact?: string
+                            description?: string
+                          },
+                          index: number
+                        ) => (
+                          <div key={index} className="flex items-start gap-2 rounded bg-muted p-2">
+                            <span className="font-medium">{factor.name}</span>
+                            {factor.weight != null && (
+                              <Badge variant="outline" className="text-xs">
+                                الوزن: {factor.weight}%
+                              </Badge>
+                            )}
+                            {factor.impact && (
+                              <Badge
+                                variant={factor.impact === 'negative' ? 'destructive' : 'secondary'}
+                              >
+                                {factor.impact}
+                              </Badge>
+                            )}
+                            {factor.description && (
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {factor.description}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -612,7 +665,10 @@ export default function AIRecommendationsPage() {
               <div className="flex flex-wrap items-end gap-4">
                 <div className="min-w-[200px]">
                   <Label>المعدّة (اختياري)</Label>
-                  <Select value={compatibleEquipmentId || '_none'} onValueChange={(v) => setCompatibleEquipmentId(v === '_none' ? '' : v)}>
+                  <Select
+                    value={compatibleEquipmentId || '_none'}
+                    onValueChange={(v) => setCompatibleEquipmentId(v === '_none' ? '' : v)}
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="اختر معدّة" />
                     </SelectTrigger>
@@ -641,7 +697,10 @@ export default function AIRecommendationsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleGetCompatible} disabled={compatibleLoading || !targetCategoryId}>
+                <Button
+                  onClick={handleGetCompatible}
+                  disabled={compatibleLoading || !targetCategoryId}
+                >
                   {compatibleLoading ? 'جاري الجلب...' : 'عرض المتوافق'}
                 </Button>
               </div>
@@ -675,7 +734,9 @@ export default function AIRecommendationsPage() {
                           </TableCell>
                           <TableCell>
                             <Link href={`/admin/inventory/equipment/${item.id}`}>
-                              <Button size="sm" variant="ghost">عرض</Button>
+                              <Button size="sm" variant="ghost">
+                                عرض
+                              </Button>
                             </Link>
                           </TableCell>
                         </TableRow>

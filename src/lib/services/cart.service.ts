@@ -130,10 +130,7 @@ export class CartService {
     const startDate = input.startDate ?? null
     const endDate = input.endDate ?? null
     const msDiff = startDate && endDate ? endDate.getTime() - startDate.getTime() : 0
-    const days =
-      startDate && endDate
-        ? Math.max(1, Math.ceil(msDiff / (24 * 60 * 60 * 1000)))
-        : 1
+    const days = startDate && endDate ? Math.max(1, Math.ceil(msDiff / (24 * 60 * 60 * 1000))) : 1
     const hoursSameDay =
       startDate && endDate && msDiff > 0 && msDiff < 24 * 60 * 60 * 1000
         ? msDiff / (60 * 60 * 1000)

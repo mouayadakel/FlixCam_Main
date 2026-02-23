@@ -8,14 +8,14 @@
 
 ### P0 – Critical (Security)
 
-1. **P0-1: Encryption key in production** ✅  
-   - **File:** `src/lib/services/integration-config.service.ts`  
+1. **P0-1: Encryption key in production** ✅
+   - **File:** `src/lib/services/integration-config.service.ts`
    - **Change:** In production, the service now **always** requires `ENCRYPTION_KEY` (min 32 chars). No fallback to a default key. Missing or short key throws a clear error.
 
 ### API / Permissions
 
-2. **Audit logs API** ✅  
-   - **File:** `src/app/api/audit-logs/route.ts`  
+2. **Audit logs API** ✅
+   - **File:** `src/app/api/audit-logs/route.ts`
    - **Change:** Permission check now uses `PERMISSIONS.AUDIT_READ` instead of a string literal.
 
 ---

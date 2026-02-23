@@ -65,9 +65,7 @@ export default function CmsStudiosPage() {
       <Card>
         <CardHeader>
           <CardTitle>قائمة الاستوديوهات</CardTitle>
-          <CardDescription>
-            انقر على تعديل لإدارة محتوى كل استوديو
-          </CardDescription>
+          <CardDescription>انقر على تعديل لإدارة محتوى كل استوديو</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
@@ -117,8 +115,7 @@ export default function CmsStudiosPage() {
                         </Badge>
                       )}
                       <span>
-                        آخر تحديث:{' '}
-                        {new Date(studio.updatedAt).toLocaleDateString('ar-SA')}
+                        آخر تحديث: {new Date(studio.updatedAt).toLocaleDateString('ar-SA')}
                       </span>
                     </div>
                   </div>

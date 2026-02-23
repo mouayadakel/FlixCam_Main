@@ -64,7 +64,7 @@ test.describe('Public studios', () => {
     await expect(page).toHaveURL(/\/cart/)
     await page.waitForTimeout(2000)
     const emptyMsg = page.getByText(/فارغة|empty/i)
-    const hasItems = await page.locator('[data-testid="cart-item"], .cart-item').count() > 0
+    const hasItems = (await page.locator('[data-testid="cart-item"], .cart-item').count()) > 0
     const isEmpty = await emptyMsg.isVisible().catch(() => false)
     expect(hasItems || isEmpty).toBeTruthy()
   })

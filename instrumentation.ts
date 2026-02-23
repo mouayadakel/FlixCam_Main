@@ -23,7 +23,9 @@ export async function register() {
   try {
     const { getBackfillWorker } = await import('@/lib/queue/backfill.worker')
     getBackfillWorker()
-    console.log('[Instrumentation] Backfill queue worker started (AI fill jobs will process automatically).')
+    console.log(
+      '[Instrumentation] Backfill queue worker started (AI fill jobs will process automatically).'
+    )
   } catch (err) {
     console.warn(
       '[Instrumentation] Backfill worker not started (Redis may be unavailable). AI fill jobs will remain queued until a worker is available.'

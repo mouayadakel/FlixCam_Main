@@ -64,15 +64,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency } from '@/lib/utils/format.utils'
@@ -315,7 +307,9 @@ export default function KitBuilderPage() {
           projectType: aiProjectType,
           duration: aiDuration,
           budget: aiBudget,
-          requirements: aiRequirements ? aiRequirements.trim().split(/\n/).filter(Boolean) : undefined,
+          requirements: aiRequirements
+            ? aiRequirements.trim().split(/\n/).filter(Boolean)
+            : undefined,
         }),
       })
       if (!res.ok) {
@@ -326,7 +320,10 @@ export default function KitBuilderPage() {
       const kits = data.kits ?? []
       const firstKit = kits[0]
       if (!firstKit?.equipment?.length) {
-        toast({ title: 'تنبيه', description: 'لم يُرجع الذكاء الاصطناعي معدات. جرّب تغيير المعايير.' })
+        toast({
+          title: 'تنبيه',
+          description: 'لم يُرجع الذكاء الاصطناعي معدات. جرّب تغيير المعايير.',
+        })
         return
       }
       const suggestedItems: KitItem[] = []
@@ -480,148 +477,149 @@ export default function KitBuilderPage() {
         </TabsList>
 
         <TabsContent value="kits" className="space-y-4">
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="بحث بالاسم..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pr-10"
-              />
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالاسم..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="جميع الفئات" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الفئات</SelectItem>
+                    {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Kits Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-64" />
+              ))}
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="جميع الفئات" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الفئات</SelectItem>
-                {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    {config.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          ) : loadError ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-destructive" />
+                <p className="text-lg font-medium">فشل تحميل البيانات</p>
+                <p className="mb-4 text-sm">{loadError}</p>
+                <Button variant="outline" onClick={() => loadData()}>
+                  <RefreshCw className="ml-2 h-4 w-4" />
+                  إعادة المحاولة
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredKits.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Package className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <p className="text-lg font-medium">لا توجد أطقم</p>
+                <p className="text-sm">ابدأ بإنشاء طقم جديد</p>
+                <Button className="mt-4" onClick={handleCreateKit}>
+                  <Plus className="ml-2 h-4 w-4" />
+                  إنشاء طقم
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredKits.map((kit) => {
+                const categoryConfig = CATEGORY_CONFIG[kit.category]
+                const CategoryIcon = categoryConfig.icon
 
-      {/* Kits Grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-64" />
-          ))}
-        </div>
-      ) : loadError ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-destructive" />
-            <p className="text-lg font-medium">فشل تحميل البيانات</p>
-            <p className="mb-4 text-sm">{loadError}</p>
-            <Button variant="outline" onClick={() => loadData()}>
-              <RefreshCw className="ml-2 h-4 w-4" />
-              إعادة المحاولة
-            </Button>
-          </CardContent>
-        </Card>
-      ) : filteredKits.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Package className="mx-auto mb-4 h-12 w-12 opacity-50" />
-            <p className="text-lg font-medium">لا توجد أطقم</p>
-            <p className="text-sm">ابدأ بإنشاء طقم جديد</p>
-            <Button className="mt-4" onClick={handleCreateKit}>
-              <Plus className="ml-2 h-4 w-4" />
-              إنشاء طقم
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredKits.map((kit) => {
-            const categoryConfig = CATEGORY_CONFIG[kit.category]
-            const CategoryIcon = categoryConfig.icon
-
-            return (
-              <Card key={kit.id} className={!kit.isActive ? 'opacity-60' : ''}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`rounded-lg p-2 ${categoryConfig.bgColor}`}>
-                        <CategoryIcon className={`h-5 w-5 ${categoryConfig.color}`} />
+                return (
+                  <Card key={kit.id} className={!kit.isActive ? 'opacity-60' : ''}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`rounded-lg p-2 ${categoryConfig.bgColor}`}>
+                            <CategoryIcon className={`h-5 w-5 ${categoryConfig.color}`} />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">{kit.nameAr}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{kit.name}</p>
+                          </div>
+                        </div>
+                        <Badge variant={kit.isActive ? 'default' : 'secondary'}>
+                          {kit.isActive ? 'نشط' : 'غير نشط'}
+                        </Badge>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">{kit.nameAr}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{kit.name}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="mb-4 text-sm text-muted-foreground">{kit.description}</p>
+
+                      <div className="mb-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>عدد المعدات:</span>
+                          <span className="font-medium">{kit.items.length} قطعة</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>السعر الأصلي:</span>
+                          <span className="text-muted-foreground line-through">
+                            {formatCurrency(kit.totalDailyRate)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>الخصم:</span>
+                          <span className="text-green-600">-{kit.discountPercent}%</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>السعر النهائي:</span>
+                          <span className="text-primary">
+                            {formatCurrency(kit.finalDailyRate)}/يوم
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <Badge variant={kit.isActive ? 'default' : 'secondary'}>
-                      {kit.isActive ? 'نشط' : 'غير نشط'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="mb-4 text-sm text-muted-foreground">{kit.description}</p>
 
-                  <div className="mb-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>عدد المعدات:</span>
-                      <span className="font-medium">{kit.items.length} قطعة</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>السعر الأصلي:</span>
-                      <span className="text-muted-foreground line-through">
-                        {formatCurrency(kit.totalDailyRate)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>الخصم:</span>
-                      <span className="text-green-600">-{kit.discountPercent}%</span>
-                    </div>
-                    <div className="flex justify-between font-bold">
-                      <span>السعر النهائي:</span>
-                      <span className="text-primary">{formatCurrency(kit.finalDailyRate)}/يوم</span>
-                    </div>
-                  </div>
+                      <div className="mb-4 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>استخدم {kit.usageCount} مرة</span>
+                      </div>
 
-                  <div className="mb-4 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>استخدم {kit.usageCount} مرة</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleEditKit(kit)}
-                    >
-                      <Edit className="ml-1 h-4 w-4" />
-                      تعديل
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleDuplicateKit(kit)}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive"
-                      onClick={() => handleDeleteKit(kit.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEditKit(kit)}
+                        >
+                          <Edit className="ml-1 h-4 w-4" />
+                          تعديل
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDuplicateKit(kit)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive"
+                          onClick={() => handleDeleteKit(kit.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-4">

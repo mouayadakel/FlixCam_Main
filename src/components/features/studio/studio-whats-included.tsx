@@ -43,7 +43,10 @@ export function StudioWhatsIncluded({ studio }: StudioWhatsIncludedProps) {
   }
 
   return (
-    <section className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card" dir="rtl">
+    <section
+      className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-6 shadow-card"
+      dir="rtl"
+    >
       <h3 className="text-lg font-semibold text-text-heading">{t('studios.whatsIncluded')}</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -86,7 +89,9 @@ export function StudioWhatsIncluded({ studio }: StudioWhatsIncludedProps) {
         </div>
       )}
       {studio.capacity != null && (
-        <p className="text-sm text-text-muted">{t('studios.capacityUpTo').replace('{count}', String(studio.capacity))}</p>
+        <p className="text-sm text-text-muted">
+          {t('studios.capacityUpTo').replace('{count}', String(studio.capacity))}
+        </p>
       )}
     </section>
   )

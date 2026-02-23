@@ -26,10 +26,7 @@ interface EquipmentCategoryBarProps {
 
 export function EquipmentCategoryBar({ categories, currentCategoryId }: EquipmentCategoryBarProps) {
   const { t } = useLocale()
-  const parents = useMemo(
-    () => categories.filter((c) => !c.parentId),
-    [categories]
-  )
+  const parents = useMemo(() => categories.filter((c) => !c.parentId), [categories])
 
   const { currentParentId, subcategories } = useMemo(() => {
     if (!currentCategoryId) return { currentParentId: null, subcategories: [] }
@@ -44,7 +41,7 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
 
   return (
     <nav
-      className="sticky top-16 z-30 flex flex-col gap-1.5 border-b border-border-light/50 bg-white/95 py-2 -mx-4 px-4 shadow-sm backdrop-blur sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:top-16"
+      className="sticky top-16 z-30 -mx-4 flex flex-col gap-1.5 border-b border-border-light/50 bg-white/95 px-4 py-2 shadow-sm backdrop-blur sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:top-16"
       aria-label="Equipment categories"
     >
       {/* Row 1: All + parent categories */}
@@ -101,8 +98,8 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
       </div>
 
       {/* Row 2: Subcategories – always directly under parent row, follows its position */}
-      <div className="overflow-x-auto min-h-[30px]">
-        <div className="flex min-w-0 gap-1.5 items-center">
+      <div className="min-h-[30px] overflow-x-auto">
+        <div className="flex min-w-0 items-center gap-1.5">
           {showSubcategories ? (
             subcategories.map((cat) => {
               const isActive = currentCategoryId === cat.id
@@ -125,8 +122,9 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
           ) : (
             <span className="text-xs text-text-muted" role="status">
               {currentCategoryId
-                ? t('equipment.noSubcategories') ?? 'No subcategories'
-                : t('equipment.selectCategoryForSubcategories') ?? 'Select a category above to see subcategories'}
+                ? (t('equipment.noSubcategories') ?? 'No subcategories')
+                : (t('equipment.selectCategoryForSubcategories') ??
+                  'Select a category above to see subcategories')}
             </span>
           )}
         </div>

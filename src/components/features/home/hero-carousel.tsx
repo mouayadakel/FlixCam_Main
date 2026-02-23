@@ -187,7 +187,7 @@ export function HeroCarousel({
       <div className="absolute -bottom-32 -start-32 h-80 w-80 rounded-full bg-black/10 blur-3xl" />
 
       {/* Search bar – left corner at golden ratio (38.2% from top) */}
-      <div className="absolute left-0 right-0 top-[38.2%] z-10 pointer-events-none">
+      <div className="pointer-events-none absolute left-0 right-0 top-[38.2%] z-10">
         <PublicContainer className="pointer-events-auto">
           <div className="w-full max-w-md">
             <PublicSearch />
@@ -294,27 +294,29 @@ export function HeroCarousel({
                   )}
                   {/* Overlay */}
                   <div
-                    className="pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity hero-carousel-overlay"
+                    className="hero-carousel-overlay pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity"
                     style={{ ['--hero-overlay-opacity' as string]: String(slide.overlayOpacity) }}
                     aria-hidden
                   />
                   {/* Content */}
                   <PublicContainer className="relative z-[2]">
                     <div
-                      className={`relative flex min-h-[400px] flex-col items-center justify-center gap-10 py-16 md:min-h-[440px] md:flex-row md:items-center md:gap-16 lg:py-20 ${slide.textPosition === 'center'
+                      className={`relative flex min-h-[400px] flex-col items-center justify-center gap-10 py-16 md:min-h-[440px] md:flex-row md:items-center md:gap-16 lg:py-20 ${
+                        slide.textPosition === 'center'
                           ? 'text-center'
                           : slide.textPosition === 'end'
                             ? 'text-end md:flex-row-reverse'
                             : 'text-center md:text-start'
-                        }`}
+                      }`}
                     >
                       <div
-                        className={`flex flex-1 flex-col ${slide.textPosition === 'center'
+                        className={`flex flex-1 flex-col ${
+                          slide.textPosition === 'center'
                             ? 'items-center'
                             : slide.textPosition === 'end'
                               ? 'items-end'
                               : 'items-center md:items-start'
-                          }`}
+                        }`}
                       >
                         {getSlideText(slide, locale).badge && (
                           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-sm">
@@ -376,8 +378,9 @@ export function HeroCarousel({
             <button
               key={index}
               type="button"
-              className={`h-2 rounded-full transition-all hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-white ${selectedIndex === index ? 'w-6 bg-white' : 'w-2 bg-white/50'
-                }`}
+              className={`h-2 rounded-full transition-all hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-white ${
+                selectedIndex === index ? 'w-6 bg-white' : 'w-2 bg-white/50'
+              }`}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={selectedIndex === index ? 'true' : undefined}
               onClick={() => scrollTo(index)}
@@ -392,7 +395,7 @@ export function HeroCarousel({
             role="presentation"
           >
             <div
-              className="h-full bg-white/70 transition-all duration-100 hero-carousel-progress-fill"
+              className="hero-carousel-progress-fill h-full bg-white/70 transition-all duration-100"
               style={{ ['--hero-progress' as string]: `${progress}%` }}
             />
           </div>

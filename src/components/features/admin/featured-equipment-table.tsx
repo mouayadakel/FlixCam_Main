@@ -349,7 +349,10 @@ export function FeaturedEquipmentTable({
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={selectedCategoryId || 'all'} onValueChange={(v) => setSelectedCategoryId(v === 'all' ? '' : v)}>
+              <Select
+                value={selectedCategoryId || 'all'}
+                onValueChange={(v) => setSelectedCategoryId(v === 'all' ? '' : v)}
+              >
                 <SelectTrigger className="w-[180px]" dir="rtl">
                   <SelectValue placeholder="الفئة" />
                 </SelectTrigger>
@@ -362,7 +365,10 @@ export function FeaturedEquipmentTable({
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedBrandId || 'all'} onValueChange={(v) => setSelectedBrandId(v === 'all' ? '' : v)}>
+              <Select
+                value={selectedBrandId || 'all'}
+                onValueChange={(v) => setSelectedBrandId(v === 'all' ? '' : v)}
+              >
                 <SelectTrigger className="w-[160px]" dir="rtl">
                   <SelectValue placeholder="العلامة التجارية" />
                 </SelectTrigger>
@@ -441,9 +447,7 @@ export function FeaturedEquipmentTable({
                       <TableCell>
                         <Checkbox
                           checked={!!localFeatured[item.id]}
-                          onCheckedChange={(checked) =>
-                            handleToggle(item.id, checked === true)
-                          }
+                          onCheckedChange={(checked) => handleToggle(item.id, checked === true)}
                           aria-label={`عرض ${item.model || item.sku} على الصفحة الرئيسية`}
                         />
                       </TableCell>

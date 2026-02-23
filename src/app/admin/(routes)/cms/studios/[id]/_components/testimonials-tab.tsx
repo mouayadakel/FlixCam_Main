@@ -124,19 +124,28 @@ export function CmsStudioTestimonialsTab({ studioId }: TestimonialsTabProps) {
           throw new Error(err.error || 'فشل الإنشاء')
         }
       }
-      toast({ title: 'تم الحفظ', description: editingId ? 'تم تحديث التقييم' : 'تمت إضافة التقييم' })
+      toast({
+        title: 'تم الحفظ',
+        description: editingId ? 'تم تحديث التقييم' : 'تمت إضافة التقييم',
+      })
       setDialogOpen(false)
       resetForm()
       load()
     } catch (err) {
-      toast({ title: 'خطأ', description: err instanceof Error ? err.message : 'حدث خطأ', variant: 'destructive' })
+      toast({
+        title: 'خطأ',
+        description: err instanceof Error ? err.message : 'حدث خطأ',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('هل تريد حذف هذا التقييم؟')) return
     try {
-      const res = await fetch(`/api/admin/studios/${studioId}/testimonials/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/studios/${studioId}/testimonials/${id}`, {
+        method: 'DELETE',
+      })
       if (!res.ok) throw new Error('فشل الحذف')
       toast({ title: 'تم الحذف' })
       load()
@@ -259,9 +268,13 @@ export function CmsStudioTestimonialsTab({ studioId }: TestimonialsTabProps) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{item.name}</p>
-                    {item.role && <span className="text-xs text-muted-foreground">· {item.role}</span>}
+                    {item.role && (
+                      <span className="text-xs text-muted-foreground">· {item.role}</span>
+                    )}
                     {!item.isActive && (
-                      <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">غير نشط</span>
+                      <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-500">
+                        غير نشط
+                      </span>
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center gap-0.5">
@@ -272,7 +285,7 @@ export function CmsStudioTestimonialsTab({ studioId }: TestimonialsTabProps) {
                       />
                     ))}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{item.text}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.text}</p>
                 </div>
                 <div className="flex gap-1">
                   <Button type="button" variant="ghost" size="icon" onClick={() => openEdit(item)}>

@@ -178,13 +178,7 @@ export function KitSummarySidebar({ className }: { className?: string }) {
           <div key={id} className="flex items-center gap-2 text-sm">
             <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-white">
               {item.imageUrl ? (
-                <Image
-                  src={item.imageUrl}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="40px"
-                />
+                <Image src={item.imageUrl} alt="" fill className="object-cover" sizes="40px" />
               ) : (
                 <div className="h-full w-full bg-muted" />
               )}

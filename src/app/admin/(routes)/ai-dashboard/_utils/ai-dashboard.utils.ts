@@ -195,7 +195,9 @@ export function exportJobsToCSV(
 ): void {
   const bom = '\uFEFF'
   const rows = [
-    ['التاريخ', 'النوع', 'الحالة', 'المُعالَج', 'الإجمالي', 'الأخطاء', 'التكلفة (USD)'].map(escapeCSV),
+    ['التاريخ', 'النوع', 'الحالة', 'المُعالَج', 'الإجمالي', 'الأخطاء', 'التكلفة (USD)'].map(
+      escapeCSV
+    ),
     ...jobs.map((j) => [
       escapeCSV(j.startedAt ?? j.createdAt ?? ''),
       escapeCSV(JOB_TYPE_LABELS[j.type] ?? j.type),

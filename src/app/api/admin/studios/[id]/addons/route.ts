@@ -23,10 +23,7 @@ const createSchema = z.object({
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(new NextRequest(new URL('http://localhost')))
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -59,17 +56,11 @@ export async function GET(
       })),
     })
   } catch {
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -109,15 +100,16 @@ export async function POST(
       },
     })
     return NextResponse.json(
-      { ...addOn, price: Number(addOn.price), originalPrice: addOn.originalPrice ? Number(addOn.originalPrice) : null },
+      {
+        ...addOn,
+        price: Number(addOn.price),
+        originalPrice: addOn.originalPrice ? Number(addOn.originalPrice) : null,
+      },
       { status: 201 }
     )
   } catch (e) {
     if (e instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: e.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation failed', details: e.errors }, { status: 400 })
     }
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Internal Server Error' },

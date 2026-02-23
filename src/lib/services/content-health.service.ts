@@ -291,7 +291,10 @@ const GAP_BATCH_SIZE = 100
  * @param options.revenueWeighted - when true, order by priceDaily desc so high-revenue products are filled first
  * @param options.minQualityScore - when set, only include products with contentScore < this (fill worst first)
  */
-export async function getProductIdsWithGaps(options?: { revenueWeighted?: boolean; minQualityScore?: number }): Promise<string[]> {
+export async function getProductIdsWithGaps(options?: {
+  revenueWeighted?: boolean
+  minQualityScore?: number
+}): Promise<string[]> {
   const ids: string[] = []
   let cursor: string | undefined
   const revenueWeighted = options?.revenueWeighted ?? false

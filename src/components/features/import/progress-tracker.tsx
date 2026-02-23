@@ -163,7 +163,8 @@ export function ProgressTracker({ jobId, onComplete }: ProgressTrackerProps) {
           <Progress value={products.percentage} />
           {progress.status === 'PENDING' && products.total > 0 && products.processed === 0 && (
             <p className="text-xs text-muted-foreground">
-              Job is queued. It will be processed automatically by the server. If progress stays at 0, ensure Redis is running.
+              Job is queued. It will be processed automatically by the server. If progress stays at
+              0, ensure Redis is running.
             </p>
           )}
           <div className="flex gap-4 text-xs text-muted-foreground">

@@ -26,7 +26,9 @@ async function main() {
   })
 
   if (!lighting) {
-    console.error('❌ Category "Lighting" (slug: lighting) not found. Run the main seed first: npm run db:seed')
+    console.error(
+      '❌ Category "Lighting" (slug: lighting) not found. Run the main seed first: npm run db:seed'
+    )
     process.exit(1)
   }
 
@@ -58,7 +60,9 @@ async function main() {
     // Cache may be in another process (e.g. Next.js in-memory)
   }
   console.log('✅ Lighting subcategories created/updated.')
-  console.log('   If you still don\'t see them: restart the Next.js dev server (npm run dev), then open')
+  console.log(
+    "   If you still don't see them: restart the Next.js dev server (npm run dev), then open"
+  )
   console.log('   http://localhost:3000/equipment and click "Lighting" to see the second row.')
 }
 

@@ -34,13 +34,13 @@ export function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950"
+      className="fixed left-0 right-0 top-0 z-[100] bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950"
     >
       <span>لا يوجد اتصال بالإنترنت. سيتم المزامنة عند العودة.</span>
       <button
         type="button"
         onClick={() => setDismissed(true)}
-        className="ms-3 underline focus:outline-none focus:ring-2 focus:ring-amber-900 rounded"
+        className="ms-3 rounded underline focus:outline-none focus:ring-2 focus:ring-amber-900"
         aria-label="إغلاق"
       >
         إغلاق

@@ -56,15 +56,14 @@ export async function POST(request: NextRequest) {
     const name = bodySchema.name(body.name)
     const categoryId = bodySchema.categoryId(body.categoryId)
     if (!name || !categoryId) {
-      return NextResponse.json(
-        { error: 'name and categoryId are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'name and categoryId are required' }, { status: 400 })
     }
 
     const brandId = bodySchema.brandId(body.brandId)
     const existingSpecs = bodySchema.existingSpecs(body.existingSpecs)
-    const existingShortDescription = bodySchema.existingShortDescription(body.existingShortDescription)
+    const existingShortDescription = bodySchema.existingShortDescription(
+      body.existingShortDescription
+    )
     const existingLongDescription = bodySchema.existingLongDescription(body.existingLongDescription)
 
     const category = await prisma.category.findUnique({
@@ -117,7 +116,12 @@ export async function POST(request: NextRequest) {
     // Merge ALL inferred specs — the AI is instructed to always fill every field with creative measurements
     const specsToMerge = (specResult?.specs ?? []).filter((s) => {
       const val = (s as { value: string }).value
-      return val && String(val).trim() !== '' && String(val).toLowerCase() !== 'unknown' && String(val).toLowerCase() !== 'n/a'
+      return (
+        val &&
+        String(val).trim() !== '' &&
+        String(val).toLowerCase() !== 'unknown' &&
+        String(val).toLowerCase() !== 'n/a'
+      )
     })
     const mergedSpecs = { ...(existingSpecs ?? {}) }
     for (const s of specsToMerge) {
@@ -157,7 +161,9 @@ export async function POST(request: NextRequest) {
     }
 
     const confidence: Record<string, number> = {
-      shortDescription: masterResult?.short_desc_en ? (dynamicConfidence.shortDescription ?? 85) : 0,
+      shortDescription: masterResult?.short_desc_en
+        ? (dynamicConfidence.shortDescription ?? 85)
+        : 0,
       longDescription: masterResult?.long_desc_en ? (dynamicConfidence.longDescription ?? 82) : 0,
       seoTitle: masterResult?.seo_title_en ? (dynamicConfidence.seoTitle ?? 90) : 0,
       seoDescription: masterResult?.seo_desc_en ? (dynamicConfidence.seoDescription ?? 88) : 0,
@@ -182,12 +188,18 @@ export async function POST(request: NextRequest) {
       Monitors: ['screen_size', 'resolution', 'brightness_nits', 'color_space'],
       Grip: ['max_load_kg', 'max_height_cm', 'head_type', 'material'],
       Stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours', 'follow_modes'],
-      Drones: ['max_flight_time_min', 'max_video_resolution', 'camera_sensor_size', 'max_transmission_range'],
+      Drones: [
+        'max_flight_time_min',
+        'max_video_resolution',
+        'camera_sensor_size',
+        'max_transmission_range',
+      ],
       Power: ['capacity_wh', 'voltage', 'mount_type', 'max_output_watts'],
       Recorders: ['max_resolution', 'codec', 'media_type', 'screen_size'],
       Wireless: ['max_range_m', 'latency_ms', 'max_resolution', 'frequency_band'],
     }
-    const highlightKeys = topHighlightKeys[categoryTemplateName] ?? Object.keys(mergedSpecs).slice(0, 4)
+    const highlightKeys =
+      topHighlightKeys[categoryTemplateName] ?? Object.keys(mergedSpecs).slice(0, 4)
     const autoHighlights = highlightKeys
       .filter((k) => mergedSpecs[k] != null && String(mergedSpecs[k]).trim() !== '')
       .map((k) => ({
@@ -200,9 +212,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-generate quick spec pills from first 6 specs
-    const quickSpecKeys = Object.keys(mergedSpecs).filter(
-      (k) => mergedSpecs[k] != null && String(mergedSpecs[k]).trim() !== ''
-    ).slice(0, 6)
+    const quickSpecKeys = Object.keys(mergedSpecs)
+      .filter((k) => mergedSpecs[k] != null && String(mergedSpecs[k]).trim() !== '')
+      .slice(0, 6)
     structuredSpecs.quickSpecs = quickSpecKeys.map((k) => ({
       icon: 'star',
       label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -212,14 +224,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       specs: mergedSpecs,
       structuredSpecs,
-      shortDescription:
-        masterResult?.short_desc_en ||
-        existingShortDescription ||
-        '',
-      longDescription:
-        masterResult?.long_desc_en ||
-        existingLongDescription ||
-        '',
+      shortDescription: masterResult?.short_desc_en || existingShortDescription || '',
+      longDescription: masterResult?.long_desc_en || existingLongDescription || '',
       seo: masterResult?.seo_title_en
         ? {
             metaTitle: masterResult.seo_title_en,
@@ -232,32 +238,34 @@ export async function POST(request: NextRequest) {
       relatedEquipmentIds: relatedEquipment.map((e) => e.id),
       confidence,
       // Full multilingual translations for auto-fill across all 3 locales
-      translations: masterResult ? {
-        en: {
-          name,
-          shortDescription: masterResult.short_desc_en || '',
-          longDescription: masterResult.long_desc_en || '',
-          seoTitle: masterResult.seo_title_en || '',
-          seoDescription: masterResult.seo_desc_en || '',
-          seoKeywords: masterResult.seo_keywords_en || '',
-        },
-        ar: {
-          name: masterResult.name_ar || '',
-          shortDescription: masterResult.short_desc_ar || '',
-          longDescription: masterResult.long_desc_ar || '',
-          seoTitle: masterResult.seo_title_ar || '',
-          seoDescription: masterResult.seo_desc_ar || '',
-          seoKeywords: masterResult.seo_keywords_ar || '',
-        },
-        zh: {
-          name: masterResult.name_zh || '',
-          shortDescription: masterResult.short_desc_zh || '',
-          longDescription: masterResult.long_desc_zh || '',
-          seoTitle: masterResult.seo_title_zh || '',
-          seoDescription: masterResult.seo_desc_zh || '',
-          seoKeywords: masterResult.seo_keywords_zh || '',
-        },
-      } : undefined,
+      translations: masterResult
+        ? {
+            en: {
+              name,
+              shortDescription: masterResult.short_desc_en || '',
+              longDescription: masterResult.long_desc_en || '',
+              seoTitle: masterResult.seo_title_en || '',
+              seoDescription: masterResult.seo_desc_en || '',
+              seoKeywords: masterResult.seo_keywords_en || '',
+            },
+            ar: {
+              name: masterResult.name_ar || '',
+              shortDescription: masterResult.short_desc_ar || '',
+              longDescription: masterResult.long_desc_ar || '',
+              seoTitle: masterResult.seo_title_ar || '',
+              seoDescription: masterResult.seo_desc_ar || '',
+              seoKeywords: masterResult.seo_keywords_ar || '',
+            },
+            zh: {
+              name: masterResult.name_zh || '',
+              shortDescription: masterResult.short_desc_zh || '',
+              longDescription: masterResult.long_desc_zh || '',
+              seoTitle: masterResult.seo_title_zh || '',
+              seoDescription: masterResult.seo_desc_zh || '',
+              seoKeywords: masterResult.seo_keywords_zh || '',
+            },
+          }
+        : undefined,
     })
   } catch (error: unknown) {
     console.error('Equipment AI suggest failed:', error)

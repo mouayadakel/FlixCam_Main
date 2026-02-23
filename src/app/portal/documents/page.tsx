@@ -75,7 +75,9 @@ export default async function PortalDocumentsPage() {
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">{t('ar', 'portal.noContracts')}</p>
+            <p className="py-6 text-center text-muted-foreground">
+              {t('ar', 'portal.noContracts')}
+            </p>
           ) : (
             <ul className="space-y-3">
               {contracts.map((c) => (
@@ -84,7 +86,12 @@ export default async function PortalDocumentsPage() {
                   className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50"
                 >
                   <div>
-                    <span className="font-medium">{t('ar', 'portal.bookingContractHash').replace('{number}', c.booking.bookingNumber)}</span>
+                    <span className="font-medium">
+                      {t('ar', 'portal.bookingContractHash').replace(
+                        '{number}',
+                        c.booking.bookingNumber
+                      )}
+                    </span>
                     <span className="mr-2 text-sm text-muted-foreground">
                       — {formatDate(c.createdAt)}
                       {c.signedAt && ` · ${t('ar', 'portal.signed')} ${formatDate(c.signedAt)}`}

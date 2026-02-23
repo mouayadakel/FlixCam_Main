@@ -80,7 +80,10 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
 
   const cancelNotAllowedMessage =
     booking.status === 'CONFIRMED' && !canCancel
-      ? t('ar', 'portal.cancelNotAllowed').replace('{hours}', String(CANCELLATION_HOURS_BEFORE_START))
+      ? t('ar', 'portal.cancelNotAllowed').replace(
+          '{hours}',
+          String(CANCELLATION_HOURS_BEFORE_START)
+        )
       : undefined
 
   function getStatusBadge(status: BookingStatus) {
@@ -114,7 +117,9 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
             <ArrowRight className="h-4 w-4" />
             {t('ar', 'portal.backToBookings')}
           </Link>
-          <h1 className="text-3xl font-bold">{t('ar', 'portal.booking')} #{booking.bookingNumber}</h1>
+          <h1 className="text-3xl font-bold">
+            {t('ar', 'portal.booking')} #{booking.bookingNumber}
+          </h1>
         </div>
         {getStatusBadge(booking.status)}
       </div>
@@ -173,7 +178,9 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
             )}
             {'actualReturnDate' in booking && booking.actualReturnDate && (
               <div>
-                <div className="text-sm text-muted-foreground">{t('ar', 'portal.actualReturnDate')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('ar', 'portal.actualReturnDate')}
+                </div>
                 <div className="font-medium">{formatDate(booking.actualReturnDate)}</div>
               </div>
             )}
@@ -218,7 +225,9 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
                         </div>
                       )}
                     </div>
-                    <Badge variant="outline">{t('ar', 'portal.quantity').replace('{count}', String(item.quantity))}</Badge>
+                    <Badge variant="outline">
+                      {t('ar', 'portal.quantity').replace('{count}', String(item.quantity))}
+                    </Badge>
                   </div>
                 ))}
               </div>

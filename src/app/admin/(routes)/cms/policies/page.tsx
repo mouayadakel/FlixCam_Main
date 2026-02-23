@@ -188,7 +188,9 @@ export default function CmsPoliciesPage() {
               </p>
               <p className="mt-3 text-sm text-muted-foreground">
                 إذا كنت تتوقع ظهور سياسات: سجّل الخروج ثم الدخول مرة أخرى، أو شغّل من المشروع:{' '}
-                <code className="rounded bg-muted px-1.5 py-0.5">npx tsx scripts/seed-policies.ts</code>
+                <code className="rounded bg-muted px-1.5 py-0.5">
+                  npx tsx scripts/seed-policies.ts
+                </code>
               </p>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => fetchItems()}>
                 إعادة المحاولة

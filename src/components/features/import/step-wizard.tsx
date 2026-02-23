@@ -46,17 +46,20 @@ export function StepWizard({
             const isAccessible = isCompleted || index <= currentStep
 
             return (
-              <li key={step.id} className="flex items-center gap-2 flex-1">
+              <li key={step.id} className="flex flex-1 items-center gap-2">
                 <button
                   type="button"
                   onClick={() => isAccessible && onStepClick?.(index)}
                   disabled={!isAccessible}
                   className={cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full',
+                    'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive && 'bg-primary text-primary-foreground shadow-sm',
                     isCompleted && !isActive && 'bg-green-100 text-green-800 hover:bg-green-200',
-                    !isActive && !isCompleted && isAccessible && 'bg-muted hover:bg-muted/80 text-muted-foreground',
-                    !isAccessible && 'bg-muted/50 text-muted-foreground/50 cursor-not-allowed'
+                    !isActive &&
+                      !isCompleted &&
+                      isAccessible &&
+                      'bg-muted text-muted-foreground hover:bg-muted/80',
+                    !isAccessible && 'cursor-not-allowed bg-muted/50 text-muted-foreground/50'
                   )}
                 >
                   <span
@@ -75,14 +78,11 @@ export function StepWizard({
                       index + 1
                     )}
                   </span>
-                  <span className="hidden sm:inline truncate">{step.label}</span>
+                  <span className="hidden truncate sm:inline">{step.label}</span>
                 </button>
                 {index < steps.length - 1 && (
                   <div
-                    className={cn(
-                      'h-0.5 w-4 shrink-0',
-                      isCompleted ? 'bg-green-400' : 'bg-muted'
-                    )}
+                    className={cn('h-0.5 w-4 shrink-0', isCompleted ? 'bg-green-400' : 'bg-muted')}
                   />
                 )}
               </li>
@@ -95,20 +95,13 @@ export function StepWizard({
 
       {showNavigation && (
         <div className="flex items-center justify-between border-t pt-4">
-          <Button
-            variant="outline"
-            onClick={onPrevious}
-            disabled={currentStep === 0}
-          >
+          <Button variant="outline" onClick={onPrevious} disabled={currentStep === 0}>
             ← السابق
           </Button>
           <span className="text-sm text-muted-foreground">
             {currentStep + 1} / {steps.length}
           </span>
-          <Button
-            onClick={onNext}
-            disabled={nextDisabled}
-          >
+          <Button onClick={onNext} disabled={nextDisabled}>
             {nextLabel || (currentStep === steps.length - 1 ? 'بدء الاستيراد' : 'التالي →')}
           </Button>
         </div>

@@ -14,10 +14,7 @@ import { ValidationError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(new NextRequest(new URL('http://localhost')))
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -49,10 +46,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -76,7 +70,15 @@ export async function POST(
     }
     const body = await request.json()
     const data = createStudioTestimonialSchema.parse(body)
-    const testimonial = await StudioTestimonialService.create(id, data, session.user.id)
+    const testimonial = await StudioTestimonialService.create(
+      id,
+      {
+        ...data,
+        role: data.role ?? undefined,
+        avatarUrl: data.avatarUrl ?? undefined,
+      },
+      session.user.id
+    )
     return NextResponse.json(testimonial, { status: 201 })
   } catch (error) {
     if (error instanceof ValidationError) {

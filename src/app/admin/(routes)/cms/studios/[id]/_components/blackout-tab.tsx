@@ -5,13 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -187,17 +181,12 @@ export function CmsStudioBlackoutTab({ studioId, onRefresh }: BlackoutTabProps) 
             <p className="text-sm text-muted-foreground">لا توجد أيام معطلة</p>
           ) : (
             blackouts.map((b) => (
-              <div
-                key={b.id}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
+              <div key={b.id} className="flex items-center justify-between rounded-lg border p-3">
                 <div>
                   <p className="font-medium">
                     {b.startDate} — {b.endDate}
                   </p>
-                  {b.reason && (
-                    <p className="text-sm text-muted-foreground">{b.reason}</p>
-                  )}
+                  {b.reason && <p className="text-sm text-muted-foreground">{b.reason}</p>}
                 </div>
                 <Button
                   type="button"

@@ -46,8 +46,7 @@ export async function POST(request: NextRequest) {
     console.error('Map columns failed:', error)
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Failed to map columns',
+        error: error instanceof Error ? error.message : 'Failed to map columns',
       },
       { status: 500 }
     )

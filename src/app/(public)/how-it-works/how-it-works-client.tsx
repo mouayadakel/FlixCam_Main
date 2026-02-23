@@ -24,12 +24,8 @@ export function HowItWorksClient() {
   return (
     <main className="py-12">
       <PublicContainer className="max-w-3xl">
-        <h1 className="mb-2 text-3xl font-bold text-text-heading">
-          {t('howItWorks.pageTitle')}
-        </h1>
-        <p className="mb-10 text-text-muted">
-          {t('howItWorks.pageSubtitle')}
-        </p>
+        <h1 className="mb-2 text-3xl font-bold text-text-heading">{t('howItWorks.pageTitle')}</h1>
+        <p className="mb-10 text-text-muted">{t('howItWorks.pageSubtitle')}</p>
         <div className="space-y-10">
           {STEPS.map((step, i) => (
             <div key={step.titleKey} className="flex gap-6">

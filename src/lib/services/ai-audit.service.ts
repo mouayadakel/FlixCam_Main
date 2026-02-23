@@ -40,6 +40,9 @@ export async function logAiAudit(input: LogAiAuditInput): Promise<void> {
       },
     })
   } catch (error) {
-    console.error('[ai-audit] Failed to write audit log:', error instanceof Error ? error.message : error)
+    console.error(
+      '[ai-audit] Failed to write audit log:',
+      error instanceof Error ? error.message : error
+    )
   }
 }

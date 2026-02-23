@@ -10,7 +10,17 @@ import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StudioSlotPicker } from './studio-slot-picker'
-import { CalendarDays, Clock, Package, Plus, ShoppingCart, Info, Search, Tag, Sparkles } from 'lucide-react'
+import {
+  CalendarDays,
+  Clock,
+  Package,
+  Plus,
+  ShoppingCart,
+  Info,
+  Search,
+  Tag,
+  Sparkles,
+} from 'lucide-react'
 import type { StudioPublicData } from '@/lib/types/studio.types'
 import { trackStudioEvent } from '@/lib/analytics'
 
@@ -33,7 +43,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'أخرى',
 }
 
-export function StudioBookingPanel({ studio, controlledPackageId, onChangePackage, controlledDate, onDateChange: onDateChangeProp }: StudioBookingPanelProps) {
+export function StudioBookingPanel({
+  studio,
+  controlledPackageId,
+  onChangePackage,
+  controlledDate,
+  onDateChange: onDateChangeProp,
+}: StudioBookingPanelProps) {
   const { t } = useLocale()
   const [internalDate, setInternalDate] = useState('')
 
@@ -58,7 +74,8 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
 
   const isControlled = controlledPackageId !== undefined
   const selectedPackageId = isControlled ? controlledPackageId : internalPackageId
-  const setSelectedPackageId = isControlled && onChangePackage ? onChangePackage : setInternalPackageId
+  const setSelectedPackageId =
+    isControlled && onChangePackage ? onChangePackage : setInternalPackageId
 
   const packages = studio.packages ?? []
   const addOns = studio.addOns ?? []
@@ -138,26 +155,27 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
 
   const bufferNote =
     studio.setupBuffer > 0 || studio.cleaningBuffer > 0
-      ? t('studios.bufferNote').replace('{minutes}', String(studio.setupBuffer + studio.cleaningBuffer))
+      ? t('studios.bufferNote').replace(
+          '{minutes}',
+          String(studio.setupBuffer + studio.cleaningBuffer)
+        )
       : null
 
   return (
     <div
       id="booking-panel"
-      className="lg:sticky lg:top-24 space-y-5 rounded-2xl border border-border-light/40 bg-white p-5 shadow-card-elevated"
+      className="space-y-5 rounded-2xl border border-border-light/40 bg-white p-5 shadow-card-elevated lg:sticky lg:top-24"
       dir="rtl"
     >
       {/* Discount Banner */}
       {hasDiscount && (
-        <div className="animate-fade-in -mx-5 -mt-5 overflow-hidden rounded-t-2xl bg-gradient-to-l from-primary via-primary/90 to-primary/80 px-5 py-3">
+        <div className="-mx-5 -mt-5 animate-fade-in overflow-hidden rounded-t-2xl bg-gradient-to-l from-primary via-primary/90 to-primary/80 px-5 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-white/90" />
-              <span className="text-sm font-bold text-white">
-                خصم {studio.discountPercent}%
-              </span>
+              <span className="text-sm font-bold text-white">خصم {studio.discountPercent}%</span>
             </div>
-            <Badge className="border-white/30 bg-white/20 text-white text-[10px]">
+            <Badge className="border-white/30 bg-white/20 text-[10px] text-white">
               <Tag className="me-1 h-3 w-3" />
               عرض محدود
             </Badge>
@@ -177,7 +195,9 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
         {studio.hourlyRate > 0 && (
           <div className="text-end">
             {hasDiscount && (
-              <span className="me-1.5 text-sm text-text-muted line-through">{Number(studio.hourlyRate).toLocaleString()}</span>
+              <span className="me-1.5 text-sm text-text-muted line-through">
+                {Number(studio.hourlyRate).toLocaleString()}
+              </span>
             )}
             <span className="text-price-tag text-primary">
               {hasDiscount
@@ -227,7 +247,7 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-text-heading">
-                {selectedPkg ? (selectedPkg.nameAr || selectedPkg.name) : t('studios.hourlyOption')}
+                {selectedPkg ? selectedPkg.nameAr || selectedPkg.name : t('studios.hourlyOption')}
               </span>
             </div>
             <button
@@ -244,7 +264,9 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
           {selectedPkg && (
             <p className="mt-1 text-xs text-text-muted">
               {Number(selectedPkg.price).toLocaleString()} ر.س
-              {selectedPkg.hours != null ? ` · ${selectedPkg.hours} ${selectedPkg.hours === 1 ? t('studios.hour') : t('studios.hours')}` : ''}
+              {selectedPkg.hours != null
+                ? ` · ${selectedPkg.hours} ${selectedPkg.hours === 1 ? t('studios.hour') : t('studios.hours')}`
+                : ''}
             </p>
           )}
         </div>
@@ -263,7 +285,9 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
                 onChange={() => setSelectedPackageId(null)}
                 className="accent-primary"
               />
-              <span className="font-medium">{t('studios.hourlyRateLabel').replace('{rate}', String(studio.hourlyRate))}</span>
+              <span className="font-medium">
+                {t('studios.hourlyRateLabel').replace('{rate}', String(studio.hourlyRate))}
+              </span>
             </label>
             {packages.map((pkg) => (
               <label
@@ -282,16 +306,20 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
                     <span className="font-medium">{pkg.nameAr || pkg.name}</span>
                     <div className="flex items-center gap-1.5">
                       {pkg.originalPrice != null && pkg.originalPrice > pkg.price && (
-                        <span className="text-xs text-text-muted line-through">{pkg.originalPrice} ر.س</span>
+                        <span className="text-xs text-text-muted line-through">
+                          {pkg.originalPrice} ر.س
+                        </span>
                       )}
                       <span className="font-semibold text-primary">{pkg.price} ر.س</span>
                     </div>
                   </div>
                   {pkg.hours != null && (
-                    <span className="text-xs text-text-muted">{pkg.hours} {pkg.hours === 1 ? t('studios.hour') : t('studios.hours')}</span>
+                    <span className="text-xs text-text-muted">
+                      {pkg.hours} {pkg.hours === 1 ? t('studios.hour') : t('studios.hours')}
+                    </span>
                   )}
                   {pkg.discountPercent != null && pkg.discountPercent > 0 && (
-                    <Badge className="mt-1 border-success-500/30 bg-success-50 text-success-700 text-[10px]">
+                    <Badge className="mt-1 border-success-500/30 bg-success-50 text-[10px] text-success-700">
                       خصم {pkg.discountPercent}%
                     </Badge>
                   )}
@@ -320,7 +348,7 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
                 placeholder="ابحث في الإضافات..."
                 value={addOnSearch}
                 onChange={(e) => setAddOnSearch(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background py-2 pe-3 ps-3 pr-9 text-sm transition-shadow placeholder:text-muted-foreground focus:shadow-card-elevated focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-xl border border-input bg-background py-2 pe-3 pr-9 ps-3 text-sm transition-shadow placeholder:text-muted-foreground focus:shadow-card-elevated focus:outline-none focus:ring-2 focus:ring-primary/20"
                 aria-label="بحث في الإضافات"
                 dir="rtl"
               />
@@ -364,9 +392,13 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
                         </div>
                         <div className="flex shrink-0 flex-col items-end">
                           {hasSale && (
-                            <span className="text-[10px] text-text-muted line-through">{addOn.originalPrice} ر.س</span>
+                            <span className="text-[10px] text-text-muted line-through">
+                              {addOn.originalPrice} ر.س
+                            </span>
                           )}
-                          <span className={`text-xs font-semibold ${hasSale ? 'text-success-700' : 'text-primary'}`}>
+                          <span
+                            className={`text-xs font-semibold ${hasSale ? 'text-success-700' : 'text-primary'}`}
+                          >
                             {addOn.price} ر.س
                           </span>
                         </div>
@@ -400,14 +432,16 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
       {/* Total */}
       <div className="rounded-xl bg-surface-light p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-text-body">
-            {t('studios.total')}
-          </span>
+          <span className="text-sm font-medium text-text-body">{t('studios.total')}</span>
           <div className="text-end">
             {hasDiscount && savings > 0 && (
-              <p className="text-xs text-text-muted line-through">{(basePrice + addOnsTotal).toLocaleString()} ر.س</p>
+              <p className="text-xs text-text-muted line-through">
+                {(basePrice + addOnsTotal).toLocaleString()} ر.س
+              </p>
             )}
-            <span className="text-xl font-bold text-text-heading">{total.toLocaleString()} ر.س</span>
+            <span className="text-xl font-bold text-text-heading">
+              {total.toLocaleString()} ر.س
+            </span>
             {studio.vatIncluded && (
               <p className="text-[10px] text-text-muted">{t('studios.vatIncluded')}</p>
             )}
@@ -416,7 +450,9 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
         {hasDiscount && savings > 0 && (
           <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-success-50 px-3 py-1.5">
             <Tag className="h-3 w-3 text-success-700" />
-            <span className="text-xs font-medium text-success-700">وفرت {savings.toLocaleString()} ر.س!</span>
+            <span className="text-xs font-medium text-success-700">
+              وفرت {savings.toLocaleString()} ر.س!
+            </span>
           </div>
         )}
       </div>
@@ -446,21 +482,26 @@ export function StudioBookingPanel({ studio, controlledPackageId, onChangePackag
             trackStudioEvent('booking_started', {
               studio_slug: studio.slug,
               package_id: selectedPackageId,
-              package_name: selectedPkg ? (selectedPkg.nameAr || selectedPkg.name) : 'hourly',
+              package_name: selectedPkg ? selectedPkg.nameAr || selectedPkg.name : 'hourly',
               addons_count: selectedAddOnIds.size,
               total,
             })
           }
         }}
       >
-        <Link href={canAdd ? `/cart?${cartParams.toString()}` : '#'} className="inline-flex items-center justify-center gap-2">
+        <Link
+          href={canAdd ? `/cart?${cartParams.toString()}` : '#'}
+          className="inline-flex items-center justify-center gap-2"
+        >
           <ShoppingCart className="h-4 w-4" />
           {t('common.addToCart')}
         </Link>
       </Button>
 
       {studio.bookingDisclaimer && (
-        <p className="text-center text-[11px] leading-relaxed text-text-muted">{studio.bookingDisclaimer}</p>
+        <p className="text-center text-[11px] leading-relaxed text-text-muted">
+          {studio.bookingDisclaimer}
+        </p>
       )}
     </div>
   )

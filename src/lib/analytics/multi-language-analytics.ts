@@ -97,7 +97,7 @@ class MultiLanguageAnalytics {
     if (existing) {
       // Update cache hit rate
       const totalRequests = existing.usage
-      const hits = Math.floor(existing.cacheHitRate * totalRequests / 100) + (hit ? 1 : 0)
+      const hits = Math.floor((existing.cacheHitRate * totalRequests) / 100) + (hit ? 1 : 0)
       existing.cacheHitRate = (hits / totalRequests) * 100
       this.metrics.set(locale, existing)
     }
@@ -114,7 +114,7 @@ class MultiLanguageAnalytics {
     const existing = this.metrics.get(locale)
     if (existing) {
       // Update error rate
-      existing.errorRate = (existing.errorRate + 1) / existing.usage * 100
+      existing.errorRate = ((existing.errorRate + 1) / existing.usage) * 100
       this.metrics.set(locale, existing)
     }
 
@@ -156,10 +156,11 @@ class MultiLanguageAnalytics {
   } {
     const localeMetrics = Array.from(this.metrics.values())
     const totalUsage = localeMetrics.reduce((sum, m) => sum + m.usage, 0)
-    const mostPopularLocale = localeMetrics.reduce((max, m) => 
-      m.usage > max.usage ? m : max, localeMetrics[0]
-    )?.locale || 'ar'
-    const averageLoadTime = localeMetrics.reduce((sum, m) => sum + m.avgLoadTime, 0) / localeMetrics.length
+    const mostPopularLocale =
+      localeMetrics.reduce((max, m) => (m.usage > max.usage ? m : max), localeMetrics[0])?.locale ||
+      'ar'
+    const averageLoadTime =
+      localeMetrics.reduce((sum, m) => sum + m.avgLoadTime, 0) / localeMetrics.length
 
     return {
       localeMetrics,
@@ -180,7 +181,7 @@ class MultiLanguageAnalytics {
         const translations = await import(`@/messages/${locale}.json`)
         const flatKeys = this.flattenObject(translations.default)
         const totalKeys = Object.keys(flatKeys).length
-        const translatedKeys = Object.values(flatKeys).filter(v => v && v !== '').length
+        const translatedKeys = Object.values(flatKeys).filter((v) => v && v !== '').length
         const missingKeys = Object.entries(flatKeys)
           .filter(([_, value]) => !value || value === '')
           .map(([key]) => key)
@@ -215,19 +216,26 @@ class MultiLanguageAnalytics {
       recommendations.push('Consider optimizing bundle sizes for slower locales')
     }
 
-    const slowestLocale = Object.entries(summary.performanceMetrics.loadTimes)
-      .sort(([, a], [, b]) => b - a)[0]?.[0]
+    const slowestLocale = Object.entries(summary.performanceMetrics.loadTimes).sort(
+      ([, a], [, b]) => b - a
+    )[0]?.[0]
     if (slowestLocale && summary.performanceMetrics.loadTimes[slowestLocale] > 3000) {
-      recommendations.push(`${slowestLocale} has slow load times - consider lazy loading optimization`)
+      recommendations.push(
+        `${slowestLocale} has slow load times - consider lazy loading optimization`
+      )
     }
 
-    const leastUsedLocale = summary.localeMetrics
-      .sort((a, b) => a.usage - b.usage)[0]?.locale
-    if (leastUsedLocale && summary.localeMetrics.find(m => m.locale === leastUsedLocale)?.usage! < 100) {
-      recommendations.push(`${leastUsedLocale} has low usage - consider improving content or marketing`)
+    const leastUsedLocale = summary.localeMetrics.sort((a, b) => a.usage - b.usage)[0]?.locale
+    if (
+      leastUsedLocale &&
+      summary.localeMetrics.find((m) => m.locale === leastUsedLocale)?.usage! < 100
+    ) {
+      recommendations.push(
+        `${leastUsedLocale} has low usage - consider improving content or marketing`
+      )
     }
 
-    const lowCoverage = summary.localeMetrics.find(m => m.errorRate > 5)
+    const lowCoverage = summary.localeMetrics.find((m) => m.errorRate > 5)
     if (lowCoverage) {
       recommendations.push(`${lowCoverage.locale} has high error rate - check translation quality`)
     }
@@ -248,8 +256,17 @@ class MultiLanguageAnalytics {
     }
 
     // CSV format
-    const headers = ['Locale', 'Usage', 'Page Views', 'Avg Load Time', 'Bounce Rate', 'Conversion Rate', 'Error Rate', 'Cache Hit Rate']
-    const rows = data.localeMetrics.map(m => [
+    const headers = [
+      'Locale',
+      'Usage',
+      'Page Views',
+      'Avg Load Time',
+      'Bounce Rate',
+      'Conversion Rate',
+      'Error Rate',
+      'Cache Hit Rate',
+    ]
+    const rows = data.localeMetrics.map((m) => [
       m.locale,
       m.usage.toString(),
       m.pageViews.toString(),
@@ -260,7 +277,7 @@ class MultiLanguageAnalytics {
       m.cacheHitRate.toString(),
     ])
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n')
+    return [headers, ...rows].map((row) => row.join(',')).join('\n')
   }
 
   // Private helper methods
@@ -299,12 +316,15 @@ export function useMultiLanguageAnalytics() {
     trackLocaleUsage: multiLanguageAnalytics.trackLocaleUsage.bind(multiLanguageAnalytics),
     trackLoadTime: multiLanguageAnalytics.trackLoadTime.bind(multiLanguageAnalytics),
     trackCacheHit: multiLanguageAnalytics.trackCacheHit.bind(multiLanguageAnalytics),
-    trackTranslationError: multiLanguageAnalytics.trackTranslationError.bind(multiLanguageAnalytics),
+    trackTranslationError:
+      multiLanguageAnalytics.trackTranslationError.bind(multiLanguageAnalytics),
     trackLanguageSwitch: multiLanguageAnalytics.trackLanguageSwitch.bind(multiLanguageAnalytics),
     trackBundleSize: multiLanguageAnalytics.trackBundleSize.bind(multiLanguageAnalytics),
     getAnalyticsSummary: multiLanguageAnalytics.getAnalyticsSummary.bind(multiLanguageAnalytics),
-    getTranslationCoverage: multiLanguageAnalytics.getTranslationCoverage.bind(multiLanguageAnalytics),
-    generatePerformanceReport: multiLanguageAnalytics.generatePerformanceReport.bind(multiLanguageAnalytics),
+    getTranslationCoverage:
+      multiLanguageAnalytics.getTranslationCoverage.bind(multiLanguageAnalytics),
+    generatePerformanceReport:
+      multiLanguageAnalytics.generatePerformanceReport.bind(multiLanguageAnalytics),
     exportData: multiLanguageAnalytics.exportData.bind(multiLanguageAnalytics),
   }
 }

@@ -39,7 +39,9 @@ function extractByRules(
     for (const re of patterns) {
       const m = text.match(re)
       if (m) {
-        const value = m[1] ? `${m[1]}${key.includes('_kg') ? ' kg' : key.includes('fps') ? ' fps' : ''}`.trim() : m[0]
+        const value = m[1]
+          ? `${m[1]}${key.includes('_kg') ? ' kg' : key.includes('fps') ? ' fps' : ''}`.trim()
+          : m[0]
         results.push({ key, value, confidence: 85 })
         break
       }
@@ -63,7 +65,9 @@ export async function inferMissingSpecs(product: ProductWithRelations): Promise<
   }
   const categoryName = product.category?.name ?? 'Cameras'
   const expected = getExpectedSpecs(categoryName)
-  const firstTranslation = product.translations.find((t: { locale: string }) => t.locale === 'en') ?? product.translations[0]
+  const firstTranslation =
+    product.translations.find((t: { locale: string }) => t.locale === 'en') ??
+    product.translations[0]
   const existingSpecs = (firstTranslation?.specifications as Record<string, unknown>) ?? {}
   const missingKeys = expected.filter((k) => {
     const v = existingSpecs[k]
@@ -111,7 +115,12 @@ Output ONLY a JSON array, no markdown.`
         const content = result.response.text().trim()
         const jsonMatch = content.match(/\[[\s\S]*\]/)
         if (jsonMatch) {
-          const arr = JSON.parse(jsonMatch[0]) as Array<{ key: string; value: string; confidence: number; reasoning?: string }>
+          const arr = JSON.parse(jsonMatch[0]) as Array<{
+            key: string
+            value: string
+            confidence: number
+            reasoning?: string
+          }>
           aiSpecs = arr.map((s) => ({
             key: s.key,
             value: String(s.value),

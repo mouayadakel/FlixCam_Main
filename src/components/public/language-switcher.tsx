@@ -39,10 +39,10 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="gap-2" 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2"
           aria-label={ariaLabels[locale]}
           aria-haspopup="menu"
           aria-expanded="false"
@@ -62,9 +62,7 @@ export function LanguageSwitcher() {
             aria-label={`${LOCALE_LABELS[loc]}${locale === loc ? ` (${ariaCurrentLabels[locale]})` : ''}`}
           >
             {LOCALE_LABELS[loc]}
-            {locale === loc && (
-              <span className="sr-only"> ({ariaCurrentLabels[locale]})</span>
-            )}
+            {locale === loc && <span className="sr-only"> ({ariaCurrentLabels[locale]})</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

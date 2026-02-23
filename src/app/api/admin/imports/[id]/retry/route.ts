@@ -16,10 +16,7 @@ export const dynamic = 'force-dynamic'
  * POST /api/admin/imports/[id]/retry
  * Retry failed rows only
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -81,7 +78,11 @@ export async function POST(
     // Build mapping from row payloads (sheetName -> categoryId)
     const mappingMap = new Map<string, { categoryId: string; subCategoryId?: string | null }>()
     for (const row of job.rows) {
-      const p = row.payload as { sheetName?: string; categoryId?: string; subCategoryId?: string | null } | null
+      const p = row.payload as {
+        sheetName?: string
+        categoryId?: string
+        subCategoryId?: string | null
+      } | null
       if (p?.sheetName && p?.categoryId && !mappingMap.has(p.sheetName)) {
         mappingMap.set(p.sheetName, { categoryId: p.categoryId, subCategoryId: p.subCategoryId })
       }

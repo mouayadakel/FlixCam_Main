@@ -25,31 +25,31 @@ function generateAlternates(path: string) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
-    { 
-      url: BASE, 
-      lastModified: new Date(), 
-      changeFrequency: 'daily', 
+    {
+      url: BASE,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
       priority: 1,
       alternates: generateAlternates('/'),
     },
-    { 
-      url: `${BASE}/equipment`, 
-      lastModified: new Date(), 
-      changeFrequency: 'daily', 
+    {
+      url: `${BASE}/equipment`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
       priority: 0.9,
       alternates: generateAlternates('/equipment'),
     },
-    { 
-      url: `${BASE}/studios`, 
-      lastModified: new Date(), 
-      changeFrequency: 'weekly', 
+    {
+      url: `${BASE}/studios`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
       priority: 0.8,
       alternates: generateAlternates('/studios'),
     },
-    { 
-      url: `${BASE}/packages`, 
-      lastModified: new Date(), 
-      changeFrequency: 'weekly', 
+    {
+      url: `${BASE}/packages`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
       priority: 0.8,
       alternates: generateAlternates('/packages'),
     },
@@ -67,10 +67,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
       alternates: generateAlternates('/how-it-works'),
     },
-    { 
-      url: `${BASE}/support`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/support`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.5,
       alternates: generateAlternates('/support'),
     },
@@ -81,38 +81,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
       alternates: generateAlternates('/policies'),
     },
-    { 
-      url: `${BASE}/faq`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/faq`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.5,
       alternates: generateAlternates('/faq'),
     },
-    { 
-      url: `${BASE}/terms`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.3,
       alternates: generateAlternates('/terms'),
     },
-    { 
-      url: `${BASE}/privacy`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.3,
       alternates: generateAlternates('/privacy'),
     },
-    { 
-      url: `${BASE}/about`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.5,
       alternates: generateAlternates('/about'),
     },
-    { 
-      url: `${BASE}/contact`, 
-      lastModified: new Date(), 
-      changeFrequency: 'monthly', 
+    {
+      url: `${BASE}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
       priority: 0.5,
       alternates: generateAlternates('/contact'),
     },

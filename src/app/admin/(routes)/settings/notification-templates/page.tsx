@@ -314,8 +314,8 @@ export default function NotificationTemplatesPage() {
         <CardHeader>
           <CardTitle>القوالب</CardTitle>
           <CardDescription>
-            فلتر حسب المشغّل والقناة. استخدم متغيرات في النص:{' '}
-            {`{{customerName}}`}، {`{{bookingId}}`}، {`{{totalAmount}}`}.
+            فلتر حسب المشغّل والقناة. استخدم متغيرات في النص: {`{{customerName}}`}،{' '}
+            {`{{bookingId}}`}، {`{{totalAmount}}`}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -414,8 +414,7 @@ export default function NotificationTemplatesPage() {
           <DialogHeader>
             <DialogTitle>{editingId ? 'تعديل القالب' : 'قالب جديد'}</DialogTitle>
             <DialogDescription>
-              الموضوع يستخدم للبريد. النص يدعم متغيرات مثل {`{{customerName}}`}،{' '}
-              {`{{bookingId}}`}.
+              الموضوع يستخدم للبريد. النص يدعم متغيرات مثل {`{{customerName}}`}، {`{{bookingId}}`}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

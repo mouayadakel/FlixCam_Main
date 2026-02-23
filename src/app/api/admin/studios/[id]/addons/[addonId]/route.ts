@@ -59,10 +59,7 @@ export async function PUT(
     return NextResponse.json({ ...addOn, price: Number(addOn.price) })
   } catch (e) {
     if (e instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: e.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation failed', details: e.errors }, { status: 400 })
     }
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Internal Server Error' },
@@ -106,9 +103,6 @@ export async function DELETE(
     })
     return NextResponse.json({ success: true })
   } catch {
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

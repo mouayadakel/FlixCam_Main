@@ -131,7 +131,7 @@ export default function NewEquipmentPage() {
   const watchedSubCategoryId = watch('subCategoryId')
   const parentCategories = useMemo(() => categories.filter((c) => !c.parentId), [categories])
   const subCategories = useMemo(
-    () => watchedCategoryId ? categories.filter((c) => c.parentId === watchedCategoryId) : [],
+    () => (watchedCategoryId ? categories.filter((c) => c.parentId === watchedCategoryId) : []),
     [categories, watchedCategoryId]
   )
   const categoryHint = watchedCategoryId
@@ -143,10 +143,38 @@ export default function NewEquipmentPage() {
 
   const formSections = useMemo(
     () => [
-      { id: 'info', label: 'المعلومات والأسعار', status: (watch('sku') && watch('categoryId') ? 'complete' : 'warning') as 'complete' | 'warning' | 'empty' },
-      { id: 'content', label: 'المحتوى و SEO', status: (watchedTranslations.some((t) => t.name) ? 'complete' : 'empty') as 'complete' | 'warning' | 'empty' },
-      { id: 'media', label: 'الوسائط', status: (photoCount >= 4 ? 'complete' : photoCount > 0 ? 'warning' : 'empty') as 'complete' | 'warning' | 'empty', detail: `${photoCount}/4` },
-      { id: 'specs', label: 'المواصفات والربط', status: (watchedSpecifications && Object.keys(watchedSpecifications).length > 0 ? 'complete' : 'empty') as 'complete' | 'warning' | 'empty' },
+      {
+        id: 'info',
+        label: 'المعلومات والأسعار',
+        status: (watch('sku') && watch('categoryId') ? 'complete' : 'warning') as
+          | 'complete'
+          | 'warning'
+          | 'empty',
+      },
+      {
+        id: 'content',
+        label: 'المحتوى و SEO',
+        status: (watchedTranslations.some((t) => t.name) ? 'complete' : 'empty') as
+          | 'complete'
+          | 'warning'
+          | 'empty',
+      },
+      {
+        id: 'media',
+        label: 'الوسائط',
+        status: (photoCount >= 4 ? 'complete' : photoCount > 0 ? 'warning' : 'empty') as
+          | 'complete'
+          | 'warning'
+          | 'empty',
+        detail: `${photoCount}/4`,
+      },
+      {
+        id: 'specs',
+        label: 'المواصفات والربط',
+        status: (watchedSpecifications && Object.keys(watchedSpecifications).length > 0
+          ? 'complete'
+          : 'empty') as 'complete' | 'warning' | 'empty',
+      },
     ],
     [watch('sku'), watch('categoryId'), watchedTranslations, watchedSpecifications, photoCount]
   )
@@ -261,7 +289,12 @@ export default function NewEquipmentPage() {
     }
 
     // --- Multilingual translations (ar/en/zh) — read fresh from form ---
-    if (scope === 'all' || scope === 'descriptions' || scope === 'seo' || scope === 'translations') {
+    if (
+      scope === 'all' ||
+      scope === 'descriptions' ||
+      scope === 'seo' ||
+      scope === 'translations'
+    ) {
       const locales = ['ar', 'en', 'zh'] as const
       const trans = [...(watch('translations') || [])]
 
@@ -277,29 +310,50 @@ export default function NewEquipmentPage() {
         if (scope === 'all' || scope === 'descriptions' || scope === 'translations') {
           if (!t.name || String(t.name).trim() === '') {
             const aiName = aiLocale?.name
-            if (aiName && aiName.trim() !== '') { t.name = aiName; filledCount++ }
+            if (aiName && aiName.trim() !== '') {
+              t.name = aiName
+              filledCount++
+            }
           }
           if (!t.shortDescription || String(t.shortDescription).trim() === '') {
-            const aiShort = aiLocale?.shortDescription ?? (locale === 'en' ? payload.shortDescription : '')
-            if (aiShort && aiShort.trim() !== '') { t.shortDescription = aiShort; filledCount++ }
+            const aiShort =
+              aiLocale?.shortDescription ?? (locale === 'en' ? payload.shortDescription : '')
+            if (aiShort && aiShort.trim() !== '') {
+              t.shortDescription = aiShort
+              filledCount++
+            }
           }
           if (!t.description || String(t.description).trim() === '') {
-            const aiLong = aiLocale?.longDescription ?? (locale === 'en' ? payload.longDescription : '')
-            if (aiLong && aiLong.trim() !== '') { t.description = aiLong; filledCount++ }
+            const aiLong =
+              aiLocale?.longDescription ?? (locale === 'en' ? payload.longDescription : '')
+            if (aiLong && aiLong.trim() !== '') {
+              t.description = aiLong
+              filledCount++
+            }
           }
         }
         if (scope === 'all' || scope === 'seo' || scope === 'translations') {
           if (!t.seoTitle || String(t.seoTitle).trim() === '') {
             const aiTitle = aiLocale?.seoTitle ?? (locale === 'en' ? payload.seo?.metaTitle : '')
-            if (aiTitle && aiTitle.trim() !== '') { t.seoTitle = aiTitle; filledCount++ }
+            if (aiTitle && aiTitle.trim() !== '') {
+              t.seoTitle = aiTitle
+              filledCount++
+            }
           }
           if (!t.seoDescription || String(t.seoDescription).trim() === '') {
-            const aiDesc = aiLocale?.seoDescription ?? (locale === 'en' ? payload.seo?.metaDescription : '')
-            if (aiDesc && aiDesc.trim() !== '') { t.seoDescription = aiDesc; filledCount++ }
+            const aiDesc =
+              aiLocale?.seoDescription ?? (locale === 'en' ? payload.seo?.metaDescription : '')
+            if (aiDesc && aiDesc.trim() !== '') {
+              t.seoDescription = aiDesc
+              filledCount++
+            }
           }
           if (!t.seoKeywords || String(t.seoKeywords).trim() === '') {
             const aiKw = aiLocale?.seoKeywords ?? (locale === 'en' ? payload.seo?.metaKeywords : '')
-            if (aiKw && aiKw.trim() !== '') { t.seoKeywords = aiKw; filledCount++ }
+            if (aiKw && aiKw.trim() !== '') {
+              t.seoKeywords = aiKw
+              filledCount++
+            }
           }
         }
         trans[idx] = t
@@ -367,7 +421,11 @@ export default function NewEquipmentPage() {
     try {
       const suggestion = await fetchAISuggestion()
       if (!suggestion) {
-        toast({ title: 'لم يتم إنشاء محتوى', description: 'تعذر الحصول على اقتراحات AI', variant: 'destructive' })
+        toast({
+          title: 'لم يتم إنشاء محتوى',
+          description: 'تعذر الحصول على اقتراحات AI',
+          variant: 'destructive',
+        })
         return
       }
       // Apply everything directly with scope='all' passed as parameter
@@ -499,7 +557,9 @@ export default function NewEquipmentPage() {
             size="sm"
             className="gap-2 border-violet-300 text-violet-700 hover:bg-violet-50 hover:text-violet-800"
             onClick={handleAutoFill}
-            disabled={loading || autoFilling || !(watch('model') || watch('sku')) || !watch('categoryId')}
+            disabled={
+              loading || autoFilling || !(watch('model') || watch('sku')) || !watch('categoryId')
+            }
             title="يتطلب الموديل/SKU والفئة — يملأ جميع الحقول الفارغة بالذكاء الاصطناعي لـ 3 لغات"
           >
             {autoFilling ? (
@@ -528,10 +588,12 @@ export default function NewEquipmentPage() {
       {/* AI Status Banner */}
       {autoFilling && (
         <div className="flex items-center gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
-          <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
           <div>
             <span className="font-medium">جاري إنشاء المحتوى بالذكاء الاصطناعي...</span>
-            <span className="text-violet-600 mr-1">الأوصاف والترجمات وSEO والمواصفات لـ 3 لغات</span>
+            <span className="mr-1 text-violet-600">
+              الأوصاف والترجمات وSEO والمواصفات لـ 3 لغات
+            </span>
           </div>
         </div>
       )}
@@ -540,7 +602,7 @@ export default function NewEquipmentPage() {
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <div>
             <span className="font-medium">تم ملء {aiFilledCount} حقل بنجاح</span>
-            <span className="text-emerald-600 mr-1">— راجع التبويبات أدناه ثم اضغط حفظ</span>
+            <span className="mr-1 text-emerald-600">— راجع التبويبات أدناه ثم اضغط حفظ</span>
           </div>
           <Button
             type="button"
@@ -564,558 +626,575 @@ export default function NewEquipmentPage() {
 
       <div className="flex gap-6">
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="info">المعلومات والأسعار</TabsTrigger>
-            <TabsTrigger value="content" className="relative">
-              المحتوى و SEO
-              {aiFilled && <span className="absolute -top-0.5 -left-0.5 h-2 w-2 rounded-full bg-emerald-500" />}
-            </TabsTrigger>
-            <TabsTrigger value="media">الوسائط</TabsTrigger>
-            <TabsTrigger value="specs" className="relative">
-              المواصفات والربط
-              {aiFilled && <span className="absolute -top-0.5 -left-0.5 h-2 w-2 rounded-full bg-emerald-500" />}
-            </TabsTrigger>
-          </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="info">المعلومات والأسعار</TabsTrigger>
+              <TabsTrigger value="content" className="relative">
+                المحتوى و SEO
+                {aiFilled && (
+                  <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="media">الوسائط</TabsTrigger>
+              <TabsTrigger value="specs" className="relative">
+                المواصفات والربط
+                {aiFilled && (
+                  <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Tab 1: Basic Info */}
-          <TabsContent value="info" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>المعلومات الأساسية</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="sku">SKU *</Label>
-                    <Input id="sku" {...register('sku')} placeholder="EQ-001" dir="ltr" />
-                    {errors.sku && <p className="text-sm text-error-600">{errors.sku.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="model">الموديل</Label>
-                    <Input id="model" {...register('model')} placeholder="Sony FX3" />
-                    {errors.model && (
-                      <p className="text-sm text-error-600">{errors.model.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="categoryId">الفئة *</Label>
-                    <Select onValueChange={(value) => {
-                      setValue('categoryId', value)
-                      setValue('subCategoryId', undefined)
-                    }}>
-                      <SelectTrigger id="categoryId">
-                        <SelectValue placeholder="اختر الفئة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {parentCategories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.categoryId && (
-                      <p className="text-sm text-error-600">{errors.categoryId.message}</p>
-                    )}
-                  </div>
-
-                  {subCategories.length > 0 && (
+            {/* Tab 1: Basic Info */}
+            <TabsContent value="info" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>المعلومات الأساسية</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="subCategoryId">الفئة الفرعية</Label>
+                      <Label htmlFor="sku">SKU *</Label>
+                      <Input id="sku" {...register('sku')} placeholder="EQ-001" dir="ltr" />
+                      {errors.sku && <p className="text-sm text-error-600">{errors.sku.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="model">الموديل</Label>
+                      <Input id="model" {...register('model')} placeholder="Sony FX3" />
+                      {errors.model && (
+                        <p className="text-sm text-error-600">{errors.model.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="categoryId">الفئة *</Label>
                       <Select
-                        value={watchedSubCategoryId || ''}
-                        onValueChange={(value) => setValue('subCategoryId', value || undefined)}
+                        onValueChange={(value) => {
+                          setValue('categoryId', value)
+                          setValue('subCategoryId', undefined)
+                        }}
                       >
-                        <SelectTrigger id="subCategoryId">
-                          <SelectValue placeholder="اختر الفئة الفرعية (اختياري)" />
+                        <SelectTrigger id="categoryId">
+                          <SelectValue placeholder="اختر الفئة" />
                         </SelectTrigger>
                         <SelectContent>
-                          {subCategories.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id}>
-                              {sub.name}
+                          {parentCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.categoryId && (
+                        <p className="text-sm text-error-600">{errors.categoryId.message}</p>
+                      )}
                     </div>
+
+                    {subCategories.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="subCategoryId">الفئة الفرعية</Label>
+                        <Select
+                          value={watchedSubCategoryId || ''}
+                          onValueChange={(value) => setValue('subCategoryId', value || undefined)}
+                        >
+                          <SelectTrigger id="subCategoryId">
+                            <SelectValue placeholder="اختر الفئة الفرعية (اختياري)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {subCategories.map((sub) => (
+                              <SelectItem key={sub.id} value={sub.id}>
+                                {sub.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="brandId">العلامة التجارية</Label>
+                      <Select onValueChange={(value) => setValue('brandId', value)}>
+                        <SelectTrigger id="brandId">
+                          <SelectValue placeholder="اختر العلامة التجارية" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {brands.map((brand) => (
+                            <SelectItem key={brand.id} value={brand.id}>
+                              {brand.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.brandId && (
+                        <p className="text-sm text-error-600">{errors.brandId.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="condition">الحالة</Label>
+                      <Select
+                        defaultValue="GOOD"
+                        onValueChange={(value) => setValue('condition', value as any)}
+                      >
+                        <SelectTrigger id="condition">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EXCELLENT">ممتاز</SelectItem>
+                          <SelectItem value="GOOD">جيد</SelectItem>
+                          <SelectItem value="FAIR">مقبول</SelectItem>
+                          <SelectItem value="POOR">ضعيف</SelectItem>
+                          <SelectItem value="MAINTENANCE">صيانة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="barcode">الباركود</Label>
+                      <Input
+                        id="barcode"
+                        {...register('barcode')}
+                        placeholder="1234567890"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>المخزون</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="quantityTotal">الكمية الإجمالية</Label>
+                      <Input
+                        id="quantityTotal"
+                        type="number"
+                        min="1"
+                        {...register('quantityTotal', { valueAsNumber: true })}
+                      />
+                      {errors.quantityTotal && (
+                        <p className="text-sm text-error-600">{errors.quantityTotal.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="quantityAvailable">الكمية المتاحة</Label>
+                      <Input
+                        id="quantityAvailable"
+                        type="number"
+                        min="0"
+                        {...register('quantityAvailable', { valueAsNumber: true })}
+                      />
+                      {errors.quantityAvailable && (
+                        <p className="text-sm text-error-600">{errors.quantityAvailable.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="warehouseLocation">موقع المستودع</Label>
+                      <Input
+                        id="warehouseLocation"
+                        {...register('warehouseLocation')}
+                        placeholder="رف A-3"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>التسعير</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="dailyPrice">السعر اليومي *</Label>
+                      <Input
+                        id="dailyPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('dailyPrice', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                      />
+                      {errors.dailyPrice && (
+                        <p className="text-sm text-error-600">{errors.dailyPrice.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="weeklyPrice">السعر الأسبوعي</Label>
+                      <Input
+                        id="weeklyPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('weeklyPrice', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                      />
+                      {errors.weeklyPrice && (
+                        <p className="text-sm text-error-600">{errors.weeklyPrice.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyPrice">السعر الشهري</Label>
+                      <Input
+                        id="monthlyPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('monthlyPrice', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                      />
+                      {errors.monthlyPrice && (
+                        <p className="text-sm text-error-600">{errors.monthlyPrice.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="depositAmount">مبلغ التأمين</Label>
+                      <Input
+                        id="depositAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('depositAmount', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                      />
+                      {errors.depositAmount && (
+                        <p className="text-sm text-error-600">{errors.depositAmount.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>الإعدادات</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="isActive"
+                        {...register('isActive')}
+                        className="h-4 w-4 rounded border-neutral-300"
+                      />
+                      <Label htmlFor="isActive" className="cursor-pointer">
+                        نشط
+                      </Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab 2: Content & SEO (merged translations + seo + settings) */}
+            <TabsContent value="content" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>الترجمات والمحتوى</CardTitle>
+                  <p className="mt-2 text-sm text-neutral-600">
+                    أدخل معلومات المعدة بلغات متعددة. العربية مطلوبة كحد أدنى.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <TranslationTabSwitcher
+                    activeLocale={activeLocale}
+                    onLocaleChange={setActiveLocale}
+                    translations={translationDataForSwitcher}
+                    onCopyLocale={(from, to) => {
+                      const fromT = watchedTranslations.find((t) => t.locale === from)
+                      if (!fromT) return
+                      const current = [...watchedTranslations]
+                      const toIndex = current.findIndex((t) => t.locale === to)
+                      const target =
+                        toIndex >= 0
+                          ? current[toIndex]
+                          : {
+                              locale: to,
+                              name: '',
+                              description: '',
+                              shortDescription: '',
+                              seoTitle: '',
+                              seoDescription: '',
+                              seoKeywords: '',
+                            }
+                      const updated = {
+                        ...target,
+                        name: fromT.name ?? target.name,
+                        shortDescription: fromT.shortDescription ?? target.shortDescription,
+                        description: fromT.description ?? target.description,
+                        seoTitle: fromT.seoTitle ?? target.seoTitle,
+                        seoDescription: fromT.seoDescription ?? target.seoDescription,
+                        seoKeywords: fromT.seoKeywords ?? target.seoKeywords,
+                      }
+                      if (toIndex >= 0) {
+                        current[toIndex] = updated
+                      } else {
+                        current.push(updated)
+                      }
+                      setValue('translations', current)
+                    }}
+                  />
+                  {([activeLocale] as const).map((locale) => {
+                    const translation = watchedTranslations.find((t) => t.locale === locale) || {
+                      locale,
+                      name: '',
+                      description: '',
+                      shortDescription: '',
+                    }
+
+                    return (
+                      <TranslationSection
+                        key={locale}
+                        locale={locale}
+                        value={translation}
+                        onChange={(newValue) => {
+                          const current = watchedTranslations || []
+                          const index = current.findIndex((t) => t.locale === locale)
+                          if (index >= 0) {
+                            const updated = [...current]
+                            updated[index] = { ...updated[index], ...newValue }
+                            setValue('translations', updated)
+                          } else {
+                            setValue('translations', [
+                              ...current,
+                              { locale, name: newValue.name ?? '', ...newValue },
+                            ])
+                          }
+                        }}
+                        defaultExpanded={true}
+                      />
+                    )
+                  })}
+                  {errors.translations && (
+                    <p className="text-sm text-error-600">{errors.translations.message}</p>
                   )}
+                </CardContent>
+              </Card>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="brandId">العلامة التجارية</Label>
-                    <Select onValueChange={(value) => setValue('brandId', value)}>
-                      <SelectTrigger id="brandId">
-                        <SelectValue placeholder="اختر العلامة التجارية" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {brands.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.brandId && (
-                      <p className="text-sm text-error-600">{errors.brandId.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="condition">الحالة</Label>
-                    <Select
-                      defaultValue="GOOD"
-                      onValueChange={(value) => setValue('condition', value as any)}
-                    >
-                      <SelectTrigger id="condition">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="EXCELLENT">ممتاز</SelectItem>
-                        <SelectItem value="GOOD">جيد</SelectItem>
-                        <SelectItem value="FAIR">مقبول</SelectItem>
-                        <SelectItem value="POOR">ضعيف</SelectItem>
-                        <SelectItem value="MAINTENANCE">صيانة</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="barcode">الباركود</Label>
-                    <Input
-                      id="barcode"
-                      {...register('barcode')}
-                      placeholder="1234567890"
-                      dir="ltr"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>المخزون</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantityTotal">الكمية الإجمالية</Label>
-                    <Input
-                      id="quantityTotal"
-                      type="number"
-                      min="1"
-                      {...register('quantityTotal', { valueAsNumber: true })}
-                    />
-                    {errors.quantityTotal && (
-                      <p className="text-sm text-error-600">{errors.quantityTotal.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="quantityAvailable">الكمية المتاحة</Label>
-                    <Input
-                      id="quantityAvailable"
-                      type="number"
-                      min="0"
-                      {...register('quantityAvailable', { valueAsNumber: true })}
-                    />
-                    {errors.quantityAvailable && (
-                      <p className="text-sm text-error-600">{errors.quantityAvailable.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="warehouseLocation">موقع المستودع</Label>
-                    <Input
-                      id="warehouseLocation"
-                      {...register('warehouseLocation')}
-                      placeholder="رف A-3"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>التسعير</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="dailyPrice">السعر اليومي *</Label>
-                    <Input
-                      id="dailyPrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...register('dailyPrice', { valueAsNumber: true })}
-                      placeholder="0.00"
-                      dir="ltr"
-                    />
-                    {errors.dailyPrice && (
-                      <p className="text-sm text-error-600">{errors.dailyPrice.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="weeklyPrice">السعر الأسبوعي</Label>
-                    <Input
-                      id="weeklyPrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...register('weeklyPrice', { valueAsNumber: true })}
-                      placeholder="0.00"
-                      dir="ltr"
-                    />
-                    {errors.weeklyPrice && (
-                      <p className="text-sm text-error-600">{errors.weeklyPrice.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="monthlyPrice">السعر الشهري</Label>
-                    <Input
-                      id="monthlyPrice"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...register('monthlyPrice', { valueAsNumber: true })}
-                      placeholder="0.00"
-                      dir="ltr"
-                    />
-                    {errors.monthlyPrice && (
-                      <p className="text-sm text-error-600">{errors.monthlyPrice.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="depositAmount">مبلغ التأمين</Label>
-                    <Input
-                      id="depositAmount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...register('depositAmount', { valueAsNumber: true })}
-                      placeholder="0.00"
-                      dir="ltr"
-                    />
-                    {errors.depositAmount && (
-                      <p className="text-sm text-error-600">{errors.depositAmount.message}</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>الإعدادات</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      {...register('isActive')}
-                      className="h-4 w-4 rounded border-neutral-300"
-                    />
-                    <Label htmlFor="isActive" className="cursor-pointer">
-                      نشط
-                    </Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 2: Content & SEO (merged translations + seo + settings) */}
-          <TabsContent value="content" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>الترجمات والمحتوى</CardTitle>
-                <p className="mt-2 text-sm text-neutral-600">
-                  أدخل معلومات المعدة بلغات متعددة. العربية مطلوبة كحد أدنى.
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <TranslationTabSwitcher
-                  activeLocale={activeLocale}
-                  onLocaleChange={setActiveLocale}
-                  translations={translationDataForSwitcher}
-                  onCopyLocale={(from, to) => {
-                    const fromT = watchedTranslations.find((t) => t.locale === from)
-                    if (!fromT) return
-                    const current = [...watchedTranslations]
-                    const toIndex = current.findIndex((t) => t.locale === to)
-                    const target = toIndex >= 0 ? current[toIndex] : { locale: to, name: '', description: '', shortDescription: '', seoTitle: '', seoDescription: '', seoKeywords: '' }
-                    const updated = {
-                      ...target,
-                      name: fromT.name ?? target.name,
-                      shortDescription: fromT.shortDescription ?? target.shortDescription,
-                      description: fromT.description ?? target.description,
-                      seoTitle: fromT.seoTitle ?? target.seoTitle,
-                      seoDescription: fromT.seoDescription ?? target.seoDescription,
-                      seoKeywords: fromT.seoKeywords ?? target.seoKeywords,
+              <Card>
+                <CardHeader>
+                  <CardTitle>SEO (تحسين محركات البحث)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {(['ar', 'en', 'zh'] as const).map((locale) => {
+                    const translation = watchedTranslations.find((t) => t.locale === locale) || {
+                      locale,
+                      seoTitle: '',
+                      seoDescription: '',
+                      seoKeywords: '',
                     }
-                    if (toIndex >= 0) {
-                      current[toIndex] = updated
-                    } else {
-                      current.push(updated)
-                    }
-                    setValue('translations', current)
-                  }}
-                />
-                {([activeLocale] as const).map((locale) => {
-                  const translation = watchedTranslations.find((t) => t.locale === locale) || {
-                    locale,
-                    name: '',
-                    description: '',
-                    shortDescription: '',
-                  }
 
-                  return (
-                    <TranslationSection
-                      key={locale}
-                      locale={locale}
-                      value={translation}
-                      onChange={(newValue) => {
-                        const current = watchedTranslations || []
-                        const index = current.findIndex((t) => t.locale === locale)
-                        if (index >= 0) {
-                          const updated = [...current]
-                          updated[index] = { ...updated[index], ...newValue }
-                          setValue('translations', updated)
-                        } else {
-                          setValue('translations', [
-                            ...current,
-                            { locale, name: newValue.name ?? '', ...newValue },
-                          ])
+                    return (
+                      <SEOSection
+                        key={locale}
+                        locale={locale}
+                        value={{
+                          seoTitle: translation.seoTitle,
+                          seoDescription: translation.seoDescription,
+                          seoKeywords: translation.seoKeywords,
+                        }}
+                        onChange={(newValue) => {
+                          const current = watchedTranslations || []
+                          const index = current.findIndex((t) => t.locale === locale)
+                          if (index >= 0) {
+                            const updated = [...current]
+                            updated[index] = { ...updated[index], ...newValue }
+                            setValue('translations', updated)
+                          } else {
+                            setValue('translations', [
+                              ...current,
+                              {
+                                name: ('name' in translation ? translation.name : '') ?? '',
+                                ...translation,
+                                ...newValue,
+                              },
+                            ])
+                          }
+                        }}
+                        name={'name' in translation ? translation.name : ''}
+                        shortDescription={
+                          'shortDescription' in translation ? translation.shortDescription : ''
                         }
-                      }}
-                      defaultExpanded={true}
-                    />
-                  )
-                })}
-                {errors.translations && (
-                  <p className="text-sm text-error-600">{errors.translations.message}</p>
-                )}
-              </CardContent>
-            </Card>
+                        defaultExpanded={locale === 'ar'}
+                      />
+                    )
+                  })}
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>SEO (تحسين محركات البحث)</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {(['ar', 'en', 'zh'] as const).map((locale) => {
-                  const translation = watchedTranslations.find((t) => t.locale === locale) || {
-                    locale,
-                    seoTitle: '',
-                    seoDescription: '',
-                    seoKeywords: '',
-                  }
-
-                  return (
-                    <SEOSection
-                      key={locale}
-                      locale={locale}
-                      value={{
-                        seoTitle: translation.seoTitle,
-                        seoDescription: translation.seoDescription,
-                        seoKeywords: translation.seoKeywords,
-                      }}
-                      onChange={(newValue) => {
-                        const current = watchedTranslations || []
-                        const index = current.findIndex((t) => t.locale === locale)
-                        if (index >= 0) {
-                          const updated = [...current]
-                          updated[index] = { ...updated[index], ...newValue }
-                          setValue('translations', updated)
-                        } else {
-                          setValue('translations', [
-                            ...current,
-                            {
-                              name: ('name' in translation ? translation.name : '') ?? '',
-                              ...translation,
-                              ...newValue,
-                            },
-                          ])
-                        }
-                      }}
-                      name={'name' in translation ? translation.name : ''}
-                      shortDescription={
-                        'shortDescription' in translation ? translation.shortDescription : ''
-                      }
-                      defaultExpanded={locale === 'ar'}
-                    />
-                  )
-                })}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>الإعدادات الإضافية</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="boxContents">محتوى الصندوق</Label>
-                  <Textarea
-                    id="boxContents"
-                    {...register('boxContents')}
-                    placeholder="قائمة بمحتويات الصندوق أو الكيت..."
-                    rows={4}
-                    dir="rtl"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tags">الوسوم (Tags)</Label>
-                  <Input
-                    id="tags"
-                    {...register('tags')}
-                    placeholder="كاميرا, سينما, تصوير, 4K..."
-                    dir="ltr"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>الإعدادات الإضافية</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bufferTime">وقت الفاصل</Label>
+                    <Label htmlFor="boxContents">محتوى الصندوق</Label>
+                    <Textarea
+                      id="boxContents"
+                      {...register('boxContents')}
+                      placeholder="قائمة بمحتويات الصندوق أو الكيت..."
+                      rows={4}
+                      dir="rtl"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tags">الوسوم (Tags)</Label>
                     <Input
-                      id="bufferTime"
-                      type="number"
-                      min="0"
-                      {...register('bufferTime', { valueAsNumber: true })}
-                      placeholder="0"
+                      id="tags"
+                      {...register('tags')}
+                      placeholder="كاميرا, سينما, تصوير, 4K..."
+                      dir="ltr"
                     />
-                    {errors.bufferTime && (
-                      <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
-                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
-                    <Select
-                      defaultValue="hours"
-                      onValueChange={(value) =>
-                        setValue('bufferTimeUnit', value as 'hours' | 'days')
-                      }
-                    >
-                      <SelectTrigger id="bufferTimeUnit">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hours">ساعات</SelectItem>
-                        <SelectItem value="days">أيام</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="bufferTime">وقت الفاصل</Label>
+                      <Input
+                        id="bufferTime"
+                        type="number"
+                        min="0"
+                        {...register('bufferTime', { valueAsNumber: true })}
+                        placeholder="0"
+                      />
+                      {errors.bufferTime && (
+                        <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
+                      <Select
+                        defaultValue="hours"
+                        onValueChange={(value) =>
+                          setValue('bufferTimeUnit', value as 'hours' | 'days')
+                        }
+                      >
+                        <SelectTrigger id="bufferTimeUnit">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hours">ساعات</SelectItem>
+                          <SelectItem value="days">أيام</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Tab 4: Media */}
-          <TabsContent value="media" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>الوسائط</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <PhotoGateIndicator photoCount={photoCount} />
-                <ImageUpload
-                  value={watch('featuredImageUrl')}
-                  onChange={(url) => setValue('featuredImageUrl', url)}
-                  label="الصورة المميزة"
-                />
+            {/* Tab 4: Media */}
+            <TabsContent value="media" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>الوسائط</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <PhotoGateIndicator photoCount={photoCount} />
+                  <ImageUpload
+                    value={watch('featuredImageUrl')}
+                    onChange={(url) => setValue('featuredImageUrl', url)}
+                    label="الصورة المميزة"
+                  />
 
-                <ImageGallery
-                  value={watch('galleryImageUrls') || []}
-                  onChange={(urls) => setValue('galleryImageUrls', urls)}
-                  label="معرض الصور"
-                />
+                  <ImageGallery
+                    value={watch('galleryImageUrls') || []}
+                    onChange={(urls) => setValue('galleryImageUrls', urls)}
+                    label="معرض الصور"
+                  />
 
-                <VideoUrlInput
-                  value={watch('videoUrl')}
-                  onChange={(url) => setValue('videoUrl', url)}
-                  label="رابط الفيديو"
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  <VideoUrlInput
+                    value={watch('videoUrl')}
+                    onChange={(url) => setValue('videoUrl', url)}
+                    label="رابط الفيديو"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Tab 4: Specifications & Related */}
-          <TabsContent value="specs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>المواصفات</CardTitle>
-                <p className="mt-2 text-sm text-neutral-600">
-                  أدخل مواصفات المعدة باستخدام أي من الطرق المتاحة.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <SpecificationsEditor
-                  value={watchedSpecifications ?? undefined}
-                  onChange={(specs) => setValue('specifications', specs)}
-                  categoryHint={categoryHint}
-                  onAiInfer={async () => {
-                    const name = watch('model') || watch('sku') || ''
-                    const categoryId = watch('categoryId')
-                    if (!name.trim() || !categoryId) return null
-                    const res = await fetch('/api/admin/equipment/ai-suggest', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        name: name.trim(),
-                        categoryId,
-                        brandId: watch('brandId') || undefined,
-                        existingSpecs: watchedSpecifications ?? undefined,
-                      }),
-                    })
-                    if (!res.ok) return null
-                    const data = await res.json()
-                    return (data.specs ?? null) as Record<string, unknown> | null
-                  }}
-                />
-              </CardContent>
-            </Card>
+            {/* Tab 4: Specifications & Related */}
+            <TabsContent value="specs" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>المواصفات</CardTitle>
+                  <p className="mt-2 text-sm text-neutral-600">
+                    أدخل مواصفات المعدة باستخدام أي من الطرق المتاحة.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <SpecificationsEditor
+                    value={watchedSpecifications ?? undefined}
+                    onChange={(specs) => setValue('specifications', specs)}
+                    categoryHint={categoryHint}
+                    onAiInfer={async () => {
+                      const name = watch('model') || watch('sku') || ''
+                      const categoryId = watch('categoryId')
+                      if (!name.trim() || !categoryId) return null
+                      const res = await fetch('/api/admin/equipment/ai-suggest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          name: name.trim(),
+                          categoryId,
+                          brandId: watch('brandId') || undefined,
+                          existingSpecs: watchedSpecifications ?? undefined,
+                        }),
+                      })
+                      if (!res.ok) return null
+                      const data = await res.json()
+                      return (data.specs ?? null) as Record<string, unknown> | null
+                    }}
+                  />
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>المعدات ذات الصلة</CardTitle>
-                <p className="mt-2 text-sm text-neutral-600">
-                  اختر المعدات المرتبطة بهذه المعدة (معدات موصى بها).
-                </p>
-              </CardHeader>
-              <CardContent>
-                <RelatedEquipmentSelector
-                  value={watch('relatedEquipmentIds') || []}
-                  onChange={(ids) => setValue('relatedEquipmentIds', ids)}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <Card>
+                <CardHeader>
+                  <CardTitle>المعدات ذات الصلة</CardTitle>
+                  <p className="mt-2 text-sm text-neutral-600">
+                    اختر المعدات المرتبطة بهذه المعدة (معدات موصى بها).
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <RelatedEquipmentSelector
+                    value={watch('relatedEquipmentIds') || []}
+                    onChange={(ids) => setValue('relatedEquipmentIds', ids)}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-3 border-t pt-6">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            إلغاء
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-            حفظ المعدة
-            <ArrowRight className="mr-2 h-4 w-4" />
-          </Button>
-        </div>
-      </form>
-        <aside className="hidden lg:block w-64 shrink-0">
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 border-t pt-6">
+            <Button type="button" variant="outline" onClick={() => router.back()}>
+              إلغاء
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              حفظ المعدة
+              <ArrowRight className="mr-2 h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+        <aside className="hidden w-64 shrink-0 lg:block">
           <FormProgressSidebar
             sections={formSections}
             activeSection={activeTab}

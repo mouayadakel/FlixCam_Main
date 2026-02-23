@@ -11,10 +11,7 @@ import { AppError } from '@/lib/errors'
  * Return a standardized JSON error response.
  */
 export function apiError(message: string, status: number = 500, code?: string) {
-  return NextResponse.json(
-    { error: message, code: code ?? `HTTP_${status}`, status },
-    { status }
-  )
+  return NextResponse.json({ error: message, code: code ?? `HTTP_${status}`, status }, { status })
 }
 
 /**

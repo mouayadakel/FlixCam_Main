@@ -37,8 +37,12 @@ test.describe('AI Dashboard', () => {
 
     test('dashboard page and tabs are visible', async ({ page }) => {
       await page.goto(AI_DASHBOARD)
-      await expect(page.locator('[data-testid="ai-dashboard-page"]')).toBeVisible({ timeout: 15000 })
-      await expect(page.locator('[data-testid="ai-dashboard-title"]')).toContainText('لوحة الذكاء الاصطناعي')
+      await expect(page.locator('[data-testid="ai-dashboard-page"]')).toBeVisible({
+        timeout: 15000,
+      })
+      await expect(page.locator('[data-testid="ai-dashboard-title"]')).toContainText(
+        'لوحة الذكاء الاصطناعي'
+      )
       await expect(page.locator('[data-testid="ai-dashboard-tablist"]')).toBeVisible()
       await expect(page.locator('[data-testid="ai-tab-overview"]')).toBeVisible()
       await expect(page.locator('[data-testid="ai-tab-content-health"]')).toBeVisible()

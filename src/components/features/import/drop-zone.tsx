@@ -23,13 +23,7 @@ const ACCEPTED_TYPES = [
 ]
 const ACCEPTED_EXTENSIONS = ['.xlsx', '.xls', '.csv', '.tsv']
 
-export function DropZone({
-  onFileSelect,
-  file,
-  onClear,
-  maxSizeMB = 50,
-  disabled,
-}: DropZoneProps) {
+export function DropZone({ onFileSelect, file, onClear, maxSizeMB = 50, disabled }: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -97,10 +91,8 @@ export function DropZone({
           <div className="flex items-center gap-3">
             <FileSpreadsheet className="h-8 w-8 text-green-600" />
             <div>
-              <p className="font-medium text-sm">{file.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {(file.size / 1024).toFixed(0)} KB
-              </p>
+              <p className="text-sm font-medium">{file.name}</p>
+              <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(0)} KB</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClear} disabled={disabled}>
@@ -118,10 +110,10 @@ export function DropZone({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors cursor-pointer',
+          'relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors',
           isDragging && 'border-primary bg-primary/5',
           !isDragging && 'border-muted-foreground/25 hover:border-muted-foreground/50',
-          disabled && 'opacity-50 cursor-not-allowed'
+          disabled && 'cursor-not-allowed opacity-50'
         )}
       >
         <input
@@ -130,18 +122,18 @@ export function DropZone({
           onChange={handleInputChange}
           disabled={disabled}
           title="اختر ملف Excel أو CSV"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
-        <UploadCloud className={cn('h-10 w-10 mb-3', isDragging ? 'text-primary' : 'text-muted-foreground')} />
+        <UploadCloud
+          className={cn('mb-3 h-10 w-10', isDragging ? 'text-primary' : 'text-muted-foreground')}
+        />
         <p className="text-sm font-medium">اسحب ملف Excel أو CSV هنا</p>
-        <p className="text-xs text-muted-foreground mt-1">أو اضغط للاختيار</p>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="mt-1 text-xs text-muted-foreground">أو اضغط للاختيار</p>
+        <p className="mt-2 text-xs text-muted-foreground">
           {ACCEPTED_EXTENSIONS.join(', ')} — حد أقصى {maxSizeMB}MB
         </p>
       </div>
-      {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )
 }

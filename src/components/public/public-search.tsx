@@ -26,7 +26,9 @@ function getRecentSearches(): string[] {
   if (typeof window === 'undefined') return []
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
-  } catch { return [] }
+  } catch {
+    return []
+  }
 }
 
 function saveRecentSearch(query: string) {
@@ -35,12 +37,18 @@ function saveRecentSearch(query: string) {
     const recent = getRecentSearches().filter((s) => s !== query)
     recent.unshift(query)
     localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)))
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function clearRecentSearches() {
   if (typeof window === 'undefined') return
-  try { localStorage.removeItem(RECENT_KEY) } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(RECENT_KEY)
+  } catch {
+    /* ignore */
+  }
 }
 
 export function PublicSearch() {
@@ -73,13 +81,18 @@ export function PublicSearch() {
 
   // Live search API
   const fetchSuggestions = useCallback((query: string) => {
-    if (!query.trim() || query.length < 2) { setApiResults([]); return }
+    if (!query.trim() || query.length < 2) {
+      setApiResults([])
+      return
+    }
     setApiLoading(true)
     fetch(`/api/equipment?take=5&q=${encodeURIComponent(query)}`)
-      .then((res) => res.ok ? res.json() : { items: [] })
+      .then((res) => (res.ok ? res.json() : { items: [] }))
       .then((data) => {
         const items = data.items ?? data.equipment ?? []
-        setApiResults(items.slice(0, 5).map((i: any) => ({ id: i.id, name: i.model || i.sku || i.name || '' })))
+        setApiResults(
+          items.slice(0, 5).map((i: any) => ({ id: i.id, name: i.model || i.sku || i.name || '' }))
+        )
       })
       .catch(() => setApiResults([]))
       .finally(() => setApiLoading(false))
@@ -119,7 +132,8 @@ export function PublicSearch() {
     setRecentSearches([])
   }
 
-  const hasContent = q.length >= 2 ? apiResults.length > 0 : (recentSearches.length > 0 || POPULAR_SEARCHES.length > 0)
+  const hasContent =
+    q.length >= 2 ? apiResults.length > 0 : recentSearches.length > 0 || POPULAR_SEARCHES.length > 0
 
   return (
     <div ref={containerRef} className="relative w-full max-w-md flex-1 md:max-w-sm lg:max-w-md">
@@ -144,7 +158,10 @@ export function PublicSearch() {
           name="q"
           value={q}
           onChange={(e) => handleInputChange(e.target.value)}
-          onFocus={() => { setFocused(true); setShowDropdown(true) }}
+          onFocus={() => {
+            setFocused(true)
+            setShowDropdown(true)
+          }}
           onBlur={() => setFocused(false)}
           placeholder={t('header.searchPlaceholder')}
           className="h-11 flex-1 border-0 bg-transparent px-3 text-sm text-text-heading placeholder:text-text-muted/70 focus:outline-none focus:ring-0"
@@ -169,7 +186,10 @@ export function PublicSearch() {
                 <button
                   key={item.id}
                   type="button"
-                  onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(item.name) }}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleSuggestionClick(item.name)
+                  }}
                   className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-text-heading hover:bg-muted/50"
                 >
                   <Search className="h-3.5 w-3.5 shrink-0 text-text-muted" />
@@ -198,7 +218,10 @@ export function PublicSearch() {
                     <button
                       key={s}
                       type="button"
-                      onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s) }}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleSuggestionClick(s)
+                      }}
                       className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-text-heading hover:bg-muted/50"
                     >
                       <Clock className="h-3.5 w-3.5 shrink-0 text-text-muted" />
@@ -215,7 +238,10 @@ export function PublicSearch() {
                   <button
                     key={s}
                     type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s) }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleSuggestionClick(s)
+                    }}
                     className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-text-heading hover:bg-muted/50"
                   >
                     <TrendingUp className="h-3.5 w-3.5 shrink-0 text-text-muted" />

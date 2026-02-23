@@ -63,9 +63,7 @@ export function StudioPackageComparison({
         onClick={() => setIsOpen((v) => !v)}
         className="flex w-full items-center justify-between rounded-xl border border-border-light/40 bg-white px-5 py-3.5 text-sm font-semibold text-text-heading shadow-sm transition-colors hover:bg-surface-light"
       >
-        <span>
-          {t('studios.comparePackages')}
-        </span>
+        <span>{t('studios.comparePackages')}</span>
         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
 
@@ -86,7 +84,8 @@ export function StudioPackageComparison({
                       {t('studios.hourlyOption')}
                     </div>
                     <p className="font-bold text-primary">
-                      {Number(hourlyRate).toLocaleString()} <span className="text-[10px] font-normal">ر.س/ساعة</span>
+                      {Number(hourlyRate).toLocaleString()}{' '}
+                      <span className="text-[10px] font-normal">ر.س/ساعة</span>
                     </p>
                   </div>
                 </th>
@@ -100,7 +99,7 @@ export function StudioPackageComparison({
                       className={`relative p-4 text-center ${isSelected ? 'bg-primary-50/30' : ''}`}
                     >
                       {isRecommended && (
-                        <span className="absolute -top-0.5 left-1/2 z-10 -translate-x-1/2 inline-flex items-center gap-0.5 whitespace-nowrap rounded-b-lg bg-primary px-3 py-0.5 text-[10px] font-bold text-white">
+                        <span className="absolute -top-0.5 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-b-lg bg-primary px-3 py-0.5 text-[10px] font-bold text-white">
                           <Sparkles className="h-2.5 w-2.5" />
                           {pkg.badgeText || t('studios.mostPopular')}
                         </span>
@@ -113,7 +112,7 @@ export function StudioPackageComparison({
                           </span>
                           <span className="text-[10px] text-text-muted">ر.س</span>
                           {pkg.originalPrice != null && pkg.originalPrice > pkg.price && (
-                            <span className="text-[10px] text-text-muted line-through ms-1">
+                            <span className="ms-1 text-[10px] text-text-muted line-through">
                               {Number(pkg.originalPrice).toLocaleString()}
                             </span>
                           )}
@@ -204,14 +203,19 @@ export function StudioPackageComparison({
                         : 'border border-primary/20 bg-primary-50 text-primary hover:bg-primary hover:text-white'
                     }`}
                   >
-                    {selectedPackageId === null ? t('studios.packageSelected') : t('studios.selectLabel')}
+                    {selectedPackageId === null
+                      ? t('studios.packageSelected')
+                      : t('studios.selectLabel')}
                   </button>
                 </td>
                 {/* Package CTAs */}
                 {sorted.map((pkg) => {
                   const isSelected = selectedPackageId === pkg.id
                   return (
-                    <td key={pkg.id} className={`p-4 text-center ${isSelected ? 'bg-primary-50/20' : ''}`}>
+                    <td
+                      key={pkg.id}
+                      className={`p-4 text-center ${isSelected ? 'bg-primary-50/20' : ''}`}
+                    >
                       <button
                         type="button"
                         onClick={() => onSelectPackage(pkg.id)}

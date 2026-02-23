@@ -226,10 +226,7 @@ export class PolicyService {
   /**
    * Reorder policy items by array of IDs (order = index).
    */
-  static async reorder(
-    data: ReorderPolicyInput,
-    userId?: string
-  ): Promise<PolicyItemListItem[]> {
+  static async reorder(data: ReorderPolicyInput, userId?: string): Promise<PolicyItemListItem[]> {
     await prisma.$transaction(
       data.policyIds.map((id, index) =>
         prisma.policyItem.updateMany({

@@ -30,7 +30,11 @@ function formatStudioSlot(startDate: string | null, endDate: string | null): str
   const start = new Date(startDate)
   const end = new Date(endDate)
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—'
-  const dateStr = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  const dateStr = start.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
   const timeStr = `${start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} – ${end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
   return `${dateStr} • ${timeStr}`
 }
@@ -49,7 +53,10 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
           const start = new Date(item.startDate)
           const end = new Date(item.endDate)
           const dateStr = start.toISOString().slice(0, 10)
-          const durationHours = Math.max(1, Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000)))
+          const durationHours = Math.max(
+            1,
+            Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000))
+          )
           return `/studios/${item.studioSlug}?date=${dateStr}&start=${item.startDate}&duration=${durationHours}`
         })()
       : null
@@ -58,9 +65,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4">
       <div>
         <p className="font-medium">{isStudio && studioName ? studioName : label}</p>
-        {isStudio && studioSlot && (
-          <p className="text-sm text-muted-foreground">{studioSlot}</p>
-        )}
+        {isStudio && studioSlot && <p className="text-sm text-muted-foreground">{studioSlot}</p>}
         {!isStudio && (
           <p className="text-sm text-muted-foreground">
             {item.quantity} ×{' '}

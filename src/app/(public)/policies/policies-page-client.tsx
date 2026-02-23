@@ -34,20 +34,56 @@ function StaticPoliciesContent({ locale }: { locale: string }) {
   const isAr = locale === 'ar'
   const sections = isAr
     ? [
-        { title: 'التأمين', body: 'المعدات مغطاة بتأمين التأجير القياسي خلال فترة التأجير. قد يتوفر تنازل عن الأضرار أو تغطية أعلى عند الدفع. تنطبق استثناءات؛ راجع الشروط للتفاصيل.' },
-        { title: 'الوديعة', body: 'وديعة قابلة للاسترداد (عادة 30٪ من قيمة المعدات، حد أدنى 1000 ريال، حد أقصى 50000 ريال) مطلوبة. تُطلق بعد إرجاع المعدات وفحصها. قد تُخصم مبالغ عن الأضرار أو التأخير.' },
-        { title: 'متطلبات الهوية', body: 'قد يُطلب بطاقة هوية حكومية سارية (الهوية الوطنية أو جواز السفر)، وللشركات السجل التجاري. قد نتحقق من الهوية قبل تسليم المعدات.' },
-        { title: 'رسوم التأخير', body: 'الإرجاع المتأخر يُحتسب بمقدار 1.5× معدل اليوم عن كل يوم أو جزء من يوم بعد تاريخ الإرجاع المتفق عليه، ما لم يتم الموافقة على تمديد مسبقاً.' },
-        { title: 'الأضرار والضياع', body: 'أنت مسؤول عن المعدات من الاستلام حتى الإرجاع. يجب الإبلاغ عن أي ضرر أو ضياع فوراً. قد تُخصم تكاليف الإصلاح أو الاستبدال من الوديعة أو تُفوتر.' },
-        { title: 'الإلغاء', body: 'الإلغاء قبل أكثر من 48 ساعة من الاستلام: استرداد كامل مخصوماً رسوم المعالجة. خلال 48 ساعة: قد تُحجز الوديعة. الغياب يفقد الوديعة. راجع الشروط لسياسة الإلغاء الكاملة.' },
+        {
+          title: 'التأمين',
+          body: 'المعدات مغطاة بتأمين التأجير القياسي خلال فترة التأجير. قد يتوفر تنازل عن الأضرار أو تغطية أعلى عند الدفع. تنطبق استثناءات؛ راجع الشروط للتفاصيل.',
+        },
+        {
+          title: 'الوديعة',
+          body: 'وديعة قابلة للاسترداد (عادة 30٪ من قيمة المعدات، حد أدنى 1000 ريال، حد أقصى 50000 ريال) مطلوبة. تُطلق بعد إرجاع المعدات وفحصها. قد تُخصم مبالغ عن الأضرار أو التأخير.',
+        },
+        {
+          title: 'متطلبات الهوية',
+          body: 'قد يُطلب بطاقة هوية حكومية سارية (الهوية الوطنية أو جواز السفر)، وللشركات السجل التجاري. قد نتحقق من الهوية قبل تسليم المعدات.',
+        },
+        {
+          title: 'رسوم التأخير',
+          body: 'الإرجاع المتأخر يُحتسب بمقدار 1.5× معدل اليوم عن كل يوم أو جزء من يوم بعد تاريخ الإرجاع المتفق عليه، ما لم يتم الموافقة على تمديد مسبقاً.',
+        },
+        {
+          title: 'الأضرار والضياع',
+          body: 'أنت مسؤول عن المعدات من الاستلام حتى الإرجاع. يجب الإبلاغ عن أي ضرر أو ضياع فوراً. قد تُخصم تكاليف الإصلاح أو الاستبدال من الوديعة أو تُفوتر.',
+        },
+        {
+          title: 'الإلغاء',
+          body: 'الإلغاء قبل أكثر من 48 ساعة من الاستلام: استرداد كامل مخصوماً رسوم المعالجة. خلال 48 ساعة: قد تُحجز الوديعة. الغياب يفقد الوديعة. راجع الشروط لسياسة الإلغاء الكاملة.',
+        },
       ]
     : [
-        { title: 'Insurance', body: 'Equipment is covered by our standard rental insurance during the rental period. Optional damage waiver or higher coverage may be available at checkout. Exclusions apply; see terms for details.' },
-        { title: 'Deposit', body: 'A refundable deposit (typically 30% of equipment value, min 1,000 SAR, max 50,000 SAR) is required. It is released after equipment is returned and inspected. Deductions may apply for damage or late return.' },
-        { title: 'ID Requirements', body: 'Valid government-issued ID (national ID or passport) and, for companies, commercial registration may be required. We may verify identity before releasing equipment.' },
-        { title: 'Late Fees', body: 'Late returns are charged at 1.5× the daily rate for each day or part day after the agreed return date, unless an extension was approved in advance.' },
-        { title: 'Damage & Loss', body: 'You are responsible for equipment from pickup until return. Damage or loss must be reported immediately. Repair or replacement costs may be deducted from the deposit or invoiced.' },
-        { title: 'Cancellation', body: 'Cancellations more than 48 hours before pickup: full refund minus a processing fee. Within 48 hours: deposit may be retained. No-shows forfeit the deposit. See terms for full cancellation policy.' },
+        {
+          title: 'Insurance',
+          body: 'Equipment is covered by our standard rental insurance during the rental period. Optional damage waiver or higher coverage may be available at checkout. Exclusions apply; see terms for details.',
+        },
+        {
+          title: 'Deposit',
+          body: 'A refundable deposit (typically 30% of equipment value, min 1,000 SAR, max 50,000 SAR) is required. It is released after equipment is returned and inspected. Deductions may apply for damage or late return.',
+        },
+        {
+          title: 'ID Requirements',
+          body: 'Valid government-issued ID (national ID or passport) and, for companies, commercial registration may be required. We may verify identity before releasing equipment.',
+        },
+        {
+          title: 'Late Fees',
+          body: 'Late returns are charged at 1.5× the daily rate for each day or part day after the agreed return date, unless an extension was approved in advance.',
+        },
+        {
+          title: 'Damage & Loss',
+          body: 'You are responsible for equipment from pickup until return. Damage or loss must be reported immediately. Repair or replacement costs may be deducted from the deposit or invoiced.',
+        },
+        {
+          title: 'Cancellation',
+          body: 'Cancellations more than 48 hours before pickup: full refund minus a processing fee. Within 48 hours: deposit may be retained. No-shows forfeit the deposit. See terms for full cancellation policy.',
+        },
       ]
   return (
     <section className="space-y-8">

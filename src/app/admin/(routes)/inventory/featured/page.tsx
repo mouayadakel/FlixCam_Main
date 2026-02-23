@@ -15,8 +15,8 @@ export default function FeaturedEquipmentPage() {
       <div>
         <h1 className="text-3xl font-bold text-neutral-900">المعدات المميزة</h1>
         <p className="mt-1 text-sm text-neutral-600">
-          العناصر المحددة هنا تظهر عشوائياً في قسم «معدات مميزة» بالصفحة الرئيسية. يمكنك اختيار
-          عدد غير محدود.
+          العناصر المحددة هنا تظهر عشوائياً في قسم «معدات مميزة» بالصفحة الرئيسية. يمكنك اختيار عدد
+          غير محدود.
         </p>
       </div>
       <FeaturedEquipmentTable />

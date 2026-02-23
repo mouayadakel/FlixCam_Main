@@ -172,7 +172,12 @@ const config: Config = {
       },
       fontFamily: {
         arabic: ['"Cairo"', 'system-ui', 'sans-serif'],
-        'header-nav': ['var(--font-ibm-plex-arabic)', '"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
+        'header-nav': [
+          'var(--font-ibm-plex-arabic)',
+          '"IBM Plex Sans Arabic"',
+          'system-ui',
+          'sans-serif',
+        ],
         english: ['"Inter"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
       },

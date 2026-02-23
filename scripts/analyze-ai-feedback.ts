@@ -30,9 +30,16 @@ async function analyzeAiPerformance() {
   } else {
     for (const stat of rejectionStats) {
       const catName = stat.categoryId
-        ? (await prisma.category.findUnique({ where: { id: stat.categoryId }, select: { name: true } }))?.name || stat.categoryId
+        ? (
+            await prisma.category.findUnique({
+              where: { id: stat.categoryId },
+              select: { name: true },
+            })
+          )?.name || stat.categoryId
         : 'Unknown'
-      console.log(`  Category: ${catName} | Type: ${stat.contentType} | Rejections: ${stat._count.action}`)
+      console.log(
+        `  Category: ${catName} | Type: ${stat.contentType} | Rejections: ${stat._count.action}`
+      )
     }
   }
 
@@ -43,7 +50,10 @@ async function analyzeAiPerformance() {
     _count: true,
   })
 
-  const providerMap = new Map<string, { approved: number; rejected: number; edited: number; total: number }>()
+  const providerMap = new Map<
+    string,
+    { approved: number; rejected: number; edited: number; total: number }
+  >()
   for (const stat of providerStats) {
     const provider = stat.provider || 'unknown'
     if (!providerMap.has(provider)) {
@@ -59,7 +69,9 @@ async function analyzeAiPerformance() {
 
   for (const [provider, data] of providerMap) {
     const approvalRate = data.total > 0 ? Math.round((data.approved / data.total) * 100) : 0
-    console.log(`  ${provider}: ${approvalRate}% approval (${data.approved}/${data.total}) | ${data.rejected} rejected | ${data.edited} edited`)
+    console.log(
+      `  ${provider}: ${approvalRate}% approval (${data.approved}/${data.total}) | ${data.rejected} rejected | ${data.edited} edited`
+    )
   }
 
   // 3. Rejection reasons breakdown
@@ -105,9 +117,16 @@ async function analyzeAiPerformance() {
     const rate = Math.round((stat._count.action / total) * 100)
     if (rate >= 95) {
       const catName = stat.categoryId
-        ? (await prisma.category.findUnique({ where: { id: stat.categoryId }, select: { name: true } }))?.name || stat.categoryId
+        ? (
+            await prisma.category.findUnique({
+              where: { id: stat.categoryId },
+              select: { name: true },
+            })
+          )?.name || stat.categoryId
         : 'Unknown'
-      console.log(`  ELIGIBLE: ${catName}/${stat.contentType} — ${rate}% approval over ${total} samples`)
+      console.log(
+        `  ELIGIBLE: ${catName}/${stat.contentType} — ${rate}% approval over ${total} samples`
+      )
     }
   }
 
@@ -119,9 +138,15 @@ async function analyzeAiPerformance() {
   const totalEdited = await prisma.aiFeedback.count({ where: { action: 'edited' } })
 
   console.log(`  Total feedback entries: ${totalFeedback}`)
-  console.log(`  Approved: ${totalApproved} (${totalFeedback > 0 ? Math.round((totalApproved / totalFeedback) * 100) : 0}%)`)
-  console.log(`  Rejected: ${totalRejected} (${totalFeedback > 0 ? Math.round((totalRejected / totalFeedback) * 100) : 0}%)`)
-  console.log(`  Edited:   ${totalEdited} (${totalFeedback > 0 ? Math.round((totalEdited / totalFeedback) * 100) : 0}%)`)
+  console.log(
+    `  Approved: ${totalApproved} (${totalFeedback > 0 ? Math.round((totalApproved / totalFeedback) * 100) : 0}%)`
+  )
+  console.log(
+    `  Rejected: ${totalRejected} (${totalFeedback > 0 ? Math.round((totalRejected / totalFeedback) * 100) : 0}%)`
+  )
+  console.log(
+    `  Edited:   ${totalEdited} (${totalFeedback > 0 ? Math.round((totalEdited / totalFeedback) * 100) : 0}%)`
+  )
 
   // 6. Photo gate stats
   console.log('\n--- Photo Gate Status ---')

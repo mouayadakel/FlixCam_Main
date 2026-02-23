@@ -7,13 +7,7 @@
     "market_focus": "Riyadh_Saudi_Arabia"
   },
   "validation_rules": {
-    "human_required_fields": [
-      "product_name",
-      "brand",
-      "sku",
-      "daily_price",
-      "quantity"
-    ],
+    "human_required_fields": ["product_name", "brand", "sku", "daily_price", "quantity"],
     "media_requirements": {
       "min_photos": 4,
       "action_on_fail": "highlight_row_red",
@@ -53,7 +47,11 @@
       "languages": ["EN", "AR", "ZH"],
       "ar_style": "Modern Standard Arabic (Fusha), professional rental tone, right-to-left optimized",
       "ar_keywords_required": ["تأجير", "استأجر", "الرياض", "السعودية"],
-      "ar_cultural_context": ["desert cinematography", "Riyadh-based commercial production", "Saudi wedding videography"],
+      "ar_cultural_context": [
+        "desert cinematography",
+        "Riyadh-based commercial production",
+        "Saudi wedding videography"
+      ],
       "zh_style": "Simplified Chinese, include 利雅得 (Riyadh) and 沙特阿拉伯 (Saudi Arabia)",
       "en_keywords_required": ["rent", "rental", "Riyadh", "Saudi Arabia"]
     }
@@ -75,7 +73,14 @@
   "feedback_loop": {
     "model": "AiFeedback",
     "tracked_actions": ["approved", "rejected", "edited"],
-    "rejection_reasons": ["inaccurate", "wrong_locale", "too_generic", "factually_incorrect", "formatting", "other"],
+    "rejection_reasons": [
+      "inaccurate",
+      "wrong_locale",
+      "too_generic",
+      "factually_incorrect",
+      "formatting",
+      "other"
+    ],
     "auto_approve_threshold": {
       "min_samples": 50,
       "approval_rate": 95,

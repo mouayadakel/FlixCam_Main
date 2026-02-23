@@ -17,10 +17,10 @@ Used to verify the import flow at **Admin → Inventory → Import** (`/admin/in
 
 ### Required for each row
 
-| Purpose      | Accepted column headers (any one) |
-|-------------|-----------------------------------|
-| **Product name** | `Name`, `name`, `Product Name`, `Product`, `اسم` |
-| **Category**     | Set in UI: map the sheet to a category (required). |
+| Purpose          | Accepted column headers (any one)                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Product name** | `Name`, `name`, `Product Name`, `Product`, `اسم`                                                                                |
+| **Category**     | Set in UI: map the sheet to a category (required).                                                                              |
 | **Brand**        | `Brand`, `brand`, `Brand Name`, `brand_name`, `Manufacturer`, `الماركة`, `العلامة التجارية` — defaults to `Unknown` if missing. |
 
 ### Optional (pricing & inventory)
@@ -64,12 +64,12 @@ Used to verify the import flow at **Admin → Inventory → Import** (`/admin/in
 
 ## 5. Known issues / things to verify
 
-| Item | Status / note |
-|------|----------------|
-| **Subcategory disabled** | Subcategory dropdown is enabled only after a **category** is selected and that category **has subcategories** in the system. Add subcategories under Inventory → Categories if needed. |
-| **AI preview not filling** | Ensure `.env` has `GEMINI_API_KEY` (or `OPENAI_API_KEY`) and optionally `AI_PROVIDER=gemini`. SEO now falls back to env if Admin AI settings are not saved. |
-| **500 on import page** | If you see 500, ensure the app builds (e.g. no `??`/`||` syntax error in `ai-autofill.service.ts`). Restart dev server after code/env changes. |
-| **File not in repo** | `docs/Flix Stock invintory (1).xlsx` was not found in the project. Place the file in `docs/` or anywhere and select it in the browser when uploading. |
+| Item                       | Status / note                                                                                                                                                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------------------------------------------------------------- |
+| **Subcategory disabled**   | Subcategory dropdown is enabled only after a **category** is selected and that category **has subcategories** in the system. Add subcategories under Inventory → Categories if needed. |
+| **AI preview not filling** | Ensure `.env` has `GEMINI_API_KEY` (or `OPENAI_API_KEY`) and optionally `AI_PROVIDER=gemini`. SEO now falls back to env if Admin AI settings are not saved.                            |
+| **500 on import page**     | If you see 500, ensure the app builds (e.g. no `??`/`                                                                                                                                  |     | `syntax error in`ai-autofill.service.ts`). Restart dev server after code/env changes. |
+| **File not in repo**       | `docs/Flix Stock invintory (1).xlsx` was not found in the project. Place the file in `docs/` or anywhere and select it in the browser when uploading.                                  |
 
 ---
 

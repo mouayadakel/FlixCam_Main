@@ -21,10 +21,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   if (!(await hasPermission(session.user.id, PERMISSIONS.EQUIPMENT_UPDATE))) {
-    return NextResponse.json(
-      { error: 'Forbidden - equipment.update required' },
-      { status: 403 }
-    )
+    return NextResponse.json({ error: 'Forbidden - equipment.update required' }, { status: 403 })
   }
 
   try {

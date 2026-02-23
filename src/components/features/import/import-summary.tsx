@@ -30,26 +30,26 @@ export function ImportSummary({
       <CardContent className="p-4">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div className="text-center">
-            <Package className="mx-auto h-5 w-5 text-muted-foreground mb-1" />
+            <Package className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
             <p className="text-2xl font-bold">{totalItems}</p>
             <p className="text-xs text-muted-foreground">إجمالي المنتجات</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-2">الحالة</p>
+            <p className="mb-2 text-xs text-muted-foreground">الحالة</p>
             <div className="flex flex-col items-center gap-1">
               <StatusBadge status="READY" />
               <span className="text-sm font-medium">{readyCount}</span>
             </div>
           </div>
           <div className="text-center">
-            <Sparkles className="mx-auto h-5 w-5 text-blue-600 mb-1" />
+            <Sparkles className="mx-auto mb-1 h-5 w-5 text-blue-600" />
             <p className="text-2xl font-bold text-blue-700">{aiFilled}</p>
             <p className="text-xs text-muted-foreground">تم ملؤها بالذكاء</p>
           </div>
           <div className="text-center">
             {estimatedCost !== undefined && (
               <>
-                <DollarSign className="mx-auto h-5 w-5 text-green-600 mb-1" />
+                <DollarSign className="mx-auto mb-1 h-5 w-5 text-green-600" />
                 <p className="text-2xl font-bold text-green-700">${estimatedCost.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground">التكلفة المقدرة</p>
               </>
@@ -58,9 +58,8 @@ export function ImportSummary({
         </div>
 
         <div className="mt-3 border-t pt-3">
-          <p className="text-sm text-muted-foreground text-center">
-            {totalItems} منتج عبر {categoryCount} فئة.{' '}
-            {readyCount > 0 && <>{readyCount} جاهز. </>}
+          <p className="text-center text-sm text-muted-foreground">
+            {totalItems} منتج عبر {categoryCount} فئة. {readyCount > 0 && <>{readyCount} جاهز. </>}
             {draftCount > 0 && <>{draftCount} مسودة. </>}
             {needsReviewCount > 0 && (
               <span className="text-amber-600">{needsReviewCount} يحتاج مراجعة.</span>

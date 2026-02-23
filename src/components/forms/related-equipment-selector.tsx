@@ -48,9 +48,7 @@ export function RelatedEquipmentSelector({
   const [search, setSearch] = useState('')
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<string[]>(() =>
-    Array.isArray(value) ? value : []
-  )
+  const [selected, setSelected] = useState<string[]>(() => (Array.isArray(value) ? value : []))
 
   // Sync internal state when controlled value changes (e.g. form reset)
   useEffect(() => {
@@ -112,9 +110,7 @@ export function RelatedEquipmentSelector({
   }, [equipment, selected])
 
   const handleToggle = (id: string) => {
-    const next = selected.includes(id)
-      ? selected.filter((i) => i !== id)
-      : [...selected, id]
+    const next = selected.includes(id) ? selected.filter((i) => i !== id) : [...selected, id]
     setSelected(next)
     onChange(next)
   }

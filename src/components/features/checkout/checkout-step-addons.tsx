@@ -37,9 +37,7 @@ export function CheckoutStepAddons({ onSuccess }: CheckoutStepAddonsProps) {
             {t('checkout.addTechnician')}
           </Label>
         </div>
-        <p className="text-sm text-text-muted">
-          {t('checkout.addonsTechNote')}
-        </p>
+        <p className="text-sm text-text-muted">{t('checkout.addonsTechNote')}</p>
         <Button type="submit" size="lg" className="w-full">
           {t('common.next')}
         </Button>

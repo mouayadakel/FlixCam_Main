@@ -281,7 +281,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Cards - 2 columns on mobile per plan */}
-      <div className="grid grid-cols-2 gap-4 lg:gap-6 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
         <KPICard
           title="الإيرادات (هذا الشهر)"
           value={`${kpis.revenue.toLocaleString('ar-SA')} ر.س`}

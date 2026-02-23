@@ -6,13 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -167,10 +161,7 @@ export function CmsStudioGalleryTab({ studioId, onRefresh }: GalleryTabProps) {
           <Label>الصور</Label>
           <div className="mt-2 grid grid-cols-2 gap-4 md:grid-cols-3">
             {media.map((m, i) => (
-              <div
-                key={m.id}
-                className="relative overflow-hidden rounded-lg border bg-muted"
-              >
+              <div key={m.id} className="relative overflow-hidden rounded-lg border bg-muted">
                 <div className="relative aspect-square">
                   <Image
                     src={m.url}
@@ -180,7 +171,7 @@ export function CmsStudioGalleryTab({ studioId, onRefresh }: GalleryTabProps) {
                     sizes="(max-width: 768px) 50vw, 33vw"
                   />
                 </div>
-                <div className="absolute top-2 start-2 flex gap-1">
+                <div className="absolute start-2 top-2 flex gap-1">
                   <Button
                     type="button"
                     variant="secondary"
@@ -206,7 +197,7 @@ export function CmsStudioGalleryTab({ studioId, onRefresh }: GalleryTabProps) {
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 end-2 h-8 w-8"
+                  className="absolute end-2 top-2 h-8 w-8"
                   onClick={() => handleDelete(m.id)}
                 >
                   <Trash2 className="h-4 w-4" />

@@ -166,7 +166,9 @@ async function main() {
   } else {
     console.log(`✅ Policies in DB: ${total}`)
   }
-  console.log('→ If the policies page is still empty, log out and log in again to refresh your session permissions.')
+  console.log(
+    '→ If the policies page is still empty, log out and log in again to refresh your session permissions.'
+  )
 }
 
 main()

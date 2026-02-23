@@ -35,7 +35,14 @@ interface CustomerBooking {
   invoices?: Array<{ id: string; invoiceNumber: string; status: string }>
 }
 
-const STATUS_LABELS: Record<string, { ar: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode }> = {
+const STATUS_LABELS: Record<
+  string,
+  {
+    ar: string
+    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+    icon: React.ReactNode
+  }
+> = {
   PENDING: { ar: 'قيد الانتظار', variant: 'outline', icon: <Clock className="h-3 w-3" /> },
   CONFIRMED: { ar: 'مؤكد', variant: 'default', icon: <CheckCircle className="h-3 w-3" /> },
   ACTIVE: { ar: 'نشط', variant: 'default', icon: <CheckCircle className="h-3 w-3" /> },
@@ -85,7 +92,8 @@ export default function AccountBookingsPage() {
     const now = new Date()
     return {
       active: bookings.filter((b) => b.status === 'ACTIVE').length,
-      upcoming: bookings.filter((b) => b.status === 'CONFIRMED' && new Date(b.startDate) > now).length,
+      upcoming: bookings.filter((b) => b.status === 'CONFIRMED' && new Date(b.startDate) > now)
+        .length,
       completed: bookings.filter((b) => b.status === 'COMPLETED' || b.status === 'RETURNED').length,
       totalSpend: bookings
         .filter((b) => b.status !== 'CANCELLED')
@@ -98,17 +106,20 @@ export default function AccountBookingsPage() {
     return bookings.filter((b) => b.status === statusFilter)
   }, [bookings, statusFilter])
 
-  const isLate = (b: CustomerBooking) =>
-    b.status === 'ACTIVE' && new Date(b.endDate) < new Date()
+  const isLate = (b: CustomerBooking) => b.status === 'ACTIVE' && new Date(b.endDate) < new Date()
 
   if (status === 'loading' || (status === 'authenticated' && loading)) {
     return (
       <div className="mx-auto max-w-4xl space-y-4 p-6" dir="rtl">
         <Skeleton className="h-10 w-48" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-20" />
+          ))}
         </div>
-        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 w-full" />
+        ))}
       </div>
     )
   }
@@ -138,7 +149,9 @@ export default function AccountBookingsPage() {
         <Card>
           <CardContent className="pb-3 pt-4">
             <p className="text-xs text-muted-foreground">نشطة الآن</p>
-            <p className={`text-2xl font-bold ${summary.active > 0 ? 'text-green-600' : ''}`}>{summary.active}</p>
+            <p className={`text-2xl font-bold ${summary.active > 0 ? 'text-green-600' : ''}`}>
+              {summary.active}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -185,7 +198,11 @@ export default function AccountBookingsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((booking) => {
-            const statusInfo = STATUS_LABELS[booking.status] ?? { ar: booking.status, variant: 'outline' as const, icon: null }
+            const statusInfo = STATUS_LABELS[booking.status] ?? {
+              ar: booking.status,
+              variant: 'outline' as const,
+              icon: null,
+            }
             const late = isLate(booking)
             return (
               <Card key={booking.id} className={late ? 'border-red-200' : ''}>
@@ -219,13 +236,18 @@ export default function AccountBookingsPage() {
                       </div>
                       {booking.equipment?.length > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          {booking.equipment.slice(0, 3).map((e) => e.model ?? e.sku).join('، ')}
+                          {booking.equipment
+                            .slice(0, 3)
+                            .map((e) => e.model ?? e.sku)
+                            .join('، ')}
                           {booking.equipment.length > 3 && ` +${booking.equipment.length - 3}`}
                         </p>
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <p className="text-lg font-bold">{formatCurrency(Number(booking.totalAmount))}</p>
+                      <p className="text-lg font-bold">
+                        {formatCurrency(Number(booking.totalAmount))}
+                      </p>
                       <div className="flex gap-2">
                         {booking.invoices && booking.invoices.length > 0 && (
                           <Button size="sm" variant="outline" asChild>

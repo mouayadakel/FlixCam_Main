@@ -152,7 +152,9 @@ export class InvoicePdfService {
     // Footer
     doc.setTextColor(150, 150, 150)
     doc.setFontSize(7)
-    doc.text('FlixCam.rent – Cinematic Equipment & Studio Rental', pageW / 2, 285, { align: 'center' })
+    doc.text('FlixCam.rent – Cinematic Equipment & Studio Rental', pageW / 2, 285, {
+      align: 'center',
+    })
     doc.text('VAT # 300000000000003 | CR # 1010000000', pageW / 2, 289, { align: 'center' })
 
     return Buffer.from(doc.output('arraybuffer'))

@@ -32,16 +32,24 @@ export async function POST(request: NextRequest) {
     const openaiKey =
       (setting?.apiKey && setting.apiKey.length >= 10 && !setting.apiKey.startsWith('****')
         ? setting.apiKey
-        : null) ?? process.env.OPENAI_API_KEY ?? null
+        : null) ??
+      process.env.OPENAI_API_KEY ??
+      null
     const geminiKey =
       (setting?.apiKey && setting.apiKey.length >= 10 && !setting.apiKey.startsWith('****')
         ? setting.apiKey
-        : null) ?? process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? null
+        : null) ??
+      process.env.GEMINI_API_KEY ??
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
+      null
 
     if (provider === 'openai') {
       if (!openaiKey) {
         return NextResponse.json(
-          { ok: false, error: 'مفتاح API غير مُعرّف. أدخله في الإعدادات أو في .env (OPENAI_API_KEY)' },
+          {
+            ok: false,
+            error: 'مفتاح API غير مُعرّف. أدخله في الإعدادات أو في .env (OPENAI_API_KEY)',
+          },
           { status: 200 }
         )
       }
@@ -51,7 +59,11 @@ export async function POST(request: NextRequest) {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         return NextResponse.json(
-          { ok: false, error: (err as { error?: { message?: string } })?.error?.message ?? 'فشل الاتصال بـ OpenAI' },
+          {
+            ok: false,
+            error:
+              (err as { error?: { message?: string } })?.error?.message ?? 'فشل الاتصال بـ OpenAI',
+          },
           { status: 200 }
         )
       }
@@ -61,21 +73,29 @@ export async function POST(request: NextRequest) {
     if (provider === 'gemini') {
       if (!geminiKey) {
         return NextResponse.json(
-          { ok: false, error: 'مفتاح API غير مُعرّف. أدخله في الإعدادات أو في .env (GEMINI_API_KEY)' },
+          {
+            ok: false,
+            error: 'مفتاح API غير مُعرّف. أدخله في الإعدادات أو في .env (GEMINI_API_KEY)',
+          },
           { status: 200 }
         )
       }
-      const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models',
-        { method: 'GET', headers: { 'x-goog-api-key': geminiKey } }
-      )
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+        method: 'GET',
+        headers: { 'x-goog-api-key': geminiKey },
+      })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({})) as { error?: { message?: string; status?: string } }
-        const message = err?.error?.message ?? (res.status === 400 ? 'مفتاح API غير صالح أو منتهي' : res.status === 403 ? 'الوصول مرفوض أو تجاوز الحصة' : 'فشل الاتصال بـ Gemini')
-        return NextResponse.json(
-          { ok: false, error: message },
-          { status: 200 }
-        )
+        const err = (await res.json().catch(() => ({}))) as {
+          error?: { message?: string; status?: string }
+        }
+        const message =
+          err?.error?.message ??
+          (res.status === 400
+            ? 'مفتاح API غير صالح أو منتهي'
+            : res.status === 403
+              ? 'الوصول مرفوض أو تجاوز الحصة'
+              : 'فشل الاتصال بـ Gemini')
+        return NextResponse.json({ ok: false, error: message }, { status: 200 })
       }
       return NextResponse.json({ ok: true, message: 'تم الاتصال بـ Gemini بنجاح' })
     }

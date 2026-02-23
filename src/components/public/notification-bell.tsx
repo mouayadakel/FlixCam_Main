@@ -92,7 +92,9 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' }).catch(() => {})
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n)))
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n))
+    )
     setUnreadCount((c) => Math.max(0, c - 1))
   }
 
@@ -102,7 +104,9 @@ export function NotificationBell() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'markAllRead' }),
     }).catch(() => {})
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() })))
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() }))
+    )
     setUnreadCount(0)
   }
 
@@ -136,7 +140,11 @@ export function NotificationBell() {
         size="icon"
         onClick={() => setOpen((v) => !v)}
         className="relative rounded-full text-text-heading transition-colors hover:bg-brand-primary/5 hover:text-brand-primary"
-        aria-label={t('notifications.title') !== 'notifications.title' ? t('notifications.title') : 'الإشعارات'}
+        aria-label={
+          t('notifications.title') !== 'notifications.title'
+            ? t('notifications.title')
+            : 'الإشعارات'
+        }
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -193,7 +201,12 @@ export function NotificationBell() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={cn('text-sm', !n.read ? 'font-semibold text-text-heading' : 'text-text-body')}>
+                        <p
+                          className={cn(
+                            'text-sm',
+                            !n.read ? 'font-semibold text-text-heading' : 'text-text-body'
+                          )}
+                        >
                           {n.title}
                         </p>
                         {!n.read && (
@@ -209,7 +222,9 @@ export function NotificationBell() {
                       </div>
                       <p className="mt-0.5 line-clamp-2 text-xs text-text-muted">{n.message}</p>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="text-[10px] text-text-muted">{formatTime(n.createdAt)}</span>
+                        <span className="text-[10px] text-text-muted">
+                          {formatTime(n.createdAt)}
+                        </span>
                         {link && (
                           <Link
                             href={link}

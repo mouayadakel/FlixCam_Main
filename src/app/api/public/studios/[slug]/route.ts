@@ -27,8 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     ...studio,
     hourlyRate: studio.hourlyRate ? Number(studio.hourlyRate) : 0,
     dailyRate: studio.dailyRate ? Number(studio.dailyRate) : null,
-    addOns:
-      studio.addOns?.map((a) => ({ ...a, price: a.price ? Number(a.price) : 0 })) ?? [],
+    addOns: studio.addOns?.map((a) => ({ ...a, price: a.price ? Number(a.price) : 0 })) ?? [],
     packages:
       studio.packages?.map((p) => ({
         ...p,
