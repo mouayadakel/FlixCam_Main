@@ -58,7 +58,7 @@ export function StudioTestimonials({ testimonials }: StudioTestimonialsProps) {
           </div>
 
           {/* Text */}
-          <p className="text-sm leading-relaxed text-text-body">"{current.text}"</p>
+          <p className="text-sm leading-relaxed text-text-body">&quot;{current.text}&quot;</p>
 
           {/* Author */}
           <div className="flex items-center gap-3">

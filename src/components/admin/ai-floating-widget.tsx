@@ -64,16 +64,17 @@ function loadConversationId(): string {
 
 export function AIFloatingWidget() {
   const pathname = usePathname()
-  const enabled = typeof process.env.NEXT_PUBLIC_AI_WIDGET_ENABLED !== 'undefined'
-    ? process.env.NEXT_PUBLIC_AI_WIDGET_ENABLED === 'true'
-    : true
-  if (!enabled) return null
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<StoredMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
+
+  const enabled =
+    typeof process.env.NEXT_PUBLIC_AI_WIDGET_ENABLED !== 'undefined'
+      ? process.env.NEXT_PUBLIC_AI_WIDGET_ENABLED === 'true'
+      : true
 
   useEffect(() => {
     setMessages(loadMessages())
@@ -83,6 +84,8 @@ export function AIFloatingWidget() {
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight
   }, [messages])
+
+  if (!enabled) return null
 
   const sendMessage = async () => {
     const text = input.trim()
