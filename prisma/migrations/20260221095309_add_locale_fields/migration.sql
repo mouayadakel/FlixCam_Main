@@ -18,23 +18,13 @@ CREATE TYPE "AiJobType" AS ENUM ('TEXT_BACKFILL', 'PHOTO_BACKFILL', 'SPEC_BACKFI
 -- CreateEnum
 CREATE TYPE "JobStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED');
 
--- DropIndex
-DROP INDEX "Equipment_nameEn_idx";
-
--- DropIndex
-DROP INDEX "Equipment_nameZh_idx";
-
--- DropIndex
-DROP INDEX "Kit_nameEn_idx";
-
--- DropIndex
-DROP INDEX "Kit_nameZh_idx";
-
--- DropIndex
-DROP INDEX "Studio_nameEn_idx";
-
--- DropIndex
-DROP INDEX "Studio_nameZh_idx";
+-- DropIndex (IF EXISTS for idempotency when index was never created or already dropped)
+DROP INDEX IF EXISTS "Equipment_nameEn_idx";
+DROP INDEX IF EXISTS "Equipment_nameZh_idx";
+DROP INDEX IF EXISTS "Kit_nameEn_idx";
+DROP INDEX IF EXISTS "Kit_nameZh_idx";
+DROP INDEX IF EXISTS "Studio_nameEn_idx";
+DROP INDEX IF EXISTS "Studio_nameZh_idx";
 
 -- AlterTable
 ALTER TABLE "AISettings" ADD COLUMN     "backfillEnabled" BOOLEAN NOT NULL DEFAULT true,
