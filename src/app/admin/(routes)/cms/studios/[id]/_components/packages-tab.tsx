@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,7 +73,7 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
     isActive: true,
   })
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/studios/${studioId}/packages`)
       if (res.ok) {
@@ -85,11 +85,11 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
     } finally {
       setLoading(false)
     }
-  }
+  }, [studioId, toast])
 
   useEffect(() => {
     load()
-  }, [studioId])
+  }, [load])
 
   const resetForm = () => {
     setForm({

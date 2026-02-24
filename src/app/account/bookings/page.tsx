@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -64,13 +64,7 @@ export default function AccountBookingsPage() {
     }
   }, [status, router])
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      loadBookings()
-    }
-  }, [status])
-
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -86,7 +80,13 @@ export default function AccountBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadBookings()
+    }
+  }, [status, loadBookings])
 
   const summary = useMemo(() => {
     const now = new Date()

@@ -65,7 +65,7 @@ export default function PaymentPage() {
     return () => {
       cancelled = true
     }
-  }, [details, items.length])
+  }, [details, items.length, t])
 
   if (!details || items.length === 0) {
     return (

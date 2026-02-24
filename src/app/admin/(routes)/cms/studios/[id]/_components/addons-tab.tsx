@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -76,7 +76,7 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState<string>('all')
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/studios/${studioId}/addons`)
       if (res.ok) {
@@ -88,11 +88,11 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [studioId, toast])
 
   useEffect(() => {
     load()
-  }, [studioId])
+  }, [load])
 
   const filtered = useMemo(() => {
     let list = addOns

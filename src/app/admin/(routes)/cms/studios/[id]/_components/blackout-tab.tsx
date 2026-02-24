@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,7 @@ export function CmsStudioBlackoutTab({ studioId, onRefresh }: BlackoutTabProps) 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState({ startDate: '', endDate: '', reason: '' })
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/studios/${studioId}/blackout`)
       if (res.ok) {
@@ -56,11 +56,11 @@ export function CmsStudioBlackoutTab({ studioId, onRefresh }: BlackoutTabProps) 
     } finally {
       setLoading(false)
     }
-  }
+  }, [studioId, toast])
 
   useEffect(() => {
     load()
-  }, [studioId])
+  }, [load])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -68,7 +68,7 @@ export default function LoginPage() {
     if (emailParam) {
       setValue('email', emailParam)
     }
-  }, [searchParams, setValue, toast])
+  }, [searchParams, setValue, toast, i18n])
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)

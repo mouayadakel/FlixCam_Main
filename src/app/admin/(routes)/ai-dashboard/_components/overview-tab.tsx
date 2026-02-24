@@ -491,7 +491,7 @@ export function OverviewTab({ onSwitchTab }: OverviewTabProps) {
         }),
       })
     }
-  }, [fetchAll, toast, onSwitchTab, revenueWeighted, fillTypes, minQualityScore])
+  }, [toast, onSwitchTab, revenueWeighted, fillTypes, minQualityScore])
 
   const handleFillNow = async (productId: string) => {
     setFillingId(productId)

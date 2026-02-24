@@ -22,7 +22,7 @@ export const options = {
   },
 }
 
-export default function () {
+export default function loadTest() {
   const res = http.get(`${BASE}/api/public/equipment?limit=10`)
   check(res, { 'equipment status 200': (r) => r.status === 200 })
   sleep(0.5)

@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,7 +39,7 @@ export function CmsStudioScheduleTab({ studioId }: ScheduleTabProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/studios/${studioId}/schedule`)
       if (res.ok) {
@@ -53,11 +53,11 @@ export function CmsStudioScheduleTab({ studioId }: ScheduleTabProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [studioId, toast])
 
   useEffect(() => {
     load()
-  }, [studioId])
+  }, [load])
 
   const updateDay = (dayOfWeek: number, field: keyof ScheduleEntry, value: string | boolean) => {
     setSchedule((prev) =>
