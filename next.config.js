@@ -28,6 +28,9 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   staticPageGenerationTimeout: 120,
+  turbopack: {
+    root: __dirname,
+  },
   experimental: {
     cpus: 2,
     serverActions: {

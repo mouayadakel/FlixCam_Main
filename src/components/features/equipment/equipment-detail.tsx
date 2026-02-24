@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
 import { BottomSheet } from '@/components/mobile/bottom-sheet'
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EquipmentGallery } from './equipment-gallery'
-import { EquipmentPriceBlock } from './equipment-price-block'
+import { EquipmentPriceBlock, type TierKey } from './equipment-price-block'
 import { EquipmentCard } from './equipment-card'
 import { useCartStore } from '@/lib/stores/cart.store'
 import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
@@ -28,21 +28,26 @@ import type { EquipmentCardItem } from './equipment-card'
 import type { AnySpecifications } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 import {
+  AlertCircle,
   ChevronRight,
   ShoppingCart,
   ArrowRight,
   Calendar,
   CheckCircle2,
   Clock,
+  Loader2,
   Truck,
 } from 'lucide-react'
 
-function getDefaultDates(): { start: string; end: string } {
-  const start = new Date()
+function getDefaultDates(): { today: string; start: string; end: string } {
+  const today = new Date()
+  const todayStr = today.toISOString().slice(0, 10)
+  const start = new Date(today)
   start.setDate(start.getDate() + 1)
   const end = new Date(start)
   end.setDate(end.getDate() + 3)
   return {
+    today: todayStr,
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
   }
@@ -84,6 +89,70 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
   const [added, setAdded] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false)
+  const [selectedTier, setSelectedTier] = useState<TierKey | null>(null)
+
+  const handleTierSelect = (tier: TierKey) => {
+    const today = new Date()
+    const todayStr = today.toISOString().slice(0, 10)
+    setSelectedTier(tier)
+    setStartDate(todayStr)
+
+    const end = new Date(today)
+    if (tier === 'day') {
+      end.setDate(end.getDate() + 1)
+    } else if (tier === 'week') {
+      end.setDate(end.getDate() + 7)
+    } else if (tier === 'month') {
+      end.setDate(end.getDate() + 30)
+    }
+    setEndDate(end.toISOString().slice(0, 10))
+  }
+
+  // Availability check state
+  const [availCheck, setAvailCheck] = useState<'idle' | 'loading' | 'available' | 'unavailable'>('idle')
+  const availAbortRef = useRef<AbortController | null>(null)
+
+  const checkDateAvailability = useCallback(async (start: string, end: string) => {
+    if (!equipment.id || !start || !end) return
+    const s = new Date(start)
+    const e = new Date(end)
+    if (e <= s) return
+
+    availAbortRef.current?.abort()
+    const controller = new AbortController()
+    availAbortRef.current = controller
+
+    setAvailCheck('loading')
+    try {
+      const params = new URLSearchParams({ startDate: start, endDate: end })
+      const res = await fetch(
+        `/api/public/equipment/${equipment.id}/availability?${params.toString()}`,
+        { signal: controller.signal }
+      )
+      if (controller.signal.aborted) return
+      if (!res.ok) {
+        setAvailCheck('unavailable')
+        return
+      }
+      const data: { available: boolean; quantityAvailable: number } = await res.json()
+      if (controller.signal.aborted) return
+      setAvailCheck(data.available && data.quantityAvailable > 0 ? 'available' : 'unavailable')
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      setAvailCheck('unavailable')
+    }
+  }, [equipment.id])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkDateAvailability(startDate, endDate)
+    }, 400)
+    return () => {
+      clearTimeout(timer)
+      availAbortRef.current?.abort()
+    }
+  }, [startDate, endDate, checkDateAvailability])
+
   const maxQty = Math.min(equipment.quantityAvailable ?? 1, 10)
   const availabilityStatus = getAvailabilityStatus(equipment.quantityAvailable, true)
   const available = availabilityStatus === 'available' || availabilityStatus === 'limited'
@@ -135,7 +204,19 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
     return diff > 0 ? diff : 1
   }, [startDate, endDate])
 
-  const estimatedTotal = rentalDays * equipment.dailyPrice * quantity
+  const estimatedTotal = useMemo(() => {
+    if (selectedTier === 'month' && equipment.monthlyPrice) {
+      const months = Math.max(1, Math.floor(rentalDays / 30))
+      const remainingDays = rentalDays % 30
+      return (months * equipment.monthlyPrice + remainingDays * equipment.dailyPrice) * quantity
+    }
+    if (selectedTier === 'week' && equipment.weeklyPrice) {
+      const weeks = Math.max(1, Math.floor(rentalDays / 7))
+      const remainingDays = rentalDays % 7
+      return (weeks * equipment.weeklyPrice + remainingDays * equipment.dailyPrice) * quantity
+    }
+    return rentalDays * equipment.dailyPrice * quantity
+  }, [rentalDays, selectedTier, equipment.dailyPrice, equipment.weeklyPrice, equipment.monthlyPrice, quantity])
 
   return (
     <>
@@ -306,6 +387,8 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                 dailyPrice={equipment.dailyPrice}
                 weeklyPrice={equipment.weeklyPrice}
                 monthlyPrice={equipment.monthlyPrice}
+                onTierSelect={handleTierSelect}
+                selectedTier={selectedTier}
               />
 
               {/* Divider */}
@@ -326,8 +409,11 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                       id="start-date"
                       type="date"
                       value={startDate}
-                      min={defaultDates.start}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      min={defaultDates.today}
+                      onChange={(e) => {
+                        setStartDate(e.target.value)
+                        setSelectedTier(null)
+                      }}
                       className="w-full rounded-xl border-border-light focus-visible:ring-brand-primary/20"
                     />
                   </div>
@@ -340,11 +426,34 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                       type="date"
                       value={endDate}
                       min={startDate}
-                      onChange={(e) => setEndDate(e.target.value)}
+                      onChange={(e) => {
+                        setEndDate(e.target.value)
+                        setSelectedTier(null)
+                      }}
                       className="w-full rounded-xl border-border-light focus-visible:ring-brand-primary/20"
                     />
                   </div>
                 </div>
+
+                {/* Availability status for selected dates */}
+                {availCheck === 'loading' && (
+                  <div className="flex items-center gap-2 rounded-lg bg-surface-light px-3 py-2 text-xs text-text-muted">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>جاري التحقق من التوفر...</span>
+                  </div>
+                )}
+                {availCheck === 'available' && (
+                  <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>المعدة متاحة في هذه الفترة</span>
+                  </div>
+                )}
+                {availCheck === 'unavailable' && (
+                  <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+                  </div>
+                )}
               </div>
 
               {/* Quantity */}
@@ -387,9 +496,13 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs text-text-muted">
-                    {t('equipment.forDays').replace('{days}', String(rentalDays))} ×{' '}
-                    {quantity > 1 ? `${quantity} ×` : ''} {equipment.dailyPrice.toLocaleString()}{' '}
-                    SAR
+                    {t('equipment.forDays').replace('{days}', String(rentalDays))}
+                    {selectedTier === 'week' && equipment.weeklyPrice
+                      ? ` × ${equipment.weeklyPrice.toLocaleString()} SAR/${t('equipment.week')}`
+                      : selectedTier === 'month' && equipment.monthlyPrice
+                        ? ` × ${equipment.monthlyPrice.toLocaleString()} SAR/${t('equipment.month')}`
+                        : ` × ${equipment.dailyPrice.toLocaleString()} SAR/${t('common.pricePerDay')}`}
+                    {quantity > 1 ? ` × ${quantity}` : ''}
                   </p>
                 </div>
               )}
@@ -483,6 +596,8 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
               dailyPrice={equipment.dailyPrice}
               weeklyPrice={equipment.weeklyPrice}
               monthlyPrice={equipment.monthlyPrice}
+              onTierSelect={handleTierSelect}
+              selectedTier={selectedTier}
             />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -493,8 +608,11 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                   id="mobile-start-date"
                   type="date"
                   value={startDate}
-                  min={defaultDates.start}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  min={defaultDates.today}
+                  onChange={(e) => {
+                    setStartDate(e.target.value)
+                    setSelectedTier(null)
+                  }}
                   className="h-12 w-full rounded-xl border-border-light text-base"
                 />
               </div>
@@ -507,11 +625,35 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                   type="date"
                   value={endDate}
                   min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(e) => {
+                    setEndDate(e.target.value)
+                    setSelectedTier(null)
+                  }}
                   className="h-12 w-full rounded-xl border-border-light text-base"
                 />
               </div>
             </div>
+
+            {/* Availability status for selected dates (mobile) */}
+            {availCheck === 'loading' && (
+              <div className="flex items-center gap-2 rounded-lg bg-surface-light px-3 py-2 text-xs text-text-muted">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>جاري التحقق من التوفر...</span>
+              </div>
+            )}
+            {availCheck === 'available' && (
+              <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>المعدة متاحة في هذه الفترة</span>
+              </div>
+            )}
+            {availCheck === 'unavailable' && (
+              <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                <AlertCircle className="h-3.5 w-3.5" />
+                <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+              </div>
+            )}
+
             {maxQty > 1 && (
               <div className="flex items-center gap-2">
                 <Label className="text-xs font-medium text-text-muted">{t('equipment.qty')}</Label>
