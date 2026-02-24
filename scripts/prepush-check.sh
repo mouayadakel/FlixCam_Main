@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
 # Pre-push safety check — run before git push to catch CI-breaking issues.
+# Portable: uses only POSIX grep/sed (works on macOS and Linux).
 # Usage:  npm run prepush   OR   bash scripts/prepush-check.sh
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -26,21 +27,30 @@ npm run lint || fail "lint failed"
 step "Running type-check..."
 npm run type-check || fail "type-check failed"
 
-# ── 4. Migration safety scan ─────────────────────────────────────────
+# ── 4. Migration safety scan (portable: no grep -P) ───────────────────
 step "Scanning migrations for unsafe SQL..."
 UNSAFE=0
 for f in prisma/migrations/*/migration.sql; do
-  # Look for DROP INDEX/COLUMN/TABLE without IF EXISTS (skip comments)
-  if grep -Pn '^\s*DROP\s+(INDEX|TABLE)\s+(?!IF)' "$f" 2>/dev/null | grep -v '^.*--' > /dev/null 2>&1; then
-    warn "Potentially unsafe DROP without IF EXISTS in: $f"
-    grep -Pn '^\s*DROP\s+(INDEX|TABLE)\s+(?!IF)' "$f" 2>/dev/null | grep -v '^.*--' || true
-    UNSAFE=1
-  fi
-  # Check for ALTER TABLE ... DROP COLUMN without defensive DO $$ block
-  if grep -Pn '^\s*ALTER\s+TABLE.*DROP\s+COLUMN' "$f" 2>/dev/null | grep -v 'IF EXISTS' | grep -v '^.*--' > /dev/null 2>&1; then
-    warn "ALTER TABLE DROP COLUMN without IF EXISTS guard in: $f"
-    UNSAFE=1
-  fi
+  [ -f "$f" ] || continue
+  # DROP INDEX or DROP TABLE without IF EXISTS (skip comment lines)
+  while IFS= read -r line; do
+    echo "$line" | grep -qE '^[[:space:]]*--' && continue
+    echo "$line" | grep -q 'IF EXISTS' && continue
+    if echo "$line" | grep -qE '^[[:space:]]*DROP[[:space:]]+(INDEX|TABLE)[[:space:]]+'; then
+      warn "Potentially unsafe DROP without IF EXISTS in: $f"
+      echo "  $line"
+      UNSAFE=1
+    fi
+  done < "$f"
+  # ALTER TABLE ... DROP COLUMN without IF EXISTS
+  while IFS= read -r line; do
+    echo "$line" | grep -qE '^[[:space:]]*--' && continue
+    echo "$line" | grep -q 'IF EXISTS' && continue
+    if echo "$line" | grep -qE '^[[:space:]]*ALTER[[:space:]]+TABLE.*DROP[[:space:]]+COLUMN'; then
+      warn "ALTER TABLE DROP COLUMN without IF EXISTS guard in: $f"
+      UNSAFE=1
+    fi
+  done < "$f"
 done
 
 if [ "$UNSAFE" -eq 1 ]; then

@@ -1,8 +1,0 @@
-node_modules
-.next
-out
-build
-dist
-*.lock
-.env
-.env*.local

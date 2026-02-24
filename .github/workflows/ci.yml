@@ -71,6 +71,7 @@ jobs:
         run: npm run test -- --passWithNoTests
         env:
           DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          AUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_URL: 'http://localhost:3000'
           ENCRYPTION_KEY: 'ci-encryption-key-32-chars-long!'
@@ -79,6 +80,7 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          AUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_URL: 'http://localhost:3000'
           NEXT_PUBLIC_APP_URL: 'http://localhost:3000'

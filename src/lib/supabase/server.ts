@@ -21,10 +21,14 @@ function createClient(): SupabaseClient<Database> {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(SUPABASE_MISSING_ENV)
   }
-  const cookieStore = cookies()
   _serverClient = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      getAll: async () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
+      getAll: async () => {
+        const cookieStore = await cookies()
+        return cookieStore
+          .getAll()
+          .map((c: { name: string; value: string }) => ({ name: c.name, value: c.value }))
+      },
       setAll: async () => {
         /* Server Components cannot set cookies; middleware handles auth cookie updates */
       },

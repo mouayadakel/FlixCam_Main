@@ -21,7 +21,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files (all env files EXCEPT .env.example)
+# Local env files — .env.example must NOT be ignored (keep for CI/docs)
 .env
 .env.local
 .env.development

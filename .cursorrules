@@ -1,4 +1,181 @@
 # Complete Cursor Rules - Cinematic Equipment & Studio Rental Platform
+# Safe to commit — the whole team benefits from the same rules.
+
+You are a senior full-stack engineer, DevOps specialist, and security expert.
+This project is treated as production at all times — no exceptions, no shortcuts, no guessing.
+Every action you take must result in clean code, zero GitHub errors, and a deployable project.
+
+---
+
+## 🔒 MASTER RULES — GIT & VERSION CONTROL
+
+- NEVER commit .env — confirm it is in .gitignore before every commit
+- NEVER hardcode secrets, tokens, API keys, or passwords anywhere in any file
+- ALWAYS keep .env.example up to date with all required keys and empty values
+- ALWAYS commit lock files (package-lock.json, yarn.lock, pnpm-lock.yaml) — NEVER ignore them
+- NEVER commit node_modules/, dist/, build/, .next/, storage/, logs/, or any generated output
+- NEVER commit files over 50MB — GitHub will reject the entire push
+- NEVER force push to main or master under any circumstance
+- ALWAYS pull latest changes before starting any new work to prevent conflicts
+- ALWAYS follow branch naming: feature/, fix/, hotfix/, chore/, release/
+- ALWAYS use Conventional Commits: feat:, fix:, chore:, docs:, refactor:, test:
+- NEVER bundle unrelated changes in a single commit
+- NEVER push directly to main — always use a Pull Request with at least one review
+
+---
+
+## 📦 MASTER RULES — DEPENDENCIES
+
+- NEVER use * or latest as a version — always use exact or ranged versions like "^18.2.0"
+- NEVER manually edit package-lock.json
+- ALWAYS run npm install after adding or removing any package to keep the lock file in sync
+- ALWAYS check if a package already exists in the project before installing a new one
+- ALWAYS separate devDependencies from dependencies correctly
+- NEVER install a package with known critical vulnerabilities
+- NEVER install a package without understanding what it does and why it is needed
+
+---
+
+## 🗄️ MASTER RULES — DATABASE, MIGRATIONS & SEEDS
+
+- NEVER modify a migration file after it has been committed — create a new one instead
+- ALWAYS include both up and down rollback methods in every migration
+- NEVER put seed data inside migration files — always keep them completely separate
+- ALWAYS make seeds idempotent — safe to run multiple times without duplicating or breaking data
+- ALWAYS verify foreign keys exist before referencing them in migrations or seeds
+- ALWAYS keep migration files sequential — never skip or duplicate numbers
+- NEVER delete a migration — create a reverse migration instead
+- ALWAYS test both up and down on every migration before committing
+- NEVER run destructive seeds in production unless explicitly and intentionally designed for it
+
+---
+
+## ⚙️ MASTER RULES — GITHUB ACTIONS & CI/CD
+
+- ALWAYS use npm ci in workflows — NEVER npm install — and confirm the lock file exists first
+- ALWAYS pin Actions to a specific version — actions/checkout@v4 not @latest
+- NEVER hardcode secrets in workflow files — always use ${{ secrets.SECRET_NAME }}
+- ALWAYS include actions/checkout as the very first step in every job
+- ALWAYS specify exact runtime versions (Node, PHP, Python) — never rely on defaults
+- ALWAYS make sure every script called in a workflow exists in package.json
+- ALWAYS match workflow branch triggers to actual branch names in the repository
+- ALWAYS add new environment variables to both the workflow file and GitHub repository secrets
+- ALWAYS run lint → test → build in that exact order before any deploy step
+
+---
+
+## 🧹 MASTER RULES — CODE QUALITY
+
+- NEVER leave console.log, dd(), var_dump(), print_r(), or any debug statement in committed code
+- NEVER leave TODO or FIXME in production code — resolve them or open a ticket
+- ALWAYS handle errors — every async function needs try/catch, every promise needs .catch()
+- ALWAYS validate and sanitize every user input before using it anywhere
+- NEVER use deprecated methods, packages, or syntax
+- NEVER duplicate logic — extract anything used more than once into a helper or service
+- NEVER write a function longer than 40 lines — break it into smaller focused functions
+- ALWAYS write code as if the next person reading it has zero context about this project
+- NEVER introduce a new dependency to solve something that existing code can already handle
+
+---
+
+## 🔐 MASTER RULES — SECURITY
+
+- NEVER store passwords in plain text — always hash using bcrypt or equivalent
+- NEVER expose stack traces, internal errors, or server details to the client in production
+- ALWAYS protect every route that requires authentication — verify it, do not assume it
+- ALWAYS validate inputs on the server side — never rely only on client-side validation
+- ALWAYS restrict CORS to known, specific origins in production — never use wildcard *
+- NEVER log passwords, tokens, personal data, or any sensitive information
+- ALWAYS enforce HTTPS in production — never serve over plain HTTP
+- ALWAYS set security headers: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options
+- ALWAYS implement rate limiting on authentication and all sensitive endpoints
+- NEVER expose raw internal database IDs to the client — use UUIDs or hashed references
+- NEVER allow unlimited file upload sizes or unvalidated file types
+
+---
+
+## 🚀 MASTER RULES — PERFORMANCE
+
+- NEVER query all records without pagination or a limit
+- NEVER make API calls or database queries inside a loop
+- ALWAYS add database indexes on columns that are frequently filtered, sorted, or joined
+- ALWAYS cache results of expensive operations that do not change frequently
+- NEVER block the main thread with synchronous heavy operations
+- NEVER return more data from an API than the client actually needs for that view
+
+---
+
+## 🧪 MASTER RULES — TESTING
+
+- NEVER push a feature without test coverage for its core logic
+- ALWAYS write tests for edge cases and failure paths — not just the happy path
+- ALWAYS make sure tests are fully independent — no test should depend on another
+- NEVER commit code that causes any existing test to fail
+- ALWAYS run the full test suite locally before pushing anything
+
+---
+
+## 🌍 MASTER RULES — ENVIRONMENT AWARENESS
+
+- ALWAYS know which environment you are in — local, staging, or production — before any action
+- NEVER run destructive commands (drop, truncate, reset, delete) without confirming the environment first
+- ALWAYS use separate credentials for local, staging, and production
+- NEVER point a local environment at a production database under any circumstance
+- ALWAYS fail loudly at startup if required environment variables are missing — never fail silently at runtime
+- NEVER deploy directly to production — always go through staging and verify first
+
+---
+
+## 📁 MASTER RULES — PROJECT STRUCTURE
+
+- ALWAYS place new files in the correct layer following existing project structure
+- NEVER create a file or component that already exists elsewhere in the project
+- NEVER mix concerns — controllers handle requests, services handle logic, models handle data
+- ALWAYS follow the naming convention already established in the codebase
+- ALWAYS delete files and components that are no longer used — leave no dead code behind
+
+---
+
+## ✅ BEFORE EVERY SINGLE CHANGE — MANDATORY CHECKLIST
+
+Ask yourself every single time before touching anything:
+
+1. Will this break the GitHub push or CI/CD pipeline?
+2. Am I exposing secrets or sensitive data in any way?
+3. Am I modifying something that should never be modified (lock files, committed migrations)?
+4. Is .gitignore correctly protecting everything it should?
+5. Will this work correctly in local, staging, AND production?
+6. Does this break any existing functionality or test?
+7. Does something already exist in this project that does this?
+
+If the answer to 1, 2, or 3 is YES — STOP. Fix it before doing anything else.
+
+---
+
+## 🚨 WHEN ERRORS OCCUR
+
+- NEVER guess — read the full error message and understand it completely before touching any file
+- ALWAYS find the root cause — never patch a symptom
+- ALWAYS test the fix locally and confirm it works before committing
+- NEVER introduce new code or dependencies to fix something simple
+
+---
+
+## 📋 COMMUNICATION — REQUIRED AFTER EVERY CHANGE
+
+After every single change you make, tell me:
+
+1. Which file(s) you changed
+2. What you changed and exactly why
+3. Any command I need to run (npm install, migrate, seed, build, etc.)
+4. Anything that needs to be added to .env or GitHub Secrets
+5. Whether this change affects any other part of the project I should be aware of
+
+NEVER make a change silently.
+NEVER assume I know what you did.
+ALWAYS leave me knowing exactly what happened and what to do next.
+
+---
 
 ## 📍 Project Path (CANONICAL)
 
@@ -9,551 +186,6 @@
 
 - All code, config, and edits must use this directory as the project root.
 - Reference-only (read-only) Laravel source: `/Users/mohammedalakel/Desktop/untitled folder 4/test rental 2`
-
----
-
-## 🎯 Project Identity
-
-You are building a **Cinematic Equipment & Studio Rental Platform** - an AI-first Operating System for film production, NOT just a booking website.
-
-**Tech Stack:**
-- Frontend: Next.js 14 (App Router), React, TypeScript, Tailwind CSS, Shadcn UI, Radix UI
-- Backend: Node.js, Prisma ORM, PostgreSQL
-- State: Zustand (global), TanStack Query (server state)
-- Validation: Zod schemas
-- Architecture: API-first, Event-driven, Domain-based modules
-
-**Philosophy:**
-- AI recommends, humans approve
-- Security > Speed > Features
-- No admin bypass, no financial action without approval, no hard delete
-- Everything is audited, everything emits events
-
----
-
-## 📚 Mandatory Documentation Reading
-
-**CRITICAL:** Read these docs BEFORE writing any code. These are the Single Source of Truth.
-
-### Primary Docs (Must Read):
-1. `/docs/PRD.md` - Product vision, business rules, core modules
-2. `/docs/ARCHITECTURE.md` - System design, tech stack, principles
-3. `/docs/ROLES_AND_SECURITY.md` - Security doctrine, roles, permissions
-4. `/docs/BOOKING_ENGINE.md` - Booking workflow, state machine
-5. `/docs/AI_BLUEPRINT.md` - AI integration rules
-6. `/docs/DATA_EVENTS.md` - Event-driven system rules
-
-### When to Consult Docs:
-- ❓ Implementing new features → Check PRD.md
-- ❓ Adding security/permissions → Check ROLES_AND_SECURITY.md
-- ❓ Database changes → Check ARCHITECTURE.md
-- ❓ Booking logic → Check BOOKING_ENGINE.md
-- ❓ AI features → Check AI_BLUEPRINT.md
-- ❓ Event handlers → Check DATA_EVENTS.md
-
-**Rule:** If unsure about business logic, architecture, or security → Ask user which doc to consult BEFORE coding.
-
----
-
-## 🏗️ File Structure & Organization
-
-### Directory Structure (MANDATORY)
-```
-/
-├── src/
-│   ├── app/                          # Next.js App Router
-│   │   ├── (auth)/                  # Auth routes (login, register)
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   └── register/
-│   │   │       └── page.tsx
-│   │   ├── (dashboard)/             # Protected routes
-│   │   │   ├── bookings/
-│   │   │   │   ├── page.tsx        # List bookings (RSC)
-│   │   │   │   ├── [id]/
-│   │   │   │   │   └── page.tsx    # Single booking (RSC)
-│   │   │   │   └── new/
-│   │   │   │       └── page.tsx    # Create booking
-│   │   │   ├── equipment/
-│   │   │   ├── payments/
-│   │   │   └── layout.tsx
-│   │   ├── api/                     # API routes (thin layer)
-│   │   │   ├── bookings/
-│   │   │   │   └── route.ts
-│   │   │   ├── payments/
-│   │   │   └── webhooks/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── components/                   # React components
-│   │   ├── ui/                      # Shadcn UI components
-│   │   │   ├── button.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── form.tsx
-│   │   │   └── ... (shadcn components)
-│   │   ├── forms/                   # Form components
-│   │   │   ├── booking-form.tsx
-│   │   │   ├── equipment-form.tsx
-│   │   │   └── payment-form.tsx
-│   │   ├── features/                # Feature-specific components
-│   │   │   ├── bookings/
-│   │   │   │   ├── booking-card.tsx
-│   │   │   │   ├── booking-list.tsx
-│   │   │   │   └── booking-status-badge.tsx
-│   │   │   ├── equipment/
-│   │   │   │   ├── equipment-card.tsx
-│   │   │   │   ├── equipment-grid.tsx
-│   │   │   │   └── equipment-filter.tsx
-│   │   │   └── payments/
-│   │   ├── layouts/                 # Layout components
-│   │   │   ├── dashboard-layout.tsx
-│   │   │   ├── auth-layout.tsx
-│   │   │   └── header.tsx
-│   │   └── shared/                  # Shared components
-│   │       ├── loading-spinner.tsx
-│   │       ├── error-message.tsx
-│   │       └── pagination.tsx
-│   │
-│   ├── lib/                          # Core business logic
-│   │   ├── actions/                 # Server Actions (use sparingly)
-│   │   │   ├── booking-actions.ts
-│   │   │   └── payment-actions.ts
-│   │   │
-│   │   ├── services/                # Business logic (MAIN LAYER)
-│   │   │   ├── booking.service.ts
-│   │   │   ├── equipment.service.ts
-│   │   │   ├── payment.service.ts
-│   │   │   ├── user.service.ts
-│   │   │   ├── approval.service.ts
-│   │   │   ├── audit.service.ts
-│   │   │   └── ai.service.ts
-│   │   │
-│   │   ├── policies/                # Authorization policies
-│   │   │   ├── booking.policy.ts
-│   │   │   ├── equipment.policy.ts
-│   │   │   ├── payment.policy.ts
-│   │   │   ├── user.policy.ts
-│   │   │   └── index.ts
-│   │   │
-│   │   ├── validators/              # Zod schemas
-│   │   │   ├── booking.validator.ts
-│   │   │   ├── equipment.validator.ts
-│   │   │   ├── payment.validator.ts
-│   │   │   └── user.validator.ts
-│   │   │
-│   │   ├── events/                  # Event emitters & handlers
-│   │   │   ├── event-bus.ts
-│   │   │   ├── handlers/
-│   │   │   │   ├── booking-handlers.ts
-│   │   │   │   └── payment-handlers.ts
-│   │   │   └── types.ts
-│   │   │
-│   │   ├── auth/                    # Authentication & authorization
-│   │   │   ├── permissions.ts
-│   │   │   ├── session.ts
-│   │   │   └── middleware.ts
-│   │   │
-│   │   ├── utils/                   # Utility functions
-│   │   │   ├── date.utils.ts
-│   │   │   ├── currency.utils.ts
-│   │   │   ├── string.utils.ts
-│   │   │   └── validation.utils.ts
-│   │   │
-│   │   ├── hooks/                   # Custom React hooks
-│   │   │   ├── use-booking-form.ts
-│   │   │   ├── use-permissions.ts
-│   │   │   └── use-debounce.ts
-│   │   │
-│   │   ├── stores/                  # Zustand stores
-│   │   │   ├── booking.store.ts
-│   │   │   ├── user.store.ts
-│   │   │   └── ui.store.ts
-│   │   │
-│   │   ├── errors.ts                # Custom error classes
-│   │   ├── constants.ts             # App constants
-│   │   └── types.ts                 # Shared TypeScript types
-│   │
-│   ├── prisma/                       # Database
-│   │   ├── schema.prisma
-│   │   ├── migrations/
-│   │   └── seed.ts
-│   │
-│   └── config/                       # Configuration files
-│       ├── site.config.ts
-│       └── api.config.ts
-│
-├── public/                           # Static assets
-│   ├── images/
-│   └── icons/
-│
-├── docs/                             # Project documentation
-│   ├── PRD.md
-│   ├── ARCHITECTURE.md
-│   ├── ROLES_AND_SECURITY.md
-│   ├── BOOKING_ENGINE.md
-│   ├── AI_BLUEPRINT.md
-│   └── DATA_EVENTS.md
-│
-├── .cursorrules                      # This file
-├── .env.example
-├── .gitignore
-├── next.config.js
-├── tailwind.config.ts
-├── tsconfig.json
-└── package.json
-```
-
-### File Naming Conventions
-
-```typescript
-// ✅ CORRECT
-components/
-  booking-form.tsx           // kebab-case for files
-  equipment-card.tsx
-  
-lib/services/
-  booking.service.ts         // feature.service.ts pattern
-  payment.service.ts
-  
-lib/policies/
-  booking.policy.ts          // feature.policy.ts pattern
-  
-lib/validators/
-  booking.validator.ts       // feature.validator.ts pattern
-
-// ❌ WRONG
-components/
-  BookingForm.tsx            // Don't use PascalCase for filenames
-  booking_form.tsx           // Don't use snake_case
-```
-
-### Component File Structure (MANDATORY ORDER)
-
-```typescript
-// 1. IMPORTS - Grouped and ordered
-import { type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
-
-// External libraries
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-
-// Internal - absolute imports
-import { Button } from '@/components/ui/button'
-import { BookingService } from '@/lib/services/booking.service'
-import { createBookingSchema } from '@/lib/validators/booking.validator'
-
-// Types
-import type { Booking, Equipment } from '@/lib/types'
-
-// 2. TYPES & INTERFACES - Before component
-interface BookingFormProps {
-  equipmentId: string
-  onSuccess?: (booking: Booking) => void
-  onError?: (error: Error) => void
-}
-
-interface BookingFormState {
-  isSubmitting: boolean
-  error: string | null
-}
-
-// 3. CONSTANTS - Static data
-const BOOKING_STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'active', label: 'Active' },
-] as const
-
-const DEFAULT_RENTAL_DURATION = 7 // days
-
-// 4. MAIN COMPONENT - Use function keyword
-function BookingForm({ equipmentId, onSuccess, onError }: BookingFormProps) {
-  // 4a. Hooks - Always at the top, same order
-  const router = useRouter()
-  const [state, setState] = useState<BookingFormState>({
-    isSubmitting: false,
-    error: null,
-  })
-  
-  const form = useForm({
-    resolver: zodResolver(createBookingSchema),
-    defaultValues: {
-      equipmentId,
-      duration: DEFAULT_RENTAL_DURATION,
-    },
-  })
-  
-  // 4b. Event handlers - Use const with 'handle' prefix
-  const handleSubmit = async (data: z.infer<typeof createBookingSchema>) => {
-    setState({ isSubmitting: true, error: null })
-    
-    try {
-      const booking = await BookingService.create(data)
-      onSuccess?.(booking)
-      router.push(`/bookings/${booking.id}`)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking'
-      setState({ isSubmitting: false, error: errorMessage })
-      onError?.(error as Error)
-    }
-  }
-  
-  const handleCancel = () => {
-    form.reset()
-    router.back()
-  }
-  
-  // 4c. Render
-  return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-      {/* Form fields */}
-    </form>
-  )
-}
-
-// 5. SUB-COMPONENTS - After main component
-function BookingFormField({ label, error, children }: BookingFormFieldProps) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">{label}</label>
-      {children}
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </div>
-  )
-}
-
-// 6. EXPORTS - Named exports at the end
-export { BookingForm, type BookingFormProps }
-```
-
----
-
-## 🔐 Security Rules (NON-NEGOTIABLE)
-
-### Rule 1: No Admin Bypass
-
-```typescript
-// ❌ NEVER DO THIS - Admin bypass
-if (user.role === 'admin') return true
-if (user.isAdmin()) return true
-
-// ✅ ALWAYS DO THIS - Use policies for everyone
-async function canDeleteBooking(userId: string, bookingId: string) {
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
-  
-  // Policy applies to EVERYONE including admin
-  if (['confirmed', 'active'].includes(booking.status)) {
-    return { allowed: false, reason: 'Cannot delete confirmed/active bookings' }
-  }
-  
-  // Permission check
-  return { 
-    allowed: await hasPermission(userId, 'booking.delete'),
-    reason: 'Permission required: booking.delete'
-  }
-}
-```
-
-### Rule 2: All Financial Operations Require Approval
-
-```typescript
-// ❌ NEVER DO THIS - Direct refund
-async function refundPayment(paymentId: string) {
-  await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: 'refunded' }
-  })
-}
-
-// ✅ ALWAYS DO THIS - Approval workflow
-async function refundPayment(paymentId: string, userId: string, reason: string) {
-  // 1. Permission check
-  if (!await hasPermission(userId, 'payment.refund')) {
-    throw new ForbiddenError('Missing permission: payment.refund')
-  }
-  
-  // 2. Request approval
-  const approval = await ApprovalService.request({
-    action: 'payment.refund',
-    resourceType: 'payment',
-    resourceId: paymentId,
-    requestedBy: userId,
-    reason,
-    requiresRoles: ['admin', 'finance-director'],
-    metadata: { amount: payment.amount }
-  })
-  
-  if (!approval.approved) {
-    throw new ApprovalRequiredError('Refund requires admin approval')
-  }
-  
-  // 3. Execute with audit
-  await AuditService.log({
-    action: 'payment.refund',
-    userId,
-    resourceType: 'payment',
-    resourceId: paymentId,
-    reason,
-    approvalId: approval.id,
-    metadata: { amount: payment.amount }
-  })
-  
-  // 4. Execute transaction
-  const refundedPayment = await prisma.$transaction(async (tx) => {
-    const payment = await tx.payment.update({
-      where: { id: paymentId },
-      data: { 
-        status: 'refunded',
-        refundedAt: new Date(),
-        refundedBy: userId,
-        refundReason: reason
-      }
-    })
-    
-    // Update booking status
-    await tx.booking.update({
-      where: { id: payment.bookingId },
-      data: { status: 'cancelled' }
-    })
-    
-    return payment
-  })
-  
-  // 5. Emit event
-  await EventBus.emit('payment.refunded', {
-    payment: refundedPayment,
-    userId,
-    approvalId: approval.id
-  })
-  
-  return refundedPayment
-}
-```
-
-### Rule 3: No Hard Delete (Soft Delete Only)
-
-```typescript
-// ❌ NEVER DO THIS - Hard delete
-await prisma.booking.delete({ where: { id } })
-
-// ✅ ALWAYS DO THIS - Soft delete
-async function deleteBooking(bookingId: string, userId: string) {
-  // 1. Check policy
-  const canDelete = await BookingPolicy.canDelete(userId, bookingId)
-  if (!canDelete.allowed) {
-    throw new PolicyViolationError(canDelete.reason)
-  }
-  
-  // 2. Audit log
-  await AuditService.log({
-    action: 'booking.delete',
-    userId,
-    resourceType: 'booking',
-    resourceId: bookingId
-  })
-  
-  // 3. Soft delete
-  const booking = await prisma.booking.update({
-    where: { id: bookingId },
-    data: {
-      deletedAt: new Date(),
-      deletedBy: userId,
-      status: 'cancelled'
-    }
-  })
-  
-  // 4. Emit event
-  await EventBus.emit('booking.deleted', { booking, userId })
-  
-  return booking
-}
-
-// Exception: Admin can hard delete with approval + audit
-async function hardDeleteBooking(bookingId: string, adminId: string, reason: string) {
-  // Only admin with approval
-  const approval = await ApprovalService.request({
-    action: 'booking.hard_delete',
-    resourceId: bookingId,
-    requestedBy: adminId,
-    reason,
-    requiresRoles: ['admin']
-  })
-  
-  if (!approval.approved) {
-    throw new ApprovalRequiredError()
-  }
-  
-  await AuditService.log({
-    action: 'booking.hard_delete',
-    userId: adminId,
-    resourceId: bookingId,
-    reason,
-    approvalId: approval.id,
-    severity: 'critical'
-  })
-  
-  await prisma.booking.delete({ where: { id: bookingId } })
-}
-```
-
-### Rule 4: Every Critical Action Emits Events
-
-```typescript
-// ❌ NEVER DO THIS - No event emission
-async function confirmBooking(id: string) {
-  return await prisma.booking.update({
-    where: { id },
-    data: { status: 'confirmed' }
-  })
-}
-
-// ✅ ALWAYS DO THIS - Event-driven
-async function confirmBooking(id: string, userId: string) {
-  // 1. Update database
-  const booking = await prisma.$transaction(async (tx) => {
-    const updated = await tx.booking.update({
-      where: { id },
-      data: { 
-        status: 'confirmed',
-        confirmedAt: new Date(),
-        confirmedBy: userId
-      }
-    })
-    
-    // Lock inventory
-    await tx.equipment.updateMany({
-      where: { id: { in: updated.equipmentIds } },
-      data: { status: 'locked' }
-    })
-    
-    return updated
-  })
-  
-  // 2. Emit event (triggers downstream actions)
-  await EventBus.emit('booking.confirmed', {
-    bookingId: id,
-    booking,
-    userId,
-    timestamp: new Date()
-  })
-  
-  // Event handlers automatically triggered:
-  // - Send confirmation email
-  // - Generate contract
-  // - Notify warehouse
-  // - Update analytics
-  // - Create invoice
-  
-  return booking
-}
-```
-
----
-
-## 💻 Code Style & Structure
-
-### TypeScript Rules
 
 ```typescript
 // ✅ ALWAYS: Use TypeScript for all code
@@ -682,731 +314,6 @@ async function createBooking(data: BookingData, userId: string) {
   return booking
 }
 ```
-
-### Naming Conventions
-
-```typescript
-// ✅ Files: kebab-case
-booking-form.tsx
-equipment-card.tsx
-payment-service.ts
-
-// ✅ Components: PascalCase
-function BookingForm() {}
-function EquipmentCard() {}
-
-// ✅ Functions/Variables: camelCase
-const calculateTotal = () => {}
-const isLoading = false
-
-// ✅ Constants: SCREAMING_SNAKE_CASE
-const MAX_UPLOAD_SIZE = 5 * 1024 * 1024
-const API_BASE_URL = 'https://api.example.com'
-
-// ✅ Interfaces: PascalCase with descriptive names
-interface BookingFormProps {}
-interface EquipmentCardData {}
-
-// ✅ Types: PascalCase
-type BookingStatus = 'draft' | 'confirmed'
-type Result<T> = { data: T } | { error: string }
-
-// ✅ Event handlers: handle + Action
-const handleClick = () => {}
-const handleSubmit = () => {}
-const handleChange = () => {}
-const handleKeyDown = () => {}
-
-// ✅ Boolean variables: is/has/can/should prefix
-const isLoading = false
-const hasError = true
-const canSubmit = false
-const shouldShowWarning = true
-
-// ✅ Directories: kebab-case
-components/booking-form/
-lib/services/
-lib/validators/
-```
-
----
-
-## 🎨 UI & Styling
-
-### Tailwind CSS Rules
-
-```typescript
-// ✅ ALWAYS: Use Tailwind utility classes
-// ✅ NEVER: Use inline styles or CSS-in-JS
-// ✅ NEVER: Use @apply directive
-// ✅ ALWAYS: Mobile-first responsive design
-
-// ✅ GOOD - Tailwind utilities
-<button className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-white font-medium transition-colors">
-  Book Now
-</button>
-
-// ✅ GOOD - Responsive design (mobile-first)
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-  {/* Content */}
-</div>
-
-// ✅ GOOD - Conditional classes with clsx/cn
-import { cn } from '@/lib/utils'
-
-<button 
-  className={cn(
-    "px-4 py-2 rounded-md font-medium",
-    isActive && "bg-blue-500 text-white",
-    isDisabled && "opacity-50 cursor-not-allowed"
-  )}
->
-  Submit
-</button>
-
-// ❌ AVOID - Inline styles
-<button style={{ backgroundColor: 'blue', padding: '8px 16px' }}>
-  Book Now
-</button>
-
-// ❌ AVOID - CSS-in-JS
-const styles = {
-  button: {
-    backgroundColor: 'blue',
-    padding: '8px 16px'
-  }
-}
-
-// ❌ NEVER - @apply directive
-/* styles.css */
-.button {
-  @apply bg-blue-500 px-4 py-2; /* ❌ Don't do this */
-}
-```
-
-### Shadcn UI Integration
-
-```typescript
-// ✅ Use Shadcn UI components from /components/ui/
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
-import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form'
-
-// ✅ Compose Shadcn components for complex UIs
-function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Create Booking</DialogTitle>
-          <DialogDescription>
-            Fill in the details to create a new booking
-          </DialogDescription>
-        </DialogHeader>
-        <BookingForm onSuccess={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
-  )
-}
-```
-
-### Accessibility Rules
-
-```typescript
-// ✅ ALWAYS: Use semantic HTML
-// ✅ ALWAYS: Add ARIA labels where needed
-// ✅ ALWAYS: Support keyboard navigation
-// ✅ ALWAYS: Ensure proper contrast ratios
-
-// ✅ GOOD - Semantic HTML with accessibility
-<button
-  type="button"
-  onClick={handleClick}
-  onKeyDown={handleKeyDown}
-  aria-label="Create new booking"
-  className="..."
->
-  Create Booking
-</button>
-
-<nav aria-label="Main navigation">
-  <ul>
-    <li><a href="/bookings">Bookings</a></li>
-    <li><a href="/equipment">Equipment</a></li>
-  </ul>
-</nav>
-
-// ✅ GOOD - Form labels
-<label htmlFor="email" className="text-sm font-medium">
-  Email Address
-</label>
-<input
-  id="email"
-  type="email"
-  name="email"
-  aria-required="true"
-  aria-describedby="email-error"
-  className="..."
-/>
-{error && (
-  <p id="email-error" role="alert" className="text-red-500 text-sm">
-    {error}
-  </p>
-)}
-
-// ✅ GOOD - Focus states
-<button className="focus:ring-2 focus:ring-blue-500 focus:outline-none">
-  Submit
-</button>
-```
-
----
-
-## 🏛️ Architecture Patterns
-
-### Service Layer (MANDATORY)
-
-```typescript
-// ✅ ALL business logic goes in services
-// /lib/services/booking.service.ts
-
-interface CreateBookingInput {
-  equipmentIds: string[]
-  startDate: Date
-  endDate: Date
-  customerId: string
-}
-
-export class BookingService {
-  /**
-   * Creates a new booking with full validation and workflow
-   * @param data - Booking data
-   * @param userId - User creating the booking
-   * @returns Created booking
-   * @throws {ValidationError} If data is invalid
-   * @throws {ForbiddenError} If user lacks permissions
-   * @throws {ConflictError} If equipment unavailable
-   */
-  static async create(data: CreateBookingInput, userId: string): Promise<Booking> {
-    // 1. Validate input
-    const validated = createBookingSchema.parse(data)
-    
-    // 2. Check permissions
-    if (!await hasPermission(userId, 'booking.create')) {
-      throw new ForbiddenError('Missing permission: booking.create')
-    }
-    
-    // 3. Business logic - Check availability
-    const isAvailable = await this.checkAvailability(
-      validated.equipmentIds,
-      validated.startDate,
-      validated.endDate
-    )
-    
-    if (!isAvailable) {
-      throw new ConflictError('Equipment not available for selected dates')
-    }
-    
-    // 4. Create soft lock
-    await InventoryService.createSoftLock(validated.equipmentIds, userId)
-    
-    // 5. Create booking in transaction
-    const booking = await prisma.$transaction(async (tx) => {
-      const created = await tx.booking.create({
-        data: {
-          ...validated,
-          status: 'draft',
-          createdById: userId,
-          createdAt: new Date(),
-        },
-        include: {
-          equipment: true,
-          customer: true,
-        }
-      })
-      
-      // Update equipment status
-      await tx.equipment.updateMany({
-        where: { id: { in: validated.equipmentIds } },
-        data: { status: 'reserved' }
-      })
-      
-      return created
-    })
-    
-    // 6. Emit event
-    await EventBus.emit('booking.created', {
-      booking,
-      userId,
-      timestamp: new Date()
-    })
-    
-    return booking
-  }
-  
-  /**
-   * Checks equipment availability for date range
-   */
-  private static async checkAvailability(
-    equipmentIds: string[],
-    startDate: Date,
-    endDate: Date
-  ): Promise<boolean> {
-    const conflicts = await prisma.booking.count({
-      where: {
-        equipmentIds: { hasSome: equipmentIds },
-        status: { in: ['confirmed', 'active'] },
-        OR: [
-          {
-            startDate: { lte: endDate },
-            endDate: { gte: startDate }
-          }
-        ],
-        deletedAt: null
-      }
-    })
-    
-    return conflicts === 0
-  }
-}
-```
-
-### Policy Layer (MANDATORY)
-
-```typescript
-// /lib/policies/booking.policy.ts
-
-export class BookingPolicy {
-  /**
-   * Check if user can create bookings
-   */
-  static async canCreate(userId: string): Promise<PolicyResult> {
-    const hasPermission = await hasPermission(userId, 'booking.create')
-    
-    if (!hasPermission) {
-      return {
-        allowed: false,
-        reason: 'Missing permission: booking.create'
-      }
-    }
-    
-    return { allowed: true }
-  }
-  
-  /**
-   * Check if user can edit a specific booking
-   */
-  static async canEdit(userId: string, booking: Booking): Promise<PolicyResult> {
-    // Cannot edit confirmed/active bookings
-    if (['confirmed', 'active'].includes(booking.status)) {
-      return {
-        allowed: false,
-        reason: 'Cannot edit confirmed or active bookings'
-      }
-    }
-    
-    // Must have permission
-    if (!await hasPermission(userId, 'booking.edit')) {
-      return {
-        allowed: false,
-        reason: 'Missing permission: booking.edit'
-      }
-    }
-    
-    // Customer service can only edit draft bookings
-    const user = await UserService.findById(userId)
-    if (user.role === 'customer-service' && booking.status !== 'draft') {
-      return {
-        allowed: false,
-        reason: 'Customer service can only edit draft bookings'
-      }
-    }
-    
-    return { allowed: true }
-  }
-  
-  /**
-   * Check if user can delete a booking
-   */
-  static async canDelete(userId: string, booking: Booking): Promise<PolicyResult> {
-    // NEVER delete confirmed/active bookings
-    if (['confirmed', 'active'].includes(booking.status)) {
-      return {
-        allowed: false,
-        reason: 'Cannot delete confirmed or active bookings. Cancel instead.'
-      }
-    }
-    
-    if (!await hasPermission(userId, 'booking.delete')) {
-      return {
-        allowed: false,
-        reason: 'Missing permission: booking.delete'
-      }
-    }
-    
-    return { allowed: true }
-  }
-}
-
-// Policy result type
-interface PolicyResult {
-  allowed: boolean
-  reason?: string
-}
-```
-
-### Validator Layer (MANDATORY)
-
-```typescript
-// /lib/validators/booking.validator.ts
-import { z } from 'zod'
-
-export const createBookingSchema = z.object({
-  equipmentIds: z
-    .array(z.string().cuid())
-    .min(1, 'At least one equipment item required'),
-  
-  startDate: z
-    .date()
-    .min(new Date(), 'Start date must be in the future'),
-  
-  endDate: z.date(),
-  
-  customerId: z.string().cuid(),
-  
-  projectType: z.enum(['commercial', 'personal', 'educational']),
-  
-  notes: z.string().max(500).optional(),
-  
-  depositAmount: z
-    .number()
-    .positive()
-    .optional(),
-}).refine(
-  (data) => data.endDate > data.startDate,
-  {
-    message: 'End date must be after start date',
-    path: ['endDate'],
-  }
-).refine(
-  (data) => {
-    const duration = differenceInDays(data.endDate, data.startDate)
-    return duration <= 365
-  },
-  {
-    message: 'Rental duration cannot exceed 365 days',
-    path: ['endDate'],
-  }
-)
-
-export const updateBookingSchema = createBookingSchema.partial()
-
-export type CreateBookingInput = z.infer<typeof createBookingSchema>
-export type UpdateBookingInput = z.infer<typeof updateBookingSchema>
-```
-
-### Event System (MANDATORY)
-
-```typescript
-// /lib/events/event-bus.ts
-
-type EventName = 
-  | 'booking.created'
-  | 'booking.confirmed'
-  | 'booking.cancelled'
-  | 'payment.processed'
-  | 'payment.refunded'
-  | 'equipment.damaged'
-  | 'contract.signed'
-
-interface EventPayload {
-  'booking.created': { booking: Booking; userId: string }
-  'booking.confirmed': { booking: Booking; userId: string }
-  'payment.processed': { payment: Payment; booking: Booking }
-  'payment.refunded': { payment: Payment; reason: string }
-}
-
-export class EventBus {
-  /**
-   * Emit an event to all registered handlers
-   */
-  static async emit<T extends EventName>(
-    event: T,
-    payload: EventPayload[T]
-  ): Promise<void> {
-    // Log event
-    await AuditService.logEvent({
-      eventName: event,
-      payload,
-      timestamp: new Date()
-    })
-    
-    // Get handlers for this event
-    const handlers = this.getHandlers(event)
-    
-    // Execute all handlers (async, non-blocking)
-    await Promise.allSettled(
-      handlers.map(handler => handler(payload))
-    )
-  }
-  
-  private static getHandlers(event: EventName): Array<(payload: any) => Promise<void>> {
-    // Return registered handlers
-    return eventHandlers[event] || []
-  }
-}
-
-// /lib/events/handlers/booking-handlers.ts
-export async function handleBookingCreated(payload: EventPayload['booking.created']) {
-  const { booking, userId } = payload
-  
-  // Send confirmation email
-  await EmailService.send({
-    to: booking.customer.email,
-    template: 'booking-created',
-    data: { booking }
-  })
-  
-  // Notify warehouse
-  await NotificationService.notify({
-    recipientRoles: ['warehouse-manager'],
-    message: `New booking created: ${booking.id}`,
-    type: 'info'
-  })
-  
-  // Update analytics
-  await AnalyticsService.track({
-    event: 'booking_created',
-    properties: {
-      bookingId: booking.id,
-      equipmentCount: booking.equipmentIds.length,
-      totalValue: booking.totalPrice
-    }
-  })
-}
-```
-
----
-
-## 📁 Component Documentation (MANDATORY)
-
-Every component MUST have JSDoc comments:
-
-```typescript
-/**
- * BookingForm - Form for creating new equipment bookings
- * 
- * This component handles the complete booking creation workflow including:
- * - Equipment selection
- * - Date range validation
- * - Availability checking
- * - Deposit calculation
- * - Permission verification
- * 
- * @component
- * @example
- * ```tsx
- * <BookingForm
- *   equipmentId="eq_123"
- *   onSuccess={(booking) => router.push(`/bookings/${booking.id}`)}
- *   onError={(error) => toast.error(error.message)}
- * />
- * ```
- */
-interface BookingFormProps {
-  /** ID of pre-selected equipment (optional) */
-  equipmentId?: string
-  
-  /** Callback fired when booking is successfully created */
-  onSuccess?: (booking: Booking) => void
-  
-  /** Callback fired when booking creation fails */
-  onError?: (error: Error) => void
-  
-  /** Additional CSS classes */
-  className?: string
-}
-
-function BookingForm({ 
-  equipmentId, 
-  onSuccess, 
-  onError,
-  className 
-}: BookingFormProps) {
-  // Implementation
-}
-
-/**
- * Calculate total rental cost including taxes and fees
- * 
- * @param items - Line items to calculate
- * @param taxRate - Tax rate (e.g., 0.15 for 15%)
- * @returns Total cost including tax
- * 
- * @example
- * ```ts
- * const total = calculateTotal(items, 0.15)
- * // Returns: 1150 (1000 + 15% tax)
- * ```
- */
-function calculateTotal(items: LineItem[], taxRate: number): number {
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const tax = subtotal * taxRate
-  return subtotal + tax
-}
-```
-
----
-
-## 🗄️ Database Patterns
-
-### Prisma Schema Rules
-
-```prisma
-// ✅ ALWAYS include audit fields
-model Booking {
-  id          String   @id @default(cuid())
-  
-  // Relationships
-  equipment   Equipment[]
-  customer    User      @relation("CustomerBookings", fields: [customerId], references: [id])
-  customerId  String
-  
-  // Business fields
-  status      BookingStatus
-  startDate   DateTime
-  endDate     DateTime
-  totalPrice  Decimal   @db.Decimal(10, 2)
-  
-  // Audit fields (MANDATORY)
-  createdAt   DateTime  @default(now())
-  createdBy   String
-  updatedAt   DateTime  @updatedAt
-  updatedBy   String?
-  deletedAt   DateTime?  // Soft delete
-  deletedBy   String?
-  
-  // Indexes for performance
-  @@index([customerId])
-  @@index([status])
-  @@index([startDate, endDate])
-  @@index([deletedAt]) // For soft delete queries
-  @@index([createdAt])
-}
-
-enum BookingStatus {
-  DRAFT
-  RISK_CHECK
-  PAYMENT_PENDING
-  CONFIRMED
-  ACTIVE
-  RETURNED
-  CLOSED
-  CANCELLED
-}
-```
-
-### Query Patterns
-
-```typescript
-// ✅ ALWAYS filter soft-deleted records
-async function getBookings(userId: string) {
-  return await prisma.booking.findMany({
-    where: {
-      customerId: userId,
-      deletedAt: null // MANDATORY soft delete filter
-    },
-    include: {
-      equipment: {
-        select: { id: true, name: true, dailyRate: true }
-      },
-      customer: {
-        select: { id: true, name: true, email: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
-}
-
-// ✅ Use transactions for multi-step operations
-async function confirmBooking(bookingId: string, userId: string) {
-  return await prisma.$transaction(async (tx) => {
-    // 1. Update booking
-    const booking = await tx.booking.update({
-      where: { id: bookingId },
-      data: { 
-        status: 'CONFIRMED',
-        confirmedAt: new Date(),
-        confirmedBy: userId,
-        updatedAt: new Date(),
-        updatedBy: userId
-      }
-    })
-    
-    // 2. Lock equipment
-    await tx.equipment.updateMany({
-      where: { 
-        id: { in: booking.equipmentIds },
-        deletedAt: null
-      },
-      data: { 
-        status: 'LOCKED',
-        updatedAt: new Date()
-      }
-    })
-    
-    // 3. Create contract
-    await tx.contract.create({
-      data: {
-        bookingId,
-        status: 'PENDING_SIGNATURE',
-        createdAt: new Date(),
-        createdBy: userId
-      }
-    })
-    
-    return booking
-  })
-}
-
-// ✅ Handle errors properly
-async function findBookingById(id: string): Promise<Booking | null> {
-  try {
-    return await prisma.booking.findUnique({
-      where: { id, deletedAt: null },
-      include: { equipment: true, customer: true }
-    })
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return null // Record not found
-      }
-    }
-    throw error
-  }
-}
-```
-
----
-
-## ⚡ Performance Optimization
-
-### React Server Components (RSC) First
-
-```typescript
-// ✅ GOOD - Server Component (default)
-// app/(dashboard)/bookings/page.tsx
-export default async function BookingsPage() {
-  const session = await getServerSession()
-  const bookings = await BookingService.getBookings(session.user.id)
-  
-  return (
-    <div>
-      <h1>My Bookings</h1>
-      <BookingList bookings={bookings} />
-    </div>
-  )
-}
 
 // ✅ Client Component only when needed
 // components/features/bookings/booking-filter.tsx
@@ -2030,3 +937,1273 @@ Ask the user BEFORE proceeding if:
 - Components display UI
 
 **Act accordingly.**
+
+### Naming Conventions
+
+```typescript
+// ✅ Files: kebab-case
+booking-form.tsx
+equipment-card.tsx
+payment-service.ts
+
+// ✅ Components: PascalCase
+function BookingForm() {}
+function EquipmentCard() {}
+
+// ✅ Functions/Variables: camelCase
+const calculateTotal = () => {}
+const isLoading = false
+
+// ✅ Constants: SCREAMING_SNAKE_CASE
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024
+const API_BASE_URL = 'https://api.example.com'
+
+// ✅ Interfaces: PascalCase with descriptive names
+interface BookingFormProps {}
+interface EquipmentCardData {}
+
+// ✅ Types: PascalCase
+type BookingStatus = 'draft' | 'confirmed'
+type Result<T> = { data: T } | { error: string }
+
+// ✅ Event handlers: handle + Action
+const handleClick = () => {}
+const handleSubmit = () => {}
+const handleChange = () => {}
+const handleKeyDown = () => {}
+
+// ✅ Boolean variables: is/has/can/should prefix
+const isLoading = false
+const hasError = true
+const canSubmit = false
+const shouldShowWarning = true
+
+// ✅ Directories: kebab-case
+components/booking-form/
+lib/services/
+lib/validators/
+```
+
+```typescript
+// ✅ ALWAYS: Use Tailwind utility classes
+// ✅ NEVER: Use inline styles or CSS-in-JS
+// ✅ NEVER: Use @apply directive
+// ✅ ALWAYS: Mobile-first responsive design
+
+// ✅ GOOD - Tailwind utilities
+<button className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-white font-medium transition-colors">
+  Book Now
+</button>
+
+// ✅ GOOD - Responsive design (mobile-first)
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {/* Content */}
+</div>
+
+// ✅ GOOD - Conditional classes with clsx/cn
+import { cn } from '@/lib/utils'
+
+<button 
+  className={cn(
+    "px-4 py-2 rounded-md font-medium",
+    isActive && "bg-blue-500 text-white",
+    isDisabled && "opacity-50 cursor-not-allowed"
+  )}
+>
+  Submit
+</button>
+
+// ❌ AVOID - Inline styles
+<button style={{ backgroundColor: 'blue', padding: '8px 16px' }}>
+  Book Now
+</button>
+
+// ❌ AVOID - CSS-in-JS
+const styles = {
+  button: {
+    backgroundColor: 'blue',
+    padding: '8px 16px'
+  }
+}
+
+// ❌ NEVER - @apply directive
+/* styles.css */
+.button {
+  @apply bg-blue-500 px-4 py-2; /* ❌ Don't do this */
+}
+```
+
+### Shadcn UI Integration
+
+```typescript
+// ✅ Use Shadcn UI components from /components/ui/
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form'
+
+// ✅ Compose Shadcn components for complex UIs
+function BookingDialog({ open, onOpenChange }: BookingDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Create Booking</DialogTitle>
+          <DialogDescription>
+            Fill in the details to create a new booking
+          </DialogDescription>
+        </DialogHeader>
+        <BookingForm onSuccess={() => onOpenChange(false)} />
+      </DialogContent>
+    </Dialog>
+  )
+}
+```
+
+### Accessibility Rules
+
+```typescript
+// ✅ ALWAYS: Use semantic HTML
+// ✅ ALWAYS: Add ARIA labels where needed
+// ✅ ALWAYS: Support keyboard navigation
+// ✅ ALWAYS: Ensure proper contrast ratios
+
+// ✅ GOOD - Semantic HTML with accessibility
+<button
+  type="button"
+  onClick={handleClick}
+  onKeyDown={handleKeyDown}
+  aria-label="Create new booking"
+  className="..."
+>
+  Create Booking
+</button>
+
+<nav aria-label="Main navigation">
+  <ul>
+    <li><a href="/bookings">Bookings</a></li>
+    <li><a href="/equipment">Equipment</a></li>
+  </ul>
+</nav>
+
+// ✅ GOOD - Form labels
+<label htmlFor="email" className="text-sm font-medium">
+  Email Address
+</label>
+<input
+  id="email"
+  type="email"
+  name="email"
+  aria-required="true"
+  aria-describedby="email-error"
+  className="..."
+/>
+{error && (
+  <p id="email-error" role="alert" className="text-red-500 text-sm">
+    {error}
+  </p>
+)}
+
+// ✅ GOOD - Focus states
+<button className="focus:ring-2 focus:ring-blue-500 focus:outline-none">
+  Submit
+</button>
+```
+
+```typescript
+// ✅ ALL business logic goes in services
+// /lib/services/booking.service.ts
+
+interface CreateBookingInput {
+  equipmentIds: string[]
+  startDate: Date
+  endDate: Date
+  customerId: string
+}
+
+export class BookingService {
+  /**
+   * Creates a new booking with full validation and workflow
+   * @param data - Booking data
+   * @param userId - User creating the booking
+   * @returns Created booking
+   * @throws {ValidationError} If data is invalid
+   * @throws {ForbiddenError} If user lacks permissions
+   * @throws {ConflictError} If equipment unavailable
+   */
+  static async create(data: CreateBookingInput, userId: string): Promise<Booking> {
+    // 1. Validate input
+    const validated = createBookingSchema.parse(data)
+    
+    // 2. Check permissions
+    if (!await hasPermission(userId, 'booking.create')) {
+      throw new ForbiddenError('Missing permission: booking.create')
+    }
+    
+    // 3. Business logic - Check availability
+    const isAvailable = await this.checkAvailability(
+      validated.equipmentIds,
+      validated.startDate,
+      validated.endDate
+    )
+    
+    if (!isAvailable) {
+      throw new ConflictError('Equipment not available for selected dates')
+    }
+    
+    // 4. Create soft lock
+    await InventoryService.createSoftLock(validated.equipmentIds, userId)
+    
+    // 5. Create booking in transaction
+    const booking = await prisma.$transaction(async (tx) => {
+      const created = await tx.booking.create({
+        data: {
+          ...validated,
+          status: 'draft',
+          createdById: userId,
+          createdAt: new Date(),
+        },
+        include: {
+          equipment: true,
+          customer: true,
+        }
+      })
+      
+      // Update equipment status
+      await tx.equipment.updateMany({
+        where: { id: { in: validated.equipmentIds } },
+        data: { status: 'reserved' }
+      })
+      
+      return created
+    })
+    
+    // 6. Emit event
+    await EventBus.emit('booking.created', {
+      booking,
+      userId,
+      timestamp: new Date()
+    })
+    
+    return booking
+  }
+  
+  /**
+   * Checks equipment availability for date range
+   */
+  private static async checkAvailability(
+    equipmentIds: string[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<boolean> {
+    const conflicts = await prisma.booking.count({
+      where: {
+        equipmentIds: { hasSome: equipmentIds },
+        status: { in: ['confirmed', 'active'] },
+        OR: [
+          {
+            startDate: { lte: endDate },
+            endDate: { gte: startDate }
+          }
+        ],
+        deletedAt: null
+      }
+    })
+    
+    return conflicts === 0
+  }
+}
+```
+
+### Policy Layer (MANDATORY)
+
+```typescript
+// /lib/policies/booking.policy.ts
+
+export class BookingPolicy {
+  /**
+   * Check if user can create bookings
+   */
+  static async canCreate(userId: string): Promise<PolicyResult> {
+    const hasPermission = await hasPermission(userId, 'booking.create')
+    
+    if (!hasPermission) {
+      return {
+        allowed: false,
+        reason: 'Missing permission: booking.create'
+      }
+    }
+    
+    return { allowed: true }
+  }
+  
+  /**
+   * Check if user can edit a specific booking
+   */
+  static async canEdit(userId: string, booking: Booking): Promise<PolicyResult> {
+    // Cannot edit confirmed/active bookings
+    if (['confirmed', 'active'].includes(booking.status)) {
+      return {
+        allowed: false,
+        reason: 'Cannot edit confirmed or active bookings'
+      }
+    }
+    
+    // Must have permission
+    if (!await hasPermission(userId, 'booking.edit')) {
+      return {
+        allowed: false,
+        reason: 'Missing permission: booking.edit'
+      }
+    }
+    
+    // Customer service can only edit draft bookings
+    const user = await UserService.findById(userId)
+    if (user.role === 'customer-service' && booking.status !== 'draft') {
+      return {
+        allowed: false,
+        reason: 'Customer service can only edit draft bookings'
+      }
+    }
+    
+    return { allowed: true }
+  }
+  
+  /**
+   * Check if user can delete a booking
+   */
+  static async canDelete(userId: string, booking: Booking): Promise<PolicyResult> {
+    // NEVER delete confirmed/active bookings
+    if (['confirmed', 'active'].includes(booking.status)) {
+      return {
+        allowed: false,
+        reason: 'Cannot delete confirmed or active bookings. Cancel instead.'
+      }
+    }
+    
+    if (!await hasPermission(userId, 'booking.delete')) {
+      return {
+        allowed: false,
+        reason: 'Missing permission: booking.delete'
+      }
+    }
+    
+    return { allowed: true }
+  }
+}
+
+// Policy result type
+interface PolicyResult {
+  allowed: boolean
+  reason?: string
+}
+```
+
+### Validator Layer (MANDATORY)
+
+```typescript
+// /lib/validators/booking.validator.ts
+import { z } from 'zod'
+
+export const createBookingSchema = z.object({
+  equipmentIds: z
+    .array(z.string().cuid())
+    .min(1, 'At least one equipment item required'),
+  
+  startDate: z
+    .date()
+    .min(new Date(), 'Start date must be in the future'),
+  
+  endDate: z.date(),
+  
+  customerId: z.string().cuid(),
+  
+  projectType: z.enum(['commercial', 'personal', 'educational']),
+  
+  notes: z.string().max(500).optional(),
+  
+  depositAmount: z
+    .number()
+    .positive()
+    .optional(),
+}).refine(
+  (data) => data.endDate > data.startDate,
+  {
+    message: 'End date must be after start date',
+    path: ['endDate'],
+  }
+).refine(
+  (data) => {
+    const duration = differenceInDays(data.endDate, data.startDate)
+    return duration <= 365
+  },
+  {
+    message: 'Rental duration cannot exceed 365 days',
+    path: ['endDate'],
+  }
+)
+
+export const updateBookingSchema = createBookingSchema.partial()
+
+export type CreateBookingInput = z.infer<typeof createBookingSchema>
+export type UpdateBookingInput = z.infer<typeof updateBookingSchema>
+```
+
+### Event System (MANDATORY)
+
+```typescript
+// /lib/events/event-bus.ts
+
+type EventName = 
+  | 'booking.created'
+  | 'booking.confirmed'
+  | 'booking.cancelled'
+  | 'payment.processed'
+  | 'payment.refunded'
+  | 'equipment.damaged'
+  | 'contract.signed'
+
+interface EventPayload {
+  'booking.created': { booking: Booking; userId: string }
+  'booking.confirmed': { booking: Booking; userId: string }
+  'payment.processed': { payment: Payment; booking: Booking }
+  'payment.refunded': { payment: Payment; reason: string }
+}
+
+export class EventBus {
+  /**
+   * Emit an event to all registered handlers
+   */
+  static async emit<T extends EventName>(
+    event: T,
+    payload: EventPayload[T]
+  ): Promise<void> {
+    // Log event
+    await AuditService.logEvent({
+      eventName: event,
+      payload,
+      timestamp: new Date()
+    })
+    
+    // Get handlers for this event
+    const handlers = this.getHandlers(event)
+    
+    // Execute all handlers (async, non-blocking)
+    await Promise.allSettled(
+      handlers.map(handler => handler(payload))
+    )
+  }
+  
+  private static getHandlers(event: EventName): Array<(payload: any) => Promise<void>> {
+    // Return registered handlers
+    return eventHandlers[event] || []
+  }
+}
+
+// /lib/events/handlers/booking-handlers.ts
+export async function handleBookingCreated(payload: EventPayload['booking.created']) {
+  const { booking, userId } = payload
+  
+  // Send confirmation email
+  await EmailService.send({
+    to: booking.customer.email,
+    template: 'booking-created',
+    data: { booking }
+  })
+  
+  // Notify warehouse
+  await NotificationService.notify({
+    recipientRoles: ['warehouse-manager'],
+    message: `New booking created: ${booking.id}`,
+    type: 'info'
+  })
+  
+  // Update analytics
+  await AnalyticsService.track({
+    event: 'booking_created',
+    properties: {
+      bookingId: booking.id,
+      equipmentCount: booking.equipmentIds.length,
+      totalValue: booking.totalPrice
+    }
+  })
+}
+```
+
+/**
+ * Calculate total rental cost including taxes and fees
+ * 
+ * @param items - Line items to calculate
+ * @param taxRate - Tax rate (e.g., 0.15 for 15%)
+ * @returns Total cost including tax
+ * 
+ * @example
+ * ```ts
+ * const total = calculateTotal(items, 0.15)
+ * // Returns: 1150 (1000 + 15% tax)
+ * ```
+ */
+function calculateTotal(items: LineItem[], taxRate: number): number {
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const tax = subtotal * taxRate
+  return subtotal + tax
+}
+```
+
+```prisma
+// ✅ ALWAYS include audit fields
+model Booking {
+  id          String   @id @default(cuid())
+  
+  // Relationships
+  equipment   Equipment[]
+  customer    User      @relation("CustomerBookings", fields: [customerId], references: [id])
+  customerId  String
+  
+  // Business fields
+  status      BookingStatus
+  startDate   DateTime
+  endDate     DateTime
+  totalPrice  Decimal   @db.Decimal(10, 2)
+  
+  // Audit fields (MANDATORY)
+  createdAt   DateTime  @default(now())
+  createdBy   String
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  deletedAt   DateTime?  // Soft delete
+  deletedBy   String?
+  
+  // Indexes for performance
+  @@index([customerId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([deletedAt]) // For soft delete queries
+  @@index([createdAt])
+}
+
+enum BookingStatus {
+  DRAFT
+  RISK_CHECK
+  PAYMENT_PENDING
+  CONFIRMED
+  ACTIVE
+  RETURNED
+  CLOSED
+  CANCELLED
+}
+```
+
+### Query Patterns
+
+```typescript
+// ✅ ALWAYS filter soft-deleted records
+async function getBookings(userId: string) {
+  return await prisma.booking.findMany({
+    where: {
+      customerId: userId,
+      deletedAt: null // MANDATORY soft delete filter
+    },
+    include: {
+      equipment: {
+        select: { id: true, name: true, dailyRate: true }
+      },
+      customer: {
+        select: { id: true, name: true, email: true }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+}
+
+// ✅ Use transactions for multi-step operations
+async function confirmBooking(bookingId: string, userId: string) {
+  return await prisma.$transaction(async (tx) => {
+    // 1. Update booking
+    const booking = await tx.booking.update({
+      where: { id: bookingId },
+      data: { 
+        status: 'CONFIRMED',
+        confirmedAt: new Date(),
+        confirmedBy: userId,
+        updatedAt: new Date(),
+        updatedBy: userId
+      }
+    })
+    
+    // 2. Lock equipment
+    await tx.equipment.updateMany({
+      where: { 
+        id: { in: booking.equipmentIds },
+        deletedAt: null
+      },
+      data: { 
+        status: 'LOCKED',
+        updatedAt: new Date()
+      }
+    })
+    
+    // 3. Create contract
+    await tx.contract.create({
+      data: {
+        bookingId,
+        status: 'PENDING_SIGNATURE',
+        createdAt: new Date(),
+        createdBy: userId
+      }
+    })
+    
+    return booking
+  })
+}
+
+// ✅ Handle errors properly
+async function findBookingById(id: string): Promise<Booking | null> {
+  try {
+    return await prisma.booking.findUnique({
+      where: { id, deletedAt: null },
+      include: { equipment: true, customer: true }
+    })
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return null // Record not found
+      }
+    }
+    throw error
+  }
+}
+```
+
+---
+
+## 🎯 Project Identity
+
+You are building a **Cinematic Equipment & Studio Rental Platform** - an AI-first Operating System for film production, NOT just a booking website.
+
+**Tech Stack:**
+- Frontend: Next.js 14 (App Router), React, TypeScript, Tailwind CSS, Shadcn UI, Radix UI
+- Backend: Node.js, Prisma ORM, PostgreSQL
+- State: Zustand (global), TanStack Query (server state)
+- Validation: Zod schemas
+- Architecture: API-first, Event-driven, Domain-based modules
+
+**Philosophy:**
+- AI recommends, humans approve
+- Security > Speed > Features
+- No admin bypass, no financial action without approval, no hard delete
+- Everything is audited, everything emits events
+
+```typescript
+// ❌ NEVER DO THIS - Admin bypass
+if (user.role === 'admin') return true
+if (user.isAdmin()) return true
+
+// ✅ ALWAYS DO THIS - Use policies for everyone
+async function canDeleteBooking(userId: string, bookingId: string) {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
+  
+  // Policy applies to EVERYONE including admin
+  if (['confirmed', 'active'].includes(booking.status)) {
+    return { allowed: false, reason: 'Cannot delete confirmed/active bookings' }
+  }
+  
+  // Permission check
+  return { 
+    allowed: await hasPermission(userId, 'booking.delete'),
+    reason: 'Permission required: booking.delete'
+  }
+}
+```
+
+### Rule 2: All Financial Operations Require Approval
+
+```typescript
+// ❌ NEVER DO THIS - Direct refund
+async function refundPayment(paymentId: string) {
+  await prisma.payment.update({
+    where: { id: paymentId },
+    data: { status: 'refunded' }
+  })
+}
+
+// ✅ ALWAYS DO THIS - Approval workflow
+async function refundPayment(paymentId: string, userId: string, reason: string) {
+  // 1. Permission check
+  if (!await hasPermission(userId, 'payment.refund')) {
+    throw new ForbiddenError('Missing permission: payment.refund')
+  }
+  
+  // 2. Request approval
+  const approval = await ApprovalService.request({
+    action: 'payment.refund',
+    resourceType: 'payment',
+    resourceId: paymentId,
+    requestedBy: userId,
+    reason,
+    requiresRoles: ['admin', 'finance-director'],
+    metadata: { amount: payment.amount }
+  })
+  
+  if (!approval.approved) {
+    throw new ApprovalRequiredError('Refund requires admin approval')
+  }
+  
+  // 3. Execute with audit
+  await AuditService.log({
+    action: 'payment.refund',
+    userId,
+    resourceType: 'payment',
+    resourceId: paymentId,
+    reason,
+    approvalId: approval.id,
+    metadata: { amount: payment.amount }
+  })
+  
+  // 4. Execute transaction
+  const refundedPayment = await prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.update({
+      where: { id: paymentId },
+      data: { 
+        status: 'refunded',
+        refundedAt: new Date(),
+        refundedBy: userId,
+        refundReason: reason
+      }
+    })
+    
+    // Update booking status
+    await tx.booking.update({
+      where: { id: payment.bookingId },
+      data: { status: 'cancelled' }
+    })
+    
+    return payment
+  })
+  
+  // 5. Emit event
+  await EventBus.emit('payment.refunded', {
+    payment: refundedPayment,
+    userId,
+    approvalId: approval.id
+  })
+  
+  return refundedPayment
+}
+```
+
+### Rule 3: No Hard Delete (Soft Delete Only)
+
+```typescript
+// ❌ NEVER DO THIS - Hard delete
+await prisma.booking.delete({ where: { id } })
+
+// ✅ ALWAYS DO THIS - Soft delete
+async function deleteBooking(bookingId: string, userId: string) {
+  // 1. Check policy
+  const canDelete = await BookingPolicy.canDelete(userId, bookingId)
+  if (!canDelete.allowed) {
+    throw new PolicyViolationError(canDelete.reason)
+  }
+  
+  // 2. Audit log
+  await AuditService.log({
+    action: 'booking.delete',
+    userId,
+    resourceType: 'booking',
+    resourceId: bookingId
+  })
+  
+  // 3. Soft delete
+  const booking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      deletedAt: new Date(),
+      deletedBy: userId,
+      status: 'cancelled'
+    }
+  })
+  
+  // 4. Emit event
+  await EventBus.emit('booking.deleted', { booking, userId })
+  
+  return booking
+}
+
+// Exception: Admin can hard delete with approval + audit
+async function hardDeleteBooking(bookingId: string, adminId: string, reason: string) {
+  // Only admin with approval
+  const approval = await ApprovalService.request({
+    action: 'booking.hard_delete',
+    resourceId: bookingId,
+    requestedBy: adminId,
+    reason,
+    requiresRoles: ['admin']
+  })
+  
+  if (!approval.approved) {
+    throw new ApprovalRequiredError()
+  }
+  
+  await AuditService.log({
+    action: 'booking.hard_delete',
+    userId: adminId,
+    resourceId: bookingId,
+    reason,
+    approvalId: approval.id,
+    severity: 'critical'
+  })
+  
+  await prisma.booking.delete({ where: { id: bookingId } })
+}
+```
+
+### Rule 4: Every Critical Action Emits Events
+
+```typescript
+// ❌ NEVER DO THIS - No event emission
+async function confirmBooking(id: string) {
+  return await prisma.booking.update({
+    where: { id },
+    data: { status: 'confirmed' }
+  })
+}
+
+// ✅ ALWAYS DO THIS - Event-driven
+async function confirmBooking(id: string, userId: string) {
+  // 1. Update database
+  const booking = await prisma.$transaction(async (tx) => {
+    const updated = await tx.booking.update({
+      where: { id },
+      data: { 
+        status: 'confirmed',
+        confirmedAt: new Date(),
+        confirmedBy: userId
+      }
+    })
+    
+    // Lock inventory
+    await tx.equipment.updateMany({
+      where: { id: { in: updated.equipmentIds } },
+      data: { status: 'locked' }
+    })
+    
+    return updated
+  })
+  
+  // 2. Emit event (triggers downstream actions)
+  await EventBus.emit('booking.confirmed', {
+    bookingId: id,
+    booking,
+    userId,
+    timestamp: new Date()
+  })
+  
+  // Event handlers automatically triggered:
+  // - Send confirmation email
+  // - Generate contract
+  // - Notify warehouse
+  // - Update analytics
+  // - Create invoice
+  
+  return booking
+}
+```
+
+---
+
+## 📚 Mandatory Documentation Reading
+
+**CRITICAL:** Read these docs BEFORE writing any code. These are the Single Source of Truth.
+
+### Primary Docs (Must Read):
+1. `/docs/PRD.md` - Product vision, business rules, core modules
+2. `/docs/ARCHITECTURE.md` - System design, tech stack, principles
+3. `/docs/ROLES_AND_SECURITY.md` - Security doctrine, roles, permissions
+4. `/docs/BOOKING_ENGINE.md` - Booking workflow, state machine
+5. `/docs/AI_BLUEPRINT.md` - AI integration rules
+6. `/docs/DATA_EVENTS.md` - Event-driven system rules
+
+### When to Consult Docs:
+- ❓ Implementing new features → Check PRD.md
+- ❓ Adding security/permissions → Check ROLES_AND_SECURITY.md
+- ❓ Database changes → Check ARCHITECTURE.md
+- ❓ Booking logic → Check BOOKING_ENGINE.md
+- ❓ AI features → Check AI_BLUEPRINT.md
+- ❓ Event handlers → Check DATA_EVENTS.md
+
+**Rule:** If unsure about business logic, architecture, or security → Ask user which doc to consult BEFORE coding.
+
+### File Naming Conventions
+
+```typescript
+// ✅ CORRECT
+components/
+  booking-form.tsx           // kebab-case for files
+  equipment-card.tsx
+  
+lib/services/
+  booking.service.ts         // feature.service.ts pattern
+  payment.service.ts
+  
+lib/policies/
+  booking.policy.ts          // feature.policy.ts pattern
+  
+lib/validators/
+  booking.validator.ts       // feature.validator.ts pattern
+
+// ❌ WRONG
+components/
+  BookingForm.tsx            // Don't use PascalCase for filenames
+  booking_form.tsx           // Don't use snake_case
+```
+
+### Component File Structure (MANDATORY ORDER)
+
+```typescript
+// 1. IMPORTS - Grouped and ordered
+import { type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+
+// External libraries
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+
+// Internal - absolute imports
+import { Button } from '@/components/ui/button'
+import { BookingService } from '@/lib/services/booking.service'
+import { createBookingSchema } from '@/lib/validators/booking.validator'
+
+// Types
+import type { Booking, Equipment } from '@/lib/types'
+
+// 2. TYPES & INTERFACES - Before component
+interface BookingFormProps {
+  equipmentId: string
+  onSuccess?: (booking: Booking) => void
+  onError?: (error: Error) => void
+}
+
+interface BookingFormState {
+  isSubmitting: boolean
+  error: string | null
+}
+
+// 3. CONSTANTS - Static data
+const BOOKING_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'active', label: 'Active' },
+] as const
+
+const DEFAULT_RENTAL_DURATION = 7 // days
+
+// 4. MAIN COMPONENT - Use function keyword
+function BookingForm({ equipmentId, onSuccess, onError }: BookingFormProps) {
+  // 4a. Hooks - Always at the top, same order
+  const router = useRouter()
+  const [state, setState] = useState<BookingFormState>({
+    isSubmitting: false,
+    error: null,
+  })
+  
+  const form = useForm({
+    resolver: zodResolver(createBookingSchema),
+    defaultValues: {
+      equipmentId,
+      duration: DEFAULT_RENTAL_DURATION,
+    },
+  })
+  
+  // 4b. Event handlers - Use const with 'handle' prefix
+  const handleSubmit = async (data: z.infer<typeof createBookingSchema>) => {
+    setState({ isSubmitting: true, error: null })
+    
+    try {
+      const booking = await BookingService.create(data)
+      onSuccess?.(booking)
+      router.push(`/bookings/${booking.id}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking'
+      setState({ isSubmitting: false, error: errorMessage })
+      onError?.(error as Error)
+    }
+  }
+  
+  const handleCancel = () => {
+    form.reset()
+    router.back()
+  }
+  
+  // 4c. Render
+  return (
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      {/* Form fields */}
+    </form>
+  )
+}
+
+// 5. SUB-COMPONENTS - After main component
+function BookingFormField({ label, error, children }: BookingFormFieldProps) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">{label}</label>
+      {children}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  )
+}
+
+// 6. EXPORTS - Named exports at the end
+export { BookingForm, type BookingFormProps }
+```
+
+---
+
+## 🏗️ File Structure & Organization
+
+### Directory Structure (MANDATORY)
+```
+/
+├── src/
+│   ├── app/                          # Next.js App Router
+│   │   ├── (auth)/                  # Auth routes (login, register)
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx
+│   │   │   └── register/
+│   │   │       └── page.tsx
+│   │   ├── (dashboard)/             # Protected routes
+│   │   │   ├── bookings/
+│   │   │   │   ├── page.tsx        # List bookings (RSC)
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── page.tsx    # Single booking (RSC)
+│   │   │   │   └── new/
+│   │   │   │       └── page.tsx    # Create booking
+│   │   │   ├── equipment/
+│   │   │   ├── payments/
+│   │   │   └── layout.tsx
+│   │   ├── api/                     # API routes (thin layer)
+│   │   │   ├── bookings/
+│   │   │   │   └── route.ts
+│   │   │   ├── payments/
+│   │   │   └── webhooks/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   │
+│   ├── components/                   # React components
+│   │   ├── ui/                      # Shadcn UI components
+│   │   │   ├── button.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── form.tsx
+│   │   │   └── ... (shadcn components)
+│   │   ├── forms/                   # Form components
+│   │   │   ├── booking-form.tsx
+│   │   │   ├── equipment-form.tsx
+│   │   │   └── payment-form.tsx
+│   │   ├── features/                # Feature-specific components
+│   │   │   ├── bookings/
+│   │   │   │   ├── booking-card.tsx
+│   │   │   │   ├── booking-list.tsx
+│   │   │   │   └── booking-status-badge.tsx
+│   │   │   ├── equipment/
+│   │   │   │   ├── equipment-card.tsx
+│   │   │   │   ├── equipment-grid.tsx
+│   │   │   │   └── equipment-filter.tsx
+│   │   │   └── payments/
+│   │   ├── layouts/                 # Layout components
+│   │   │   ├── dashboard-layout.tsx
+│   │   │   ├── auth-layout.tsx
+│   │   │   └── header.tsx
+│   │   └── shared/                  # Shared components
+│   │       ├── loading-spinner.tsx
+│   │       ├── error-message.tsx
+│   │       └── pagination.tsx
+│   │
+│   ├── lib/                          # Core business logic
+│   │   ├── actions/                 # Server Actions (use sparingly)
+│   │   │   ├── booking-actions.ts
+│   │   │   └── payment-actions.ts
+│   │   │
+│   │   ├── services/                # Business logic (MAIN LAYER)
+│   │   │   ├── booking.service.ts
+│   │   │   ├── equipment.service.ts
+│   │   │   ├── payment.service.ts
+│   │   │   ├── user.service.ts
+│   │   │   ├── approval.service.ts
+│   │   │   ├── audit.service.ts
+│   │   │   └── ai.service.ts
+│   │   │
+│   │   ├── policies/                # Authorization policies
+│   │   │   ├── booking.policy.ts
+│   │   │   ├── equipment.policy.ts
+│   │   │   ├── payment.policy.ts
+│   │   │   ├── user.policy.ts
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── validators/              # Zod schemas
+│   │   │   ├── booking.validator.ts
+│   │   │   ├── equipment.validator.ts
+│   │   │   ├── payment.validator.ts
+│   │   │   └── user.validator.ts
+│   │   │
+│   │   ├── events/                  # Event emitters & handlers
+│   │   │   ├── event-bus.ts
+│   │   │   ├── handlers/
+│   │   │   │   ├── booking-handlers.ts
+│   │   │   │   └── payment-handlers.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── auth/                    # Authentication & authorization
+│   │   │   ├── permissions.ts
+│   │   │   ├── session.ts
+│   │   │   └── middleware.ts
+│   │   │
+│   │   ├── utils/                   # Utility functions
+│   │   │   ├── date.utils.ts
+│   │   │   ├── currency.utils.ts
+│   │   │   ├── string.utils.ts
+│   │   │   └── validation.utils.ts
+│   │   │
+│   │   ├── hooks/                   # Custom React hooks
+│   │   │   ├── use-booking-form.ts
+│   │   │   ├── use-permissions.ts
+│   │   │   └── use-debounce.ts
+│   │   │
+│   │   ├── stores/                  # Zustand stores
+│   │   │   ├── booking.store.ts
+│   │   │   ├── user.store.ts
+│   │   │   └── ui.store.ts
+│   │   │
+│   │   ├── errors.ts                # Custom error classes
+│   │   ├── constants.ts             # App constants
+│   │   └── types.ts                 # Shared TypeScript types
+│   │
+│   ├── prisma/                       # Database
+│   │   ├── schema.prisma
+│   │   ├── migrations/
+│   │   └── seed.ts
+│   │
+│   └── config/                       # Configuration files
+│       ├── site.config.ts
+│       └── api.config.ts
+│
+├── public/                           # Static assets
+│   ├── images/
+│   └── icons/
+│
+├── docs/                             # Project documentation
+│   ├── PRD.md
+│   ├── ARCHITECTURE.md
+│   ├── ROLES_AND_SECURITY.md
+│   ├── BOOKING_ENGINE.md
+│   ├── AI_BLUEPRINT.md
+│   └── DATA_EVENTS.md
+│
+├── .cursorrules                      # This file
+├── .env.example
+├── .gitignore
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## 🔐 Security Rules (NON-NEGOTIABLE)
+
+### Rule 1: No Admin Bypass
+
+---
+
+## 💻 Code Style & Structure
+
+### TypeScript Rules
+
+---
+
+## 🎨 UI & Styling
+
+### Tailwind CSS Rules
+
+---
+
+## 🏛️ Architecture Patterns
+
+### Service Layer (MANDATORY)
+
+---
+
+## 📁 Component Documentation (MANDATORY)
+
+Every component MUST have JSDoc comments:
+
+```typescript
+/**
+ * BookingForm - Form for creating new equipment bookings
+ * 
+ * This component handles the complete booking creation workflow including:
+ * - Equipment selection
+ * - Date range validation
+ * - Availability checking
+ * - Deposit calculation
+ * - Permission verification
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <BookingForm
+ *   equipmentId="eq_123"
+ *   onSuccess={(booking) => router.push(`/bookings/${booking.id}`)}
+ *   onError={(error) => toast.error(error.message)}
+ * />
+ * ```
+ */
+interface BookingFormProps {
+  /** ID of pre-selected equipment (optional) */
+  equipmentId?: string
+  
+  /** Callback fired when booking is successfully created */
+  onSuccess?: (booking: Booking) => void
+  
+  /** Callback fired when booking creation fails */
+  onError?: (error: Error) => void
+  
+  /** Additional CSS classes */
+  className?: string
+}
+
+function BookingForm({ 
+  equipmentId, 
+  onSuccess, 
+  onError,
+  className 
+}: BookingFormProps) {
+  // Implementation
+}
+
+---
+
+## 🗄️ Database Patterns
+
+### Prisma Schema Rules
+
+---
+
+## ⚡ Performance Optimization
+
+### React Server Components (RSC) First
+
+```typescript
+// ✅ GOOD - Server Component (default)
+// app/(dashboard)/bookings/page.tsx
+export default async function BookingsPage() {
+  const session = await getServerSession()
+  const bookings = await BookingService.getBookings(session.user.id)
+  
+  return (
+    <div>
+      <h1>My Bookings</h1>
+      <BookingList bookings={bookings} />
+    </div>
+  )
+}
