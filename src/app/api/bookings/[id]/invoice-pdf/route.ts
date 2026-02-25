@@ -7,14 +7,15 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { InvoicePdfService } from '@/lib/services/invoice-pdf.service'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const { id } = await params
   const booking = await prisma.booking.findFirst({
-    where: { id: params.id, deletedAt: null },
+    where: { id, deletedAt: null },
     include: {
       customer: { select: { name: true, email: true, phone: true } },
       studio: true,
@@ -62,16 +63,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 
   for (const be of booking.equipment) {
-    const eq = be.equipment as any
+    const eq = be.equipment as { name?: string; model?: string; dailyPrice?: unknown }
     const days = Math.max(
       1,
       Math.ceil((booking.endDate.getTime() - booking.startDate.getTime()) / 86400000)
     )
+    const unitPrice = Number(eq?.dailyPrice ?? 0)
     items.push({
       description: eq?.name ?? eq?.model ?? 'Equipment',
       quantity: be.quantity,
-      unitPrice: Number(eq?.dailyRate ?? 0),
-      total: Number(eq?.dailyRate ?? 0) * be.quantity * days,
+      unitPrice,
+      total: unitPrice * be.quantity * days,
     })
   }
 

@@ -54,11 +54,11 @@ export function PortalSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-64 shrink-0 border-e border-border-light bg-white py-6">
+    <aside className="w-64 shrink-0 border-e border-border bg-card py-6 shadow-inner-glow">
       <nav className="space-y-8 px-3" aria-label="Portal navigation">
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+            <h3 className="mb-2 px-3 font-header-nav text-label-small uppercase tracking-wider text-muted-foreground">
               {section.title}
             </h3>
             <ul className="space-y-0.5">
@@ -76,11 +76,12 @@ export function PortalSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 rounded-public-button px-3 py-2 font-header-nav text-body-main font-medium transition-all duration-200 hover:translate-x-0.5 rtl:hover:-translate-x-0.5',
                         isActive
-                          ? 'bg-brand-primary/10 text-brand-primary'
-                          : 'text-text-heading hover:bg-surface-light hover:text-brand-primary'
+                          ? 'bg-primary/10 text-primary shadow-inner-glow'
+                          : 'text-foreground hover:bg-muted hover:text-primary'
                       )}
+                      aria-current={isActive ? 'page' : undefined}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       {item.label}

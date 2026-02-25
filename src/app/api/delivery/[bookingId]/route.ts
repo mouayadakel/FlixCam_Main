@@ -16,7 +16,7 @@ import {
 } from '@/lib/validators/delivery.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { bookingId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   try {
     const session = await auth()
 
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { bookingId: s
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { bookingId } = await params
     const userId = session.user.id
 
     // Check policy
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { bookingId: s
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const deliveries = await DeliveryService.getDeliveriesByBooking(params.bookingId, userId)
+    const deliveries = await DeliveryService.getDeliveriesByBooking(bookingId, userId)
 
     return NextResponse.json({
       success: true,
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: { bookingId: s
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { bookingId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   try {
     const session = await auth()
 
@@ -56,6 +57,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { bookingId:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { bookingId } = await params
     const userId = session.user.id
 
     // Check policy
@@ -75,7 +77,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { bookingId:
     }
 
     const result = await DeliveryService.updateDelivery(
-      params.bookingId,
+      bookingId,
       validated,
       userId,
       auditContext

@@ -13,7 +13,7 @@ import { MaintenancePolicy } from '@/lib/policies/maintenance.policy'
 import { completeMaintenanceSchema } from '@/lib/validators/maintenance.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const maintenance = await MaintenanceService.complete(
-      params.id,
+      id,
       validated,
       userId,
       auditContext

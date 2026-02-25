@@ -14,12 +14,14 @@ import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hasPermission } from '@/lib/auth/permissions'
 import type {
   Invoice,
+  InvoiceItem,
   InvoiceStatus,
   InvoiceType,
   InvoiceCreateInput,
   InvoiceUpdateInput,
   InvoicePaymentInput,
 } from '@/lib/types/invoice.types'
+import type { Prisma } from '@prisma/client'
 import {
   InvoiceType as PrismaInvoiceType,
   InvoiceStatus as PrismaInvoiceStatus,
@@ -93,6 +95,38 @@ export class InvoiceService {
     return status.toLowerCase().replace('_', '_') as InvoiceStatus
   }
 
+  /** Rental formula: line total = quantity × (days ?? 1) × unitPrice. Server is source of truth. */
+  private static calculateTotals(
+    items: Array<{ quantity: number; unitPrice: number; days?: number; vatRate?: number; vatAmount?: number; [k: string]: unknown }>,
+    discount: number = 0
+  ): {
+    itemsWithTotals: Array<InvoiceItem>
+    subtotal: number
+    vatAmount: number
+    totalAmount: number
+  } {
+    const VAT_RATE = 0.15
+    const itemsWithTotals: InvoiceItem[] = items.map((item) => {
+      const days = item.days ?? 1
+      const total = item.quantity * days * item.unitPrice
+      const vatAmount = total * VAT_RATE
+      return {
+        description: item.description as string,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        ...(days > 1 && { days }),
+        total,
+        vatRate: item.vatRate ?? 15,
+        vatAmount,
+      }
+    })
+    const subtotal = itemsWithTotals.reduce((sum, item) => sum + (item.total ?? 0), 0)
+    const taxableAmount = Math.max(0, subtotal - discount)
+    const vatAmount = taxableAmount * VAT_RATE
+    const totalAmount = taxableAmount + vatAmount
+    return { itemsWithTotals, subtotal, vatAmount, totalAmount }
+  }
+
   /**
    * Create invoice from booking or manually
    */
@@ -133,21 +167,16 @@ export class InvoiceService {
       }
     }
 
-    // Calculate totals
-    const subtotal = input.items.reduce((sum, item) => sum + item.total, 0)
     const discount = input.discount || 0
-    const subtotalAfterDiscount = subtotal - discount
-    const vatAmount = subtotalAfterDiscount * 0.15 // 15% VAT
-    const totalAmount = subtotalAfterDiscount + vatAmount
+    const { itemsWithTotals, subtotal, vatAmount, totalAmount } = this.calculateTotals(
+      input.items as unknown as Array<{ quantity: number; unitPrice: number; days?: number; vatRate?: number; vatAmount?: number; [k: string]: unknown }>,
+      discount
+    )
 
-    // Generate invoice number
     const invoiceNumber = await this.generateInvoiceNumber()
-
-    // Check if overdue
     const isOverdue = new Date(input.dueDate) < new Date()
     const status: PrismaInvoiceStatus = isOverdue ? 'OVERDUE' : 'DRAFT'
 
-    // Create invoice
     const invoice = await prisma.invoice.create({
       data: {
         invoiceNumber,
@@ -163,11 +192,7 @@ export class InvoiceService {
         totalAmount: new Decimal(totalAmount),
         paidAmount: new Decimal(0),
         remainingAmount: new Decimal(totalAmount),
-        items: input.items.map((item) => ({
-          ...item,
-          vatRate: item.vatRate || 15,
-          vatAmount: item.vatAmount || item.total * 0.15,
-        })) as any,
+        items: itemsWithTotals as unknown as NonNullable<Prisma.InvoiceCreateInput['items']>,
         notes: input.notes || null,
         paymentTerms: input.paymentTerms || null,
         createdBy: userId,
@@ -178,6 +203,10 @@ export class InvoiceService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         booking: {
@@ -237,6 +266,10 @@ export class InvoiceService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         booking: {
@@ -342,6 +375,10 @@ export class InvoiceService {
               id: true,
               name: true,
               email: true,
+              phone: true,
+              taxId: true,
+              companyName: true,
+              billingAddress: true,
             },
           },
           booking: {
@@ -400,17 +437,18 @@ export class InvoiceService {
     let updatedTotalAmount = existingInvoice.totalAmount
     let updatedRemainingAmount = existingInvoice.remainingAmount
 
+    let itemsToStore: InvoiceItem[] | undefined
     if (input.items) {
-      const subtotal = input.items.reduce((sum, item) => sum + item.total, 0)
       const discount = input.discount ?? Number(existingInvoice.discount || 0)
-      const subtotalAfterDiscount = subtotal - discount
-      const vatAmount = subtotalAfterDiscount * 0.15
-      const totalAmount = subtotalAfterDiscount + vatAmount
-
+      const { itemsWithTotals, subtotal, vatAmount, totalAmount } = this.calculateTotals(
+        input.items as unknown as Array<{ quantity: number; unitPrice: number; days?: number; vatRate?: number; vatAmount?: number; [k: string]: unknown }>,
+        discount
+      )
       updatedSubtotal = new Decimal(subtotal)
       updatedVatAmount = new Decimal(vatAmount)
       updatedTotalAmount = new Decimal(totalAmount)
       updatedRemainingAmount = new Decimal(totalAmount - Number(existingInvoice.paidAmount))
+      itemsToStore = itemsWithTotals
     } else if (input.discount !== undefined) {
       const subtotalAfterDiscount = Number(existingInvoice.subtotal) - input.discount
       const vatAmount = subtotalAfterDiscount * 0.15
@@ -421,7 +459,6 @@ export class InvoiceService {
       )
     }
 
-    // Update invoice
     const updatedInvoice = await prisma.invoice.update({
       where: { id },
       data: {
@@ -433,13 +470,7 @@ export class InvoiceService {
         totalAmount: input.items || input.discount !== undefined ? updatedTotalAmount : undefined,
         remainingAmount:
           input.items || input.discount !== undefined ? updatedRemainingAmount : undefined,
-        items: input.items
-          ? (input.items.map((item) => ({
-              ...item,
-              vatRate: item.vatRate || 15,
-              vatAmount: item.vatAmount || item.total * 0.15,
-            })) as any)
-          : undefined,
+        items: input.items ? (itemsToStore as unknown as NonNullable<Prisma.InvoiceUpdateInput['items']>) : undefined,
         notes: input.notes !== undefined ? input.notes : undefined,
         paymentTerms: input.paymentTerms !== undefined ? input.paymentTerms : undefined,
         status: input.status ? this.mapInvoiceStatus(input.status) : undefined,
@@ -451,6 +482,10 @@ export class InvoiceService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         booking: {
@@ -530,6 +565,10 @@ export class InvoiceService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         booking: {
@@ -616,6 +655,10 @@ export class InvoiceService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         equipment: {
@@ -654,16 +697,15 @@ export class InvoiceService {
     const endDate = new Date(booking.endDate)
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
 
-    // Build invoice items from booking equipment
     const items = booking.equipment.map((be) => {
       const dailyPrice = Number(be.equipment.dailyPrice || 0)
       const total = dailyPrice * be.quantity * days
       const vatAmount = total * 0.15
-
       return {
         description: `${be.equipment.sku}${be.equipment.model ? ` - ${be.equipment.model}` : ''} (${be.quantity} × ${days} days)`,
         quantity: be.quantity,
         unitPrice: dailyPrice,
+        days,
         total,
         vatRate: 15,
         vatAmount,

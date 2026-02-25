@@ -1,6 +1,6 @@
 /**
  * @file delivery/page.tsx
- * @description Delivery management page
+ * @description Delivery management page (Overview + Schedule tabs)
  * @module app/admin/(routes)/ops/delivery
  * @author Engineering Team
  * @created 2026-01-28
@@ -9,8 +9,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Truck, Plus, Calendar, MapPin, Phone, User, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Truck, Calendar, MapPin, Phone, User, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DeliveryScheduleTab } from './_components/delivery-schedule-tab'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -70,9 +73,17 @@ const TYPE_LABELS: Record<string, { ar: string; en: string }> = {
 
 export default function DeliveryPage() {
   const { toast } = useToast()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams?.get('tab') ?? 'overview'
+  const [activeTab, setActiveTab] = useState(tabParam === 'schedule' ? 'schedule' : 'overview')
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'scheduled' | 'in_transit'>('all')
+
+  useEffect(() => {
+    const t = searchParams?.get('tab') ?? 'overview'
+    setActiveTab(t === 'schedule' ? 'schedule' : 'overview')
+  }, [searchParams])
 
   const summary = useMemo(() => {
     const today = new Date()
@@ -152,6 +163,13 @@ export default function DeliveryPage() {
     }
   }
 
+  const updateTab = (value: string) => {
+    setActiveTab(value)
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', value)
+    window.history.replaceState({}, '', url.toString())
+  }
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
@@ -164,15 +182,20 @@ export default function DeliveryPage() {
             <RefreshCw className={`ml-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             تحديث
           </Button>
-          <Link href="/admin/ops/delivery/schedule">
-            <Button>
-              <Plus className="ml-2 h-4 w-4" />
-              جدولة توصيل
-            </Button>
-          </Link>
+          <Button onClick={() => updateTab('schedule')}>
+            <Calendar className="ml-2 h-4 w-4" />
+            جدولة التوصيل
+          </Button>
         </div>
       </div>
 
+      <Tabs value={activeTab} onValueChange={updateTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+          <TabsTrigger value="schedule">جدولة التوصيل</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
       {/* KPI Summary */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Card>
@@ -369,6 +392,12 @@ export default function DeliveryPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="schedule" className="mt-4">
+          <DeliveryScheduleTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

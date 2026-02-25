@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth'
 import { IntegrationConfigService } from '@/lib/services/integration-config.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
-export async function PATCH(request: Request, { params }: { params: { type: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ type: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -23,11 +23,12 @@ export async function PATCH(request: Request, { params }: { params: { type: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { type } = await params
     const body = await request.json()
     const { config, enabled } = body
 
     const saved = await IntegrationConfigService.saveConfig(
-      params.type,
+      type,
       config,
       enabled ?? true,
       session.user.id

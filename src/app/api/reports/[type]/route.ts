@@ -13,7 +13,7 @@ import { ReportsPolicy } from '@/lib/policies/reports.policy'
 import { reportFilterSchema, reportTypeSchema } from '@/lib/validators/reports.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { type: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const session = await auth()
 
@@ -21,10 +21,11 @@ export async function POST(req: NextRequest, { params }: { params: { type: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { type } = await params
     const userId = session.user.id
 
     // Validate report type
-    const reportType = reportTypeSchema.parse(params.type)
+    const reportType = reportTypeSchema.parse(type)
 
     // Check policy
     const policy = await ReportsPolicy.canView(userId, reportType)

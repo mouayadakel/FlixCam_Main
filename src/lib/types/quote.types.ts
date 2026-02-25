@@ -39,6 +39,9 @@ export interface Quote {
     id: string
     name: string | null
     email: string
+    taxId?: string | null
+    companyName?: string | null
+    billingAddress?: string | null
   }
   studio?: {
     id: string

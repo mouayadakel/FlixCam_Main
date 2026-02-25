@@ -23,8 +23,8 @@ export interface EquipmentTranslationInput {
 export type VendorSubmissionStatus = 'pending_review' | 'approved' | 'rejected'
 
 export interface CreateEquipmentInput {
-  sku: string
-  model?: string
+  sku?: string
+  model: string
   categoryId: string
   subCategoryId?: string
   brandId?: string
@@ -35,9 +35,14 @@ export interface CreateEquipmentInput {
   dailyPrice: number
   weeklyPrice?: number
   monthlyPrice?: number
+  /** سعر الشراء — internal only, for tracking and سند الأمر */
+  purchasePrice?: number
   depositAmount?: number
+  /** التأمين إلزامي للعميل — default false */
+  requiresDeposit?: boolean
   featured?: boolean
   isActive?: boolean
+  requiresAssistant?: boolean
   warehouseLocation?: string
   barcode?: string
   specifications?: Record<string, unknown>
@@ -53,6 +58,9 @@ export interface CreateEquipmentInput {
   bufferTime?: number
   bufferTimeUnit?: 'hours' | 'days'
   vendorSubmissionStatus?: VendorSubmissionStatus
+  specConfidence?: number
+  specLastInferredAt?: Date
+  specSource?: 'import' | 'ai-infer' | 'url-extract' | 'manual' | 'migration'
 }
 
 export interface UpdateEquipmentInput extends Partial<CreateEquipmentInput> {
@@ -285,16 +293,21 @@ export class EquipmentService {
    * Create new equipment
    */
   static async createEquipment(input: CreateEquipmentInput) {
+    // Auto-generate SKU if not provided (DB requires unique non-null sku)
+    const sku =
+      input.sku?.trim() ||
+      `EQ-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+
     // Check if SKU already exists
     const existing = await prisma.equipment.findFirst({
       where: {
-        sku: input.sku,
+        sku,
         deletedAt: null,
       },
     })
 
     if (existing) {
-      throw new Error(`Equipment with SKU "${input.sku}" already exists`)
+      throw new Error(`Equipment with SKU "${sku}" already exists`)
     }
 
     // Build customFields
@@ -314,9 +327,10 @@ export class EquipmentService {
       customFields.tags = input.tags
     }
 
-    if (input.depositAmount !== undefined) {
+    if (input.depositAmount !== undefined && !Number.isNaN(input.depositAmount)) {
       customFields.depositAmount = input.depositAmount
     }
+    customFields.requiresDeposit = input.requiresDeposit ?? false
 
     if (input.subCategoryId) {
       customFields.subCategoryId = input.subCategoryId
@@ -338,7 +352,7 @@ export class EquipmentService {
       // Create equipment record
       const newEquipment = await tx.equipment.create({
         data: {
-          sku: input.sku,
+          sku,
           model: input.model,
           categoryId: input.categoryId,
           brandId: input.brandId,
@@ -349,8 +363,10 @@ export class EquipmentService {
           dailyPrice: input.dailyPrice,
           weeklyPrice: input.weeklyPrice,
           monthlyPrice: input.monthlyPrice,
+          purchasePrice: input.purchasePrice,
           featured: input.featured || false,
           isActive: input.isActive !== undefined ? input.isActive : true,
+          requiresAssistant: input.requiresAssistant ?? false,
           warehouseLocation: input.warehouseLocation,
           barcode: input.barcode,
           specifications: input.specifications
@@ -359,6 +375,9 @@ export class EquipmentService {
           customFields:
             Object.keys(customFields).length > 0 ? JSON.parse(JSON.stringify(customFields)) : null,
           createdBy: input.createdBy,
+          specConfidence: input.specConfidence,
+          specLastInferredAt: input.specLastInferredAt,
+          specSource: input.specSource,
         },
         include: {
           category: true,
@@ -456,6 +475,8 @@ export class EquipmentService {
       bufferTime,
       bufferTimeUnit,
       vendorSubmissionStatus,
+      depositAmount,
+      requiresDeposit,
       ...data
     } = input
 
@@ -509,14 +530,25 @@ export class EquipmentService {
     if (vendorSubmissionStatus !== undefined) {
       customFields.vendorSubmissionStatus = vendorSubmissionStatus
     }
+    if (depositAmount !== undefined) {
+      if (Number.isNaN(depositAmount)) {
+        delete customFields.depositAmount
+      } else {
+        customFields.depositAmount = depositAmount
+      }
+    }
+    if (requiresDeposit !== undefined) {
+      customFields.requiresDeposit = requiresDeposit
+    }
 
     // Update in transaction
     await prisma.$transaction(async (tx) => {
       // Update equipment record
+      const { specConfidence, specLastInferredAt, specSource, ...restData } = data
       await tx.equipment.update({
         where: { id },
         data: {
-          ...data,
+          ...restData,
           specifications: data.specifications
             ? JSON.parse(JSON.stringify(data.specifications))
             : undefined,
@@ -526,6 +558,9 @@ export class EquipmentService {
               : undefined,
           updatedBy,
           updatedAt: new Date(),
+          ...(specConfidence != null && { specConfidence }),
+          ...(specLastInferredAt != null && { specLastInferredAt }),
+          ...(specSource != null && { specSource }),
         },
       })
 

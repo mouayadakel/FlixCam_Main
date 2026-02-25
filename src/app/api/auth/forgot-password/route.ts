@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db/prisma'
 import { EmailService } from '@/lib/services/email.service'
 import { randomBytes } from 'crypto'
+import { NotificationChannel } from '@prisma/client'
 
 const bodySchema = z.object({ email: z.string().email() })
 
@@ -33,7 +34,12 @@ export async function POST(request: NextRequest) {
         data: { userId: user.id, token, type: 'password_reset', expiresAt },
       })
 
-      const result = await EmailService.sendPasswordReset(email, token)
+      const emailConfig = await prisma.messagingChannelConfig.findUnique({
+        where: { channel: NotificationChannel.EMAIL },
+      })
+      const emailEnabled = emailConfig?.isEnabled ?? true
+      const result =
+        emailEnabled ? await EmailService.sendPasswordReset(email, token) : { ok: false, error: 'Email channel disabled' }
       if (!result.ok && result.error) {
         console.error('[forgot-password] Email send failed:', result.error)
         // Still return success to avoid email enumeration

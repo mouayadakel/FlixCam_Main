@@ -40,14 +40,16 @@
 
 ## 📁 File Structure
 
+This folder contains reference specs. Production code lives in `src/`.
+
 ```
-specifications/
-├── types.ts                      # TypeScript type definitions
-├── SpecificationsDisplay.tsx     # Main display component
-├── SpecificationsEditor.tsx      # Admin editor component
-├── specifications-utils.ts       # Helpers & sample data
-├── ExampleIntegration.tsx        # Full integration example
-└── README.md                     # This file
+src/
+├── components/
+│   ├── features/equipment/specifications-display.tsx   # Display component
+│   └── forms/specifications-editor.tsx                # Admin editor
+├── lib/
+│   ├── types/specifications.types.ts                  # Type definitions
+│   └── utils/specifications.utils.ts                  # convertFlatToStructured, etc.
 ```
 
 ---
@@ -64,7 +66,7 @@ npm install lucide-react
 ### 2. Basic Usage (Frontend)
 
 ```tsx
-import { SpecificationsDisplay } from '@/components/specifications/SpecificationsDisplay'
+import { SpecificationsDisplay } from '@/components/features/equipment/specifications-display'
 
 function EquipmentDetailPage({ equipment }) {
   return (
@@ -83,7 +85,7 @@ function EquipmentDetailPage({ equipment }) {
 ### 3. Admin Panel Usage
 
 ```tsx
-import { SpecificationsEditor } from '@/components/specifications/SpecificationsEditor'
+import { SpecificationsEditor } from '@/components/forms/specifications-editor'
 
 function EquipmentForm({ equipment, onChange }) {
   return (
@@ -305,7 +307,7 @@ function EquipmentForm({ equipment, onChange }) {
 ### Convert Flat to Structured
 
 ```typescript
-import { convertFlatToStructured } from '@/lib/specifications-utils'
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
 
 const flatSpecs = {
   sensor: '12.1MP',
@@ -319,7 +321,7 @@ const structured = convertFlatToStructured(flatSpecs, 'cameras')
 ### Auto-Extract Quick Specs
 
 ```typescript
-import { extractQuickSpecs } from '@/lib/specifications-utils'
+import { extractQuickSpecs } from '@/lib/utils/specifications.utils'
 
 const quickSpecs = extractQuickSpecs(structuredSpecs, 4)
 // Returns top 4 highlighted specs
@@ -328,7 +330,7 @@ const quickSpecs = extractQuickSpecs(structuredSpecs, 4)
 ### Auto-Extract Highlights
 
 ```typescript
-import { extractHighlights } from '@/lib/specifications-utils'
+import { extractHighlights } from '@/lib/utils/specifications.utils'
 
 const highlights = extractHighlights(structuredSpecs, 4)
 // Returns top 4 specs from "Key Specs" group
@@ -337,7 +339,7 @@ const highlights = extractHighlights(structuredSpecs, 4)
 ### Validate Specifications
 
 ```typescript
-import { validateSpecifications } from '@/lib/specifications-utils'
+import { validateSpecifications } from '@/lib/utils/specifications.utils'
 
 const { valid, errors } = validateSpecifications(specs)
 if (!valid) {
@@ -433,7 +435,7 @@ type?: 'text' | 'boolean' | 'range' | 'colorTemp' | 'myCustomType'
 #### Option 2: Manual Migration
 
 ```typescript
-import { convertFlatToStructured } from '@/lib/specifications-utils'
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
 
 // In your data migration script
 const oldSpecs = {

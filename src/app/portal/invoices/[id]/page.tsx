@@ -17,7 +17,11 @@ import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { ArrowRight, Receipt, Download, CreditCard } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
-export default async function PortalInvoiceDetailPage({ params }: { params: { id: string } }) {
+export default async function PortalInvoiceDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -25,11 +29,12 @@ export default async function PortalInvoiceDetailPage({ params }: { params: { id
   }
 
   const userId = session.user.id
+  const { id } = await params
 
   // Invoice is generated from booking - fetch booking with payment info
   const booking = await prisma.booking.findFirst({
     where: {
-      id: params.id,
+      id,
       customerId: userId,
       deletedAt: null,
     },

@@ -27,10 +27,12 @@ const routeLabels: Record<string, { ar: string; en: string }> = {
   equipment: { ar: 'المعدات', en: 'Equipment' },
   categories: { ar: 'الفئات', en: 'Categories' },
   brands: { ar: 'العلامات التجارية', en: 'Brands' },
-  studios: { ar: 'الاستوديوهات', en: 'Studios' },
+  studios: { ar: 'مساحات الاستوديو', en: 'Studio Spaces' },
+  'cms/studios': { ar: 'محتوى الاستوديو', en: 'Studio Content' },
   invoices: { ar: 'الفواتير', en: 'Invoices' },
   payments: { ar: 'المدفوعات', en: 'Payments' },
   contracts: { ar: 'العقود', en: 'Contracts' },
+  'promissory-notes': { ar: 'سندات الأمر', en: 'Promissory Notes' },
   clients: { ar: 'العملاء', en: 'Clients' },
   coupons: { ar: 'الكوبونات', en: 'Coupons' },
   settings: { ar: 'الإعدادات', en: 'Settings' },
@@ -70,7 +72,9 @@ export function AdminBreadcrumbs() {
       // Skip numeric IDs and CUIDs (dynamic route params)
       const isId = /^\d+$/.test(segment) || /^c[a-z0-9]{24}$/i.test(segment)
       if (!isId) {
-        const label = routeLabels[segment] || {
+        const pathSoFar = segments.slice(0, index + 1).join('/')
+        const compoundKey = pathSoFar.includes('cms') && segment === 'studios' ? 'cms/studios' : segment
+        const label = routeLabels[compoundKey] ?? routeLabels[segment] ?? {
           ar: segment.replace(/-/g, ' '),
           en: segment.replace(/-/g, ' '),
         }

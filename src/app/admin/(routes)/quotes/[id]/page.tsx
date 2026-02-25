@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, ArrowLeft, FileText, Send, Check, X, Clock } from 'lucide-react'
@@ -32,7 +32,8 @@ const STATUS_LABELS: Record<
   converted: { ar: 'محول', en: 'Converted', variant: 'default' },
 }
 
-export default function QuoteDetailPage({ params }: { params: { id: string } }) {
+export default function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const { toast } = useToast()
   const [quote, setQuote] = useState<Quote | null>(null)
@@ -40,12 +41,12 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     loadQuote()
-  }, [params.id])
+  }, [id])
 
   const loadQuote = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/quotes/${params.id}`)
+      const response = await fetch(`/api/quotes/${id}`)
       if (!response.ok) {
         throw new Error('فشل تحميل العرض')
       }
@@ -65,7 +66,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
 
   const handleStatusUpdate = async (status: QuoteStatus) => {
     try {
-      const response = await fetch(`/api/quotes/${params.id}/status`, {
+      const response = await fetch(`/api/quotes/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
 
   const handleConvert = async () => {
     try {
-      const response = await fetch(`/api/quotes/${params.id}/convert`, {
+      const response = await fetch(`/api/quotes/${id}/convert`, {
         method: 'POST',
       })
 
@@ -109,7 +110,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
         description: 'تم تحويل العرض إلى حجز بنجاح',
       })
 
-      router.push(`/admin/bookings/${params.id}`)
+      router.push(`/admin/bookings/${id}`)
     } catch (error: any) {
       toast({
         title: 'خطأ',

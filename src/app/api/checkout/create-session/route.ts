@@ -12,6 +12,7 @@ import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 import { TapClient } from '@/lib/integrations/tap/client'
 import { prisma } from '@/lib/db/prisma'
 import { EmailService } from '@/lib/services/email.service'
+import { getPromissoryNoteSettings } from '@/lib/settings/promissory-note-settings'
 
 export async function POST(request: NextRequest) {
   const rate = await checkRateLimitUpstash(request, 'payment')
@@ -24,12 +25,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { checkoutDetails?: { name: string; email: string; phone: string } }
+  let body: {
+    checkoutDetails?: { name: string; email: string; phone: string }
+    receiver?: {
+      name?: string
+      idNumber?: string
+      phone?: string
+      idPhotoUrl?: string
+    }
+    fulfillmentMethod?: string
+    deliveryAddress?: { city?: string; street?: string; notes?: string }
+    deliveryLat?: number
+    deliveryLng?: number
+    preferredTimeSlot?: string
+    emergencyContact?: { name?: string; phone?: string; relation?: string }
+    checkoutFormData?: Record<string, unknown>
+  }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
   }
+
+  const deliveryAddrStr =
+    body.deliveryAddress &&
+    [body.deliveryAddress.street, body.deliveryAddress.city, body.deliveryAddress.notes]
+      .filter(Boolean)
+      .join(', ')
+  const deliveryAddr = deliveryAddrStr || undefined
 
   const sessionId = getCartSessionId(request.headers.get('cookie') ?? null)
   const cart = await CartService.getOrCreateCart(session.user.id, sessionId)
@@ -105,6 +128,19 @@ export async function POST(request: NextRequest) {
       studioEndTime,
       totalAmount,
       vatAmount,
+      receiverName: body.receiver?.name,
+      receiverPhone: body.receiver?.phone,
+      receiverIdNumber: body.receiver?.idNumber,
+      receiverIdPhotoUrl: body.receiver?.idPhotoUrl,
+      fulfillmentMethod: body.fulfillmentMethod ?? undefined,
+      deliveryAddress: deliveryAddr,
+      deliveryLat: body.deliveryLat,
+      deliveryLng: body.deliveryLng,
+      preferredTimeSlot: body.preferredTimeSlot,
+      emergencyContactName: body.emergencyContact?.name,
+      emergencyContactPhone: body.emergencyContact?.phone,
+      emergencyContactRelation: body.emergencyContact?.relation,
+      checkoutFormData: body.checkoutFormData,
     },
     session.user.id
   )
@@ -161,6 +197,19 @@ export async function POST(request: NextRequest) {
 
   const appUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000'
   const redirectSuccess = `${appUrl}/booking/confirmation/${booking.id}`
+
+  const pnSettings = await getPromissoryNoteSettings()
+  const pnRequired =
+    (hasEquipment && pnSettings.pn_enabled_for_equipment) ||
+    (hasStudio && !hasEquipment && pnSettings.pn_enabled_for_studio)
+
+  if (pnRequired) {
+    return NextResponse.json({
+      redirectUrl: `${appUrl}/checkout/promissory-note/${booking.id}`,
+      bookingId: booking.id,
+      depositAmount,
+    })
+  }
 
   const apiKey = process.env.TAP_API_KEY || process.env.TAP_SECRET_KEY
   const webhookSecret = process.env.TAP_WEBHOOK_SECRET

@@ -55,7 +55,7 @@ export default function CmsStudiosPage() {
       <div>
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Video className="h-8 w-8" />
-          الاستوديوهات (CMS)
+          محتوى الاستوديو
         </h1>
         <p className="mt-1 text-muted-foreground">
           إدارة محتوى صفحات الاستوديوهات: صور، أسعار، باكجات، موقع، أسئلة شائعة

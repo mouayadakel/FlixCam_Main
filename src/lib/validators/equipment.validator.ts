@@ -25,8 +25,8 @@ export const equipmentTranslationSchema = z.object({
 
 // Base schema without refine (so we can use .partial() on it)
 const baseEquipmentSchema = z.object({
-  sku: z.string().min(1, { message: 'SKU is required' }).max(100, { message: 'SKU is too long' }),
-  model: z.string().max(200, { message: 'Model name is too long' }).optional(),
+  sku: z.string().max(100, { message: 'SKU is too long' }).optional().or(z.literal('')),
+  model: z.string().min(1, { message: 'Model is required' }).max(200, { message: 'Model name is too long' }),
   categoryId: z.string().min(1, { message: 'Category is required' }),
   subCategoryId: z.string().optional(),
   brandId: z.string().optional(),
@@ -40,9 +40,24 @@ const baseEquipmentSchema = z.object({
   dailyPrice: z.number().min(0, { message: 'Daily price must be positive' }),
   weeklyPrice: z.number().min(0, { message: 'Weekly price must be positive' }).optional(),
   monthlyPrice: z.number().min(0, { message: 'Monthly price must be positive' }).optional(),
-  depositAmount: z.number().min(0, { message: 'Deposit must be positive' }).optional(),
+  /** سعر الشراء — internal only, for tracking and سند الأمر (not shown to customers) */
+  purchasePrice: z.number().min(0, { message: 'Purchase price cannot be negative' }).optional(),
+  /** مبلغ التأمين — اختياري. Empty/NaN/null from number input coerced to undefined. */
+  depositAmount: z.preprocess(
+    (v) =>
+      v === '' ||
+      v === undefined ||
+      v === null ||
+      (typeof v === 'number' && Number.isNaN(v))
+        ? undefined
+        : v,
+    z.number().min(0, { message: 'Deposit must be positive' }).optional()
+  ),
+  /** التأمين إلزامي للعميل — default false (لا يتطلب تأمين) */
+  requiresDeposit: z.boolean().optional(),
   featured: z.boolean().optional(),
   isActive: z.boolean().optional(),
+  requiresAssistant: z.boolean().optional(),
   warehouseLocation: z.string().max(200, { message: 'Warehouse location is too long' }).optional(),
   barcode: z.string().max(100, { message: 'Barcode is too long' }).optional(),
   /** Accepts both StructuredSpecifications (from SpecificationsEditor) and flat Record format */
@@ -78,6 +93,10 @@ const baseEquipmentSchema = z.object({
   boxContents: z.string().max(2000, { message: 'Box contents is too long' }).optional(),
   bufferTime: z.number().int().min(0, { message: 'Buffer time cannot be negative' }).optional(),
   bufferTimeUnit: z.enum(['hours', 'days']).optional(),
+  /** Set when specs come from AI suggest — persisted on save */
+  specConfidence: z.number().min(0).max(1).optional(),
+  specLastInferredAt: z.coerce.date().optional(),
+  specSource: z.enum(['import', 'ai-infer', 'url-extract', 'manual', 'migration']).optional(),
 })
 
 // Create schema with validation refine

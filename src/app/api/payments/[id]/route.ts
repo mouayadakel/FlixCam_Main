@@ -13,7 +13,7 @@ import { PaymentPolicy } from '@/lib/policies/payment.policy'
 import { updatePaymentSchema } from '@/lib/validators/payment.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,15 +21,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await PaymentPolicy.canView(userId, params.id)
+    const policy = await PaymentPolicy.canView(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const payment = await PaymentService.getById(params.id, userId)
+    const payment = await PaymentService.getById(id, userId)
 
     return NextResponse.json({
       success: true,
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -75,10 +76,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await PaymentPolicy.canUpdate(userId, params.id)
+    const policy = await PaymentPolicy.canUpdate(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -92,18 +94,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         // Process payment
         if (validated.tapTransactionId && validated.tapChargeId) {
           await PaymentService.process({
-            paymentId: params.id,
+            paymentId: id,
             tapTransactionId: validated.tapTransactionId,
             tapChargeId: validated.tapChargeId,
             userId,
           })
         }
       } else if (validated.status === 'FAILED') {
-        await PaymentService.markFailed(params.id, userId)
+        await PaymentService.markFailed(id, userId)
       }
     }
 
-    const payment = await PaymentService.getById(params.id, userId)
+    const payment = await PaymentService.getById(id, userId)
 
     return NextResponse.json({
       success: true,

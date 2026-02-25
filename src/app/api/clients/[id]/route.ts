@@ -13,7 +13,7 @@ import { ClientPolicy } from '@/lib/policies/client.policy'
 import { updateClientSchema } from '@/lib/validators/client.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,15 +21,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await ClientPolicy.canView(userId, params.id)
+    const policy = await ClientPolicy.canView(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const client = await ClientService.getById(params.id, userId)
+    const client = await ClientService.getById(id, userId)
 
     return NextResponse.json({
       success: true,
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -53,10 +54,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await ClientPolicy.canUpdate(userId, params.id)
+    const policy = await ClientPolicy.canUpdate(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -71,7 +73,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const client = await ClientService.update(params.id, validated, userId, auditContext)
+    const client = await ClientService.update(id, validated, userId, auditContext)
 
     return NextResponse.json({
       success: true,
@@ -99,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -107,10 +109,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await ClientPolicy.canDelete(userId, params.id)
+    const policy = await ClientPolicy.canDelete(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -122,7 +125,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    await ClientService.delete(params.id, userId, auditContext)
+    await ClientService.delete(id, userId, auditContext)
 
     return NextResponse.json({
       success: true,

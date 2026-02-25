@@ -1,5 +1,5 @@
 /**
- * POST /api/checkout/lock-price – Lock cart price for 15 min (Phase 3.4).
+ * POST /api/checkout/lock-price – Lock cart price for 2 hours.
  * Returns lockedUntil; actual price lock is enforced when creating booking/payment in Phase 3.5.
  */
 
@@ -9,7 +9,7 @@ import { CartService } from '@/lib/services/cart.service'
 import { getCartSessionId } from '@/lib/cart-session'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 
-const LOCK_TTL_MINUTES = 15
+const LOCK_TTL_MINUTES = 120
 
 export async function POST(request: NextRequest) {
   const rate = await checkRateLimitUpstash(request, 'checkout')

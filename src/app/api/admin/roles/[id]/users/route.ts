@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -38,8 +38,7 @@ export async function GET(
       )
     }
 
-    const p = await Promise.resolve(params)
-    const roleId = p.id
+    const { id: roleId } = await params
 
     const role = await prisma.role.findFirst({
       where: { id: roleId, deletedAt: null },

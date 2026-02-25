@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; roleId: string } | Promise<{ id: string; roleId: string }> }
+  { params }: { params: Promise<{ id: string; roleId: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -36,8 +36,7 @@ export async function DELETE(
       )
     }
 
-    const p = await Promise.resolve(params)
-    const { id: userId, roleId } = p
+    const { id: userId, roleId } = await params
 
     const deleted = await prisma.assignedUserRole.deleteMany({
       where: { userId, roleId },

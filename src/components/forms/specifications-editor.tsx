@@ -31,10 +31,14 @@ import {
   Gauge,
   Link2,
   Loader2,
+  FileText,
+  LayoutTemplate,
 } from 'lucide-react'
+import DOMPurify from 'dompurify'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
@@ -71,6 +75,11 @@ const ICON_OPTIONS = [
 
 const DEFAULT_STRUCTURED: StructuredSpecifications = {
   groups: [{ label: 'Specifications', labelAr: 'المواصفات', icon: 'star', priority: 1, specs: [] }],
+}
+
+function escapeHtml(s: string): string {
+  const m: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+  return String(s).replace(/[&<>"']/g, (c) => m[c] ?? c)
 }
 
 export interface SpecificationsEditorProps {
@@ -346,7 +355,7 @@ export function SpecificationsEditor({
 }: SpecificationsEditorProps) {
   const normalized = useMemo(() => normalizeValue(value, categoryHint), [value, categoryHint])
   const [state, setState] = useState<StructuredSpecifications>(normalized)
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'json'>('edit')
+  const [viewMode, setViewMode] = useState<'htmlEditor' | 'edit' | 'preview' | 'htmlPreview' | 'json'>('edit')
   const [copied, setCopied] = useState(false)
   const [fetchDialogOpen, setFetchDialogOpen] = useState(false)
   const [fetchUrl, setFetchUrl] = useState('')
@@ -463,7 +472,17 @@ export function SpecificationsEditor({
     <div className={cn('space-y-4', className)} dir="rtl">
       {label && <Label>{label}</Label>}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={viewMode === 'htmlEditor' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('htmlEditor')}
+            title="محرر HTML / نصوص"
+          >
+            <FileText className="ml-1.5 h-4 w-4" />
+            HTML / نصوص
+          </Button>
           <Button
             type="button"
             variant={viewMode === 'edit' ? 'default' : 'outline'}
@@ -480,6 +499,16 @@ export function SpecificationsEditor({
           >
             <Eye className="ml-1.5 h-4 w-4" />
             Preview
+          </Button>
+          <Button
+            type="button"
+            variant={viewMode === 'htmlPreview' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('htmlPreview')}
+            title="معاينة HTML"
+          >
+            <LayoutTemplate className="ml-1.5 h-4 w-4" />
+            HTML Preview
           </Button>
           <Button
             type="button"
@@ -531,15 +560,20 @@ export function SpecificationsEditor({
                     ...g,
                     specs: [...g.specs],
                   }))
+                  const existingKeys = new Set(
+                    mergedGroups.flatMap((g) => g.specs.map((s) => s.key))
+                  )
+                  const newSpecs = inferred.groups.flatMap((g) => g.specs)
                   const firstGroup = mergedGroups[0]
-                  if (firstGroup) {
-                    const existingKeys = new Set(firstGroup.specs.map((s) => s.key))
-                    for (const spec of inferred.groups[0]?.specs ?? []) {
-                      if (!existingKeys.has(spec.key)) {
+                  for (const spec of newSpecs) {
+                    if (!existingKeys.has(spec.key)) {
+                      if (firstGroup) {
                         firstGroup.specs.push(spec)
-                        existingKeys.add(spec.key)
                       }
+                      existingKeys.add(spec.key)
                     }
+                  }
+                  if (mergedGroups.length > 0) {
                     syncChange({ ...state, groups: mergedGroups })
                   } else {
                     syncChange({ ...state, ...inferred })
@@ -616,6 +650,27 @@ export function SpecificationsEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {viewMode === 'htmlEditor' && (
+        <Card>
+          <CardContent className="pt-6">
+            <Label className="mb-2 block text-sm font-semibold text-text-heading">
+              محرر HTML / نصوص — مقطع مواصفات مخصص
+            </Label>
+            <p className="mb-3 text-xs text-muted-foreground">
+              اكتب أو الصق HTML أو نصاً غنياً. سيُحفظ مع المواصفات ويُعرض في معاينة HTML.
+            </p>
+            <Textarea
+              value={state.customHtml ?? ''}
+              onChange={(e) => syncChange({ ...state, customHtml: e.target.value })}
+              placeholder="<p>مثال: جدول أو قائمة مواصفات مخصصة...</p>"
+              rows={14}
+              className="font-mono text-sm"
+              dir="ltr"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {viewMode === 'edit' && (
         <div className="space-y-6">
@@ -778,6 +833,49 @@ export function SpecificationsEditor({
         <div className="rounded-2xl border border-border-light/60 bg-white p-6">
           <SpecificationsDisplay specifications={state} locale="ar" showQuickSpecPills={true} />
         </div>
+      )}
+
+      {viewMode === 'htmlPreview' && (
+        <Card>
+          <CardContent className="pt-6">
+            <h4 className="mb-3 text-sm font-semibold text-text-heading">معاينة HTML</h4>
+            <div
+              className="min-h-[200px] rounded-xl border border-border-light bg-white p-4 [&_table]:w-full [&_th]:border [&_th]:bg-muted [&_th]:p-2 [&_td]:border [&_td]:p-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6"
+              dir="rtl"
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  const raw = state.customHtml?.trim()
+                  if (raw) {
+                    return DOMPurify.sanitize(raw, {
+                      ALLOWED_TAGS: [
+                        'p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li',
+                        'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4',
+                        'a', 'span', 'div', 'hr',
+                      ],
+                      ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                    })
+                  }
+                  const parts: string[] = []
+                  if (state.highlights?.length) {
+                    parts.push('<div class="mb-4"><h3>أبرز المواصفات</h3><ul>')
+                    state.highlights.forEach((h) => {
+                      parts.push(`<li><strong>${escapeHtml(h.label)}</strong>: ${escapeHtml(h.value)}</li>`)
+                    })
+                    parts.push('</ul></div>')
+                  }
+                  state.groups.forEach((g) => {
+                    parts.push(`<div class="mb-4"><h3>${escapeHtml(g.labelAr || g.label)}</h3><table><thead><tr><th>المواصفة</th><th>القيمة</th></tr></thead><tbody>`)
+                    g.specs.forEach((s) => {
+                      parts.push(`<tr><td>${escapeHtml(s.labelAr || s.label || s.key)}</td><td>${escapeHtml(s.value)}</td></tr>`)
+                    })
+                    parts.push('</tbody></table></div>')
+                  })
+                  return parts.length ? parts.join('') : '<p class="text-muted-foreground">لا يوجد محتوى. أضف مواصفات في تبويب Edit أو HTML مخصص في محرر HTML / نصوص.</p>'
+                })(),
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {viewMode === 'json' && (

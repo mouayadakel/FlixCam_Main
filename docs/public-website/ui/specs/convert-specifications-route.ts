@@ -11,8 +11,8 @@ import {
   isFlatSpecifications,
   type FlatSpecifications,
   type StructuredSpecifications,
-} from '@/types/specifications'
-import { convertFlatToStructured, validateSpecifications } from '@/lib/specifications-utils'
+} from '@/lib/types/specifications.types'
+import { convertFlatToStructured, validateSpecifications } from '@/lib/utils/specifications.utils'
 
 // ============================================================================
 // Types
@@ -117,13 +117,10 @@ async function convertEquipmentSpecifications(
 
   try {
     // Convert to structured
+    const categoryHint = equipment.category?.name?.toLowerCase() ?? equipment.category?.slug ?? ''
     const structuredSpecs = convertFlatToStructured(
       equipment.specifications as FlatSpecifications,
-      {
-        categoryHint: equipment.category.name.toLowerCase(),
-        preserveOriginal: options.preserveOriginal ?? true,
-        autoFillDefaults: options.autoFillDefaults ?? true,
-      }
+      categoryHint
     )
 
     // Validate (unless skipped)

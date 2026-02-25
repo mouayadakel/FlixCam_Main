@@ -12,7 +12,7 @@ import { QuoteService } from '@/lib/services/quote.service'
 import { QuotePolicy } from '@/lib/policies/quote.policy'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const booking = await QuoteService.convertToBooking(params.id, userId, auditContext)
+    const booking = await QuoteService.convertToBooking(id, userId, auditContext)
 
     return NextResponse.json({
       success: true,

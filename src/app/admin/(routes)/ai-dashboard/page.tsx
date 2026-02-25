@@ -1,12 +1,14 @@
 /**
  * @file page.tsx
- * @description AI Dashboard — command center: Overview, Content Health Scanner, Analytics
+ * @description AI Dashboard — Overview, AI Recommendations, Content Health, Analytics
  * @module app/admin/(routes)/ai-dashboard
  */
 
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OverviewTab } from './_components/overview-tab'
@@ -14,6 +16,13 @@ import { ContentHealthTab } from './_components/content-health-tab'
 import { ContentReviewTab } from './_components/content-review-tab'
 import { AnalyticsTab } from './_components/analytics-tab'
 import { ImageReviewTab } from './_components/image-review-tab'
+
+const AIRecommendationsTab = dynamic(
+  () => import('../ai-recommendations/page').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <div className="flex h-64 items-center justify-center">جاري التحميل...</div> }
+)
+
+const TAB_VALUES = ['overview', 'ai-recommendations', 'content-health', 'content-review', 'image-review', 'analytics'] as const
 
 const TabFallback = () => (
   <div className="space-y-4">
@@ -23,7 +32,29 @@ const TabFallback = () => (
 )
 
 export default function AIDashboardPage() {
-  const [activeTab, setActiveTab] = useState('overview')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const tabParam = searchParams?.get('tab') ?? 'overview'
+  const [activeTab, setActiveTab] = useState<string>(
+    TAB_VALUES.includes(tabParam as (typeof TAB_VALUES)[number]) ? tabParam : 'overview'
+  )
+
+  useEffect(() => {
+    const t = searchParams?.get('tab') ?? 'overview'
+    if (TAB_VALUES.includes(t as (typeof TAB_VALUES)[number])) setActiveTab(t)
+  }, [searchParams])
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    if (value === 'overview') {
+      params.delete('tab')
+    } else {
+      params.set('tab', value)
+    }
+    const query = params.toString()
+    router.replace(`/admin/ai-dashboard${query ? `?${query}` : ''}`, { scroll: false })
+  }
 
   return (
     <div className="space-y-6" dir="rtl" data-testid="ai-dashboard-page">
@@ -38,13 +69,16 @@ export default function AIDashboardPage() {
 
       <Tabs
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
         className="space-y-4"
         data-testid="ai-dashboard-tabs"
       >
-        <TabsList className="grid w-full max-w-3xl grid-cols-5" data-testid="ai-dashboard-tablist">
+        <TabsList className="mb-4 flex-wrap" data-testid="ai-dashboard-tablist">
           <TabsTrigger value="overview" data-testid="ai-tab-overview">
             نظرة عامة
+          </TabsTrigger>
+          <TabsTrigger value="ai-recommendations" data-testid="ai-tab-recommendations">
+            توصيات الذكاء الاصطناعي
           </TabsTrigger>
           <TabsTrigger value="content-health" data-testid="ai-tab-content-health">
             صحة المحتوى
@@ -62,8 +96,12 @@ export default function AIDashboardPage() {
 
         <TabsContent value="overview" data-testid="ai-tabpanel-overview">
           <Suspense fallback={<TabFallback />}>
-            <OverviewTab onSwitchTab={setActiveTab} />
+            <OverviewTab onSwitchTab={handleTabChange} />
           </Suspense>
+        </TabsContent>
+
+        <TabsContent value="ai-recommendations" data-testid="ai-tabpanel-recommendations">
+          <AIRecommendationsTab />
         </TabsContent>
 
         <TabsContent value="content-health" data-testid="ai-tabpanel-content-health">

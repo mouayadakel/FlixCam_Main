@@ -1,380 +1,80 @@
 /**
- * @file payments/page.tsx
- * @description Payments list page
+ * @file page.tsx
+ * @description Payments page with tabs: Payments, Deposits, Refunds
  * @module app/admin/(routes)/payments
- * @author Engineering Team
- * @created 2026-01-28
  */
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import Link from 'next/link'
-import { Eye, RefreshCw, DollarSign, Clock, XCircle, RotateCcw, Download } from 'lucide-react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
-import { exportToCSV } from '@/lib/utils/export.utils'
-import { useToast } from '@/hooks/use-toast'
-import { TablePagination } from '@/components/tables/table-pagination'
-import { TableSkeleton } from '@/components/admin/table-skeleton'
-import { EmptyState } from '@/components/states/empty-state'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PaymentStatus } from '@prisma/client'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 
-interface Payment {
-  id: string
-  bookingId: string
-  amount: number
-  status: PaymentStatus
-  tapTransactionId?: string | null
-  tapChargeId?: string | null
-  refundAmount?: number | null
-  refundReason?: string | null
-  booking?: {
-    id: string
-    bookingNumber: string
-    customerId: string
-    totalPrice: number
-    customer?: {
-      id: string
-      name: string | null
-      email: string
-    }
-  } | null
-  createdAt: string
-  updatedAt: string
-}
+const PaymentsListTab = dynamic(
+  () => import('./_components/payments-list-tab').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
+const DepositsTab = dynamic(
+  () => import('../finance/deposits/page').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
+const RefundsTab = dynamic(
+  () => import('../finance/refunds/page').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
 
-interface PaymentsSummary {
-  totalCollected: number
-  pendingAmount: number
-  failedCount: number
-  refundedTotal: number
-}
-
-const STATUS_LABELS: Record<
-  PaymentStatus,
-  { ar: string; en: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  PENDING: { ar: 'قيد الانتظار', en: 'Pending', variant: 'outline' },
-  PROCESSING: { ar: 'قيد المعالجة', en: 'Processing', variant: 'secondary' },
-  SUCCESS: { ar: 'نجح', en: 'Success', variant: 'default' },
-  FAILED: { ar: 'فشل', en: 'Failed', variant: 'destructive' },
-  REFUNDED: { ar: 'مسترد', en: 'Refunded', variant: 'destructive' },
-  PARTIALLY_REFUNDED: { ar: 'مسترد جزئياً', en: 'Partially Refunded', variant: 'secondary' },
-}
+const TAB_VALUES = ['payments', 'deposits', 'refunds'] as const
 
 export default function PaymentsPage() {
-  const { toast } = useToast()
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [total, setTotal] = useState(0)
-  const [summary, setSummary] = useState<PaymentsSummary | null>(null)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(50)
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
-
-  const statuses: Array<PaymentStatus | 'all'> = [
-    'all',
-    'PENDING',
-    'PROCESSING',
-    'SUCCESS',
-    'FAILED',
-    'REFUNDED',
-    'PARTIALLY_REFUNDED',
-  ]
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const tabParam = searchParams?.get('tab') ?? 'payments'
+  const [activeTab, setActiveTab] = useState<string>(
+    TAB_VALUES.includes(tabParam as (typeof TAB_VALUES)[number]) ? tabParam : 'payments'
+  )
 
   useEffect(() => {
-    loadPayments()
-  }, [statusFilter, page, pageSize, dateFrom, dateTo])
+    const t = searchParams?.get('tab') ?? 'payments'
+    if (TAB_VALUES.includes(t as (typeof TAB_VALUES)[number])) setActiveTab(t)
+  }, [searchParams])
 
-  const loadPayments = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (dateFrom) params.set('dateFrom', dateFrom)
-      if (dateTo) params.set('dateTo', dateTo)
-      params.set('page', String(page))
-      params.set('pageSize', String(pageSize))
-
-      const response = await fetch(`/api/payments?${params.toString()}`)
-      if (!response.ok) {
-        throw new Error('فشل تحميل المدفوعات')
-      }
-
-      const data = await response.json()
-      setPayments(data.data || [])
-      setTotal(data.total ?? 0)
-      if (data.summary) setSummary(data.summary)
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: error instanceof Error ? error.message : 'فشل تحميل المدفوعات',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    if (value === 'payments') {
+      params.delete('tab')
+    } else {
+      params.set('tab', value)
     }
-  }
-
-  const filteredPayments = useMemo(() => {
-    return payments
-  }, [payments])
-
-  const getStatusLabel = (status: PaymentStatus) => {
-    return STATUS_LABELS[status]?.ar || status
-  }
-
-  const getStatusVariant = (status: PaymentStatus) => {
-    return STATUS_LABELS[status]?.variant || 'default'
-  }
-
-  const handleExportCSV = () => {
-    const rows = filteredPayments.map((p) => ({
-      id: p.id,
-      bookingNumber: p.booking?.bookingNumber ?? '',
-      customerName: p.booking?.customer?.name ?? '',
-      amount: formatCurrency(p.amount),
-      status: getStatusLabel(p.status),
-      refundAmount: p.refundAmount != null ? formatCurrency(p.refundAmount) : '',
-      createdAt: formatDate(p.createdAt),
-    }))
-    exportToCSV(rows, `payments-${new Date().toISOString().slice(0, 10)}`, [
-      { key: 'id', label: 'المعرف' },
-      { key: 'bookingNumber', label: 'رقم الحجز' },
-      { key: 'customerName', label: 'العميل' },
-      { key: 'amount', label: 'المبلغ' },
-      { key: 'status', label: 'الحالة' },
-      { key: 'refundAmount', label: 'المسترد' },
-      { key: 'createdAt', label: 'تاريخ الإنشاء' },
-    ])
+    const query = params.toString()
+    router.replace(`/admin/payments${query ? `?${query}` : ''}`, { scroll: false })
   }
 
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">المدفوعات</h1>
-          <p className="mt-2 text-muted-foreground">إدارة المدفوعات والاستردادات</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportCSV}
-            disabled={filteredPayments.length === 0}
-          >
-            <Download className="ml-2 h-4 w-4" />
-            تصدير CSV
-          </Button>
-          <Button onClick={loadPayments} variant="outline">
-            <RefreshCw className="ml-2 h-4 w-4" />
-            تحديث
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold">المدفوعات</h1>
       </div>
 
-      {summary && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي المحصل</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-bold text-green-600">
-                {formatCurrency(summary.totalCollected)}
-              </span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">مبلغ قيد الانتظار</CardTitle>
-              <Clock className="h-4 w-4 text-amber-600" />
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-bold text-amber-600">
-                {formatCurrency(summary.pendingAmount)}
-              </span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">فاشلة</CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-bold text-red-600">{summary.failedCount}</span>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">إجمالي المسترد</CardTitle>
-              <RotateCcw className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <span className="text-2xl font-bold">{formatCurrency(summary.refundedTotal)}</span>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="payments">المدفوعات</TabsTrigger>
+          <TabsTrigger value="deposits">العهد</TabsTrigger>
+          <TabsTrigger value="refunds">المستردات</TabsTrigger>
+        </TabsList>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="من تاريخ"
-        />
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="إلى تاريخ"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status === 'all'
-                ? 'جميع الحالات'
-                : STATUS_LABELS[status as PaymentStatus]?.ar || status}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Payments Table */}
-      <div className="rounded-lg border">
-        {loading ? (
-          <TableSkeleton
-            rowCount={5}
-            headers={[
-              'رقم الحجز',
-              'العميل',
-              'المبلغ',
-              'طريقة الدفع',
-              'الحالة',
-              'مبلغ الاسترداد',
-              'معرف المعاملة',
-              'تاريخ الإنشاء',
-              'الإجراءات',
-            ]}
-          />
-        ) : filteredPayments.length === 0 ? (
-          <EmptyState
-            title="لا توجد مدفوعات"
-            description="لم يتم العثور على مدفوعات تطابق الفلتر. المدفوعات تظهر هنا بعد إتمام عمليات الدفع."
-            icon={<DollarSign className="h-12 w-12" />}
-          />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>رقم الحجز</TableHead>
-                <TableHead>العميل</TableHead>
-                <TableHead>المبلغ</TableHead>
-                <TableHead>طريقة الدفع</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>مبلغ الاسترداد</TableHead>
-                <TableHead>معرف المعاملة</TableHead>
-                <TableHead>تاريخ الإنشاء</TableHead>
-                <TableHead>الإجراءات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell className="font-medium">
-                    {payment.booking?.bookingNumber || payment.bookingId}
-                  </TableCell>
-                  <TableCell>
-                    {payment.booking?.customer?.name || payment.booking?.customer?.email || '-'}
-                  </TableCell>
-                  <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {payment.tapTransactionId || payment.tapChargeId ? 'Tap / بطاقة' : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(payment.status)}>
-                      {getStatusLabel(payment.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {payment.refundAmount ? (
-                      <div>
-                        <span className="font-medium text-destructive">
-                          {formatCurrency(payment.refundAmount)}
-                        </span>
-                        {payment.refundReason && (
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {payment.refundReason}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {payment.tapTransactionId ? (
-                      <div className="font-mono text-sm">
-                        {payment.tapTransactionId.substring(0, 20)}...
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>{formatDate(payment.createdAt)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Link href={`/admin/payments/${payment.id}`}>
-                        <Button size="sm" variant="ghost">
-                          <Eye className="ml-1 h-4 w-4" />
-                          عرض
-                        </Button>
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {!loading && total > 0 && (
-        <TablePagination
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
-            setPage(1)
-          }}
-          itemLabel="مدفوعة"
-          dir="rtl"
-        />
-      )}
+        <TabsContent value="payments" className="mt-0">
+          <PaymentsListTab />
+        </TabsContent>
+        <TabsContent value="deposits" className="mt-0">
+          <DepositsTab />
+        </TabsContent>
+        <TabsContent value="refunds" className="mt-0">
+          <RefundsTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -241,15 +241,15 @@ export const FEATURE_FLAG_META: Record<string, Omit<FeatureFlagMeta, 'name'>> = 
 
 /** Admin sidebar href -> feature flag mapping. Disabled flag hides the item. */
 export const ADMIN_SIDEBAR_FLAG_MAP: Record<string, string> = {
-  '/admin/ai': 'enable_admin_ai',
+  '/admin/ai-dashboard': 'enable_admin_ai',
   '/admin/kit-builder': 'enable_admin_kit_builder',
   '/admin/shoot-types': 'enable_admin_shoot_types',
   '/admin/dynamic-pricing': 'enable_admin_dynamic_pricing',
-  '/admin/ai-recommendations': 'enable_admin_ai_recommendations',
+  '/admin/ai-recommendations': 'enable_admin_ai',
   '/admin/vendors': 'enable_admin_vendors',
-  '/admin/vendors/payouts': 'enable_admin_vendors',
   '/admin/marketing': 'enable_admin_marketing',
   '/admin/coupons': 'enable_admin_coupons',
   '/admin/live-ops': 'enable_admin_live_ops',
+  '/admin/finance/reports': 'enable_admin_analytics',
   '/admin/analytics': 'enable_admin_analytics',
 }

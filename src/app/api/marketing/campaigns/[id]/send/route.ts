@@ -12,7 +12,7 @@ import { MarketingService } from '@/lib/services/marketing.service'
 import { MarketingPolicy } from '@/lib/policies/marketing.policy'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const campaign = await MarketingService.send(params.id, userId, auditContext)
+    const campaign = await MarketingService.send(id, userId, auditContext)
 
     return NextResponse.json({
       success: true,

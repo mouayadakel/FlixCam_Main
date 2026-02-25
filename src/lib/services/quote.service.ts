@@ -166,6 +166,9 @@ export class QuoteService {
             id: true,
             name: true,
             email: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         studio: {
@@ -248,6 +251,9 @@ export class QuoteService {
             id: true,
             name: true,
             email: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         studio: {
@@ -350,6 +356,9 @@ export class QuoteService {
               id: true,
               name: true,
               email: true,
+              taxId: true,
+              companyName: true,
+              billingAddress: true,
             },
           },
           studio: {
@@ -529,6 +538,9 @@ export class QuoteService {
             id: true,
             name: true,
             email: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         studio: {
@@ -737,6 +749,9 @@ export class QuoteService {
             id: true,
             name: true,
             email: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         studio: {
@@ -781,6 +796,9 @@ export class QuoteService {
             id: true,
             name: true,
             email: true,
+            taxId: true,
+            companyName: true,
+            billingAddress: true,
           },
         },
         studio: {

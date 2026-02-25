@@ -5,6 +5,10 @@
  */
 
 import { prisma } from '@/lib/db/prisma'
+import {
+  type StructuredSpecifications,
+  isStructuredSpecifications,
+} from '@/lib/types/specifications.types'
 import { Prisma, TranslationLocale } from '@prisma/client'
 
 const REQUIRED_LOCALES: TranslationLocale[] = ['ar', 'en', 'zh']
@@ -61,12 +65,29 @@ function getImageCount(galleryImages: unknown, hasFeaturedImage: boolean): numbe
 
 /**
  * Calculate specs completeness from specifications JSON (0-1)
+ * Handles both Structured (groups[].specs) and Flat formats.
  */
 function getSpecsCompleteness(specifications: unknown): number {
   if (specifications == null || typeof specifications !== 'object') return 0
+
+  if (isStructuredSpecifications(specifications as StructuredSpecifications)) {
+    const allSpecs = (specifications as StructuredSpecifications).groups.flatMap((g) => g.specs)
+    if (allSpecs.length === 0) return 0
+    const filled = allSpecs.filter(
+      (s) =>
+        s.value != null &&
+        String(s.value).trim() !== '' &&
+        String(s.value).toLowerCase() !== 'unknown' &&
+        String(s.value).toLowerCase() !== 'n/a'
+    )
+    return filled.length / allSpecs.length
+  }
+
   const obj = specifications as Record<string, unknown>
-  const keys = Object.keys(obj)
-  if (keys.length === 0) return 1
+  const keys = Object.keys(obj).filter(
+    (k) => !['highlights', 'quickSpecs', 'groups'].includes(k)
+  )
+  if (keys.length === 0) return 0
   const filled = keys.filter((k) => isFilled(obj[k]))
   return filled.length / keys.length
 }

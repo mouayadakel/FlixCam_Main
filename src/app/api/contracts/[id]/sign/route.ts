@@ -13,7 +13,7 @@ import { ContractPolicy } from '@/lib/policies/contract.policy'
 import { signContractSchema } from '@/lib/validators/contract.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,10 +21,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await ContractPolicy.canSign(userId, params.id)
+    const policy = await ContractPolicy.canSign(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const contract = await ContractService.sign(params.id, validated, userId, auditContext)
+    const contract = await ContractService.sign(id, validated, userId, auditContext)
 
     return NextResponse.json({
       success: true,

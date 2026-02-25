@@ -18,6 +18,7 @@ function coerceEquipmentBody(body: Record<string, unknown>) {
     'dailyPrice',
     'weeklyPrice',
     'monthlyPrice',
+    'purchasePrice',
     'depositAmount',
     'bufferTime',
   ]
@@ -29,7 +30,7 @@ function coerceEquipmentBody(body: Record<string, unknown>) {
     }
   }
 
-  const booleanFields = ['featured', 'isActive']
+  const booleanFields = ['featured', 'isActive', 'requiresAssistant', 'requiresDeposit']
   for (const key of booleanFields) {
     const v = out[key]
     if (typeof v === 'string') {

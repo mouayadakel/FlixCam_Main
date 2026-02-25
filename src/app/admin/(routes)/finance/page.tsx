@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description Finance page (Invoices/Payments) with real data
+ * @description Finance page (Invoices/Payments/Deposits/Refunds) with real data
  * @module app/admin/(routes)/finance
  */
 
@@ -49,11 +49,44 @@ interface Payment {
   booking?: { bookingNumber: string; customer?: { name: string | null; email: string } }
 }
 
+interface DepositItem {
+  id: string
+  bookingNumber: string
+  status: string
+  depositAmount: number
+  totalAmount: number
+  startDate: string
+  endDate: string
+  createdAt: string
+  paidDate: string | null
+  depositStatus: 'paid' | 'pending' | 'refunded'
+  customer: { id: string; name: string | null; email: string }
+}
+
+interface RefundItem {
+  id: string
+  bookingId: string
+  bookingNumber: string | null
+  customer: { id: string; name: string | null; email: string } | null
+  amount: number
+  status: string
+  refundAmount: number | null
+  refundReason: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 interface FinanceStats {
   totalRevenue: number
   pendingPayments: number
   overdueInvoices: number
   thisMonthRevenue: number
+}
+
+const DEPOSIT_STATUS_LABELS: Record<string, { ar: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+  paid: { ar: 'مدفوع', variant: 'default' },
+  pending: { ar: 'قيد الانتظار', variant: 'secondary' },
+  refunded: { ar: 'مسترد', variant: 'destructive' },
 }
 
 const INVOICE_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -77,15 +110,19 @@ export default function FinancePage() {
   const { toast } = useToast()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
+  const [deposits, setDeposits] = useState<DepositItem[]>([])
+  const [refunds, setRefunds] = useState<RefundItem[]>([])
   const [stats, setStats] = useState<FinanceStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [invoicesRes, paymentsRes] = await Promise.all([
+      const [invoicesRes, paymentsRes, depositsRes, refundsRes] = await Promise.all([
         fetch('/api/invoices?pageSize=20'),
         fetch('/api/payments?pageSize=20'),
+        fetch('/api/finance/deposits'),
+        fetch('/api/finance/refunds'),
       ])
 
       let invoicesData: Invoice[] = []
@@ -101,6 +138,16 @@ export default function FinancePage() {
         const data = await paymentsRes.json()
         paymentsData = data.data || []
         setPayments(paymentsData)
+      }
+
+      if (depositsRes.ok) {
+        const json = await depositsRes.json()
+        setDeposits(json.data ?? [])
+      }
+
+      if (refundsRes.ok) {
+        const json = await refundsRes.json()
+        setRefunds(json.data ?? [])
       }
 
       // Calculate stats from fetched data
@@ -119,7 +166,7 @@ export default function FinancePage() {
         overdueInvoices,
         thisMonthRevenue: totalRevenue, // Simplified
       })
-    } catch (error) {
+    } catch {
       toast({
         title: 'خطأ',
         description: 'فشل تحميل البيانات المالية',
@@ -218,6 +265,8 @@ export default function FinancePage() {
         <TabsList>
           <TabsTrigger value="invoices">الفواتير</TabsTrigger>
           <TabsTrigger value="payments">المدفوعات</TabsTrigger>
+          <TabsTrigger value="deposits">العربون</TabsTrigger>
+          <TabsTrigger value="refunds">الاستردادات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="invoices" className="space-y-4">
@@ -370,6 +419,150 @@ export default function FinancePage() {
                       </TableRow>
                     )
                   })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="deposits" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">العربون</h2>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/finance/deposits">عرض الكل</Link>
+            </Button>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>رقم الحجز</TableHead>
+                  <TableHead>العميل</TableHead>
+                  <TableHead>مبلغ العربون</TableHead>
+                  <TableHead>حالة العربون</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead className="text-right">إجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6}>
+                      <div className="space-y-2 py-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : deposits.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                      لا توجد عربون
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  deposits.slice(0, 10).map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-medium">
+                        <Link href={`/admin/bookings/${row.id}`} className="text-primary hover:underline">
+                          #{row.bookingNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{row.customer.name || row.customer.email}</TableCell>
+                      <TableCell>{formatCurrency(row.depositAmount)}</TableCell>
+                      <TableCell>
+                        <Badge variant={DEPOSIT_STATUS_LABELS[row.depositStatus]?.variant ?? 'secondary'}>
+                          {DEPOSIT_STATUS_LABELS[row.depositStatus]?.ar ?? row.depositStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {row.paidDate ? formatDate(row.paidDate) : '—'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/admin/bookings/${row.id}`}>
+                            <Eye className="ml-1 h-4 w-4" />
+                            عرض
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="refunds" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">الاستردادات</h2>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/finance/refunds">عرض الكل</Link>
+            </Button>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>رقم الحجز</TableHead>
+                  <TableHead>العميل</TableHead>
+                  <TableHead>المبلغ</TableHead>
+                  <TableHead>مبلغ الاسترداد</TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead className="text-right">إجراءات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <div className="space-y-2 py-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : refunds.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                      لا توجد استردادات
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  refunds.slice(0, 10).map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>
+                        <Link href={`/admin/bookings/${row.bookingId}`} className="text-primary hover:underline">
+                          #{row.bookingNumber ?? row.bookingId.slice(0, 8)}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{row.customer?.name || row.customer?.email || '—'}</TableCell>
+                      <TableCell>{formatCurrency(row.amount)}</TableCell>
+                      <TableCell className="font-medium text-destructive">
+                        {row.refundAmount != null ? formatCurrency(row.refundAmount) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={row.status === 'REFUNDED' ? 'destructive' : 'secondary'}>
+                          {row.status === 'REFUNDED' ? 'مسترد' : row.status === 'PARTIALLY_REFUNDED' ? 'مسترد جزئياً' : row.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(row.updatedAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/admin/payments/${row.id}`}>
+                            <Eye className="ml-1 h-4 w-4" />
+                            عرض
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>

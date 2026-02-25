@@ -1,7 +1,11 @@
 /**
  * @file product-equipment-sync.service.ts
- * @description Bidirectional sync between Product (catalog/AI) and Equipment (rental inventory).
- * Used after import and after AI processing so Equipment stays in sync with Product.
+ * @description Sync Product → Equipment (one-way). Used after import and AI processing.
+ *
+ * LIMITATION — Reverse sync (Equipment → Product) is NOT implemented:
+ * Manual edits to Equipment.specifications in admin do NOT update ProductTranslation.specifications.
+ * This can cause divergence between what AI sees (Product) and what users see (Equipment).
+ * Future: add syncEquipmentToProduct() when Equipment is updated and productId link exists.
  */
 
 import { prisma } from '@/lib/db/prisma'

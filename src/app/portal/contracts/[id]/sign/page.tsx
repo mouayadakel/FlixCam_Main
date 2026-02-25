@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { use, useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,10 +20,11 @@ import { FileText, X, Check } from 'lucide-react'
 import Link from 'next/link'
 
 interface ContractSignPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default function ContractSignPage({ params }: ContractSignPageProps) {
+  const { id } = use(params)
   const router = useRouter()
   const signatureRef = useRef<SignatureCanvas>(null)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -34,7 +35,7 @@ export default function ContractSignPage({ params }: ContractSignPageProps) {
   useEffect(() => {
     async function fetchContract() {
       try {
-        const response = await fetch(`/api/contracts/${params.id}`)
+        const response = await fetch(`/api/contracts/${id}`)
         if (response.ok) {
           const data = await response.json()
           setContractContent(data.content || '')
@@ -47,7 +48,7 @@ export default function ContractSignPage({ params }: ContractSignPageProps) {
     }
 
     fetchContract()
-  }, [params.id])
+  }, [id])
 
   const handleClear = () => {
     signatureRef.current?.clear()
@@ -86,7 +87,7 @@ export default function ContractSignPage({ params }: ContractSignPageProps) {
     try {
       const signatureData = signatureRef.current.toDataURL()
 
-      const response = await fetch(`/api/contracts/${params.id}/sign`, {
+      const response = await fetch(`/api/contracts/${id}/sign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ export default function ContractSignPage({ params }: ContractSignPageProps) {
         description: 'تم توقيع العقد بنجاح',
       })
 
-      router.push(`/portal/contracts/${params.id}`)
+      router.push(`/portal/contracts/${id}`)
       router.refresh()
     } catch (error: any) {
       toast({
@@ -198,7 +199,7 @@ export default function ContractSignPage({ params }: ContractSignPageProps) {
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-4">
-        <Link href={`/portal/contracts/${params.id}`}>
+        <Link href={`/portal/contracts/${id}`}>
           <Button variant="outline">إلغاء</Button>
         </Link>
         <Button onClick={handleSubmit} disabled={isSubmitting || !acceptedTerms}>

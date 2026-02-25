@@ -60,6 +60,7 @@ async function getEquipment(slugOrId: string) {
     categoryId: e.categoryId,
     brandId: e.brandId,
     quantityAvailable: e.quantityAvailable,
+    requiresAssistant: e.requiresAssistant ?? false,
     category: e.category,
     brand: e.brand,
     media: e.media,

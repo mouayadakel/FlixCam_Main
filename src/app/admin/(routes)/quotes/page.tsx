@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/states/empty-state'
 import type { QuoteStatus } from '@/lib/types/quote.types'
 
 interface Quote {
@@ -287,8 +288,14 @@ export default function QuotesPage() {
               </TableRow>
             ) : filteredQuotes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  لا توجد عروض أسعار
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyState
+                    title="لا توجد عروض أسعار"
+                    description="لم يتم العثور على عروض أسعار تطابق الفلتر. أنشئ عرض سعر جديد من الزر أدناه."
+                    icon={<FileText className="h-12 w-12" />}
+                    actionLabel="عرض سعر جديد"
+                    actionHref="/admin/quotes/new"
+                  />
                 </TableCell>
               </TableRow>
             ) : (

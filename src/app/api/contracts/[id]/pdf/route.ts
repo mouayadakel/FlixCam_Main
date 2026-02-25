@@ -13,7 +13,7 @@ import { ContractPolicy } from '@/lib/policies/contract.policy'
 import { PdfService } from '@/lib/services/pdf.service'
 import { ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,13 +21,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
-    const policy = await ContractPolicy.canView(userId, params.id)
+    const policy = await ContractPolicy.canView(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const contract = await ContractService.getById(params.id, userId)
+    const contract = await ContractService.getById(id, userId)
     const locale = (req.nextUrl.searchParams.get('locale') as 'ar' | 'en') || 'en'
 
     const buffer = PdfService.generateContractPdfBuffer({
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       locale,
     })
 
-    const filename = `contract-${params.id}.pdf`
+    const filename = `contract-${id}.pdf`
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {

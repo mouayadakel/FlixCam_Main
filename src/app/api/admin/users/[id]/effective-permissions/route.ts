@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -35,8 +35,7 @@ export async function GET(
       )
     }
 
-    const p = await Promise.resolve(params)
-    const userId = p.id
+    const { id: userId } = await params
 
     const permissions = await getEffectivePermissions(userId)
 

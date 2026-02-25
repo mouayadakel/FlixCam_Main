@@ -127,7 +127,7 @@ export async function generateInvoicePdf(
   )
   y += 10
 
-  // Customer
+  // Customer (Bill To) – name, email, optional company, tax ID, billing address
   if (invoice.customer) {
     doc.setFontSize(11)
     doc.text(locale === 'ar' ? 'العميل' : 'Bill To', margin, y)
@@ -135,14 +135,36 @@ export async function generateInvoicePdf(
     doc.setFontSize(10)
     doc.text(invoice.customer.name || invoice.customer.email, margin, y)
     y += 5
+    if (invoice.customer.companyName) {
+      doc.text(invoice.customer.companyName, margin, y)
+      y += 5
+    }
     doc.text(invoice.customer.email, margin, y)
+    y += 5
+    if (invoice.customer.taxId) {
+      doc.text(
+        (locale === 'ar' ? 'الرقم الضريبي: ' : 'Tax ID: ') + invoice.customer.taxId,
+        margin,
+        y
+      )
+      y += 5
+    }
+    if (invoice.customer.billingAddress) {
+      doc.text(invoice.customer.billingAddress, margin, y)
+      y += 5
+    }
     y += 8
   }
 
-  // Items table - header row with green underline
-  const colWidths = isRtl ? [25, 70, 20, 25, 25, 25] : [25, 70, 20, 25, 25, 25]
-  const headers =
-    locale === 'ar'
+  const hasDays = (invoice.items as InvoiceItem[]).some((i) => i.days != null && i.days > 1)
+  const colWidths = hasDays
+    ? [18, 14, 58, 22, 22, 22, 22]
+    : [25, 70, 20, 25, 25, 25]
+  const headers = hasDays
+    ? locale === 'ar'
+      ? ['الكمية', 'الأيام', 'الوصف', 'السعر/يوم', 'الإجمالي', 'ض.ق.م', 'المجموع']
+      : ['Qty', 'Days', 'Description', 'Price/day', 'Total', 'VAT', 'Amount']
+    : locale === 'ar'
       ? ['الكمية', 'الوصف', 'السعر', 'الإجمالي', 'ض.ق.م', 'المجموع']
       : ['Qty', 'Description', 'Price', 'Total', 'VAT', 'Amount']
 
@@ -170,16 +192,20 @@ export async function generateInvoicePdf(
     colX = margin
     doc.text(String(item.quantity), colX + 4, y)
     colX += colWidths[0]
-    doc.text(item.description.substring(0, 40), colX + 2, y)
-    colX += colWidths[1]
-    doc.text(formatAmount(item.unitPrice, locale), colX + 2, y)
-    colX += colWidths[2]
-    doc.text(formatAmount(item.total, locale), colX + 2, y)
-    colX += colWidths[3]
-    const vatAmount = item.vatAmount ?? item.total * VAT_RATE
+    if (hasDays) {
+      doc.text(item.days != null ? String(item.days) : '—', colX + 2, y)
+      colX += colWidths[1]
+    }
+    doc.text(item.description.substring(0, hasDays ? 36 : 40), colX + 2, y)
+    colX += colWidths[hasDays ? 2 : 1]
+    doc.text(formatAmount(item.unitPrice ?? 0, locale), colX + 2, y)
+    colX += colWidths[hasDays ? 3 : 2]
+    doc.text(formatAmount(item.total ?? 0, locale), colX + 2, y)
+    colX += colWidths[hasDays ? 4 : 3]
+    const vatAmount = item.vatAmount ?? (item.total ?? 0) * VAT_RATE
     doc.text(formatAmount(vatAmount, locale), colX + 2, y)
-    colX += colWidths[4]
-    doc.text(formatAmount(item.total + vatAmount, locale), colX + 2, y)
+    colX += colWidths[hasDays ? 5 : 4]
+    doc.text(formatAmount((item.total ?? 0) + vatAmount, locale), colX + 2, y)
     y += 6
   }
 

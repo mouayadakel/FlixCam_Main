@@ -18,11 +18,26 @@ function buildDatasourceUrl(): string | undefined {
   return `${raw}${sep}connection_limit=5`
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasourceUrl: buildDatasourceUrl(),
   })
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+function getPrisma(): PrismaClient {
+  const cached = globalForPrisma.prisma
+  if (cached != null && typeof (cached as { checkoutFormSection?: unknown }).checkoutFormSection !== 'undefined') {
+    return cached
+  }
+  if (cached != null && process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = undefined
+  }
+  const client = createPrismaClient()
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client
+  }
+  return client
+}
+
+export const prisma = getPrisma()

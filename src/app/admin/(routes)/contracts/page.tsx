@@ -31,6 +31,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { formatDate } from '@/lib/utils/format.utils'
 import { exportToCSV } from '@/lib/utils/export.utils'
 import { TablePagination } from '@/components/tables/table-pagination'
@@ -261,43 +270,53 @@ export default function ContractsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <input
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor="contracts-date-from" className="sr-only">
+          من تاريخ
+        </Label>
+        <Input
+          id="contracts-date-from"
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="من تاريخ"
+          className="h-9 rounded-md border border-input"
+          aria-label="من تاريخ"
         />
-        <input
+        <Label htmlFor="contracts-date-to" className="sr-only">
+          إلى تاريخ
+        </Label>
+        <Input
+          id="contracts-date-to"
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="إلى تاريخ"
+          className="h-9 rounded-md border border-input"
+          aria-label="إلى تاريخ"
         />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status === 'all'
-                ? 'جميع الحالات'
-                : STATUS_LABELS[status as ContractStatus]?.ar || status}
-            </option>
-          ))}
-        </select>
-        <select
-          value={signedFilter}
-          onChange={(e) => setSignedFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          <option value="all">جميع العقود</option>
-          <option value="true">موقّعة</option>
-          <option value="false">غير موقّعة</option>
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر الحالة">
+            <SelectValue placeholder="جميع الحالات" />
+          </SelectTrigger>
+          <SelectContent>
+            {statuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status === 'all'
+                  ? 'جميع الحالات'
+                  : STATUS_LABELS[status as ContractStatus]?.ar || status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={signedFilter} onValueChange={setSignedFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر التوقيع">
+            <SelectValue placeholder="جميع العقود" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع العقود</SelectItem>
+            <SelectItem value="true">موقّعة</SelectItem>
+            <SelectItem value="false">غير موقّعة</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Contracts Table */}

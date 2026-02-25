@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { use, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,6 +37,7 @@ import { VideoUrlInput } from '@/components/forms/video-url-input'
 import { TranslationSection } from '@/components/forms/translation-section'
 import { SEOSection } from '@/components/forms/seo-section'
 import { SpecificationsEditor } from '@/components/forms/specifications-editor'
+import { SpecificationsLivePreview } from '@/components/features/equipment/specifications-live-preview'
 import { RelatedEquipmentSelector } from '@/components/forms/related-equipment-selector'
 import {
   AISuggestPreviewDialog,
@@ -59,7 +60,8 @@ interface Brand {
   name: string
 }
 
-export default function EditEquipmentPage({ params }: { params: { id: string } }) {
+export default function EditEquipmentPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
@@ -76,6 +78,10 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
   const [autoFilling, setAutoFilling] = useState(false)
   const [aiFilled, setAiFilled] = useState(false)
   const [aiFilledCount, setAiFilledCount] = useState(0)
+  const [comboMessage, setComboMessage] = useState('')
+  const [comboDiscountPercent, setComboDiscountPercent] = useState(10)
+  const [comboSettingsLoading, setComboSettingsLoading] = useState(false)
+  const [comboSettingsSaving, setComboSettingsSaving] = useState(false)
 
   const {
     register,
@@ -85,18 +91,40 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
     watch,
     reset,
   } = useForm<UpdateEquipmentFormData>({
-    resolver: zodResolver(updateEquipmentSchema),
+    resolver: zodResolver(updateEquipmentSchema) as import('react-hook-form').Resolver<UpdateEquipmentFormData>,
   })
 
   useEffect(() => {
     loadData()
-  }, [params.id])
+  }, [id])
+
+  useEffect(() => {
+    const loadComboSettings = async () => {
+      setComboSettingsLoading(true)
+      try {
+        const res = await fetch('/api/admin/settings/related-equipment-combo')
+        if (res.ok) {
+          const data = await res.json()
+          setComboMessage(data.message ?? '')
+          setComboDiscountPercent(data.discountPercent ?? 10)
+        }
+      } catch {
+        setComboMessage(
+          'لقد اخترنا لك إضافات ترفع من كفاءة معداتك بناءً على اختيارات خبراء ومستخدمين آخرين.\n[ أضفها الآن واحصل على خصم الـ Combo الخاص بك ]'
+        )
+        setComboDiscountPercent(10)
+      } finally {
+        setComboSettingsLoading(false)
+      }
+    }
+    loadComboSettings()
+  }, [])
 
   const loadData = async () => {
     setLoading(true)
     try {
       const [equipmentRes, categoriesRes, brandsRes] = await Promise.all([
-        fetch(`/api/equipment/${params.id}`),
+        fetch(`/api/equipment/${id}`),
         fetch('/api/categories'),
         fetch('/api/brands'),
       ])
@@ -168,7 +196,10 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
         dailyPrice: Number(equipmentData.dailyPrice),
         weeklyPrice: equipmentData.weeklyPrice ? Number(equipmentData.weeklyPrice) : undefined,
         monthlyPrice: equipmentData.monthlyPrice ? Number(equipmentData.monthlyPrice) : undefined,
+        purchasePrice:
+          equipmentData.purchasePrice != null ? Number(equipmentData.purchasePrice) : undefined,
         isActive: equipmentData.isActive,
+        requiresAssistant: equipmentData.requiresAssistant ?? false,
         warehouseLocation: equipmentData.warehouseLocation || undefined,
         barcode: equipmentData.barcode || undefined,
         specifications: (equipmentData.specifications as Record<string, unknown>) || undefined,
@@ -180,6 +211,16 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
         boxContents: equipmentData.boxContents || undefined,
         bufferTime: equipmentData.bufferTime || undefined,
         bufferTimeUnit: (equipmentData.bufferTimeUnit as 'hours' | 'days') || 'hours',
+        depositAmount:
+          equipmentData.customFields?.depositAmount != null
+            ? Number(equipmentData.customFields.depositAmount)
+            : undefined,
+        requiresDeposit: (equipmentData.customFields?.requiresDeposit as boolean) ?? false,
+        specConfidence: equipmentData.specConfidence ?? undefined,
+        specLastInferredAt: equipmentData.specLastInferredAt
+          ? new Date(equipmentData.specLastInferredAt)
+          : undefined,
+        specSource: equipmentData.specSource ?? undefined,
       })
 
       if (categoriesRes.ok) {
@@ -210,7 +251,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
   const onSubmit = async (data: UpdateEquipmentFormData) => {
     setSubmitting(true)
     try {
-      const response = await fetch(`/api/equipment/${params.id}`, {
+      const response = await fetch(`/api/equipment/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -228,7 +269,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
         description: 'تم تحديث المعدة بنجاح',
       })
 
-      router.push(`/admin/inventory/equipment/${params.id}`)
+      router.push(`/admin/inventory/equipment/${id}`)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -403,6 +444,21 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
           }
         }
         setValue('specifications', merged as UpdateEquipmentFormData['specifications'])
+        if (payload.confidence && Object.keys(payload.confidence).length > 0) {
+          const specConfidences = Object.entries(payload.confidence).filter(
+            ([k]) => !['shortDescription', 'longDescription', 'seoTitle', 'seoDescription', 'boxContents', 'tags'].includes(k)
+          )
+          const avg =
+            specConfidences.length > 0
+              ? specConfidences.reduce((s, [, v]) => s + (typeof v === 'number' ? v : 0), 0) /
+                specConfidences.length
+              : undefined
+          if (avg != null && !Number.isNaN(avg)) {
+            setValue('specConfidence', Math.min(1, Math.max(0, avg / 100)))
+            setValue('specLastInferredAt', new Date())
+            setValue('specSource', 'ai-infer')
+          }
+        }
       }
     }
 
@@ -625,7 +681,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             إلغاء
           </Button>
-          <Button size="sm" onClick={handleSubmit(onSubmit)} disabled={submitting || autoFilling}>
+          <Button size="sm" onClick={handleSubmit(onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>)} disabled={submitting || autoFilling}>
             {submitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
             <Save className="ml-2 h-4 w-4" />
             حفظ التغييرات
@@ -673,7 +729,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
       />
 
       <div className="flex gap-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>)} className="flex-1 space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="info">المعلومات الأساسية</TabsTrigger>
@@ -714,14 +770,14 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="sku">SKU *</Label>
-                      <Input id="sku" {...register('sku')} placeholder="EQ-001" dir="ltr" />
+                      <Label htmlFor="sku">SKU</Label>
+                      <Input id="sku" {...register('sku')} placeholder="اختياري — يُولَّد تلقائياً عند الإنشاء إن تُرك فارغاً" dir="ltr" />
                       {errors.sku && <p className="text-sm text-error-600">{errors.sku.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="model">الموديل</Label>
-                      <Input id="model" {...register('model')} placeholder="Sony FX3" />
+                      <Label htmlFor="model">الموديل *</Label>
+                      <Input id="model" {...register('model')} placeholder="Sony FX3" required />
                       {errors.model && (
                         <p className="text-sm text-error-600">{errors.model.message}</p>
                       )}
@@ -897,6 +953,57 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                         <p className="text-sm text-error-600">{errors.monthlyPrice.message}</p>
                       )}
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="depositAmount">مبلغ التأمين (اختياري)</Label>
+                      <Input
+                        id="depositAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('depositAmount', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                      />
+                      {errors.depositAmount && (
+                        <p className="text-sm text-error-600">{errors.depositAmount.message}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="requiresDeposit"
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-neutral-300"
+                        {...register('requiresDeposit')}
+                      />
+                      <Label htmlFor="requiresDeposit" className="cursor-pointer">
+                        التأمين إلزامي للعميل
+                      </Label>
+                    </div>
+                    <p className="text-xs text-neutral-500 md:col-span-2">
+                      الافتراضي: لا يتطلب تأمين. فعّل إذا كان هذا المنتج يتطلب تأميناً من العميل.
+                    </p>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="purchasePrice" className="text-neutral-500">
+                        سعر الشراء
+                      </Label>
+                      <Input
+                        id="purchasePrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        {...register('purchasePrice', { valueAsNumber: true })}
+                        placeholder="0.00"
+                        dir="ltr"
+                        className="max-w-xs"
+                      />
+                      <p className="text-xs text-neutral-500">
+                        للتتبع وسند الأمر فقط — لا يظهر للعميل
+                      </p>
+                      {errors.purchasePrice && (
+                        <p className="text-sm text-error-600">{errors.purchasePrice.message}</p>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -906,7 +1013,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                   <CardTitle>الإعدادات</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -917,6 +1024,17 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                       />
                       <Label htmlFor="isActive" className="cursor-pointer">
                         نشط
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="requiresAssistant"
+                        {...register('requiresAssistant')}
+                        className="h-4 w-4 rounded border-neutral-300"
+                      />
+                      <Label htmlFor="requiresAssistant" className="cursor-pointer">
+                        يتطلب مساعداً (Requires Assistant)
                       </Label>
                     </div>
                   </div>
@@ -1079,14 +1197,14 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                     value={watch('featuredImageUrl')}
                     onChange={(url) => setValue('featuredImageUrl', url)}
                     label="الصورة المميزة"
-                    equipmentId={params.id}
+                    equipmentId={id}
                   />
 
                   <ImageGallery
                     value={watch('galleryImageUrls') || []}
                     onChange={(urls) => setValue('galleryImageUrls', urls)}
                     label="معرض الصور"
-                    equipmentId={params.id}
+                    equipmentId={id}
                   />
 
                   <VideoUrlInput
@@ -1100,43 +1218,143 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
 
             {/* Tab 5: Specifications */}
             <TabsContent value="specifications" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>المواصفات</CardTitle>
-                  <p className="mt-2 text-sm text-neutral-600">
-                    أدخل مواصفات المعدة باستخدام أي من الطرق المتاحة.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <SpecificationsEditor
-                    value={watchedSpecifications ?? undefined}
-                    onChange={(specs) => setValue('specifications', specs)}
-                    categoryHint={categoryHint}
-                    onAiInfer={async () => {
-                      const name = watch('model') || watch('sku') || ''
-                      const categoryId = watch('categoryId')
-                      if (!name.trim() || !categoryId) return null
-                      const res = await fetch('/api/admin/equipment/ai-suggest', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          name: name.trim(),
-                          categoryId,
-                          brandId: watch('brandId') || undefined,
-                          existingSpecs: watchedSpecifications ?? undefined,
-                        }),
-                      })
-                      if (!res.ok) return null
-                      const data = await res.json()
-                      return (data.specs ?? null) as Record<string, unknown> | null
-                    }}
-                  />
-                </CardContent>
-              </Card>
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_340px]">
+                <Card className="min-w-0">
+                  <CardHeader>
+                    <CardTitle>المواصفات</CardTitle>
+                    <p className="mt-2 text-sm text-neutral-600">
+                      أدخل مواصفات المعدة باستخدام أي من الطرق المتاحة.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <SpecificationsEditor
+                      value={watchedSpecifications ?? undefined}
+                      onChange={(specs) => setValue('specifications', specs)}
+                      categoryHint={categoryHint}
+                      onAiInfer={async () => {
+                        const name = watch('model') || watch('sku') || ''
+                        const categoryId = watch('categoryId')
+                        if (!name.trim() || !categoryId) return null
+                        const res = await fetch('/api/admin/equipment/ai-suggest', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            name: name.trim(),
+                            categoryId,
+                            brandId: watch('brandId') || undefined,
+                            existingSpecs: watchedSpecifications ?? undefined,
+                          }),
+                        })
+                        if (!res.ok) return null
+                        const data = await res.json()
+                        return (data.specs ?? null) as Record<string, unknown> | null
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+                <SpecificationsLivePreview specifications={(watchedSpecifications ?? undefined) as import('@/lib/types/specifications.types').AnySpecifications | undefined} />
+              </div>
             </TabsContent>
 
             {/* Tab 6: Related Equipment */}
             <TabsContent value="related" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>رسالة عرض المعدات ذات الصلة</CardTitle>
+                  <p className="mt-2 text-sm text-neutral-600">
+                    رسالة تظهر للعميل فوق قائمة المعدات الموصى بها. المدير يستطيع التحكم بالرسالة
+                    ونسبة خصم الـ Combo.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {comboSettingsLoading ? (
+                    <p className="text-sm text-neutral-500">جاري تحميل الإعدادات...</p>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="comboMessage">نص الرسالة</Label>
+                        <Textarea
+                          id="comboMessage"
+                          value={comboMessage}
+                          onChange={(e) => setComboMessage(e.target.value)}
+                          placeholder="لقد اخترنا لك إضافات ترفع من كفاءة معداتك..."
+                          rows={4}
+                          className="resize-none"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-end gap-4">
+                        <div className="space-y-2 min-w-[120px]">
+                          <Label htmlFor="comboDiscountPercent">نسبة خصم Combo (%)</Label>
+                          <Input
+                            id="comboDiscountPercent"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.5}
+                            value={comboDiscountPercent}
+                            onChange={(e) =>
+                              setComboDiscountPercent(
+                                Math.min(100, Math.max(0, Number(e.target.value) || 0))
+                              )
+                            }
+                            dir="ltr"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={comboSettingsSaving}
+                          onClick={async () => {
+                            setComboSettingsSaving(true)
+                            try {
+                              const res = await fetch(
+                                '/api/admin/settings/related-equipment-combo',
+                                {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    message: comboMessage,
+                                    discountPercent: comboDiscountPercent,
+                                  }),
+                                }
+                              )
+                              if (!res.ok) throw new Error('فشل الحفظ')
+                              toast({
+                                title: 'تم الحفظ',
+                                description: 'تم حفظ رسالة العرض ونسبة الخصم بنجاح',
+                              })
+                            } catch {
+                              toast({
+                                title: 'خطأ',
+                                description: 'فشل حفظ الإعدادات',
+                                variant: 'destructive',
+                              })
+                            } finally {
+                              setComboSettingsSaving(false)
+                            }
+                          }}
+                        >
+                          {comboSettingsSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'حفظ الرسالة ونسبة الخصم'
+                          )}
+                        </Button>
+                      </div>
+                      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+                        <p className="font-medium mb-1">معاينة للعميل:</p>
+                        <p className="whitespace-pre-wrap">{comboMessage || '—'}</p>
+                        {comboDiscountPercent > 0 && (
+                          <p className="mt-2 text-neutral-600">
+                            خصم Combo: {comboDiscountPercent}%
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>المعدات ذات الصلة</CardTitle>
@@ -1148,7 +1366,7 @@ export default function EditEquipmentPage({ params }: { params: { id: string } }
                   <RelatedEquipmentSelector
                     value={watch('relatedEquipmentIds') || []}
                     onChange={(ids) => setValue('relatedEquipmentIds', ids)}
-                    excludeId={params.id}
+                    excludeId={id}
                   />
                 </CardContent>
               </Card>

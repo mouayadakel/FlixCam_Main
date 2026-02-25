@@ -15,16 +15,46 @@ import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 // Flatten & Read Helpers (for AI service and consumers)
 // ============================================================================
 
+/** Normalize label to a stable key for comparison (e.g. "Sensor Size" → "sensor_size") */
+function labelToKey(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+}
+
 /**
- * Flatten structured specifications to key-value map (for consumers that expect flat format)
+ * Flatten structured specifications to key-value map (for consumers that expect flat format).
+ * Includes groups, highlights, and quickSpecs so compare and other consumers see the full set.
  */
 export function flattenStructuredSpecs(specs: StructuredSpecifications): Record<string, string> {
   const out: Record<string, string> = {}
+
   for (const group of specs.groups) {
     for (const spec of group.specs) {
-      if (spec.key) out[spec.key] = spec.value
+      if (spec.key) out[spec.key] = String(spec.value ?? '')
     }
   }
+
+  if (specs.highlights?.length) {
+    for (const h of specs.highlights) {
+      if (h.label?.trim()) {
+        const key = labelToKey(h.label)
+        if (key && !(key in out)) out[key] = String(h.value ?? '')
+      }
+    }
+  }
+
+  if (specs.quickSpecs?.length) {
+    for (const q of specs.quickSpecs) {
+      if (q.label?.trim()) {
+        const key = labelToKey(q.label)
+        if (key && !(key in out)) out[key] = String(q.value ?? '')
+      }
+    }
+  }
+
   return out
 }
 
@@ -73,20 +103,159 @@ export function getSpecArray(specs: unknown, key: string): string[] {
 // Conversion
 // ============================================================================
 
-const RESERVED_KEYS = ['mode', 'html', 'highlights', 'quickSpecs', 'groups']
+const RESERVED_KEYS = ['mode', 'html', 'customHtml', 'highlights', 'quickSpecs', 'groups']
+
+/**
+ * Maps AI-generated keys (spec-templates) to categoryTemplate keys for correct group placement.
+ * AI uses keys like sensor_size, weight_kg; templates expect sensor, weight.
+ */
+const KEY_ALIASES: Record<string, string> = {
+  // Cameras
+  sensor_size: 'sensor',
+  sensor_type: 'sensor',
+  effective_pixels: 'resolution',
+  max_photo_resolution: 'resolution',
+  max_video_resolution: 'video',
+  max_framerate: 'video',
+  max_framerate_4k: 'video',
+  max_framerate_1080p: 'video',
+  base_iso: 'iso',
+  max_iso: 'iso',
+  dual_native_iso: 'iso',
+  mount_type: 'mount',
+  flange_distance: 'mount',
+  weight_kg: 'weight',
+  weight_body_only: 'weight',
+  dimensions_cm: 'dimensions',
+  hdmi_output: 'hdmi',
+  hdmi_version: 'hdmi',
+  battery_type: 'battery',
+  battery_life_minutes: 'battery',
+  usb_charging: 'usbCharging',
+  lcd_size: 'display',
+  lcd_resolution: 'display',
+  lcd_touchscreen: 'display',
+  lcd_type: 'display',
+  lcd_articulating: 'display',
+  evf_resolution: 'evf',
+  evf_magnification: 'evf',
+  ibis: 'stabilization',
+  ibis_stops: 'stabilization',
+  weather_sealed: 'weather',
+  body_material: 'weather',
+  media_type: 'recording',
+  card_slots: 'recording',
+  codec: 'recording',
+  internal_codec: 'recording',
+  external_codec: 'recording',
+  // Lenses
+  focal_length: 'focalLength',
+  focal_length_range: 'focalLength',
+  max_aperture: 'maxAperture',
+  min_aperture: 'maxAperture',
+  image_circle: 'format',
+  filter_size: 'filterThread',
+  filter_thread: 'filterThread',
+  minimum_focus_distance: 'mfd',
+  blade_count: 'blades',
+  blade_type: 'blades',
+  elements_groups: 'elements',
+  length_mm: 'dimensions',
+  // Lighting
+  power_watts: 'power',
+  output_lux_1m: 'output',
+  output_lux_3m: 'output',
+  output_lumens: 'lumens',
+  color_temp: 'colorTemp',
+  color_temp_range: 'colorTemp',
+  beam_angle: 'beamAngle',
+  beam_angle_range: 'beamAngle',
+  dimming_range: 'dimming',
+  dimming_curve: 'dimming',
+  front_accessory_mount: 'accessoryMount',
+  bowens_mount: 'accessoryMount',
+  power_consumption: 'power',
+  ac_input: 'acInput',
+  battery_plate: 'batteryPlate',
+  yoke_type: 'yoke',
+  fixture_mount: 'fixtureMount',
+  cooling_type: 'cooling',
+  weight_with_yoke: 'weight',
+  // Audio
+  polar_pattern: 'pattern',
+  switchable_patterns: 'pattern',
+  frequency_response: 'frequency',
+  frequency_range_hz: 'frequency',
+  max_spl_db: 'spl',
+  connector_type: 'output',
+  output_type: 'output',
+  phantom_power: 'phantom',
+  cable_length: 'cable',
+  cable_type: 'cable',
+  wireless_range_m: 'wireless',
+  // Grip / Tripods
+  max_load_kg: 'maxLoad',
+  max_height_cm: 'maxHeight',
+  min_height_cm: 'minHeight',
+  leg_sections: 'legSections',
+  head_type: 'headType',
+  quick_release: 'mount',
+  quick_release_type: 'mount',
+  pan_range: 'panTilt',
+  tilt_range: 'panTilt',
+  folded_length_cm: 'folded',
+  // Monitors
+  screen_size: 'size',
+  brightness_nits: 'brightness',
+  panel_type: 'panelType',
+  touch_screen: 'touchscreen',
+  color_space: 'colorGamut',
+  color_gamut_dcip3: 'colorGamut',
+  // Stabilizers & Drones use AI keys directly — no alias (template has weight_kg, etc.)
+  // Only cameras/lenses/lighting need weight_kg->weight, dimensions_cm->dimensions
+  // Power
+  capacity_wh: 'capacity_wh',
+  capacity_mah: 'capacity_wh',
+  voltage: 'voltage',
+  max_output_watts: 'max_output_watts',
+  d_tap_outputs: 'd_tap_outputs',
+  usb_a_outputs: 'usb_a_outputs',
+  usb_c_outputs: 'usb_c_outputs',
+  charge_time_hours: 'charge_time_hours',
+  flight_safe: 'flight_safe',
+  // Recorders (hdmi_output already defined above as 'hdmi' for cameras; recorders use identity)
+  max_resolution: 'max_resolution',
+  bit_depth: 'bit_depth',
+  hdmi_input: 'hdmi_input',
+  sdi_input: 'sdi_input',
+  sdi_output: 'sdi_output',
+  timecode_io: 'timecode_io',
+  // Wireless
+  max_range_m: 'max_range_m',
+  latency_ms: 'latency_ms',
+  frequency_band: 'frequency_band',
+  weight_transmitter_kg: 'weight_transmitter_kg',
+  weight_receiver_kg: 'weight_receiver_kg',
+  antenna_type: 'antenna_type',
+}
+
+/** Exported for ai-spec-parser: maps AI keys to template keys when checking existing specs */
+export function resolveSpecKey(key: string): string {
+  return KEY_ALIASES[key] ?? key
+}
 
 /**
  * Convert flat specifications to structured format.
  * If categoryHint is provided, matches keys against category template and distributes into groups.
+ * Uses KEY_ALIASES to map AI-generated keys (e.g. sensor_size) to template keys (e.g. sensor).
  */
 export function convertFlatToStructured(
   flatSpecs: Record<string, unknown>,
   categoryHint?: string
 ): StructuredSpecifications {
-  const entries = Object.entries(flatSpecs).filter(([key]) => !RESERVED_KEYS.includes(key)) as [
-    string,
-    string,
-  ][]
+  const entries = Object.entries(flatSpecs)
+    .filter(([key]) => !RESERVED_KEYS.includes(key))
+    .map(([k, v]) => [k, String(v ?? '')] as [string, string])
 
   const template = categoryHint ? categoryTemplates[categoryHint.toLowerCase()] : undefined
 
@@ -94,7 +263,15 @@ export function convertFlatToStructured(
     const groups: SpecGroup[] = template.groups.map((g) => ({
       ...g,
       specs: g.specs.map((s) => {
-        const pair = entries.find(([k]) => k === s.key || k.toLowerCase() === s.key.toLowerCase())
+        const pair = entries.find(([k]) => {
+          const resolved = resolveSpecKey(k)
+          return (
+            resolved === s.key ||
+            resolved.toLowerCase() === s.key.toLowerCase() ||
+            k === s.key ||
+            k.toLowerCase() === s.key.toLowerCase()
+          )
+        })
         return {
           ...s,
           value: pair ? String(pair[1] ?? '') : s.value,
@@ -104,7 +281,10 @@ export function convertFlatToStructured(
     const usedKeys = new Set(
       template.groups.flatMap((g) => g.specs.map((s) => s.key.toLowerCase()))
     )
-    const remaining = entries.filter(([k]) => !usedKeys.has(k.toLowerCase()))
+    const remaining = entries.filter(([k]) => {
+      const resolved = resolveSpecKey(k).toLowerCase()
+      return !usedKeys.has(resolved) && !usedKeys.has(k.toLowerCase())
+    })
     if (remaining.length > 0 && groups[0]) {
       groups[0].specs.push(
         ...remaining.map(([key, value]) => ({
@@ -115,7 +295,36 @@ export function convertFlatToStructured(
         }))
       )
     }
-    return { groups }
+
+    const allSpecs = groups.flatMap((g) => g.specs)
+    const TOP_KEYS: Record<string, string[]> = {
+      cameras: ['sensor', 'video', 'iso', 'mount', 'weight'],
+      lenses: ['focalLength', 'maxAperture', 'mount', 'format'],
+      lighting: ['output', 'colorTemp', 'cri', 'power'],
+      audio: ['pattern', 'frequency', 'spl'],
+      tripods: ['maxLoad', 'maxHeight', 'headType'],
+      grip: ['maxLoad', 'maxHeight', 'headType'],
+      monitors: ['size', 'resolution', 'brightness'],
+      stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours'],
+      drones: ['max_flight_time_min', 'max_speed_kmh', 'max_transmission_range'],
+      accessories: ['type', 'compatibility', 'material'],
+    }
+    const topKeys = categoryHint ? TOP_KEYS[categoryHint.toLowerCase()] ?? [] : []
+    const quickSpecs = topKeys
+      .map((k) => allSpecs.find((s) => s.key === k))
+      .filter((s): s is SpecItem => s != null && s.value != null && String(s.value).trim() !== '')
+      .slice(0, 6)
+      .map((s) => ({ icon: 'star', label: s.label, value: s.value }))
+    const highlights = quickSpecs.slice(0, 4).map((s) => ({
+      icon: 'star',
+      label: s.label,
+      value: s.value,
+      sublabel: '',
+    }))
+
+    const customHtml =
+      typeof flatSpecs.customHtml === 'string' ? flatSpecs.customHtml : undefined
+    return { highlights, quickSpecs, groups, ...(customHtml !== undefined && { customHtml }) }
   }
 
   const generalGroup: SpecGroup = {
@@ -130,7 +339,9 @@ export function convertFlatToStructured(
       type: 'text' as const,
     })),
   }
-  return { groups: [generalGroup] }
+  const customHtml =
+    typeof flatSpecs.customHtml === 'string' ? flatSpecs.customHtml : undefined
+  return { groups: [generalGroup], ...(customHtml !== undefined && { customHtml }) }
 }
 
 // ============================================================================
@@ -510,6 +721,43 @@ export const categoryTemplates: Record<string, Partial<StructuredSpecifications>
           { key: 'weight', label: 'Weight', labelAr: 'الوزن', value: '', type: 'range' },
           { key: 'dimensions', label: 'Dimensions', labelAr: 'الأبعاد', value: '' },
           { key: 'mount', label: 'Mount Type', labelAr: 'نوع التثبيت', value: '' },
+        ],
+      },
+    ],
+  },
+  grip: {
+    groups: [
+      {
+        label: 'Build',
+        labelAr: 'البنية',
+        icon: 'layers',
+        priority: 1,
+        specs: [
+          { key: 'type', label: 'Type', labelAr: 'النوع', value: '' },
+          { key: 'maxHeight', label: 'Max Height', labelAr: 'أقصى ارتفاع', value: '' },
+          { key: 'minHeight', label: 'Min Height', labelAr: 'أقل ارتفاع', value: '' },
+          { key: 'maxLoad', label: 'Max Load', labelAr: 'الحمل الأقصى', value: '' },
+          { key: 'weight', label: 'Weight', labelAr: 'الوزن', value: '' },
+          { key: 'material', label: 'Material', labelAr: 'المادة', value: '' },
+          { key: 'headType', label: 'Head Type', labelAr: 'نوع الرأس', value: '' },
+        ],
+      },
+    ],
+  },
+  accessories: {
+    groups: [
+      {
+        label: 'Details',
+        labelAr: 'التفاصيل',
+        icon: 'info',
+        priority: 1,
+        specs: [
+          { key: 'type', label: 'Type', labelAr: 'النوع', value: '' },
+          { key: 'compatibility', label: 'Compatibility', labelAr: 'التوافق', value: '' },
+          { key: 'material', label: 'Material', labelAr: 'المادة', value: '' },
+          { key: 'weight', label: 'Weight', labelAr: 'الوزن', value: '' },
+          { key: 'dimensions', label: 'Dimensions', labelAr: 'الأبعاد', value: '' },
+          { key: 'color', label: 'Color', labelAr: 'اللون', value: '' },
         ],
       },
     ],

@@ -13,7 +13,7 @@ import { QuotePolicy } from '@/lib/policies/quote.policy'
 import { quoteStatusSchema } from '@/lib/validators/quote.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,10 +21,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await QuotePolicy.canUpdate(userId, params.id)
+    const policy = await QuotePolicy.canUpdate(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -45,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const quote = await QuoteService.updateStatus(params.id, validatedStatus, userId, auditContext)
+    const quote = await QuoteService.updateStatus(id, validatedStatus, userId, auditContext)
 
     return NextResponse.json({
       success: true,

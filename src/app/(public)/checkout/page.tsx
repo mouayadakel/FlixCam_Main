@@ -1,6 +1,5 @@
 /**
- * Checkout page (Phase 3.3). 5 steps: Dates, Availability, Add-ons, Payment, Confirm.
- * Gate (step 0): profile completeness – see Phase 3.4.
+ * Checkout page – 3 steps: Receiver & Fulfillment, Add-ons, Review & Pay.
  */
 
 'use client'
@@ -14,28 +13,14 @@ import { useCartStore } from '@/lib/stores/cart.store'
 import { useCheckoutStore } from '@/lib/stores/checkout.store'
 import { Stepper } from '@/components/ui/stepper'
 import { OrderSummary } from '@/components/features/checkout/order-summary'
-import { CheckoutStepContact } from '@/components/features/checkout/checkout-step-contact'
-import { CheckoutStepDates } from '@/components/features/checkout/checkout-step-dates'
-import { CheckoutStepAvailability } from '@/components/features/checkout/checkout-step-availability'
+import { CheckoutStepReceiver } from '@/components/features/checkout/checkout-step-receiver'
 import { CheckoutStepAddons } from '@/components/features/checkout/checkout-step-addons'
-import { CheckoutStepReview } from '@/components/features/checkout/checkout-step-review'
-import { CheckoutStepPayment } from '@/components/features/checkout/checkout-step-payment'
-import { CheckoutStepConfirm } from '@/components/features/checkout/checkout-step-confirm'
+import { CheckoutStepReviewPay } from '@/components/features/checkout/checkout-step-review-pay'
 
-const STEP_LABELS_FULL = [
-  { id: 'dates', labelKey: 'checkout.stepDates' },
-  { id: 'availability', labelKey: 'checkout.stepAvailability' },
+const STEP_LABELS = [
+  { id: 'receiver', labelKey: 'checkout.stepReceiver' },
   { id: 'addons', labelKey: 'checkout.stepAddons' },
-  { id: 'review', labelKey: 'checkout.stepReview' },
-  { id: 'payment', labelKey: 'checkout.stepPayment' },
-  { id: 'confirm', labelKey: 'checkout.stepConfirm' },
-]
-
-const STEP_LABELS_STUDIO_ONLY = [
-  { id: 'addons', labelKey: 'checkout.stepAddons' },
-  { id: 'review', labelKey: 'checkout.stepReview' },
-  { id: 'payment', labelKey: 'checkout.stepPayment' },
-  { id: 'confirm', labelKey: 'checkout.stepConfirm' },
+  { id: 'review', labelKey: 'checkout.stepReviewPay' },
 ]
 
 export default function CheckoutPage() {
@@ -43,14 +28,10 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const items = useCartStore((s) => s.items)
-  const total = useCartStore((s) => s.total)
   const fetchCart = useCartStore((s) => s.fetchCart)
   const step = useCheckoutStore((s) => s.step)
   const setStep = useCheckoutStore((s) => s.setStep)
   const holdExpiresAt = useCheckoutStore((s) => s.holdExpiresAt)
-  const details = useCheckoutStore((s) => s.details)
-  const [depositAmount, setDepositAmount] = useState<number | null>(null)
-  const [showFiveSteps, setShowFiveSteps] = useState(false)
   const [profileChecked, setProfileChecked] = useState(false)
   const [profileComplete, setProfileComplete] = useState(false)
 
@@ -89,38 +70,9 @@ export default function CheckoutPage() {
     }
   }, [status, session?.user?.id, router])
 
-  useEffect(() => {
-    if (session && profileComplete && !showFiveSteps) setShowFiveSteps(true)
-  }, [session, profileComplete, showFiveSteps])
-
-  const isStudioOnly = items.length > 0 && items.every((i) => i.itemType === 'STUDIO')
-  useEffect(() => {
-    if (isStudioOnly && step < 3) setStep(3)
-  }, [isStudioOnly, step, setStep])
-
-  useEffect(() => {
-    if (!session || items.length === 0) return
-    let cancelled = false
-    fetch('/api/checkout/deposit')
-      .then((res) => (res.ok ? res.json() : { depositAmount: 0 }))
-      .then((data: { depositAmount?: number }) => {
-        if (!cancelled) setDepositAmount(data.depositAmount ?? 0)
-      })
-      .catch(() => {
-        if (!cancelled) setDepositAmount(0)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [session, items.length])
-
-  const stepLabels = isStudioOnly ? STEP_LABELS_STUDIO_ONLY : STEP_LABELS_FULL
-  const stepsWithLabels = stepLabels.map((s) => ({ id: s.id, label: t(s.labelKey) }))
-  const currentStepIndex = isStudioOnly
-    ? Math.max(0, Math.min(step - 3, stepsWithLabels.length - 1))
-    : step - 1
-  const handleStepClick = (index: number) =>
-    setStep((isStudioOnly ? index + 3 : index + 1) as 1 | 2 | 3 | 4 | 5 | 6)
+  const stepsWithLabels = STEP_LABELS.map((s) => ({ id: s.id, label: t(s.labelKey) }))
+  const currentStepIndex = Math.max(0, Math.min(step - 1, stepsWithLabels.length - 1))
+  const handleStepClick = (index: number) => setStep((index + 1) as 1 | 2 | 3)
 
   if (status === 'loading') {
     return (
@@ -134,7 +86,10 @@ export default function CheckoutPage() {
     return (
       <main className="container mx-auto max-w-xl px-4 py-12">
         <h1 className="mb-6 text-2xl font-bold">{t('checkout.title')}</h1>
-        <CheckoutStepContact onSuccess={() => setProfileChecked(false)} />
+        <p className="text-muted-foreground">{t('checkout.loginRequired')}</p>
+        <Button className="mt-4" onClick={() => router.push('/auth/signin?callbackUrl=/checkout')}>
+          {t('auth.signIn')}
+        </Button>
       </main>
     )
   }
@@ -148,14 +103,6 @@ export default function CheckoutPage() {
     )
   }
 
-  if (!showFiveSteps) {
-    return (
-      <main className="container mx-auto max-w-6xl px-4 py-8">
-        <p className="text-muted-foreground">{t('common.loading')}</p>
-      </main>
-    )
-  }
-
   return (
     <main className="container mx-auto max-w-6xl px-4 py-8 pb-24 lg:pb-8">
       <h1 className="mb-6 text-2xl font-bold">{t('checkout.title')}</h1>
@@ -165,35 +112,25 @@ export default function CheckoutPage() {
         onStepClick={handleStepClick}
         className="mb-6 lg:mb-8"
       />
+      {/* Mobile: collapsible order summary */}
+      <details className="mb-4 rounded-lg border bg-card lg:hidden">
+        <summary className="cursor-pointer list-none px-4 py-3 font-medium">
+          {t('checkout.orderSummary')}
+        </summary>
+        <div className="border-t px-4 py-3">
+          <OrderSummary holdExpiresAt={holdExpiresAt} />
+        </div>
+      </details>
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0">
-          {step === 1 && <CheckoutStepDates onSuccess={() => setStep(2)} />}
-          {step === 2 && <CheckoutStepAvailability onSuccess={() => setStep(3)} />}
-          {step === 3 && <CheckoutStepAddons onSuccess={() => setStep(4)} />}
-          {step === 4 && <CheckoutStepReview onAdvanceToPayment={() => setStep(5)} />}
-          {step === 5 && (
-            <CheckoutStepPayment depositAmount={depositAmount} onSuccess={() => setStep(6)} />
-          )}
-          {step === 6 && <CheckoutStepConfirm depositAmount={depositAmount} />}
+          {step === 1 && <CheckoutStepReceiver onSuccess={() => setStep(2)} />}
+          {step === 2 && <CheckoutStepAddons onSuccess={() => setStep(3)} />}
+          {step === 3 && <CheckoutStepReviewPay />}
         </div>
         <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-          <OrderSummary holdExpiresAt={holdExpiresAt} depositAmount={depositAmount} />
+          <OrderSummary holdExpiresAt={holdExpiresAt} />
         </div>
       </div>
-
-      {/* Mobile: sticky Pay button on step 6 (full-width, total amount) */}
-      {step === 6 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
-          <Button
-            size="lg"
-            className="h-12 w-full rounded-xl bg-brand-primary font-semibold"
-            disabled={!details || items.length === 0}
-            onClick={() => router.push('/payment')}
-          >
-            {t('checkout.payNow')} – {total.toLocaleString()} SAR
-          </Button>
-        </div>
-      )}
     </main>
   )
 }

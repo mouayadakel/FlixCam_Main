@@ -4,6 +4,8 @@
  */
 
 import { Resend } from 'resend'
+import { prisma } from '@/lib/db/prisma'
+import { MessageLogStatus, NotificationChannel } from '@prisma/client'
 
 const resendApiKey = process.env.RESEND_API_KEY
 const from = process.env.RESEND_FROM ?? process.env.SMTP_FROM ?? 'noreply@flixcam.rent'
@@ -175,6 +177,44 @@ export const EmailService = {
         <p>This link expires in 24 hours.</p>
       `,
     })
+    return error ? { ok: false, error: error.message } : { ok: true }
+  },
+
+  /**
+   * Send generic email (for notification service / templates). Optionally log to MessageLog.
+   */
+  async send(params: {
+    to: string
+    subject: string
+    html: string
+    recipientUserId?: string
+    templateId?: string
+    logToMessageLog?: boolean
+  }): Promise<{ ok: boolean; error?: string }> {
+    if (!resend) return { ok: false, error: 'Email not configured' }
+    const { error } = await resend.emails.send({
+      from: `${fromName} <${from}>`,
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+    })
+
+    if (params.logToMessageLog !== false) {
+      await prisma.messageLog.create({
+        data: {
+          channel: NotificationChannel.EMAIL,
+          recipientEmail: params.to,
+          subject: params.subject,
+          body: params.html,
+          status: error ? MessageLogStatus.FAILED : MessageLogStatus.SENT,
+          errorMessage: error?.message ?? null,
+          sentAt: error ? null : new Date(),
+          templateId: params.templateId ?? null,
+          recipientUserId: params.recipientUserId ?? null,
+        },
+      })
+    }
+
     return error ? { ok: false, error: error.message } : { ok: true }
   },
 }

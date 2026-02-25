@@ -10,7 +10,7 @@ import { ApprovalService } from '@/lib/services/approval.service'
 import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -24,6 +24,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const { reason, targetState } = body
 
@@ -31,7 +32,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Reason is required' }, { status: 400 })
     }
 
-    const flag = await FeatureFlagService.getById(params.id)
+    const flag = await FeatureFlagService.getById(id)
     if (!flag) {
       return NextResponse.json({ error: 'Feature flag not found' }, { status: 404 })
     }
@@ -39,7 +40,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const approval = await ApprovalService.request({
       action: 'feature_flag.toggle',
       resourceType: 'feature_flag',
-      resourceId: params.id,
+      resourceId: id,
       requestedBy: session.user.id,
       reason,
       metadata: {

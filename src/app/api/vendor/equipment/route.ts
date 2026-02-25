@@ -13,8 +13,8 @@ import { z } from 'zod'
 export const dynamic = 'force-dynamic'
 
 const postSchema = z.object({
-  sku: z.string().min(1).max(100),
-  model: z.string().max(255).optional(),
+  sku: z.string().max(100).optional().or(z.literal('')),
+  model: z.string().min(1, { message: 'Model is required' }).max(255),
   categoryId: z.string().min(1),
   brandId: z.string().optional(),
   condition: z.enum(['EXCELLENT', 'GOOD', 'FAIR', 'POOR']).optional(),

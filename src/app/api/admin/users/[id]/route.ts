@@ -41,7 +41,7 @@ const updateUserSchema = z.object({
  * GET /api/admin/users/[id]
  * Get user details
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const rateLimit = rateLimitAPI(request)
     if (!rateLimit.allowed) {
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       )
     }
 
-    const userId = params.id
+    const { id: userId } = await params
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  * PATCH /api/admin/users/[id]
  * Update user details
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const rateLimit = rateLimitAPI(request)
     if (!rateLimit.allowed) {
@@ -144,7 +144,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       )
     }
 
-    const userId = params.id
+    const { id: userId } = await params
     const body = await request.json()
     const validatedData = updateUserSchema.parse(body)
 
@@ -222,7 +222,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * DELETE /api/admin/users/[id]
  * Delete (soft delete) a user
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const rateLimit = rateLimitAPI(request)
     if (!rateLimit.allowed) {
@@ -243,7 +243,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       )
     }
 
-    const userId = params.id
+    const { id: userId } = await params
 
     // Prevent self-deletion
     if (userId === session.user.id) {

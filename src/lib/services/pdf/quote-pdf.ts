@@ -86,6 +86,25 @@ export function generateQuotePdf(quote: Quote, options: QuotePdfOptions = {}): B
     doc.text(locale === 'ar' ? 'العميل' : 'Customer', margin, y)
     y += 5
     doc.text(quote.customer.name ?? quote.customer.email, margin, y)
+    y += 5
+    if (quote.customer.companyName) {
+      doc.text(quote.customer.companyName, margin, y)
+      y += 5
+    }
+    doc.text(quote.customer.email, margin, y)
+    y += 5
+    if (quote.customer.taxId) {
+      doc.text(
+        (locale === 'ar' ? 'الرقم الضريبي: ' : 'Tax ID: ') + quote.customer.taxId,
+        margin,
+        y
+      )
+      y += 5
+    }
+    if (quote.customer.billingAddress) {
+      doc.text(quote.customer.billingAddress, margin, y)
+      y += 5
+    }
     y += 8
   }
 

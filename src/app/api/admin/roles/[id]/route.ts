@@ -38,17 +38,12 @@ async function requireAuthAndRolesPermission() {
   return { session }
 }
 
-async function resolveRoleId(params: { id: string } | Promise<{ id: string }>): Promise<string> {
-  const p = await Promise.resolve(params)
-  return p.id
-}
-
 /**
  * GET /api/admin/roles/[id] - Get role with permissions
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -57,7 +52,7 @@ export async function GET(
     const authResult = await requireAuthAndRolesPermission()
     if (authResult.error) return authResult.error
 
-    const roleId = await resolveRoleId(params)
+    const { id: roleId } = await params
     const role = await RoleService.getById(roleId)
     if (!role) {
       return NextResponse.json({ error: 'Role not found' }, { status: 404 })
@@ -77,7 +72,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -87,7 +82,7 @@ export async function PATCH(
     if (authResult.error) return authResult.error
     const { session } = authResult
 
-    const roleId = await resolveRoleId(params)
+    const { id: roleId } = await params
     const body = await request.json()
     const validated = updateRoleSchema.parse(body)
 
@@ -129,7 +124,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -138,7 +133,7 @@ export async function DELETE(
     const authResult = await requireAuthAndRolesPermission()
     if (authResult.error) return authResult.error
 
-    const roleId = await resolveRoleId(params)
+    const { id: roleId } = await params
     const result = await RoleService.delete(roleId)
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 })

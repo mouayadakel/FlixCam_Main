@@ -23,7 +23,11 @@ import { t } from '@/lib/i18n/translate'
 
 const CANCELLATION_HOURS_BEFORE_START = 48
 
-export default async function PortalBookingDetailPage({ params }: { params: { id: string } }) {
+export default async function PortalBookingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -31,10 +35,11 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
   }
 
   const userId = session.user.id
+  const { id } = await params
 
   const booking = await prisma.booking.findFirst({
     where: {
-      id: params.id,
+      id,
       customerId: userId,
       deletedAt: null,
     },

@@ -255,93 +255,20 @@ export function SpecificationsAuditDialog() {
 
 **الهدف**: تحويل جميع المواصفات المسطحة إلى الشكل المنظم تلقائياً
 
-#### 2.1 تحسين دالة التحويل
+#### 2.1 دالة التحويل (الكود الفعلي)
+
+الملف: `src/lib/utils/specifications.utils.ts`
+
+التوقيع الفعلي:
 
 ```typescript
-// src/lib/specifications-converter.ts
-
-export interface ConversionOptions {
-  categoryHint?: string
-  preserveOriginal?: boolean // حفظ نسخة من المواصفات الأصلية
-  autoFillDefaults?: boolean // ملء القيم الافتراضية للحقول الفارغة
-}
-
 export function convertFlatToStructured(
-  flatSpecs: FlatSpecifications,
-  options: ConversionOptions = {}
-): StructuredSpecifications {
-  const { categoryHint, preserveOriginal = false, autoFillDefaults = true } = options
-
-  // 1. اختيار القالب المناسب
-  const template = getCategoryTemplate(categoryHint)
-
-  // 2. mapping الحقول المسطحة إلى المنظمة
-  const mappedGroups = template.groups.map((group) => {
-    const mappedSpecs = group.specs.map((spec) => {
-      // البحث عن القيمة في المواصفات المسطحة
-      const value = findMatchingValue(flatSpecs, spec.key, spec.label)
-
-      return {
-        ...spec,
-        value: value || (autoFillDefaults ? spec.value : ''),
-      }
-    })
-
-    return {
-      ...group,
-      specs: mappedSpecs.filter((spec) => spec.value), // إزالة الحقول الفارغة
-    }
-  })
-
-  // 3. استخراج highlights و quickSpecs تلقائياً
-  const highlights = extractHighlights({ groups: mappedGroups }, 4)
-
-  const quickSpecs = extractQuickSpecs({ groups: mappedGroups }, 6)
-
-  // 4. بناء الكائن النهائي
-  const structured: StructuredSpecifications = {
-    highlights,
-    quickSpecs,
-    groups: mappedGroups.filter((g) => g.specs.length > 0),
-  }
-
-  // 5. حفظ النسخة الأصلية إذا طُلب ذلك
-  if (preserveOriginal) {
-    ;(structured as any)._original = flatSpecs
-  }
-
-  return structured
-}
-
-// دالة ذكية للبحث عن القيم المطابقة
-function findMatchingValue(
-  flatSpecs: FlatSpecifications,
-  key: string,
-  label: string
-): string | undefined {
-  // 1. البحث بالـ key المباشر
-  if (flatSpecs[key]) return String(flatSpecs[key])
-
-  // 2. البحث بالـ key بأشكال مختلفة
-  const variations = [
-    key.toLowerCase(),
-    key.replace(/([A-Z])/g, '_$1').toLowerCase(),
-    key.replace(/([A-Z])/g, '-$1').toLowerCase(),
-  ]
-
-  for (const variation of variations) {
-    if (flatSpecs[variation]) return String(flatSpecs[variation])
-  }
-
-  // 3. البحث بالـ label
-  const labelKey = Object.keys(flatSpecs).find(
-    (k) => k.toLowerCase() === label.toLowerCase().replace(/\s+/g, '_')
-  )
-  if (labelKey) return String(flatSpecs[labelKey])
-
-  return undefined
-}
+  flatSpecs: Record<string, unknown>,
+  categoryHint?: string
+): StructuredSpecifications
 ```
+
+لا يوجد كائن `ConversionOptions`؛ المعامل الثاني هو `categoryHint` (string) فقط. لا يوجد `preserveOriginal` ولا `autoFillDefaults` في التنفيذ الحالي.
 
 #### 2.2 API التحويل الجماعي
 
@@ -389,11 +316,7 @@ export async function POST(request: Request) {
       }
 
       // التحويل
-      const structuredSpecs = convertFlatToStructured(item.specifications as FlatSpecifications, {
-        categoryHint: item.category.name.toLowerCase(),
-        preserveOriginal: true,
-        autoFillDefaults: true,
-      })
+      const structuredSpecs = convertFlatToStructured(item.specifications as FlatSpecifications, item.category.name.toLowerCase())
 
       // التحقق من الصلاحية
       const validation = validateSpecifications(structuredSpecs)
@@ -534,9 +457,7 @@ export function SpecificationsDisplay({
     // 2. مسطحة - تحويل تلقائي
     if (isFlatSpecifications(specifications)) {
       console.warn('Flat specifications detected, converting on-the-fly')
-      return convertFlatToStructured(specifications, {
-        autoFillDefaults: false,
-      })
+      return convertFlatToStructured(specifications, undefined)
     }
 
     // 3. غير صالحة
@@ -611,8 +532,8 @@ if (process.env.NODE_ENV === 'development') {
 // scripts/test-specifications-display.ts
 
 import { prisma } from '@/lib/prisma'
-import { isStructuredSpecifications, isFlatSpecifications } from '@/lib/types'
-import { convertFlatToStructured } from '@/lib/specifications-converter'
+import { isStructuredSpecifications, isFlatSpecifications } from '@/lib/types/specifications.types'
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
 
 async function testAllEquipment() {
   const equipment = await prisma.equipment.findMany({
@@ -646,9 +567,7 @@ async function testAllEquipment() {
 
       // اختبار التحويل
       try {
-        const converted = convertFlatToStructured(item.specifications, {
-          categoryHint: item.category.name.toLowerCase(),
-        })
+        const converted = convertFlatToStructured(item.specifications, item.category.name.toLowerCase())
 
         if (converted.groups.length > 0) {
           results.conversionTests.success++
@@ -721,9 +640,7 @@ describe('Specifications System', () => {
         weight: '699g'
       };
 
-      const structured = convertFlatToStructured(flat, {
-        categoryHint: 'cameras'
-      });
+      const structured = convertFlatToStructured(flat, 'cameras');
 
       expect(structured.groups.length).toBeGreaterThan(0);
       expect(structured.groups[0].specs.length).toBeGreaterThan(0);

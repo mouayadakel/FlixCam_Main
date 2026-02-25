@@ -12,7 +12,7 @@ import { InvoiceService } from '@/lib/services/invoice.service'
 import { InvoicePolicy } from '@/lib/policies/invoice.policy'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { bookingId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   try {
     const session = await auth()
 
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: { bookingId: 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { bookingId } = await params
     const userId = session.user.id
 
     // Check policy
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { bookingId: 
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const invoice = await InvoiceService.generateFromBooking(params.bookingId, userId, auditContext)
+    const invoice = await InvoiceService.generateFromBooking(bookingId, userId, auditContext)
 
     return NextResponse.json({
       success: true,

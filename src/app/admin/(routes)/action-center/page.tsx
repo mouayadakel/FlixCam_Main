@@ -1,6 +1,6 @@
 /**
  * @file action-center/page.tsx
- * @description Action Center - Central hub for pending actions, alerts, and tasks
+ * @description Action Center - Central hub for pending actions, alerts, and approvals
  * @module app/admin/(routes)/action-center
  */
 
@@ -8,6 +8,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import {
   AlertTriangle,
   Clock,
@@ -90,7 +92,20 @@ const TYPE_CONFIG = {
   system: { label: 'نظام', icon: Bell, color: 'text-gray-600' },
 }
 
+const ApprovalsPage = dynamic(
+  () => import('../approvals/page').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <div className="flex h-64 items-center justify-center">جاري التحميل...</div> }
+)
+
+const MAIN_TABS = ['actions', 'approvals'] as const
+
 export default function ActionCenterPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const tabParam = searchParams?.get('tab') ?? 'actions'
+  const [mainTab, setMainTab] = useState<string>(
+    MAIN_TABS.includes(tabParam as (typeof MAIN_TABS)[number]) ? tabParam : 'actions'
+  )
   const { toast } = useToast()
   const [actions, setActions] = useState<ActionItem[]>([])
   const [stats, setStats] = useState<ActionStats>({
@@ -205,11 +220,28 @@ export default function ActionCenterPage() {
   }, [toast])
 
   useEffect(() => {
+    const t = searchParams?.get('tab') ?? 'actions'
+    if (MAIN_TABS.includes(t as (typeof MAIN_TABS)[number])) setMainTab(t)
+  }, [searchParams])
+
+  useEffect(() => {
     if (!hasLoadedRef.current) {
       hasLoadedRef.current = true
       loadActions()
     }
   }, [loadActions])
+
+  const handleMainTabChange = (value: string) => {
+    setMainTab(value)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    if (value === 'actions') {
+      params.delete('tab')
+    } else {
+      params.set('tab', value)
+    }
+    const query = params.toString()
+    router.replace(`/admin/action-center${query ? `?${query}` : ''}`, { scroll: false })
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -251,6 +283,13 @@ export default function ActionCenterPage() {
         </Button>
       </div>
 
+      <Tabs value={mainTab} onValueChange={handleMainTabChange}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="actions">الإجراءات</TabsTrigger>
+          <TabsTrigger value="approvals">الموافقات</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="actions" className="mt-0 space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card className="border-l-4 border-l-red-500">
@@ -398,6 +437,12 @@ export default function ActionCenterPage() {
           </Tabs>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="approvals" className="mt-0">
+          <ApprovalsPage />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

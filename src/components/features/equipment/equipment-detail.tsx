@@ -21,6 +21,7 @@ import { useCartStore } from '@/lib/stores/cart.store'
 import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
 import { AvailabilityPreview } from './availability-preview'
 import { SaveEquipmentButton } from './save-equipment-button'
+import { CompareButton } from './compare-button'
 import { SpecificationsDisplay, QuickSpecPills } from './specifications-display'
 import { FrequentlyRentedTogether } from './frequently-rented-together'
 import { WhatsAppRentButton } from './whatsapp-rent-button'
@@ -29,6 +30,7 @@ import type { AnySpecifications } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 import {
   AlertCircle,
+  AlertTriangle,
   ChevronRight,
   ShoppingCart,
   ArrowRight,
@@ -74,8 +76,15 @@ interface EquipmentDetailProps {
     shortDescription?: string | null
     longDescription?: string | null
     boxContents?: string | null
+    requiresAssistant?: boolean
   }
   recommendations: EquipmentCardItem[]
+}
+
+const REQUIRES_ASSISTANT_MESSAGE: Record<'ar' | 'en' | 'zh', string> = {
+  ar: 'هذه المعدة تتطلب إضافة مساعد للتشغيل.',
+  en: 'This equipment requires an assistant to operate.',
+  zh: '此设备需要助理操作。',
 }
 
 export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailProps) {
@@ -245,6 +254,19 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
           <span className="truncate font-medium text-text-heading">{title}</span>
         </nav>
 
+        {/* Requires Assistant notice */}
+        {equipment.requiresAssistant && (
+          <div
+            role="alert"
+            className="flex items-center gap-3 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-500 dark:bg-amber-950/40 dark:text-amber-100"
+          >
+            <AlertTriangle className="h-6 w-6 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+            <p className="font-medium">
+              {REQUIRES_ASSISTANT_MESSAGE[locale === 'zh' ? 'zh' : locale === 'ar' ? 'ar' : 'en']}
+            </p>
+          </div>
+        )}
+
         {/* Main layout: Gallery + Booking sidebar */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px] lg:gap-10">
           {/* Left column: Gallery + Tabs */}
@@ -355,7 +377,19 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                       {title}
                     </h1>
                   </div>
-                  <SaveEquipmentButton equipmentId={equipment.id} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <CompareButton
+                      equipment={{
+                        id: equipment.id,
+                        name: title ?? equipment.sku,
+                        slug: (equipment as { slug?: string }).slug ?? equipment.id,
+                        image: equipment.media[0]?.url ?? null,
+                        dailyPrice: equipment.dailyPrice,
+                        category: equipment.category,
+                      }}
+                    />
+                    <SaveEquipmentButton equipmentId={equipment.id} />
+                  </div>
                 </div>
                 {equipment.category && (
                   <Link
@@ -546,10 +580,21 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
               {/* WhatsApp Quick Rent */}
               <WhatsAppRentButton equipmentName={title} equipmentId={equipment.id} />
 
-              {/* Deposit notice */}
-              <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3">
-                <p className="text-xs text-amber-700">{t('checkout.depositNote')}</p>
-              </div>
+              {/* Deposit notice — يظهر للعميل: التأمين إلزامي أم لا */}
+              {(() => {
+                const requiresDeposit =
+                  equipment.customFields && equipment.customFields.requiresDeposit === true
+                return (
+                  <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3">
+                    <p className="text-xs text-amber-700">
+                      {requiresDeposit
+                        ? t('equipment.depositRequired')
+                        : t('equipment.depositNotRequired')}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-600/90">{t('checkout.depositNote')}</p>
+                  </div>
+                )
+              })()}
 
               {/* Trust signals */}
               <div className="space-y-2.5 border-t border-border-light/60 pt-4">

@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -182,7 +182,8 @@ const CONDITION_LABELS: Record<EquipmentCondition, string> = {
   DAMAGED: 'تالف',
 }
 
-export default function EquipmentDetailPage({ params }: { params: { id: string } }) {
+export default function EquipmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const { toast } = useToast()
   const [equipment, setEquipment] = useState<EquipmentWithRelations | null>(null)
@@ -201,12 +202,12 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
   useEffect(() => {
     loadEquipment()
     loadMaintenance()
-  }, [params.id])
+  }, [id])
 
   const loadMaintenance = async () => {
     setMaintLoading(true)
     try {
-      const res = await fetch(`/api/maintenance?equipmentId=${params.id}`)
+      const res = await fetch(`/api/maintenance?equipmentId=${id}`)
       if (res.ok) {
         const data = await res.json()
         setMaintenanceRecords(data.records ?? data.data ?? [])
@@ -228,7 +229,7 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          equipmentId: params.id,
+          equipmentId: id,
           type: newMaint.type,
           priority: newMaint.priority,
           scheduledDate: new Date(newMaint.scheduledDate).toISOString(),
@@ -257,7 +258,7 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
   const loadEquipment = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/equipment/${params.id}`)
+      const response = await fetch(`/api/equipment/${id}`)
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('المعدة غير موجودة')
@@ -285,7 +286,7 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
     }
 
     try {
-      const response = await fetch(`/api/equipment/${params.id}`, {
+      const response = await fetch(`/api/equipment/${id}`, {
         method: 'DELETE',
       })
 
@@ -378,7 +379,7 @@ export default function EquipmentDetailPage({ params }: { params: { id: string }
             حذف
           </Button>
           <Button asChild>
-            <Link href={`/admin/inventory/equipment/${params.id}/edit`}>
+            <Link href={`/admin/inventory/equipment/${id}/edit`}>
               <Edit className="ml-2 h-4 w-4" />
               تعديل
             </Link>

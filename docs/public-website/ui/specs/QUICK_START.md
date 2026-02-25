@@ -101,7 +101,8 @@ http://localhost:3000/admin/inventory/equipment
 ```typescript
 // scripts/bulk-convert.ts
 import { prisma } from '@/lib/prisma'
-import { convertFlatToStructured } from '@/lib/specifications-utils'
+import { isFlatSpecifications } from '@/lib/types/specifications.types'
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
 
 async function bulkConvert() {
   const flatEquipment = await prisma.equipment.findMany({
@@ -118,9 +119,7 @@ async function bulkConvert() {
   for (const item of flatEquipment) {
     if (isFlatSpecifications(item.specifications)) {
       try {
-        const structured = convertFlatToStructured(item.specifications, {
-          categoryHint: item.category.name.toLowerCase(),
-        })
+        const structured = convertFlatToStructured(item.specifications, item.category.name.toLowerCase())
 
         await prisma.equipment.update({
           where: { id: item.id },

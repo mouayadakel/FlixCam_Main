@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
+import { EmptyState } from '@/components/states/empty-state'
 import { formatDate } from '@/lib/utils/format.utils'
 
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -186,8 +187,14 @@ export default function RecurringBookingsPage() {
               ))
             ) : series.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  لا توجد سلاسل حجوزات متكررة
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyState
+                    title="لا توجد سلاسل حجوزات متكررة"
+                    description="لم يتم العثور على سلاسل حجوزات متكررة. أنشئ سلسلة جديدة من الزر أدناه."
+                    icon={<RefreshCw className="h-12 w-12" />}
+                    actionLabel="سلسلة حجوزات متكررة جديدة"
+                    actionHref="/admin/recurring-bookings/new"
+                  />
                 </TableCell>
               </TableRow>
             ) : (

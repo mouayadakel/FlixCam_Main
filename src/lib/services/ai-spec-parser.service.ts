@@ -7,6 +7,14 @@
 
 import { getExpectedSpecs } from '@/lib/ai/spec-templates'
 import type { InferredSpec } from '@/lib/types/backfill.types'
+import {
+  isStructuredSpecifications,
+  type StructuredSpecifications,
+} from '@/lib/types/specifications.types'
+import {
+  flattenStructuredSpecs,
+  resolveSpecKey,
+} from '@/lib/utils/specifications.utils'
 import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
@@ -44,9 +52,13 @@ export async function inferMissingSpecs(product: ProductForSpecInference | null)
   const expected = getExpectedSpecs(categoryName)
   const firstTranslation =
     product.translations.find((t) => t.locale === 'en') ?? product.translations[0]
-  const existingSpecs = (firstTranslation?.specifications as Record<string, unknown>) ?? {}
+  const rawSpecs = firstTranslation?.specifications ?? {}
+  const existingSpecs = isStructuredSpecifications(rawSpecs as StructuredSpecifications)
+    ? flattenStructuredSpecs(rawSpecs as StructuredSpecifications)
+    : (rawSpecs as Record<string, unknown>)
+
   const missingKeys = expected.filter((k) => {
-    const v = existingSpecs[k]
+    const v = existingSpecs[k] ?? existingSpecs[resolveSpecKey(k)]
     return v == null || (typeof v === 'string' && (v as string).trim() === '')
   })
 

@@ -61,7 +61,11 @@ export async function POST(request: NextRequest) {
     }
 
     const brandId = bodySchema.brandId(body.brandId)
-    const existingSpecs = bodySchema.existingSpecs(body.existingSpecs)
+    const rawExistingSpecs = bodySchema.existingSpecs(body.existingSpecs)
+    const existingSpecs =
+      rawExistingSpecs != null && isStructuredSpecifications(rawExistingSpecs)
+        ? flattenStructuredSpecs(rawExistingSpecs)
+        : rawExistingSpecs
     const existingShortDescription = bodySchema.existingShortDescription(
       body.existingShortDescription
     )
@@ -94,6 +98,7 @@ export async function POST(request: NextRequest) {
         },
       ],
     }
+    // existingSpecs is already flattened if Structured, so inferMissingSpecs gets flat format
 
     const provider = ((body.provider ?? process.env.AI_PROVIDER) as 'openai' | 'gemini') || 'gemini'
 

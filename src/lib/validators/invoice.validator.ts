@@ -19,11 +19,13 @@ export const invoiceTypeSchema = z.enum(['booking', 'deposit', 'refund', 'adjust
   errorMap: () => ({ message: 'نوع الفاتورة غير صالح' }),
 })
 
+/** Server computes total = quantity × (days ?? 1) × unitPrice. Client may omit total. */
 export const invoiceItemSchema = z.object({
   description: z.string().min(1, 'الوصف مطلوب'),
-  quantity: z.number().min(0, 'الكمية يجب أن تكون أكبر من أو تساوي 0'),
+  quantity: z.number().positive('الكمية يجب أن تكون أكبر من 0'),
   unitPrice: z.number().min(0, 'سعر الوحدة يجب أن يكون أكبر من أو يساوي 0'),
-  total: z.number().min(0, 'المجموع يجب أن يكون أكبر من أو يساوي 0'),
+  days: z.number().min(1, 'الأيام يجب أن تكون 1 على الأقل').optional().default(1),
+  total: z.number().min(0).optional(),
   vatRate: z.number().min(0).max(100).optional(),
   vatAmount: z.number().min(0).optional(),
 })

@@ -13,7 +13,7 @@ import { QuotePolicy } from '@/lib/policies/quote.policy'
 import { updateQuoteSchema } from '@/lib/validators/quote.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,15 +21,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await QuotePolicy.canView(userId, params.id)
+    const policy = await QuotePolicy.canView(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const quote = await QuoteService.getById(params.id, userId)
+    const quote = await QuoteService.getById(id, userId)
 
     return NextResponse.json({
       success: true,
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -53,10 +54,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await QuotePolicy.canUpdate(userId, params.id)
+    const policy = await QuotePolicy.canUpdate(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -71,7 +73,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const quote = await QuoteService.update(params.id, validated, userId, auditContext)
+    const quote = await QuoteService.update(id, validated, userId, auditContext)
 
     return NextResponse.json({
       success: true,
@@ -99,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -107,10 +109,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
-    const policy = await QuotePolicy.canDelete(userId, params.id)
+    const policy = await QuotePolicy.canDelete(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
@@ -122,7 +125,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    await QuoteService.delete(params.id, userId, auditContext)
+    await QuoteService.delete(id, userId, auditContext)
 
     return NextResponse.json({
       success: true,

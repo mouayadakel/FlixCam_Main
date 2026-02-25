@@ -10,6 +10,9 @@ import { z } from 'zod'
 const patchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().max(20).optional().nullable(),
+  taxId: z.string().max(50).optional().nullable(),
+  companyName: z.string().max(200).optional().nullable(),
+  billingAddress: z.string().max(500).optional().nullable(),
 })
 
 export async function GET() {
@@ -20,7 +23,15 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id, deletedAt: null },
-    select: { id: true, name: true, email: true, phone: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      taxId: true,
+      companyName: true,
+      billingAddress: true,
+    },
   })
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -55,8 +66,19 @@ export async function PATCH(request: NextRequest) {
     data: {
       ...(parsed.data.name != null && { name: parsed.data.name }),
       ...(parsed.data.phone !== undefined && { phone: parsed.data.phone }),
+      ...(parsed.data.taxId !== undefined && { taxId: parsed.data.taxId }),
+      ...(parsed.data.companyName !== undefined && { companyName: parsed.data.companyName }),
+      ...(parsed.data.billingAddress !== undefined && { billingAddress: parsed.data.billingAddress }),
     },
-    select: { id: true, name: true, email: true, phone: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      taxId: true,
+      companyName: true,
+      billingAddress: true,
+    },
   })
 
   return NextResponse.json(user)

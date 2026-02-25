@@ -57,10 +57,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 
 interface InvoiceItem {
-  id: string
+  id?: string
   description: string
   quantity: number
   unitPrice: number
+  days?: number
   total: number
 }
 
@@ -412,6 +413,12 @@ export default function InvoiceDetailPage() {
                     <p className="font-medium">{invoice.customer.taxNumber}</p>
                   </div>
                 )}
+                {(invoice.customer as { billingAddress?: string | null }).billingAddress && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">عنوان الفوترة</p>
+                    <p className="font-medium">{(invoice.customer as { billingAddress?: string | null }).billingAddress}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -427,15 +434,19 @@ export default function InvoiceDetailPage() {
                   <TableRow>
                     <TableHead>الوصف</TableHead>
                     <TableHead className="text-center">الكمية</TableHead>
-                    <TableHead className="text-left">سعر الوحدة</TableHead>
+                    <TableHead className="text-center">الأيام</TableHead>
+                    <TableHead className="text-left">سعر الوحدة / يوم</TableHead>
                     <TableHead className="text-left">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoice.items.map((item) => (
-                    <TableRow key={item.id}>
+                  {invoice.items.map((item, index) => (
+                    <TableRow key={item.id ?? `row-${index}`}>
                       <TableCell>{item.description}</TableCell>
                       <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-center">
+                        {item.days != null ? item.days : '—'}
+                      </TableCell>
                       <TableCell className="text-left">{formatCurrency(item.unitPrice)}</TableCell>
                       <TableCell className="text-left font-medium">
                         {formatCurrency(item.total)}

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
+import { resolveTemplateName } from '@/lib/ai/spec-templates'
 import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
       sku: true,
       model: true,
       specifications: true,
+      specBlacklist: true,
       category: { select: { name: true, slug: true } },
     },
   })
@@ -44,22 +46,39 @@ export async function POST(request: NextRequest) {
   const failed: { sku: string; error: string }[] = []
 
   for (const eq of equipment) {
-    const specs = eq.specifications as Record<string, unknown> | null
-    if (!specs || typeof specs !== 'object' || Object.keys(specs).length === 0) {
+    const rawSpecs = eq.specifications as Record<string, unknown> | null
+    if (!rawSpecs || typeof rawSpecs !== 'object' || Object.keys(rawSpecs).length === 0) {
       skippedEmpty++
       continue
     }
-    if (isStructuredSpecifications(specs)) {
+    if (isStructuredSpecifications(rawSpecs)) {
       skippedStructured++
       continue
     }
 
-    const categoryHint = eq.category?.slug ?? eq.category?.name ?? undefined
+    const blacklist = (eq.specBlacklist as string[] | null) ?? []
+    const filteredSpecs = Object.fromEntries(
+      Object.entries(rawSpecs).filter(([k]) => !blacklist.includes(k))
+    )
+    if (Object.keys(filteredSpecs).length === 0) {
+      skippedEmpty++
+      continue
+    }
+
+    const categoryHint = resolveTemplateName(
+      eq.category?.name ?? eq.category?.slug ?? 'Equipment'
+    ).toLowerCase()
     try {
-      const structured = convertFlatToStructured(specs as Record<string, unknown>, categoryHint)
+      const structured = convertFlatToStructured(
+        filteredSpecs as Record<string, unknown>,
+        categoryHint
+      )
       await prisma.equipment.update({
         where: { id: eq.id },
-        data: { specifications: structured as object },
+        data: {
+          specifications: structured as object,
+          specSource: 'migration',
+        },
       })
       updated++
     } catch (e) {

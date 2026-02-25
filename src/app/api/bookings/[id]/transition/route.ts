@@ -12,13 +12,14 @@ import { stateTransitionSchema } from '@/lib/validators/booking.validator'
 /**
  * POST /api/bookings/[id]/transition - Transition booking state
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const validated = stateTransitionSchema.parse(body)
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
     const booking = await BookingService.transitionState(
-      params.id,
+      id,
       validated.toState,
       session.user.id,
       { ipAddress, userAgent },

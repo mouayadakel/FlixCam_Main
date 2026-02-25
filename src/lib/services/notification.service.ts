@@ -6,6 +6,9 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { NotificationChannel } from '@prisma/client'
+import { EmailService } from '@/lib/services/email.service'
+import { WhatsAppService } from '@/lib/services/whatsapp.service'
+import { SmsService } from '@/lib/services/sms.service'
 
 export interface SendNotificationInput {
   userId?: string
@@ -23,12 +26,31 @@ export interface NotificationTemplate {
   channels: NotificationChannel[]
 }
 
+/** Check if channel is enabled in MessagingChannelConfig (master toggle). Default true if no row. */
+async function isChannelEnabled(channel: NotificationChannel): Promise<boolean> {
+  const config = await prisma.messagingChannelConfig.findUnique({
+    where: { channel },
+  })
+  return config?.isEnabled ?? true
+}
+
+/** Check if user has opted in for this channel/category. Default true if no preference. */
+async function isOptedIn(userId: string | undefined, channel: NotificationChannel): Promise<boolean> {
+  if (!userId) return true
+  const pref = await prisma.notificationPreference.findUnique({
+    where: {
+      userId_channel_category: { userId, channel, category: 'TRANSACTIONAL' },
+    },
+  })
+  return pref?.isOptedIn ?? true
+}
+
 export class NotificationService {
   /**
    * Send notification via specified channel
    */
   static async send(input: SendNotificationInput) {
-    // Create notification record
+    // Create notification record (in-app record)
     const notification = await prisma.notification.create({
       data: {
         userId: input.userId,
@@ -40,10 +62,14 @@ export class NotificationService {
       },
     })
 
-    // Send via appropriate channel
+    const channelEnabled = await isChannelEnabled(input.channel)
+    if (!channelEnabled) return notification
+
+    const optedIn = await isOptedIn(input.userId, input.channel)
+    if (!optedIn) return notification
+
     switch (input.channel) {
       case NotificationChannel.IN_APP:
-        // Already stored in database
         break
       case NotificationChannel.EMAIL:
         await this.sendEmail(input)
@@ -52,7 +78,7 @@ export class NotificationService {
         await this.sendWhatsApp(input)
         break
       case NotificationChannel.SMS:
-        // Phase 2
+        await this.sendSms(input)
         break
     }
 
@@ -153,22 +179,27 @@ export class NotificationService {
    * Send email notification
    */
   private static async sendEmail(input: SendNotificationInput) {
-    // TODO: Implement email sending via SMTP
-    // This should use the configured SMTP settings from environment variables
-    // For now, silently handle (email service will be implemented in Phase 4)
-    // Email notification will be sent when email service is implemented
+    if (!input.userId) return
+    const user = await prisma.user.findUnique({
+      where: { id: input.userId },
+      select: { email: true },
+    })
+    if (!user?.email) return
+
+    const html = `<p>${input.title}</p><p>${(input.message || '').replace(/\n/g, '<br>')}</p>`
+    await EmailService.send({
+      to: user.email,
+      subject: input.title,
+      html,
+      recipientUserId: input.userId,
+      logToMessageLog: true,
+    })
   }
 
   /**
    * Send WhatsApp notification via Meta Cloud API
    */
   private static async sendWhatsApp(input: SendNotificationInput) {
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
-
-    if (!accessToken || !phoneNumberId) return
-
-    // Resolve user phone number
     if (!input.userId) return
     const user = await prisma.user.findUnique({
       where: { id: input.userId },
@@ -176,32 +207,29 @@ export class NotificationService {
     })
     if (!user?.phone) return
 
-    // Normalize phone (remove spaces/dashes, ensure country code)
-    let phone = user.phone.replace(/[\s\-()]/g, '')
-    if (phone.startsWith('0')) phone = '966' + phone.slice(1)
-    if (!phone.startsWith('+') && !phone.startsWith('966')) phone = '966' + phone
+    const body = `${input.title}\n\n${input.message}`
+    await WhatsAppService.sendWhatsAppText(user.phone, body, {
+      recipientUserId: input.userId,
+      logToMessageLog: true,
+    })
+  }
 
-    try {
-      const res = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: phone,
-          type: 'text',
-          text: { body: `${input.title}\n\n${input.message}` },
-        }),
-      })
-      if (!res.ok) {
-        const err = await res.text().catch(() => 'unknown')
-        console.error('[WhatsApp] send failed:', res.status, err)
-      }
-    } catch (e) {
-      console.error('[WhatsApp] send error:', e)
-    }
+  /**
+   * Send SMS notification
+   */
+  private static async sendSms(input: SendNotificationInput) {
+    if (!input.userId) return
+    const user = await prisma.user.findUnique({
+      where: { id: input.userId },
+      select: { phone: true },
+    })
+    if (!user?.phone) return
+
+    const body = `${input.title}\n\n${input.message}`
+    await SmsService.sendSmsText(user.phone, body, {
+      recipientUserId: input.userId,
+      logToMessageLog: true,
+    })
   }
 
   /**

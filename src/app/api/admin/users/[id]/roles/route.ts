@@ -43,7 +43,7 @@ async function requireAuthAndAssignRole() {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -52,8 +52,7 @@ export async function GET(
     const authResult = await requireAuthAndAssignRole()
     if (authResult.error) return authResult.error
 
-    const p = await Promise.resolve(params)
-    const userId = p.id
+    const { id: userId } = await params
 
     const userRoles = await prisma.assignedUserRole.findMany({
       where: {
@@ -98,7 +97,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -108,8 +107,7 @@ export async function POST(
     if (authResult.error) return authResult.error
     const { session } = authResult
 
-    const p = await Promise.resolve(params)
-    const userId = p.id
+    const { id: userId } = await params
     const body = await request.json()
     const { roleId, isPrimary, expiresAt } = assignRoleSchema.parse(body)
 

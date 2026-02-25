@@ -18,7 +18,11 @@ import { ArrowRight, FileText, Download } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { t } from '@/lib/i18n/translate'
 
-export default async function PortalContractDetailPage({ params }: { params: { id: string } }) {
+export default async function PortalContractDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -26,10 +30,11 @@ export default async function PortalContractDetailPage({ params }: { params: { i
   }
 
   const userId = session.user.id
+  const { id } = await params
 
   const contract = await prisma.contract.findFirst({
     where: {
-      id: params.id,
+      id,
       booking: {
         customerId: userId,
         deletedAt: null,

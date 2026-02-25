@@ -13,7 +13,10 @@ export interface InvoiceItem {
   description: string
   quantity: number
   unitPrice: number
-  total: number
+  /** Rental days; when present, line total = quantity × days × unitPrice. Omit or 1 for non-rental. */
+  days?: number
+  /** Server computes if omitted; client may send for display only. */
+  total?: number
   vatRate?: number
   vatAmount?: number
 }
@@ -41,7 +44,10 @@ export interface Invoice {
     id: string
     name: string | null
     email: string
+    phone?: string | null
     taxId?: string | null
+    companyName?: string | null
+    billingAddress?: string | null
   }
   booking?: {
     id: string

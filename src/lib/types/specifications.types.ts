@@ -99,6 +99,8 @@ export interface StructuredSpecifications {
   quickSpecs?: QuickSpec[]
   /** Detailed specification groups */
   groups: SpecGroup[]
+  /** Optional raw HTML / rich text for custom specs block (editor + preview) */
+  customHtml?: string
 }
 
 /**

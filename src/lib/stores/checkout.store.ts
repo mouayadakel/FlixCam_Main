@@ -39,8 +39,8 @@ export interface CheckoutAddons {
   deliveryFee?: number
 }
 
-/** 1 = Dates, 2 = Availability, 3 = Add-ons, 4 = Review, 5 = Payment, 6 = Confirm */
-export type CheckoutStepIndex = 1 | 2 | 3 | 4 | 5 | 6
+/** 1 = Receiver & Fulfillment, 2 = Add-ons, 3 = Review & Pay */
+export type CheckoutStepIndex = 1 | 2 | 3
 
 interface CheckoutState {
   details: CheckoutDetails | null
@@ -59,6 +59,9 @@ interface CheckoutState {
   holdId: string | null
   holdExpiresAt: string | null
   setHold: (holdId: string | null, holdExpiresAt: string | null) => void
+  /** Dynamic CMS form field values (keyed by fieldKey) */
+  formValues: Record<string, unknown>
+  setFormValues: (values: Record<string, unknown>) => void
   clearHold: () => void
   clearCheckout: () => void
 }
@@ -92,6 +95,8 @@ export const useCheckoutStore = create<CheckoutState>()(
       holdId: null,
       holdExpiresAt: null,
       setHold: (holdId, holdExpiresAt) => set({ holdId, holdExpiresAt }),
+      formValues: {},
+      setFormValues: (formValues) => set({ formValues }),
       clearHold: () => set({ holdId: null, holdExpiresAt: null }),
       clearCheckout: () =>
         set({
@@ -103,6 +108,7 @@ export const useCheckoutStore = create<CheckoutState>()(
           paymentMethod: null,
           holdId: null,
           holdExpiresAt: null,
+          formValues: {},
         }),
     }),
     {
@@ -115,6 +121,7 @@ export const useCheckoutStore = create<CheckoutState>()(
         paymentMethod: s.paymentMethod,
         holdId: s.holdId,
         holdExpiresAt: s.holdExpiresAt,
+        formValues: s.formValues,
       }),
     }
   )

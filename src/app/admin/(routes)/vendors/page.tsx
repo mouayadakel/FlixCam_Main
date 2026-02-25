@@ -1,159 +1,72 @@
+/**
+ * @file page.tsx
+ * @description Vendors page with tabs: Vendors List, Payouts
+ * @module app/admin/(routes)/vendors
+ */
+
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Plus, Eye } from 'lucide-react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'قيد الانتظار',
-  APPROVED: 'معتمد',
-  SUSPENDED: 'معلق',
-  REJECTED: 'مرفوض',
-}
+const VendorsListTab = dynamic(
+  () => import('./_components/vendors-list-tab').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
+const PayoutsTab = dynamic(
+  () => import('./payouts/page').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
 
-interface Vendor {
-  id: string
-  companyName: string
-  email: string
-  status: string
-  commissionRate: number
-  user?: { name: string | null; email: string }
-  _count?: { equipment: number }
-}
+const TAB_VALUES = ['list', 'payouts'] as const
 
 export default function VendorsPage() {
-  const { toast } = useToast()
-  const [vendors, setVendors] = useState<Vendor[]>([])
-  const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [search, setSearch] = useState('')
-  const [total, setTotal] = useState(0)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const tabParam = searchParams?.get('tab') ?? 'list'
+  const [activeTab, setActiveTab] = useState<string>(
+    TAB_VALUES.includes(tabParam as (typeof TAB_VALUES)[number]) ? tabParam : 'list'
+  )
 
   useEffect(() => {
-    loadVendors()
-  }, [statusFilter, search])
+    const t = searchParams?.get('tab') ?? 'list'
+    if (TAB_VALUES.includes(t as (typeof TAB_VALUES)[number])) setActiveTab(t)
+  }, [searchParams])
 
-  const loadVendors = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (search) params.set('search', search)
-
-      const res = await fetch(`/api/admin/vendors?${params.toString()}`)
-      if (!res.ok) throw new Error('Failed to load vendors')
-
-      const data = await res.json()
-      setVendors(data.items || [])
-      setTotal(data.total ?? 0)
-    } catch (err) {
-      toast({
-        title: 'خطأ',
-        description: err instanceof Error ? err.message : 'فشل تحميل الموردين',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    if (value === 'list') {
+      params.delete('tab')
+    } else {
+      params.set('tab', value)
     }
+    const query = params.toString()
+    router.replace(`/admin/vendors${query ? `?${query}` : ''}`, { scroll: false })
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">الموردون</h1>
-        <Link href="/admin/vendors/new">
-          <Button>
-            <Plus className="ml-2 h-4 w-4" />
-            إضافة مورد
-          </Button>
-        </Link>
+        <h1 className="text-3xl font-bold">الموردون</h1>
       </div>
 
-      <div className="flex gap-4">
-        <Input
-          placeholder="بحث..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">الكل</SelectItem>
-            <SelectItem value="PENDING">قيد الانتظار</SelectItem>
-            <SelectItem value="APPROVED">معتمد</SelectItem>
-            <SelectItem value="SUSPENDED">معلق</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">قائمة الموردين</TabsTrigger>
+          <TabsTrigger value="payouts">المدفوعات</TabsTrigger>
+        </TabsList>
 
-      <div className="rounded-lg border">
-        {loading ? (
-          <div className="p-6">
-            <Skeleton className="h-48 w-full" />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>الشركة</TableHead>
-                <TableHead>البريد</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead>العمولة</TableHead>
-                <TableHead>المعدات</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vendors.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell className="font-medium">{v.companyName}</TableCell>
-                  <TableCell>{v.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={v.status === 'APPROVED' ? 'default' : 'secondary'}>
-                      {STATUS_LABELS[v.status] || v.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{v.commissionRate}%</TableCell>
-                  <TableCell>{v._count?.equipment ?? 0}</TableCell>
-                  <TableCell>
-                    <Link href={`/admin/vendors/${v.id}`}>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-        {!loading && vendors.length === 0 && (
-          <p className="py-8 text-center text-muted-foreground">لا يوجد موردون</p>
-        )}
-      </div>
+        <TabsContent value="list" className="mt-0">
+          <VendorsListTab />
+        </TabsContent>
+        <TabsContent value="payouts" className="mt-0">
+          <PayoutsTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

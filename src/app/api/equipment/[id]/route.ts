@@ -18,6 +18,8 @@ function coerceEquipmentBody(body: Record<string, unknown>) {
     'dailyPrice',
     'weeklyPrice',
     'monthlyPrice',
+    'purchasePrice',
+    'depositAmount',
     'bufferTime',
   ]
   for (const key of numberFields) {
@@ -28,7 +30,7 @@ function coerceEquipmentBody(body: Record<string, unknown>) {
     }
   }
 
-  const booleanFields = ['featured', 'isActive']
+  const booleanFields = ['featured', 'isActive', 'requiresAssistant', 'requiresDeposit']
   for (const key of booleanFields) {
     const v = out[key]
     if (typeof v === 'string') {
@@ -43,7 +45,7 @@ function coerceEquipmentBody(body: Record<string, unknown>) {
 /**
  * GET /api/equipment/[id] - Get equipment by ID
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -55,7 +57,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const equipment = await EquipmentService.getEquipmentById(params.id)
+    const { id } = await params
+    const equipment = await EquipmentService.getEquipmentById(id)
 
     return NextResponse.json(equipment)
   } catch (error) {
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 /**
  * PATCH /api/equipment/[id] - Update equipment
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -82,11 +85,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const { id } = await params
     const bodyRaw = (await request.json()) as Record<string, unknown>
     const body = coerceEquipmentBody(bodyRaw)
     const { featured: _featured, ...rest } = body
 
-    const parsed = updateEquipmentSchema.safeParse({ id: params.id, ...rest })
+    const parsed = updateEquipmentSchema.safeParse({ id, ...rest })
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
@@ -109,7 +113,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 /**
  * DELETE /api/equipment/[id] - Delete equipment (soft delete)
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -121,7 +125,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await EquipmentService.deleteEquipment(params.id, session.user.id)
+    const { id } = await params
+    await EquipmentService.deleteEquipment(id, session.user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

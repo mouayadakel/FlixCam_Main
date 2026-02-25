@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth'
 import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -23,8 +23,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
-    const flag = await FeatureFlagService.update(params.id, {
+    const flag = await FeatureFlagService.update(id, {
       ...body,
       userId: session.user.id,
     })
@@ -43,7 +44,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -57,7 +58,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await FeatureFlagService.delete(params.id, session.user.id)
+    const { id } = await params
+    await FeatureFlagService.delete(id, session.user.id)
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

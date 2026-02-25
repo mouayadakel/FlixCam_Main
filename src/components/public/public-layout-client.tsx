@@ -13,6 +13,7 @@ import { AuthModal } from '@/components/auth/auth-modal'
 import { PublicHeader } from '@/components/public/public-header'
 import { PublicFooter } from '@/components/public/public-footer'
 import { WhatsAppCta } from '@/components/public/whatsapp-cta'
+import { CompareBar } from '@/components/features/equipment/compare-bar'
 import { MobileNavBar } from '@/components/mobile/mobile-nav-bar'
 
 interface PublicLayoutClientProps {
@@ -42,6 +43,7 @@ export function PublicLayoutClient({ children, flags }: PublicLayoutClientProps)
       <PublicFooter hiddenRoutes={hiddenRoutes} />
       <MobileNavBar />
       {flags.enableWhatsAppCta && <WhatsAppCta />}
+      <CompareBar />
       <AuthModal />
     </AuthModalProvider>
   )

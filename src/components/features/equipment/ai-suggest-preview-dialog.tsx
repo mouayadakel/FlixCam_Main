@@ -43,7 +43,11 @@ import {
   Code,
   LayoutGrid,
   Search,
+  Languages,
 } from 'lucide-react'
+import { useLocale } from '@/hooks/use-locale'
+import { t as tForLocale } from '@/lib/i18n/translate'
+import { LOCALES, LOCALE_LABELS, type Locale } from '@/lib/i18n/locales'
 
 export interface TranslationLocaleData {
   name: string
@@ -66,7 +70,13 @@ export type AISuggestPayload = {
   translations?: Record<'ar' | 'en' | 'zh', TranslationLocaleData>
 }
 
-function ConfidenceBadge({ value }: { value: number | undefined }) {
+function ConfidenceBadge({
+  value,
+  labels,
+}: {
+  value: number | undefined
+  labels?: { high: string; med: string; low: string }
+}) {
   if (value == null) return null
   const cls =
     value >= 90
@@ -74,7 +84,7 @@ function ConfidenceBadge({ value }: { value: number | undefined }) {
       : value >= 70
         ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
         : 'bg-orange-100 text-orange-800 border-orange-300'
-  const label = value >= 90 ? 'High' : value >= 70 ? 'Med' : 'Low'
+  const label = value >= 90 ? (labels?.high ?? 'High') : value >= 70 ? (labels?.med ?? 'Med') : (labels?.low ?? 'Low')
   return (
     <span
       className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${cls}`}
@@ -350,6 +360,7 @@ function SpecGroupCard({
   confidence,
   onEditValue,
   onDeleteSpec,
+  confidenceLabels,
 }: {
   group: {
     label: string
@@ -357,6 +368,7 @@ function SpecGroupCard({
     entries: Array<{ key: string; label: string; value: string }>
   }
   confidence?: Record<string, number>
+  confidenceLabels?: { high: string; med: string; low: string }
   onEditValue: (key: string, value: string) => void
   onDeleteSpec: (key: string) => void
 }) {
@@ -399,7 +411,7 @@ function SpecGroupCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-muted-foreground">{entry.label}</span>
-                  <ConfidenceBadge value={confidence?.[entry.key]} />
+                  <ConfidenceBadge value={confidence?.[entry.key]} labels={confidenceLabels} />
                 </div>
                 {editingKey === entry.key ? (
                   <div className="mt-1 flex items-center gap-2">
@@ -472,6 +484,8 @@ export interface AISuggestPreviewDialogProps {
   onApply: (payload: AISuggestPayload) => void
 }
 
+const AI_SUGGEST_DIALOG_NS = 'equipment.aiSuggestDialog'
+
 export function AISuggestPreviewDialog({
   open,
   onOpenChange,
@@ -479,9 +493,23 @@ export function AISuggestPreviewDialog({
   suggestion,
   onApply,
 }: AISuggestPreviewDialogProps) {
+  const { locale } = useLocale()
+  const [dialogLocale, setDialogLocale] = useState<Locale>(locale)
   const [edited, setEdited] = useState<AISuggestPayload | null>(suggestion)
   const [specsView, setSpecsView] = useState<'grouped' | 'json'>('grouped')
   const [specSearch, setSpecSearch] = useState('')
+
+  useEffect(() => {
+    if (open) setDialogLocale(locale)
+  }, [open, locale])
+
+  const tDialog = (key: string) => tForLocale(dialogLocale, key)
+
+  const confidenceLabels = {
+    high: tDialog(`${AI_SUGGEST_DIALOG_NS}.confidenceHigh`),
+    med: tDialog(`${AI_SUGGEST_DIALOG_NS}.confidenceMed`),
+    low: tDialog(`${AI_SUGGEST_DIALOG_NS}.confidenceLow`),
+  }
 
   useEffect(() => {
     if (suggestion) setEdited(suggestion)
@@ -550,12 +578,28 @@ export function AISuggestPreviewDialog({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20">
               <Sparkles className="h-4 w-4 text-violet-600" />
             </div>
-            AI-Generated Content
+            {tDialog(`${AI_SUGGEST_DIALOG_NS}.title`)}
           </DialogTitle>
           <DialogDescription>
-            Review and edit the suggested content, then click Apply to fill the form. No data is
-            saved until you click Save.
+            {tDialog(`${AI_SUGGEST_DIALOG_NS}.description`)}
           </DialogDescription>
+          <div className="flex flex-wrap items-center gap-1.5 pt-2">
+            <Languages className="h-4 w-4 text-muted-foreground" aria-hidden />
+            {LOCALES.map((loc) => (
+              <Button
+                key={loc}
+                type="button"
+                variant={dialogLocale === loc ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 min-w-[2.5rem] text-xs font-medium"
+                onClick={() => setDialogLocale(loc)}
+                aria-label={LOCALE_LABELS[loc]}
+                aria-pressed={dialogLocale === loc}
+              >
+                {LOCALE_LABELS[loc]}
+              </Button>
+            ))}
+          </div>
         </DialogHeader>
 
         {loading && (
@@ -567,10 +611,10 @@ export function AISuggestPreviewDialog({
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Generating comprehensive specifications...
+              {tDialog(`${AI_SUGGEST_DIALOG_NS}.generating`)}
             </p>
             <p className="text-xs text-muted-foreground/70">
-              Analyzing product data and inferring technical details
+              {tDialog(`${AI_SUGGEST_DIALOG_NS}.analyzing`)}
             </p>
           </div>
         )}
@@ -580,16 +624,16 @@ export function AISuggestPreviewDialog({
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="specs" className="gap-1.5">
                 <Gauge className="h-3.5 w-3.5" />
-                Specs
+                {tDialog(`${AI_SUGGEST_DIALOG_NS}.tabSpecs`)}
                 {totalSpecCount > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
                     {totalSpecCount}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="seo">SEO</TabsTrigger>
-              <TabsTrigger value="extra">Extra</TabsTrigger>
+              <TabsTrigger value="content">{tDialog(`${AI_SUGGEST_DIALOG_NS}.tabContent`)}</TabsTrigger>
+              <TabsTrigger value="seo">{tDialog(`${AI_SUGGEST_DIALOG_NS}.tabSeo`)}</TabsTrigger>
+              <TabsTrigger value="extra">{tDialog(`${AI_SUGGEST_DIALOG_NS}.tabExtra`)}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="specs" className="space-y-3 pt-4">
@@ -601,10 +645,16 @@ export function AISuggestPreviewDialog({
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      {totalSpecCount} Technical Specifications
+                      {tDialog(`${AI_SUGGEST_DIALOG_NS}.technicalSpecsCount`).replace(
+                        '{count}',
+                        String(totalSpecCount)
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {specGroups.length} categories detected
+                      {tDialog(`${AI_SUGGEST_DIALOG_NS}.categoriesDetected`).replace(
+                        '{count}',
+                        String(specGroups.length)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -619,7 +669,7 @@ export function AISuggestPreviewDialog({
                     }`}
                   >
                     <LayoutGrid className="mr-1 inline h-3 w-3" />
-                    Grouped
+                    {tDialog(`${AI_SUGGEST_DIALOG_NS}.grouped`)}
                   </button>
                   <button
                     type="button"
@@ -631,7 +681,7 @@ export function AISuggestPreviewDialog({
                     }`}
                   >
                     <Code className="mr-1 inline h-3 w-3" />
-                    JSON
+                    {tDialog(`${AI_SUGGEST_DIALOG_NS}.json`)}
                   </button>
                 </div>
               </div>
@@ -642,7 +692,7 @@ export function AISuggestPreviewDialog({
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Search specifications..."
+                      placeholder={tDialog(`${AI_SUGGEST_DIALOG_NS}.searchPlaceholder`)}
                       value={specSearch}
                       onChange={(e) => setSpecSearch(e.target.value)}
                       className="pl-9 text-sm"
@@ -656,6 +706,7 @@ export function AISuggestPreviewDialog({
                         key={group.label}
                         group={group}
                         confidence={current.confidence}
+                        confidenceLabels={confidenceLabels}
                         onEditValue={handleEditSpecValue}
                         onDeleteSpec={handleDeleteSpec}
                       />
@@ -665,8 +716,8 @@ export function AISuggestPreviewDialog({
                         <Info className="mb-2 h-8 w-8 text-muted-foreground/50" />
                         <p className="text-sm text-muted-foreground">
                           {specSearch
-                            ? 'No specs match your search'
-                            : 'No specifications generated'}
+                            ? tDialog(`${AI_SUGGEST_DIALOG_NS}.noSpecsMatch`)
+                            : tDialog(`${AI_SUGGEST_DIALOG_NS}.noSpecsGenerated`)}
                         </p>
                       </div>
                     )}
@@ -677,7 +728,7 @@ export function AISuggestPreviewDialog({
               {specsView === 'json' && (
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">
-                    Edit JSON directly — invalid JSON is ignored while typing
+                    {tDialog(`${AI_SUGGEST_DIALOG_NS}.editJsonLabel`)}
                   </Label>
                   <Textarea
                     value={JSON.stringify(current.specs ?? {}, null, 2)}
@@ -700,8 +751,8 @@ export function AISuggestPreviewDialog({
             <TabsContent value="content" className="space-y-4 pt-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label>Short description</Label>
-                  <ConfidenceBadge value={current.confidence?.shortDescription} />
+                  <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.shortDescription`)}</Label>
+                  <ConfidenceBadge value={current.confidence?.shortDescription} labels={confidenceLabels} />
                 </div>
                 <Textarea
                   value={current.shortDescription ?? ''}
@@ -716,8 +767,8 @@ export function AISuggestPreviewDialog({
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label>Long description</Label>
-                  <ConfidenceBadge value={current.confidence?.longDescription} />
+                  <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.longDescription`)}</Label>
+                  <ConfidenceBadge value={current.confidence?.longDescription} labels={confidenceLabels} />
                 </div>
                 <Textarea
                   value={current.longDescription ?? ''}
@@ -732,7 +783,7 @@ export function AISuggestPreviewDialog({
               </div>
               {current.boxContents != null && (
                 <div className="space-y-2">
-                  <Label>Box contents</Label>
+                  <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.boxContents`)}</Label>
                   <Textarea
                     value={current.boxContents ?? ''}
                     onChange={(e) =>
@@ -745,7 +796,7 @@ export function AISuggestPreviewDialog({
               )}
               {current.tags != null && (
                 <div className="space-y-2">
-                  <Label>Tags (comma-separated)</Label>
+                  <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.tagsLabel`)}</Label>
                   <Input
                     value={
                       typeof current.tags === 'string'
@@ -757,14 +808,14 @@ export function AISuggestPreviewDialog({
                     onChange={(e) =>
                       setEdited((prev) => (prev ? { ...prev, tags: e.target.value } : null))
                     }
-                    placeholder="tag1, tag2, tag3"
+                    placeholder={tDialog(`${AI_SUGGEST_DIALOG_NS}.tagsPlaceholder`)}
                   />
                 </div>
               )}
             </TabsContent>
             <TabsContent value="seo" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>SEO title</Label>
+                <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.seoTitle`)}</Label>
                 <Input
                   value={current.seo?.metaTitle ?? ''}
                   onChange={(e) =>
@@ -780,7 +831,7 @@ export function AISuggestPreviewDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label>SEO description</Label>
+                <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.seoDescription`)}</Label>
                 <Textarea
                   value={current.seo?.metaDescription ?? ''}
                   onChange={(e) =>
@@ -797,7 +848,7 @@ export function AISuggestPreviewDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label>SEO keywords</Label>
+                <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.seoKeywords`)}</Label>
                 <Input
                   value={current.seo?.metaKeywords ?? ''}
                   onChange={(e) =>
@@ -815,7 +866,7 @@ export function AISuggestPreviewDialog({
             </TabsContent>
             <TabsContent value="extra" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Related equipment IDs (comma-separated)</Label>
+                <Label>{tDialog(`${AI_SUGGEST_DIALOG_NS}.relatedIdsLabel`)}</Label>
                 <Input
                   value={(current.relatedEquipmentIds ?? []).join(', ')}
                   onChange={(e) => {
@@ -828,8 +879,10 @@ export function AISuggestPreviewDialog({
                   placeholder="id1, id2, id3"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {current.relatedEquipmentIds?.length ?? 0} ID(s) will be applied when you click
-                  Apply.
+                  {tDialog(`${AI_SUGGEST_DIALOG_NS}.relatedIdsHint`).replace(
+                    '{count}',
+                    String(current.relatedEquipmentIds?.length ?? 0)
+                  )}
                 </p>
               </div>
             </TabsContent>
@@ -838,11 +891,11 @@ export function AISuggestPreviewDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {tDialog(`${AI_SUGGEST_DIALOG_NS}.cancel`)}
           </Button>
           <Button onClick={handleApply} disabled={!canApply} className="gap-2">
             <Check className="h-4 w-4" />
-            Apply to form
+            {tDialog(`${AI_SUGGEST_DIALOG_NS}.applyToForm`)}
           </Button>
         </DialogFooter>
       </DialogContent>

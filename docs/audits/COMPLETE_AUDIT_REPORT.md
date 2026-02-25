@@ -78,7 +78,7 @@
 
 - **AI Preview (Import):** `handleAIPreview` → POST `/api/admin/imports/preview-ai` → `generateMasterFill` (ai-content-generation.service) → OpenAI or Gemini
 - **Equipment AI Suggest:** Form triggers POST `/api/admin/equipment/ai-suggest` → inferMissingSpecs, generateSEOBatch, generateDescription, generateBoxContents, generateTags
-- **Backfill:** BullMQ job → ai-autofill.service, spec-parser.service
+- **Backfill:** BullMQ job → ai-autofill.service, ai-spec-parser.service
 
 ### Env Requirements
 

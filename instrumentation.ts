@@ -19,10 +19,9 @@ export async function register() {
       .filter(([, v]) => !v)
       .map(([k]) => k)
     if (missing.length > 0) {
-      console.error(
-        `[Instrumentation] FATAL: Missing required environment variables: ${missing.join(', ')}. The application cannot start safely.`
-      )
-      process.exit(1)
+      const msg = `[Instrumentation] FATAL: Missing required environment variables: ${missing.join(', ')}. The application cannot start safely.`
+      console.error(msg)
+      throw new Error(msg)
     }
   }
 

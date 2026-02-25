@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db/prisma'
 import { AuditService } from '@/lib/services/audit.service'
 import { publishAdminLive } from '@/lib/live-admin'
 import { NotificationService } from '@/lib/services/notification.service'
+import { processEventForMessaging } from '@/lib/services/messaging-automation.service'
 import { NotificationChannel } from '@prisma/client'
 
 export type EventName =
@@ -266,6 +267,11 @@ export class EventBus {
     // 5. Auto-create in-app notifications (fire-and-forget)
     this.createNotification(event, payload).catch((e) =>
       console.error('[EventBus] notification error:', e)
+    )
+
+    // 6. Messaging automation: rules + templates + multi-channel (fire-and-forget)
+    processEventForMessaging(event, payload as Record<string, unknown>).catch((e) =>
+      console.error('[EventBus] messaging automation error:', e)
     )
   }
 

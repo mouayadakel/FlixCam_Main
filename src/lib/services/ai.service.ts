@@ -46,6 +46,27 @@ export class AIService {
   }
 
   /**
+   * Generate plain text from a single prompt (e.g. for comparison summaries).
+   * Uses OpenAI when available; throws if no API key.
+   */
+  static async generateText(
+    prompt: string,
+    options?: { maxTokens?: number; temperature?: number }
+  ): Promise<string> {
+    const client = this.getOpenAIClient()
+    if (!client) {
+      throw new Error('OPENAI_API_KEY is not set; cannot generate text')
+    }
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: options?.maxTokens ?? 300,
+      temperature: options?.temperature ?? 0.4,
+    })
+    return completion.choices[0]?.message?.content?.trim() ?? ''
+  }
+
+  /**
    * Assess booking risk using AI
    */
   static async assessRisk(input: {

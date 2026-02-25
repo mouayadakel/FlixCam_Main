@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth'
 import { ApprovalService } from '@/lib/services/approval.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -23,6 +23,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const { reason } = body
 
@@ -31,7 +32,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     const approval = await ApprovalService.reject({
-      approvalId: params.id,
+      approvalId: id,
       rejectedBy: session.user.id,
       reason,
     })

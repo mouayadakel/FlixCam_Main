@@ -22,6 +22,15 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -227,38 +236,45 @@ export default function CouponsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <input
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor="coupons-search" className="sr-only">
+          البحث برمز الكوبون
+        </Label>
+        <Input
+          id="coupons-search"
           type="text"
           placeholder="البحث برمز الكوبون..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-lg border px-4 py-2"
+          className="h-9 min-w-[200px] flex-1 rounded-md border border-input"
+          aria-label="البحث برمز الكوبون"
         />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status === 'all'
-                ? 'جميع الحالات'
-                : STATUS_LABELS[status as CouponStatus]?.ar || status}
-            </option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {types.map((type) => (
-            <option key={type} value={type}>
-              {type === 'all' ? 'جميع الأنواع' : TYPE_LABELS[type as CouponType]?.ar || type}
-            </option>
-          ))}
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر الحالة">
+            <SelectValue placeholder="جميع الحالات" />
+          </SelectTrigger>
+          <SelectContent>
+            {statuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status === 'all'
+                  ? 'جميع الحالات'
+                  : STATUS_LABELS[status as CouponStatus]?.ar || status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر النوع">
+            <SelectValue placeholder="جميع الأنواع" />
+          </SelectTrigger>
+          <SelectContent>
+            {types.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type === 'all' ? 'جميع الأنواع' : TYPE_LABELS[type as CouponType]?.ar || type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Coupons Table */}

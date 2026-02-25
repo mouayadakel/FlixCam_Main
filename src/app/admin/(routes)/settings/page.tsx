@@ -20,6 +20,7 @@ import {
   MapPin,
   Percent,
   ScrollText,
+  FileSignature,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -208,6 +209,36 @@ export default function SettingsPage() {
           <CardContent>
             <Button asChild variant="outline" className="w-full">
               <Link href="/admin/settings/delivery-zones">إدارة مناطق التوصيل</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              بيانات الشركة
+            </CardTitle>
+            <CardDescription>المستفيد وخطاب المدير لسندات الأمر</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin/settings/company">إعدادات الشركة</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSignature className="h-5 w-5" />
+              سند الأمر
+            </CardTitle>
+            <CardDescription>تفعيل/تعطيل سند الأمر للمعدات والاستوديو</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin/settings/promissory-note">إعدادات سند الأمر</Link>
             </Button>
           </CardContent>
         </Card>

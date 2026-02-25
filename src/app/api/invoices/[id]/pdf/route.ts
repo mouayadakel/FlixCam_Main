@@ -13,7 +13,7 @@ import { InvoicePolicy } from '@/lib/policies/invoice.policy'
 import { PdfService } from '@/lib/services/pdf.service'
 import { ForbiddenError } from '@/lib/errors'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,13 +21,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
-    const policy = await InvoicePolicy.canView(userId, params.id)
+    const policy = await InvoicePolicy.canView(userId, id)
     if (!policy.allowed) {
       return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
     }
 
-    const invoice = await InvoiceService.getById(params.id, userId)
+    const invoice = await InvoiceService.getById(id, userId)
     const locale = (req.nextUrl.searchParams.get('locale') as 'ar' | 'en') || 'en'
 
     const buffer = await PdfService.generateInvoicePdfBuffer({

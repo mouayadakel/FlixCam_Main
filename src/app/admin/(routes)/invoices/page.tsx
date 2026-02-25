@@ -22,6 +22,15 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { exportToCSV } from '@/lib/utils/export.utils'
 import { TablePagination } from '@/components/tables/table-pagination'
@@ -257,45 +266,55 @@ export default function InvoicesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <input
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor="invoices-date-from" className="sr-only">
+          من تاريخ
+        </Label>
+        <Input
+          id="invoices-date-from"
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="من تاريخ"
+          className="h-9 rounded-md border border-input"
+          aria-label="من تاريخ"
         />
-        <input
+        <Label htmlFor="invoices-date-to" className="sr-only">
+          إلى تاريخ
+        </Label>
+        <Input
+          id="invoices-date-to"
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="rounded-lg border px-4 py-2 text-sm"
-          placeholder="إلى تاريخ"
+          className="h-9 rounded-md border border-input"
+          aria-label="إلى تاريخ"
         />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status === 'all'
-                ? 'جميع الحالات'
-                : STATUS_LABELS[status as InvoiceStatus]?.ar || status}
-            </option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg border px-4 py-2"
-        >
-          {types.map((type) => (
-            <option key={type} value={type}>
-              {type === 'all' ? 'جميع الأنواع' : TYPE_LABELS[type as InvoiceType]?.ar || type}
-            </option>
-          ))}
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر الحالة">
+            <SelectValue placeholder="جميع الحالات" />
+          </SelectTrigger>
+          <SelectContent>
+            {statuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status === 'all'
+                  ? 'جميع الحالات'
+                  : STATUS_LABELS[status as InvoiceStatus]?.ar || status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-9 rounded-md border border-input" aria-label="فلتر النوع">
+            <SelectValue placeholder="جميع الأنواع" />
+          </SelectTrigger>
+          <SelectContent>
+            {types.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type === 'all' ? 'جميع الأنواع' : TYPE_LABELS[type as InvoiceType]?.ar || type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Invoices Table */}

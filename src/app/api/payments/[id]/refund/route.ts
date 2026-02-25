@@ -13,7 +13,7 @@ import { PaymentPolicy } from '@/lib/policies/payment.policy'
 import { paymentRefundSchema } from '@/lib/validators/payment.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Request refund (creates approval request)
     const result = await PaymentService.requestRefund({
-      paymentId: params.id,
+      paymentId: id,
       amount: validated.refundAmount,
       reason: validated.refundReason,
       userId,

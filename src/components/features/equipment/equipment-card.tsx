@@ -12,6 +12,7 @@ import { useLocale } from '@/hooks/use-locale'
 import { isExternalImageUrl } from '@/lib/utils/image.utils'
 import { cn } from '@/lib/utils'
 import { SaveEquipmentButton } from './save-equipment-button'
+import { CompareButton } from './compare-button'
 import { Eye } from 'lucide-react'
 import { getLocalizedName } from '@/lib/i18n/content-helper'
 
@@ -23,6 +24,7 @@ export interface EquipmentCardItem {
   model: string | null
   nameEn?: string | null
   nameZh?: string | null
+  slug?: string | null
   dailyPrice: number
   quantityAvailable: number | null
   category: { name: string; slug: string } | null
@@ -75,13 +77,26 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
           {item.vendor && (
             <p className="mt-0.5 text-xs text-muted-foreground">by {item.vendor.companyName}</p>
           )}
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-price-tag text-brand-primary">
-              {item.dailyPrice > 0 ? `${Number(item.dailyPrice).toLocaleString()} SAR` : '—'}
-            </span>
-            {item.dailyPrice > 0 && (
-              <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
-            )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-price-tag text-brand-primary">
+                {item.dailyPrice > 0 ? `${Number(item.dailyPrice).toLocaleString()} SAR` : '—'}
+              </span>
+              {item.dailyPrice > 0 && (
+                <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+              )}
+            </div>
+            <CompareButton
+              equipment={{
+                id: item.id,
+                name: displayName,
+                slug: item.slug ?? item.id,
+                image: item.media[0]?.url ?? null,
+                dailyPrice: item.dailyPrice,
+                category: item.category,
+              }}
+              className="mt-1"
+            />
           </div>
         </div>
       </Link>
@@ -129,13 +144,25 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
         {item.vendor && (
           <p className="mt-0.5 text-xs text-muted-foreground">by {item.vendor.companyName}</p>
         )}
-        <div className="mt-3 flex items-baseline gap-1.5 border-t border-border-light/60 pt-3">
-          <span className="text-price-tag text-brand-primary">
-            {item.dailyPrice > 0 ? `${Number(item.dailyPrice).toLocaleString()} SAR` : '—'}
-          </span>
-          {item.dailyPrice > 0 && (
-            <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
-          )}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border-light/60 pt-3">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-price-tag text-brand-primary">
+              {item.dailyPrice > 0 ? `${Number(item.dailyPrice).toLocaleString()} SAR` : '—'}
+            </span>
+            {item.dailyPrice > 0 && (
+              <span className="text-sm text-text-muted">/ {t('common.pricePerDay')}</span>
+            )}
+          </div>
+          <CompareButton
+            equipment={{
+              id: item.id,
+              name: displayName,
+              slug: item.slug ?? item.id,
+              image: item.media[0]?.url ?? null,
+              dailyPrice: item.dailyPrice,
+              category: item.category,
+            }}
+          />
         </div>
       </div>
     </Link>

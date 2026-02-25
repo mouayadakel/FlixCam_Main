@@ -16,7 +16,9 @@ export interface AdminLiveMessage {
  */
 export function useAdminLive(onEvent?: (event: string, payload: unknown) => void): void {
   const onEventRef = useRef(onEvent)
-  onEventRef.current = onEvent
+  useEffect(() => {
+    onEventRef.current = onEvent
+  }, [onEvent])
 
   useEffect(() => {
     if (typeof EventSource === 'undefined') return

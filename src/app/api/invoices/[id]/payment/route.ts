@@ -13,7 +13,7 @@ import { InvoicePolicy } from '@/lib/policies/invoice.policy'
 import { invoicePaymentSchema } from '@/lib/validators/invoice.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const userId = session.user.id
 
     // Check policy
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       userAgent: headers.get('user-agent') || undefined,
     }
 
-    const invoice = await InvoiceService.recordPayment(params.id, validated, userId, auditContext)
+    const invoice = await InvoiceService.recordPayment(id, validated, userId, auditContext)
 
     return NextResponse.json({
       success: true,

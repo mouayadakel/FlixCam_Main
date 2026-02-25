@@ -6,25 +6,33 @@
 
 'use client'
 
-import { Search, Bell, User, LogOut, Settings, ExternalLink } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { Search, Bell, User, ExternalLink } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { LanguageSwitcher } from '@/components/public/language-switcher'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { MobileNav } from './mobile-nav'
 
+/** Loaded with ssr: false to avoid Radix-generated ID hydration mismatch. */
+const AdminHeaderUserMenu = dynamic(
+  () => import('./admin-header-user-menu').then((m) => m.AdminHeaderUserMenu),
+  {
+    ssr: false,
+    loading: () => (
+      <Button variant="ghost" className="flex items-center gap-2" aria-label="قائمة المستخدم" type="button">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-700">
+          <User className="h-4 w-4" />
+        </div>
+        <span className="hidden text-sm font-medium md:inline">المستخدم</span>
+      </Button>
+    ),
+  }
+)
+
 export function AdminHeader() {
-  const { data: session } = useSession()
   const [notificationsCount, setNotificationsCount] = useState(0)
 
   useEffect(() => {
@@ -66,8 +74,9 @@ export function AdminHeader() {
         <Input placeholder="بحث..." className="pr-10" dir="rtl" />
       </div>
 
-      {/* Right Side - Notifications & User Menu */}
+      {/* Right Side - Language, Notifications & User Menu */}
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative" asChild aria-label="الإشعارات">
           <Link href="/admin/notifications" aria-label="الإشعارات">
@@ -83,43 +92,8 @@ export function AdminHeader() {
           </Link>
         </Button>
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2" aria-label="قائمة المستخدم">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-                <User className="h-4 w-4" />
-              </div>
-              <span className="hidden text-sm font-medium md:inline">
-                {session?.user?.name || session?.user?.email || 'المستخدم'}
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>حسابي</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/admin/profile">
-                <User className="ml-2 h-4 w-4" />
-                الملف الشخصي
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/settings">
-                <Settings className="ml-2 h-4 w-4" />
-                الإعدادات
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-error-600 focus:text-error-600"
-            >
-              <LogOut className="ml-2 h-4 w-4" />
-              تسجيل الخروج
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* User Menu - dynamic with ssr: false to avoid Radix ID hydration mismatch */}
+        <AdminHeaderUserMenu />
       </div>
     </header>
   )

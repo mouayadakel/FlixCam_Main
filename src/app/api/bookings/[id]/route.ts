@@ -13,14 +13,15 @@ import { BookingStatus } from '@prisma/client'
 /**
  * GET /api/bookings/[id] - Get booking by ID
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
-    const booking = await BookingService.getById(params.id, session.user.id)
+    const { id } = await params
+    const booking = await BookingService.getById(id, session.user.id)
     return NextResponse.json(booking)
   } catch (error) {
     console.error('Error fetching booking:', error)
@@ -36,13 +37,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 /**
  * PATCH /api/bookings/[id] - Update booking
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
 
     // Check if this is a state transition request
@@ -53,7 +55,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       const userAgent = request.headers.get('user-agent') || 'unknown'
 
       const booking = await BookingService.transitionState(
-        params.id,
+        id,
         validated.toState,
         session.user.id,
         { ipAddress, userAgent },
@@ -65,7 +67,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     // Regular update (only for draft bookings)
     const validated = updateBookingSchema.parse(body)
-    const booking = await BookingService.update(params.id, session.user.id, validated)
+    const booking = await BookingService.update(id, session.user.id, validated)
     return NextResponse.json(booking)
   } catch (error) {
     console.error('Error updating booking:', error)
@@ -86,13 +88,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 /**
  * DELETE /api/bookings/[id] - Cancel booking
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
+    const { id } = await params
     const searchParams = request.nextUrl.searchParams
     const reason = searchParams.get('reason') || undefined
 
@@ -100,7 +103,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    const booking = await BookingService.cancel(params.id, session.user.id, reason, {
+    const booking = await BookingService.cancel(id, session.user.id, reason, {
       ipAddress,
       userAgent,
     })

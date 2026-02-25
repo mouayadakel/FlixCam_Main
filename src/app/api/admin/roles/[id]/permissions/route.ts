@@ -22,7 +22,7 @@ const bodySchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!rateLimitAPI(request).allowed) {
@@ -40,8 +40,7 @@ export async function POST(
       )
     }
 
-    const p = await Promise.resolve(params)
-    const roleId = p.id
+    const { id: roleId } = await params
     const body = await request.json()
     const { permissionIds } = bodySchema.parse(body)
 

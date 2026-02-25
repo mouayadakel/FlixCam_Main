@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db/prisma'
 import { EmailService } from '@/lib/services/email.service'
 import * as bcrypt from 'bcryptjs'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
+import { NotificationChannel } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   const rate = await checkRateLimitUpstash(request, 'auth')
@@ -58,7 +59,13 @@ export async function POST(request: NextRequest) {
   await prisma.authToken.create({
     data: { userId: user.id, token: verificationToken, type: 'email_verification', expiresAt },
   })
-  const emailResult = await EmailService.sendVerificationEmail(email, verificationToken)
+  const emailConfig = await prisma.messagingChannelConfig.findUnique({
+    where: { channel: NotificationChannel.EMAIL },
+  })
+  const emailEnabled = emailConfig?.isEnabled ?? true
+  const emailResult = emailEnabled
+    ? await EmailService.sendVerificationEmail(email, verificationToken)
+    : { ok: false, error: 'Email channel disabled' }
   if (!emailResult.ok && emailResult.error) {
     console.error('[register] Verification email send failed:', emailResult.error)
   }

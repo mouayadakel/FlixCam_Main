@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth'
 import { IntegrationService } from '@/lib/services/integration.service'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 
-export async function POST(request: Request, { params }: { params: { type: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ type: string }> }) {
   const rateLimit = rateLimitAPI(request)
 
   if (!rateLimit.allowed) {
@@ -23,7 +23,8 @@ export async function POST(request: Request, { params }: { params: { type: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const result = await IntegrationService.testConnection(params.type as any)
+    const { type } = await params
+    const result = await IntegrationService.testConnection(type as any)
 
     return NextResponse.json(result)
   } catch (error: any) {

@@ -11,7 +11,7 @@ import { EquipmentService } from '@/lib/services/equipment.service'
 /**
  * GET /api/equipment/[id]/availability - Check equipment availability
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
 
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const searchParams = request.nextUrl.searchParams
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const availability = await EquipmentService.checkAvailability(
-      params.id,
+      id,
       new Date(startDate),
       new Date(endDate),
       excludeBookingId

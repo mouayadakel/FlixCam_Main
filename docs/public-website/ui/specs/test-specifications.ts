@@ -1,8 +1,11 @@
 #!/usr/bin/env tsx
 // ============================================================================
-// Test Script: Comprehensive Specifications Testing
+// Test Script: Comprehensive Specifications Testing (reference in docs)
 // Purpose: Test specifications system on all equipment
 // Usage: npm run test:specs or tsx scripts/test-specifications.ts
+//
+// NOTE: The canonical script that runs in the project is scripts/test-specifications.ts.
+// This file is a legacy reference; it uses relative paths for the docs folder structure.
 // ============================================================================
 
 import { PrismaClient } from '@prisma/client'

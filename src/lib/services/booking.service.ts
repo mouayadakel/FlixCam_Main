@@ -12,7 +12,7 @@ import { EventBus } from '@/lib/events/event-bus'
 import { PayoutService } from './payout.service'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
-import { BookingStatus } from '@prisma/client'
+import { type Prisma, BookingStatus } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export interface BookingEquipmentInput {
@@ -29,10 +29,24 @@ export interface BookingCreateInput {
   studioStartTime?: Date
   studioEndTime?: Date
   notes?: string
-  // Pricing will be calculated by PricingService
   totalAmount?: number
   depositAmount?: number
   vatAmount?: number
+  // Receiver & fulfillment (checkout flow)
+  receiverId?: string
+  receiverName?: string
+  receiverPhone?: string
+  receiverIdNumber?: string
+  receiverIdPhotoUrl?: string
+  fulfillmentMethod?: string
+  deliveryAddress?: string
+  deliveryLat?: number
+  deliveryLng?: number
+  preferredTimeSlot?: string
+  emergencyContactName?: string
+  emergencyContactPhone?: string
+  emergencyContactRelation?: string
+  checkoutFormData?: Record<string, unknown>
 }
 
 export interface BookingUpdateInput {
@@ -182,7 +196,6 @@ export class BookingService {
     const softLockExpiresAt = new Date()
     softLockExpiresAt.setMinutes(softLockExpiresAt.getMinutes() + 15)
 
-    // Create booking
     const booking = await prisma.booking.create({
       data: {
         bookingNumber,
@@ -200,6 +213,20 @@ export class BookingService {
         softLockExpiresAt,
         createdBy: userId,
         updatedBy: userId,
+        receiverId: input.receiverId ?? null,
+        receiverName: input.receiverName ?? null,
+        receiverPhone: input.receiverPhone ?? null,
+        receiverIdNumber: input.receiverIdNumber ?? null,
+        receiverIdPhotoUrl: input.receiverIdPhotoUrl ?? null,
+        fulfillmentMethod: input.fulfillmentMethod ?? null,
+        deliveryAddress: input.deliveryAddress ?? null,
+        deliveryLat: input.deliveryLat ?? null,
+        deliveryLng: input.deliveryLng ?? null,
+        preferredTimeSlot: input.preferredTimeSlot ?? null,
+        emergencyContactName: input.emergencyContactName ?? null,
+        emergencyContactPhone: input.emergencyContactPhone ?? null,
+        emergencyContactRelation: input.emergencyContactRelation ?? null,
+        checkoutFormData: input.checkoutFormData == null ? undefined : (input.checkoutFormData as Prisma.InputJsonValue),
       },
     })
 

@@ -391,7 +391,7 @@ EXAMPLE API RESPONSE:
 MIGRATION HELPER:
 If you want to convert existing flat specs to structured:
 
-import { convertFlatToStructured } from '@/lib/specifications-utils';
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils';
 
 const structuredSpecs = convertFlatToStructured(
   oldFlatSpecs,
