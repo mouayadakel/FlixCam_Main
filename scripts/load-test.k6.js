@@ -22,7 +22,8 @@ export const options = {
   },
 }
 
-export default function () {
+/** k6 main scenario (default export required by k6) */
+export default function loadTestScenario() {
   // Public endpoints (no auth)
   const healthRes = http.get(`${BASE_URL}/api/health`)
   check(healthRes, { 'health status 200': (r) => r.status === 200 })

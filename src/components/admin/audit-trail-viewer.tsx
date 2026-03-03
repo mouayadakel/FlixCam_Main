@@ -49,7 +49,7 @@ export function AuditTrailViewer({
 
   useEffect(() => {
     fetchLogs()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [resourceType, resourceId])
 
   const fetchLogs = async () => {

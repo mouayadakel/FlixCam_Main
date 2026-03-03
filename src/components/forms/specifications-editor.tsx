@@ -381,7 +381,7 @@ export function SpecificationsEditor({
       lastSyncedFlatRef.current = null
     }
     // Intentionally omit onChange to avoid re-sync when parent callback identity changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [value, categoryHint])
 
   const syncChange = (next: StructuredSpecifications) => {

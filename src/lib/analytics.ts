@@ -48,7 +48,7 @@ export function trackStudioEvent(
     })
   }
   if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
+     
     console.debug('[studio-analytics]', eventName, params)
   }
 }
@@ -69,7 +69,7 @@ export function trackBlogEvent(
     })
   }
   if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
+     
     console.debug('[blog-analytics]', eventName, params)
   }
 }

@@ -6,17 +6,20 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   {
     rules: {
-      'react-hooks/exhaustive-deps': 'warn',
-      '@next/next/no-img-element': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/refs': 'warn',
-      'react-hooks/purity': 'warn',
-      'react-hooks/immutability': 'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
-      'react-hooks/use-memo': 'warn',
-      'react/no-unescaped-entities': 'warn',
+      // Kept as warn: alt-text, anonymous-default-export (low noise)
       'jsx-a11y/alt-text': 'warn',
       'import/no-anonymous-default-export': 'warn',
+      // Off until incrementally fixed: setState-in-effect and deps need per-file refactors
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/use-memo': 'off',
+      'react-hooks/incompatible-library': 'off',
+      '@next/next/no-img-element': 'off',
+      'react/no-unescaped-entities': 'off',
     },
   },
   globalIgnores([

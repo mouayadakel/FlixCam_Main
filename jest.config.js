@@ -4,6 +4,8 @@ const config = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}'],
+  // Avoid worker hanging on open handles (e.g. timers, Prisma) in CI
+  forceExit: process.env.CI === 'true',
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',

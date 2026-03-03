@@ -344,7 +344,7 @@ export default function AdminBlogAuthorsPage() {
                 <div className="flex gap-4">
                   {form.avatar && (
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img
                         src={form.avatar}
                         alt="Avatar preview"
@@ -482,7 +482,7 @@ export default function AdminBlogAuthorsPage() {
                   <TableCell>
                     {author.avatar ? (
                       <div className="relative h-10 w-10 overflow-hidden rounded-full border">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         <img
                           src={author.avatar}
                           alt={author.name}

@@ -12,7 +12,7 @@ import { prisma } from '@/lib/db/prisma'
 import { NotFoundError } from '@/lib/errors'
 
 // Use var so mockTx is available when jest.mock factory runs (avoids TDZ)
-// eslint-disable-next-line no-var
+ 
 var mockTx: {
   product: { upsert: jest.Mock }
   productTranslation: { upsert: jest.Mock; findUnique: jest.Mock }
