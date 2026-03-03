@@ -65,6 +65,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/settings': 'settings.read',
   '/admin/settings/roles': 'settings.manage_roles',
   '/admin/settings/features': 'settings.update',
+  '/admin/settings/hero-banners': 'settings.update',
   '/admin/settings/integrations': 'settings.read',
   '/admin/settings/notification-templates': 'settings.read',
   '/admin/settings/customer-segments': 'client.read',

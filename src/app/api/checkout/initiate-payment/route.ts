@@ -1,11 +1,12 @@
 /**
- * POST /api/checkout/initiate-payment – Create TAP charge for existing booking (after PN signed)
+ * POST /api/checkout/initiate-payment – Create payment charge for existing booking (after PN signed)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
-import { TapClient } from '@/lib/integrations/tap/client'
+import { PaymentGatewayConfigService } from '@/lib/services/payment-gateway-config.service'
+import { getAdapter, isSupportedSlug } from '@/lib/integrations/payment-gateway/registry'
 import { getPromissoryNoteSettings } from '@/lib/settings/promissory-note-settings'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,13 @@ export async function POST(request: NextRequest) {
     const bookingId = body.bookingId
     if (!bookingId || typeof bookingId !== 'string') {
       return NextResponse.json({ error: 'bookingId required' }, { status: 400 })
+    }
+    let gatewaySlug: string
+    if (body.gateway && isSupportedSlug(body.gateway)) {
+      gatewaySlug = body.gateway
+    } else {
+      const enabled = await PaymentGatewayConfigService.getEnabledGateways()
+      gatewaySlug = enabled[0]?.slug ?? 'tap'
     }
 
     const booking = await prisma.booking.findFirst({
@@ -63,10 +71,10 @@ export async function POST(request: NextRequest) {
 
     const appUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000'
     const redirectSuccess = `${appUrl}/booking/confirmation/${booking.id}`
-    const apiKey = process.env.TAP_API_KEY || process.env.TAP_SECRET_KEY
-    const webhookSecret = process.env.TAP_WEBHOOK_SECRET
 
-    if (!apiKey || !webhookSecret) {
+    const resolvedSlug = typeof gatewaySlug === 'string' ? gatewaySlug : 'tap'
+    const config = await PaymentGatewayConfigService.getConfig(resolvedSlug)
+    if (!config || Object.keys(config).length === 0) {
       return NextResponse.json({
         redirectUrl: redirectSuccess,
         bookingId: booking.id,
@@ -74,26 +82,31 @@ export async function POST(request: NextRequest) {
     }
 
     const totalAmount = Number(booking.totalAmount)
-    const tap = new TapClient(apiKey, webhookSecret)
+    const adapter = getAdapter(resolvedSlug as 'tap', config)
     const customer = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { name: true, email: true, phone: true },
     })
+    const name = customer?.name ?? ''
+    const parts = typeof name === 'string' ? name.split(/\s+/) : []
+    const firstName = parts[0] ?? ''
+    const lastName = parts.slice(1).join(' ') || undefined
 
-    const charge = await tap.createCharge({
+    const result = await adapter.createPayment({
       amount: Math.round(totalAmount * 100),
       currency: 'SAR',
       customer: {
         email: customer?.email ?? '',
         phone: customer?.phone ?? '',
-        first_name: customer?.name ?? undefined,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
       },
       metadata: { booking_id: booking.id },
-      redirect_url: redirectSuccess,
       description: `Booking ${booking.bookingNumber}`,
+      redirectUrl: redirectSuccess,
     })
 
-    const redirectUrl = charge.redirect?.url || charge.transaction?.url || redirectSuccess
+    const redirectUrl = result.success && result.redirectUrl ? result.redirectUrl : redirectSuccess
     return NextResponse.json({ redirectUrl, bookingId: booking.id })
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Internal server error'

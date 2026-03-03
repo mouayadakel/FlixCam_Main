@@ -1,5 +1,5 @@
 /**
- * Checkout Step 3: Review & Pay – summary, promo code, price breakdown, inline TAP.
+ * Checkout Step 3: Review & Pay – summary, promo code, price breakdown, payment gateway choice, pay.
  */
 
 'use client'
@@ -11,6 +11,12 @@ import { useCartStore } from '@/lib/stores/cart.store'
 import { useCheckoutStore } from '@/lib/stores/checkout.store'
 import { PriceLockNotice } from './price-lock-notice'
 import { InlineTapPayment } from './inline-tap-payment'
+
+interface AvailableGateway {
+  slug: string
+  displayName: string
+  sortOrder: number
+}
 
 const VAT_RATE = 0.15
 
@@ -51,16 +57,34 @@ export function CheckoutStepReviewPay() {
   const [lockExpired, setLockExpired] = useState(false)
   const [lockLoading, setLockLoading] = useState(true)
   const [payError, setPayError] = useState<string | null>(null)
+  const [availableGateways, setAvailableGateways] = useState<AvailableGateway[]>([])
 
   const { items, subtotal, discountAmount, total, fetchCart } = useCartStore()
   const details = useCheckoutStore((s) => s.details)
   const setStep = useCheckoutStore((s) => s.setStep)
   const formValues = useCheckoutStore((s) => s.formValues)
   const addons = useCheckoutStore((s) => s.addons)
+  const paymentMethod = useCheckoutStore((s) => s.paymentMethod)
+  const setPaymentMethod = useCheckoutStore((s) => s.setPaymentMethod)
 
   useEffect(() => {
     fetchCart()
   }, [fetchCart])
+
+  useEffect(() => {
+    fetch('/api/checkout/available-gateways')
+      .then((r) => r.json())
+      .then((data) => {
+        const list = data.gateways || []
+        setAvailableGateways(list)
+        if (list.length === 1 && !paymentMethod) {
+          setPaymentMethod(list[0].slug)
+        } else if (list.length > 0 && !paymentMethod) {
+          setPaymentMethod(list[0].slug)
+        }
+      })
+      .catch(() => setAvailableGateways([]))
+  }, [])
 
   const lockPrice = async () => {
     setLockLoading(true)
@@ -192,6 +216,31 @@ export function CheckoutStepReviewPay() {
         />
       )}
 
+      {availableGateways.length > 1 && (
+        <div className="rounded-lg border bg-card p-6">
+          <h3 className="mb-3 font-semibold">{t('checkout.sectionPayment')}</h3>
+          <p className="mb-3 text-sm text-muted-foreground">
+            {t('checkout.paymentMethods')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {availableGateways.map((gw) => (
+              <button
+                key={gw.slug}
+                type="button"
+                onClick={() => setPaymentMethod(gw.slug)}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  paymentMethod === gw.slug
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border hover:bg-muted'
+                }`}
+              >
+                {gw.displayName}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {payError && (
         <p className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {payError}
@@ -206,6 +255,7 @@ export function CheckoutStepReviewPay() {
           <InlineTapPayment
             totalAmount={total}
             onError={setPayError}
+            gateway={paymentMethod || undefined}
           />
         </div>
       </div>

@@ -55,7 +55,7 @@ const sidebarSections: SidebarSection[] = [
     icon: Home,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, href: '/admin/dashboard', permission: 'dashboard.read' },
-      { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center', permission: 'dashboard.read', activePaths: ['/admin/action-center', '/admin/approvals'] },
+      { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center', permission: 'dashboard.read', activePaths: ['/admin/action-center', '/admin/approvals', '/admin/notifications'] },
       { label: { ar: 'العمليات الحية', en: 'Live Operations' }, href: '/admin/live-ops', permission: 'dashboard.read' },
     ],
   },
@@ -63,7 +63,7 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'محرك الحجوزات', en: 'Booking Engine' },
     icon: Calendar,
     items: [
-      { label: { ar: 'الحجوزات', en: 'Bookings' }, href: '/admin/bookings', permission: 'booking.read', activePaths: ['/admin/bookings', '/admin/bookings/conflicts', '/admin/holds'] },
+      { label: { ar: 'الحجوزات', en: 'Bookings' }, href: '/admin/bookings', permission: 'booking.read', activePaths: ['/admin/bookings', '/admin/bookings/conflicts', '/admin/holds', '/admin/orders'] },
       { label: { ar: 'عروض الأسعار', en: 'Quotes' }, href: '/admin/quotes', permission: 'quote.read' },
       { label: { ar: 'الحجوزات المتكررة', en: 'Recurring Bookings' }, href: '/admin/recurring-bookings', permission: 'booking.read' },
       { label: { ar: 'التقويم', en: 'Calendar' }, href: '/admin/calendar', permission: 'booking.read' },
@@ -73,7 +73,7 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'أدوات المبيعات', en: 'Sales Tools' },
     icon: Brain,
     items: [
-      { label: { ar: 'لوحة الذكاء الاصطناعي', en: 'AI Dashboard' }, href: '/admin/ai-dashboard', permission: 'ai.use', activePaths: ['/admin/ai-dashboard', '/admin/ai-recommendations'] },
+      { label: { ar: 'لوحة الذكاء الاصطناعي', en: 'AI Dashboard' }, href: '/admin/ai-dashboard', permission: 'ai.use', activePaths: ['/admin/ai-dashboard', '/admin/ai-recommendations', '/admin/ai'] },
       { label: { ar: 'منشئ الحزم', en: 'Kit Builder' }, href: '/admin/kit-builder', permission: 'kit.read' },
       { label: { ar: 'التسعير الديناميكي', en: 'Dynamic Pricing' }, href: '/admin/dynamic-pricing', permission: 'pricing.read' },
       { label: { ar: 'أنواع التصوير', en: 'Shoot Types' }, href: '/admin/shoot-types', permission: 'equipment.read' },
@@ -83,7 +83,7 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'المخزون', en: 'Inventory' },
     icon: Package,
     items: [
-      { label: { ar: 'المعدات', en: 'Equipment' }, href: '/admin/inventory/equipment', permission: 'equipment.read', activePaths: ['/admin/inventory/equipment', '/admin/inventory/featured', '/admin/inventory/categories', '/admin/inventory/brands', '/admin/inventory/content-review', '/admin/inventory/products'] },
+      { label: { ar: 'المعدات', en: 'Equipment' }, href: '/admin/inventory/equipment', permission: 'equipment.read', activePaths: ['/admin/inventory', '/admin/inventory/equipment', '/admin/inventory/featured', '/admin/inventory/categories', '/admin/inventory/brands', '/admin/inventory/content-review', '/admin/inventory/products'] },
       { label: { ar: 'الحزم', en: 'Kits & Bundles' }, href: '/admin/inventory/kits', permission: 'kit.read' },
       { label: { ar: 'الاستوديو', en: 'Studios' }, href: '/admin/studios', permission: 'studio.read' },
       { label: { ar: 'الاستيراد', en: 'Import' }, href: '/admin/inventory/import', permission: 'import.read' },
@@ -94,8 +94,8 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'العمليات الميدانية', en: 'Field Operations' },
     icon: Wrench,
     items: [
-      { label: { ar: 'المستودع', en: 'Warehouse' }, href: '/admin/ops/warehouse', permission: 'warehouse.read', activePaths: ['/admin/ops/warehouse'] },
-      { label: { ar: 'التوصيل', en: 'Delivery' }, href: '/admin/ops/delivery', permission: 'delivery.read' },
+      { label: { ar: 'المستودع', en: 'Warehouse' }, href: '/admin/ops/warehouse', permission: 'warehouse.read', activePaths: ['/admin/ops/warehouse', '/admin/ops/warehouse/check-in', '/admin/ops/warehouse/check-out', '/admin/ops/warehouse/inventory'] },
+      { label: { ar: 'التوصيل', en: 'Delivery' }, href: '/admin/ops/delivery', permission: 'delivery.read', activePaths: ['/admin/ops/delivery', '/admin/ops/delivery/schedule'] },
       { label: { ar: 'الفنيون', en: 'Technicians' }, href: '/admin/technicians', permission: 'user.read' },
       { label: { ar: 'الصيانة والأضرار', en: 'Maintenance & Damage' }, href: '/admin/maintenance', permission: 'maintenance.read', activePaths: ['/admin/maintenance', '/admin/damage-claims'] },
     ],
@@ -105,17 +105,17 @@ const sidebarSections: SidebarSection[] = [
     icon: DollarSign,
     items: [
       { label: { ar: 'الفواتير', en: 'Invoices' }, href: '/admin/invoices', permission: 'invoice.read' },
-      { label: { ar: 'المدفوعات', en: 'Payments' }, href: '/admin/payments', permission: 'payment.read', activePaths: ['/admin/payments', '/admin/finance/deposits', '/admin/finance/refunds'] },
+      { label: { ar: 'المدفوعات', en: 'Payments' }, href: '/admin/payments', permission: 'payment.read', activePaths: ['/admin/payments', '/admin/wallet', '/admin/finance/deposits', '/admin/finance/refunds'] },
       { label: { ar: 'العقود', en: 'Contracts' }, href: '/admin/contracts', permission: 'contract.read' },
       { label: { ar: 'سندات الأمر', en: 'Promissory Notes' }, href: '/admin/promissory-notes', permission: 'settings.read' },
-      { label: { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' }, href: '/admin/finance/reports', permission: 'reports.read_financial', activePaths: ['/admin/finance/reports', '/admin/analytics'] },
+      { label: { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' }, href: '/admin/finance/reports', permission: 'reports.read_financial', activePaths: ['/admin/finance', '/admin/finance/reports', '/admin/reports', '/admin/analytics'] },
     ],
   },
   {
     title: { ar: 'الموردون', en: 'Vendors' },
     icon: Store,
     items: [
-      { label: { ar: 'الموردون', en: 'Vendors' }, href: '/admin/vendors', permission: 'vendor.read', activePaths: ['/admin/vendors'] },
+      { label: { ar: 'الموردون', en: 'Vendors' }, href: '/admin/vendors', permission: 'vendor.read', activePaths: ['/admin/vendors', '/admin/vendors/payouts'] },
     ],
   },
   {
@@ -123,7 +123,7 @@ const sidebarSections: SidebarSection[] = [
     icon: Users,
     items: [
       { label: { ar: 'العملاء', en: 'Clients' }, href: '/admin/clients', permission: 'client.read', activePaths: ['/admin/clients', '/admin/reviews', '/admin/settings/customer-segments'] },
-      { label: { ar: 'الكوبونات والخصومات', en: 'Coupons & Discounts' }, href: '/admin/coupons', permission: 'coupon.read' },
+      { label: { ar: 'الكوبونات والخصومات', en: 'Coupons & Discounts' }, href: '/admin/coupons', permission: 'coupon.read', activePaths: ['/admin/coupons', '/admin/discounts'] },
       { label: { ar: 'التسويق', en: 'Marketing' }, href: '/admin/marketing', permission: 'marketing.read' },
     ],
   },
@@ -135,6 +135,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'الفوتر', en: 'Footer' }, href: '/admin/cms/footer', permission: 'settings.update', activePaths: ['/admin/cms/footer'] },
       { label: { ar: 'محتوى الاستوديو', en: 'Studios CMS' }, href: '/admin/cms/studios', permission: 'cms.studio.read' },
       { label: { ar: 'مركز الرسائل', en: 'Messaging Center' }, href: '/admin/cms/messaging-center', permission: 'settings.read' },
+      { label: { ar: 'البانر الرئيسي', en: 'Hero Banners' }, href: '/admin/settings/hero-banners', permission: 'settings.update', activePaths: ['/admin/settings/hero-banners'] },
     ],
   },
   {
@@ -152,11 +153,11 @@ const sidebarSections: SidebarSection[] = [
     title: { ar: 'الإعدادات', en: 'Settings' },
     icon: Settings,
     items: [
-      { label: { ar: 'عام', en: 'General' }, href: '/admin/settings', permission: 'settings.read', activePaths: ['/admin/settings', '/admin/settings/company', '/admin/settings/branches', '/admin/settings/tax', '/admin/settings/features'] },
+      { label: { ar: 'عام', en: 'General' }, href: '/admin/settings', permission: 'settings.read', activePaths: ['/admin/settings', '/admin/settings/company', '/admin/settings/branches', '/admin/settings/tax', '/admin/settings/features', '/admin/settings/policies', '/admin/translations', '/admin/ai-translations'] },
       { label: { ar: 'المستخدمون والأدوار', en: 'Users & Roles' }, href: '/admin/users', permission: 'user.read', activePaths: ['/admin/users', '/admin/settings/roles', '/admin/settings/audit-log'] },
-      { label: { ar: 'الدفع والتوصيل', en: 'Payment & Delivery' }, href: '/admin/settings/checkout', permission: 'settings.read', activePaths: ['/admin/settings/checkout', '/admin/settings/otp-payment', '/admin/settings/delivery-zones'] },
+      { label: { ar: 'الدفع والتوصيل', en: 'Payment & Delivery' }, href: '/admin/settings/checkout', permission: 'settings.read', activePaths: ['/admin/settings/checkout', '/admin/settings/otp-payment', '/admin/settings/delivery-zones', '/admin/settings/payment-gateways'] },
       { label: { ar: 'الموقع', en: 'Website' }, href: '/admin/settings/website-pages', permission: 'settings.read', activePaths: ['/admin/settings/website-pages', '/admin/settings/hero-banners', '/admin/settings/notification-templates', '/admin/settings/promissory-note'] },
-      { label: { ar: 'التكاملات والذكاء الاصطناعي', en: 'Integrations & AI' }, href: '/admin/settings/integrations', permission: 'settings.read', activePaths: ['/admin/settings/integrations', '/admin/settings/ai'] },
+      { label: { ar: 'التكاملات والذكاء الاصطناعي', en: 'Integrations & AI' }, href: '/admin/settings/integrations', permission: 'settings.read', activePaths: ['/admin/settings/integrations', '/admin/settings/ai', '/admin/settings/ai-control'] },
     ],
   },
 ]

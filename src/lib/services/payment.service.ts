@@ -153,15 +153,54 @@ export class PaymentService {
       },
     })
 
-    await EventBus.emit('payment.success', {
-      paymentId: payment.id,
-      bookingId: payment.bookingId,
-      amount: payment.amount.toString(),
-      userId: input.userId,
-      timestamp: new Date(),
+    return updated
+  }
+
+  /**
+   * Handle webhook event from a payment gateway (Tap, Moyasar, etc.).
+   * Creates payment record and transitions booking to CONFIRMED on success.
+   */
+  static async handleGatewayWebhook(
+    slug: string,
+    event: { type: string; bookingId?: string; amount?: number; externalId?: string }
+  ): Promise<void> {
+    const bookingId = event.bookingId
+    if (!bookingId) return
+
+    const successTypes = ['charge.succeeded', 'payment_paid', 'payment.paid', 'paid', 'captured']
+    const isSuccess = successTypes.some((t) => event.type?.toLowerCase().includes(t) || event.type === t)
+    const rawAmount = event.amount != null ? Number(event.amount) : 0
+    const amount = rawAmount >= 100 ? rawAmount / 100 : rawAmount
+
+    const booking = await prisma.booking.findFirst({
+      where: { id: bookingId, deletedAt: null },
+      select: { id: true, status: true },
+    })
+    if (!booking) return
+
+    const existing = await prisma.payment.findFirst({
+      where: { bookingId, deletedAt: null, status: PaymentStatus.SUCCESS },
+    })
+    if (existing) return
+
+    await prisma.payment.create({
+      data: {
+        bookingId,
+        amount: new Decimal(amount || 0),
+        status: isSuccess ? PaymentStatus.SUCCESS : PaymentStatus.FAILED,
+        tapTransactionId: event.externalId ?? undefined,
+        tapChargeId: slug === 'tap' ? event.externalId ?? undefined : undefined,
+        createdBy: 'system',
+      },
     })
 
-    return updated
+    if (isSuccess && booking.status === BookingStatus.PAYMENT_PENDING) {
+      try {
+        await BookingService.transitionState(bookingId, BookingStatus.CONFIRMED, 'system')
+      } catch (e) {
+        console.error('handleGatewayWebhook transition error:', e)
+      }
+    }
   }
 
   /**

@@ -9,8 +9,9 @@ import { BookingService } from '@/lib/services/booking.service'
 import { PricingService } from '@/lib/services/pricing.service'
 import { getCartSessionId } from '@/lib/cart-session'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
-import { TapClient } from '@/lib/integrations/tap/client'
 import { prisma } from '@/lib/db/prisma'
+import { PaymentGatewayConfigService } from '@/lib/services/payment-gateway-config.service'
+import { getAdapter, isSupportedSlug } from '@/lib/integrations/payment-gateway/registry'
 import { EmailService } from '@/lib/services/email.service'
 import { getPromissoryNoteSettings } from '@/lib/settings/promissory-note-settings'
 
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   let body: {
+    gateway?: string
     checkoutDetails?: { name: string; email: string; phone: string }
     receiver?: {
       name?: string
@@ -237,32 +239,48 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const apiKey = process.env.TAP_API_KEY || process.env.TAP_SECRET_KEY
-  const webhookSecret = process.env.TAP_WEBHOOK_SECRET
+  let gatewaySlug = body.gateway && isSupportedSlug(body.gateway) ? body.gateway : null
+  if (!gatewaySlug) {
+    const enabled = await PaymentGatewayConfigService.getEnabledGateways()
+    gatewaySlug = enabled.length > 0 ? (enabled[0].slug as 'tap') : 'tap'
+  }
 
-  if (apiKey && webhookSecret) {
+  const config = await PaymentGatewayConfigService.getConfig(gatewaySlug)
+  if (config && Object.keys(config).length > 0) {
     try {
-      const tap = new TapClient(apiKey, webhookSecret)
+      const adapter = getAdapter(gatewaySlug as 'tap', config)
       const customer = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { name: true, email: true, phone: true },
       })
-      const charge = await tap.createCharge({
+      const name = customer?.name ?? body.checkoutDetails?.name ?? ''
+      const parts = typeof name === 'string' ? name.split(/\s+/) : []
+      const firstName = parts[0] ?? ''
+      const lastName = parts.slice(1).join(' ') || undefined
+      const result = await adapter.createPayment({
         amount: Math.round(totalAmount * 100),
         currency: 'SAR',
         customer: {
           email: customer?.email ?? body.checkoutDetails?.email ?? '',
           phone: customer?.phone ?? body.checkoutDetails?.phone ?? '',
-          first_name: customer?.name ?? body.checkoutDetails?.name ?? undefined,
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
         },
         metadata: { booking_id: booking.id },
-        redirect_url: redirectSuccess,
         description: `Booking ${booking.bookingNumber}`,
+        redirectUrl: redirectSuccess,
       })
-      const redirectUrl = charge.redirect?.url || charge.transaction?.url || redirectSuccess
-      return NextResponse.json({ redirectUrl, bookingId: booking.id, depositAmount })
+      if (result.success && result.redirectUrl) {
+        return NextResponse.json({ redirectUrl: result.redirectUrl, bookingId: booking.id, depositAmount })
+      }
+      if (!result.success && result.error) {
+        return NextResponse.json(
+          { error: result.error, redirectUrl: redirectSuccess },
+          { status: 200 }
+        )
+      }
     } catch (e) {
-      console.error('Tap createCharge error:', e)
+      console.error('Payment gateway createPayment error:', e)
       return NextResponse.json(
         { error: 'Payment provider error', redirectUrl: redirectSuccess },
         { status: 200 }

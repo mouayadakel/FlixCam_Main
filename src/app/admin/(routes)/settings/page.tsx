@@ -11,6 +11,7 @@ import {
   Flag,
   Shield,
   Globe,
+  ImageIcon,
   ShoppingCart,
   MessageSquare,
   Bot,
@@ -21,6 +22,7 @@ import {
   Percent,
   ScrollText,
   FileSignature,
+  CreditCard,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -44,6 +46,21 @@ export default function SettingsPage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/admin/settings/integrations">إدارة التكاملات</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              بوابات الدفع
+            </CardTitle>
+            <CardDescription>Tap، Moyasar، Tamara وغيرها — تفعيل/إخفاء وترتيب واختبار الاتصال</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin/settings/payment-gateways">إدارة بوابات الدفع</Link>
             </Button>
           </CardContent>
         </Card>

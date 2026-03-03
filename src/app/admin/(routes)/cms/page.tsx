@@ -8,9 +8,11 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Layout } from 'lucide-react'
+import { Layout, ImageIcon } from 'lucide-react'
 
 const FaqTab = dynamic(
   () => import('./faq/page').then((m) => ({ default: m.default })),
@@ -58,11 +60,17 @@ export default function CmsPage() {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Layout className="h-8 w-8" />
           إدارة المحتوى (CMS)
         </h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/admin/settings/hero-banners" className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            البانر الرئيسي
+          </Link>
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>

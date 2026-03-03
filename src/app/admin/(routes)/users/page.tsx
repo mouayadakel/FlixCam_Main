@@ -20,7 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils/format.utils'
-import { Eye, Loader2, RefreshCw, AlertCircle, Plus } from 'lucide-react'
+import { Eye, Loader2, RefreshCw, AlertCircle, Plus, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 interface UserRow {
@@ -94,6 +94,12 @@ export default function UsersPage() {
           <p className="mt-1 text-muted-foreground">إدارة الحسابات والأدوار</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/settings/roles">
+              <Shield className="ms-2 h-4 w-4" />
+              الأدوار والصلاحيات
+            </Link>
+          </Button>
           <Button asChild>
             <Link href="/admin/users/new">
               <Plus className="ms-2 h-4 w-4" />

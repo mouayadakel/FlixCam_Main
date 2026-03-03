@@ -1812,6 +1812,27 @@ model IntegrationConfig {
   @@index([deletedAt])
 }
 
+model PaymentGatewayConfig {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  enabled         Boolean   @default(false)
+  credentialsEnc  String?
+  displayName     String?
+  sortOrder       Int       @default(0)
+  lastCheckedAt   DateTime?
+  lastCheckOk     Boolean?
+  createdAt       DateTime  @default(now())
+  createdBy       String?
+  updatedAt       DateTime  @updatedAt
+  updatedBy       String?
+  deletedAt       DateTime?
+  deletedBy       String?
+
+  @@index([slug])
+  @@index([deletedAt])
+  @@index([enabled, sortOrder])
+}
+
 model Branch {
   id           String   @id @default(cuid())
   name         String

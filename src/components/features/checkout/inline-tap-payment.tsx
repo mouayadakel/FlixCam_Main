@@ -27,12 +27,15 @@ interface InlineTapPaymentProps {
   totalAmount: number
   onError?: (message: string) => void
   className?: string
+  /** Selected payment gateway slug (e.g. tap, moyasar). Sent to create-session. */
+  gateway?: string
 }
 
 export function InlineTapPayment({
   totalAmount,
   onError,
   className,
+  gateway,
 }: InlineTapPaymentProps) {
   const { t } = useLocale()
   const [loading, setLoading] = useState(false)
@@ -53,6 +56,7 @@ export function InlineTapPayment({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...(gateway && { gateway }),
           checkoutDetails: {
             name: details.name,
             email: details.email,

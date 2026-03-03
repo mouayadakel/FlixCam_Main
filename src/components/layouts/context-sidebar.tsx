@@ -17,6 +17,7 @@ import {
   FolderTree,
   Calendar,
   DollarSign,
+  CreditCard,
   Settings,
   Flag,
   Plug,
@@ -155,6 +156,12 @@ const contextNavConfig: Record<string, ContextNavItem[]> = {
       label: 'Integrations',
       href: '/admin/settings/integrations',
       icon: Plug,
+      permission: 'settings.read',
+    },
+    {
+      label: 'Payment gateways',
+      href: '/admin/settings/payment-gateways',
+      icon: CreditCard,
       permission: 'settings.read',
     },
     {
