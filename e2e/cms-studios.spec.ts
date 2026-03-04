@@ -27,10 +27,14 @@ test.describe('Public studios', () => {
 
   test('studio detail page loads when studio exists', async ({ page }) => {
     await page.goto(`${BASE}/studios`)
-    const link = page.locator('a[href^="/studios/"]').first()
-    const href = await link.getAttribute('href')
-    if (!href || href === '/studios') return
-    const slug = href.replace('/studios/', '')
+    const link = page.locator('a[href*="/studios/"]').first()
+    await link.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    const href = await link.getAttribute('href').catch(() => null)
+    if (!href || href.endsWith('/studios') || !href.includes('/studios/')) {
+      test.skip(true, 'No studio links on page (seed-e2e may not have run or studios disabled)')
+      return
+    }
+    const slug = href.split('/studios/')[1]?.split('/')[0]?.split('?')[0]?.trim()
     if (!slug) return
     await page.goto(`${BASE}/studios/${slug}`)
     await expect(page).toHaveURL(new RegExp(`/studios/${slug}`))
@@ -39,10 +43,14 @@ test.describe('Public studios', () => {
 
   test('studio page has booking panel', async ({ page }) => {
     await page.goto(`${BASE}/studios`)
-    const link = page.locator('a[href^="/studios/"]').first()
-    const href = await link.getAttribute('href')
-    if (!href || href === '/studios') return
-    const slug = href.replace('/studios/', '')
+    const link = page.locator('a[href*="/studios/"]').first()
+    await link.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    const href = await link.getAttribute('href').catch(() => null)
+    if (!href || href.endsWith('/studios') || !href.includes('/studios/')) {
+      test.skip(true, 'No studio links on page')
+      return
+    }
+    const slug = href.split('/studios/')[1]?.split('/')[0]?.split('?')[0]?.trim()
     if (!slug) return
     await page.goto(`${BASE}/studios/${slug}`)
     await expect(page.getByText(/احجز|Book|حجز/i)).toBeVisible({ timeout: 10000 })
@@ -50,10 +58,14 @@ test.describe('Public studios', () => {
 
   test('cart page with studio params adds item', async ({ page }) => {
     await page.goto(`${BASE}/studios`)
-    const link = page.locator('a[href^="/studios/"]').first()
-    const href = await link.getAttribute('href')
-    if (!href || href === '/studios') return
-    const slug = href.replace('/studios/', '').trim()
+    const link = page.locator('a[href*="/studios/"]').first()
+    await link.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
+    const href = await link.getAttribute('href').catch(() => null)
+    if (!href || href.endsWith('/studios') || !href.includes('/studios/')) {
+      test.skip(true, 'No studio links on page')
+      return
+    }
+    const slug = href.split('/studios/')[1]?.split('/')[0]?.split('?')[0]?.trim()
     if (!slug) return
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)

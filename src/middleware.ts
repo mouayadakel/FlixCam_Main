@@ -122,6 +122,7 @@ export default async function middleware(req: NextRequest) {
     '/about',
     '/contact',
     '/faq',
+    '/blog',
   ]
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.next()

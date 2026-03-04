@@ -193,6 +193,13 @@ jobs:
         env:
           DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
 
+      - name: Seed blog and E2E data
+        run: |
+          npm run db:seed:blog
+          npx tsx scripts/seed-e2e.ts
+        env:
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
+
       - name: Run E2E tests
         run: npm run test:e2e
         env:
