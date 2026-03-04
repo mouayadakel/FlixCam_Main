@@ -29,7 +29,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U ci"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -60,15 +60,20 @@ jobs:
           echo "PostgreSQL did not become ready in time"
           exit 1
 
+      - name: Create root role
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          PGPASSWORD=ci psql -h localhost -p 5432 -U ci -d ci -f scripts/postgres-ci-init.sql
+
       - name: Prisma generate
         run: npm run db:generate
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
 
       - name: Run migrations
         run: npx prisma migrate deploy
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
 
       - name: Lint
         run: npm run lint
@@ -83,7 +88,7 @@ jobs:
       - name: Run tests
         run: npm run test -- --passWithNoTests
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
           AUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_URL: 'http://localhost:3000'
@@ -92,7 +97,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
           AUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_URL: 'http://localhost:3000'
@@ -116,7 +121,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U ci"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -159,6 +164,11 @@ jobs:
           echo "PostgreSQL did not become ready in time"
           exit 1
 
+      - name: Create root role
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          PGPASSWORD=ci psql -h localhost -p 5432 -U ci -d ci -f scripts/postgres-ci-init.sql
+
       - name: Wait for Redis
         run: |
           sudo apt-get update -qq && sudo apt-get install -y redis-tools
@@ -176,19 +186,18 @@ jobs:
       - name: Prisma generate
         run: npm run db:generate
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
 
       - name: Run migrations
         run: npx prisma migrate deploy
         env:
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
 
-      # DATABASE_URL must use user "ci" – Postgres service creates only that role (no "root")
       - name: Run E2E tests
         run: npm run test:e2e
         env:
           CI: 'true'
-          DATABASE_URL: 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+          DATABASE_URL: 'postgresql://root:root@localhost:5432/ci?schema=public'
           REDIS_URL: 'redis://localhost:6379'
           AUTH_SECRET: 'ci-secret-minimum-32-characters-long'
           NEXTAUTH_SECRET: 'ci-secret-minimum-32-characters-long'

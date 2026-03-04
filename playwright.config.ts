@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 const baseURL = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL || 'http://localhost:3000'
 
-/** CI database URL – must match PostgreSQL service user (ci) in .github/workflows/ci.yml */
-const CI_DATABASE_URL = 'postgresql://ci:ci@localhost:5432/ci?schema=public'
+/** CI database URL – uses root role (created by scripts/postgres-ci-init.sql) in .github/workflows/ci.yml */
+const CI_DATABASE_URL = 'postgresql://root:root@localhost:5432/ci?schema=public'
 
 export default defineConfig({
   testDir: './e2e',
