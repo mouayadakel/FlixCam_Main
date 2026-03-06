@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-})
+// Only load bundle-analyzer when ANALYZE=true (dev dependency; not installed in prod deploy)
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({ enabled: true })
+    : (x) => x
 
 // Phase 0.1: Security headers (CSP, CORS, XSS, HTTPS)
 const securityHeaders = [
