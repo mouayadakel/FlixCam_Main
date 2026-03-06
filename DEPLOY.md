@@ -18,20 +18,32 @@
 | `NEXT_PUBLIC_APP_URL`           | Yes      | Public-facing URL                     |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase project URL                  |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase anon key                     |
+| `REVALIDATE_BLOG_SECRET`        | Optional | Same as CRON_SECRET or dedicated; used to revalidate blog/CMS cache after deploy so control panel and blog changes are visible on the site |
 
 ## Deploy Steps (VPS / Server)
 
-### Option A: Automated (recommended)
+### Option A: From local machine to Hostinger VPS (recommended)
+
+```bash
+./scripts/deploy-to-hostinger.sh
+# or: npm run deploy:hostinger
+```
+
+This pushes `main` to the Hostinger bare repo, SSHs to the server, updates the working copy to the latest commit (`git fetch` + `git reset --hard origin/main`), runs `scripts/server-build-restart.sh` (install, build, restart), and triggers blog/CMS revalidation when `REVALIDATE_BLOG_SECRET` or `CRON_SECRET` is set on the server. The live site stays in sync with the repo and control panel changes.
+
+**Server requirement:** The app directory on the server (e.g. `/home/flixcam/www`) must be a git clone with `origin` pointing at the bare repo so `git fetch` / `git reset` work.
+
+### Option B: On the server (after code is there)
 
 ```bash
 cd /path/to/flixcam
-git pull origin main
+git pull origin main   # or use deploy-to-hostinger.sh from your machine
 bash scripts/deploy.sh
 ```
 
-The script runs: `npm ci` -> `prisma generate` -> `prisma migrate deploy` -> `npm run build` -> restart (PM2/systemd).
+The script runs: `npm ci` -> `prisma generate` -> `prisma migrate deploy` -> `npm run build` -> restart (PM2/systemd) -> health check -> blog/CMS revalidation (if `REVALIDATE_BLOG_SECRET` or `CRON_SECRET` is set).
 
-### Option B: Manual
+### Option C: Manual
 
 ```bash
 cd /path/to/flixcam
@@ -60,7 +72,7 @@ pm2 restart flixcam
 # or: npm start
 ```
 
-### Option C: First-time deploy (includes seed)
+### Option D: First-time deploy (includes seed)
 
 ```bash
 npm ci

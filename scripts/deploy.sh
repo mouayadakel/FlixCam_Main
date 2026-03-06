@@ -19,8 +19,8 @@ echo "║  FlixCam.rent — Production Deploy            ║"
 echo "╚══════════════════════════════════════════════╝"
 
 # ── 1. Install dependencies ──────────────────────────────────────────
-step "Installing dependencies (npm ci)..."
-npm ci --omit=dev
+step "Installing dependencies (npm ci; includes devDeps for build)..."
+npm ci
 
 # ── 2. Generate Prisma client ────────────────────────────────────────
 step "Generating Prisma client..."
@@ -59,6 +59,17 @@ if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
   echo ""
 else
   echo -e "${RED}⚠  Health check failed — check logs${NC}"
+fi
+
+# ── 8. Revalidate blog/CMS (so control panel changes are visible) ─────
+REVALIDATE_SECRET="${REVALIDATE_BLOG_SECRET:-$CRON_SECRET}"
+if [ -n "$REVALIDATE_SECRET" ]; then
+  step "Revalidating blog/CMS cache..."
+  if curl -sf -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" http://localhost:3000/api/revalidate-blog > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Blog/CMS revalidation OK.${NC}"
+  else
+    echo -e "${RED}⚠  Revalidation failed (optional).${NC}"
+  fi
 fi
 
 echo ""

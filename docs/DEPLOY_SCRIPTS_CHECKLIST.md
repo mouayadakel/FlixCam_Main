@@ -18,11 +18,11 @@ Pick **one** of these (run from your **local** machine, project root):
 
 | Script                               | Use case                                                                          |
 | ------------------------------------ | --------------------------------------------------------------------------------- |
+| `./scripts/deploy-to-hostinger.sh`   | **Recommended.** Push main to Hostinger, then SSH to server, update working copy to latest commit, run build + restart, and revalidate blog/CMS. One command keeps the site up to date. |
 | `./push-to-vps.sh`                   | Sync project to VPS via **rsync** (no `.next`/node_modules; run build on server). |
-| `./scripts/deploy-to-hostinger.sh`   | Deploy via **git push** to Hostinger (bare repo).                                 |
 | `./scripts/deploy-hostinger-sftp.sh` | Deploy via **tar over SSH** (SFTP-style) to Hostinger.                            |
 
-After sync, **SSH into the server** and run the steps below in the app directory.
+For deploy-to-hostinger, the server app directory must be a git clone with `origin` at the bare repo. After other sync methods, **SSH into the server** and run the steps below in the app directory.
 
 ---
 
@@ -124,7 +124,7 @@ npm run start
 | `npm run worker:import`    | Background import worker — run separately if you use import jobs.     |
 | `npm run worker:all`       | All background workers — run separately if needed.                    |
 | `npm run migrate:specs`    | One-off migration for equipment specs — run only when required.       |
-| `npm run deploy:hostinger` | Pushes code via git to Hostinger; does not build or run DB on server. |
+| `npm run deploy:hostinger` | Pushes code to Hostinger, then on server: update to latest commit, build, restart, and revalidate blog/CMS (when REVALIDATE_BLOG_SECRET or CRON_SECRET is set). |
 
 ---
 
