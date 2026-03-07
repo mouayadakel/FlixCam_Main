@@ -1,0 +1,11 @@
+src/lib/queue/__tests__/backfill.worker.test.ts
+src/lib/queue/ai-processing.queue.ts
+src/lib/queue/ai-processing.worker.ts
+src/lib/queue/backfill.queue.ts
+src/lib/queue/backfill.worker.ts
+src/lib/queue/dead-letter.queue.ts
+src/lib/queue/image-processing.queue.ts
+src/lib/queue/image-processing.worker.ts
+src/lib/queue/import.queue.ts
+src/lib/queue/import.worker.ts
+src/lib/queue/redis.client.ts

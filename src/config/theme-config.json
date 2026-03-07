@@ -1,0 +1,22 @@
+{
+  "theme": "FLIXCAM_PRO",
+  "colors": {
+    "primary": "#8CC63F",
+    "surface": "#1A1A1A",
+    "surfaceLight": "#252525",
+    "text": "#FFFFFF",
+    "textMuted": "rgba(255, 255, 255, 0.6)"
+  },
+  "dimensions": {
+    "headerHeight": "80px",
+    "logoMaxWidth": "180px",
+    "containerWidth": "1440px"
+  },
+  "typography": {
+    "main": "IBM Plex Sans Arabic",
+    "weights": {
+      "nav": 500,
+      "cta": 700
+    }
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "SONY_FX6": {
+    "marketing_highlights": "CineAlta lineage, 4K 120p, S-Cinetone, Variable ND",
+    "technical_specs": {
+      "Resolution": "4096 x 2160 (4K DCI)",
+      "Frame_Rates": "Up to 120fps in 4K, 240fps in HD",
+      "Sensor": "10.2MP Full-Frame Exmor R CMOS",
+      "Sensor_Size": "Full Frame (35.6 x 23.8mm)",
+      "Internal_ND": "Variable Electronic (1/4 to 1/128)",
+      "Bit_Depth": "10-bit 4:2:2",
+      "Recording_Codec": "XAVC HS / XAVC S / XAVC S-I",
+      "Media_Slots": "Dual CFexpress Type A / SDXC UHS-II",
+      "Mount": "Sony E-mount",
+      "ISO_Range": "800-12800 (expandable 80-409600)",
+      "Dynamic_Range": "15+ stops (S-Log3)",
+      "SDI_Output": "12G-SDI, 6G-SDI, 3G-SDI",
+      "HDMI_Output": "Type-A Full-Size",
+      "Audio_Inputs": "2x XLR/TRS combo (phantom power)",
+      "Weight": "890g (body only)",
+      "Dimensions": "116 x 116 x 219mm",
+      "Power_Draw": "24W typical",
+      "Color_Science": "S-Cinetone / S-Log3 / HLG",
+      "Autofocus": "Fast Hybrid AF (627 points)",
+      "Stabilization": "Electronic IS (Active Mode)"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1603554-REG/sony_ilme_fx6vk_fx6_digital_cinema_camera.html",
+      "amazon_link": "https://www.amazon.com/dp/B08L7Q7KYW",
+      "manufacturer_link": "https://www.sony.com/en/interchangeable-lens-cameras/ilme-fx6v"
+    },
+    "box_contents": [
+      "Sony FX6 Camera Body",
+      "FE 24-105mm f/4 G OSS Lens (Kit version)",
+      "XLR Handle Unit (with XLR inputs)",
+      "BP-U35 Rechargeable Battery",
+      "BC-U1A Battery Charger",
+      "AC Adapter",
+      "HDMI Cable",
+      "USB-C Cable",
+      "Shoulder Strap",
+      "Body Cap",
+      "Lens Caps (front and rear)"
+    ]
+  },
+  "SONY_FX3": {
+    "marketing_highlights": "Full-frame cinema look in compact body, S-Cinetone, 5-axis IBIS",
+    "technical_specs": {
+      "Resolution": "3840 x 2160 (4K UHD)",
+      "Frame_Rates": "Up to 120fps in 4K, 240fps in 1080p",
+      "Sensor": "12.1MP Full-Frame Exmor R CMOS",
+      "Sensor_Size": "Full Frame (35.6 x 23.8mm)",
+      "Bit_Depth": "10-bit 4:2:2 (XAVC HS)",
+      "Recording_Codec": "XAVC HS / XAVC S / XAVC S-I",
+      "Media_Slots": "Dual CFexpress Type A / SD UHS-II",
+      "Mount": "Sony E-mount",
+      "ISO_Range": "80-102400 (expandable to 409600)",
+      "Dynamic_Range": "15+ stops (S-Log3)",
+      "HDMI_Output": "Type-A Full-Size (4K 4:2:2)",
+      "Audio_Inputs": "XLR/TRS via handle, 3.5mm mic, Multi Interface Shoe",
+      "Weight": "640g (body only)",
+      "Dimensions": "77.8 x 129.7 x 84.5mm",
+      "Power_Draw": "~16W",
+      "Color_Science": "S-Cinetone / S-Log3 / HLG",
+      "Autofocus": "Fast Hybrid AF (627 points, Eye AF)",
+      "Stabilization": "5-axis IBIS (Active Mode)"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1624467-REG/sony_ilme_fx3_cinema_line_fx3.html",
+      "manufacturer_link": "https://www.sony.com/en/interchangeable-lens-cameras/ilme-fx3"
+    },
+    "box_contents": [
+      "Sony FX3 Camera Body",
+      "XLR Handle Unit",
+      "NP-FZ100 Battery",
+      "BC-QZ1 Battery Charger",
+      "USB-C Cable",
+      "HDMI Cable",
+      "Windscreen",
+      "Body Cap",
+      "Shoe Cap"
+    ]
+  },
+  "ARRI_ALEXA_MINI": {
+    "marketing_highlights": "Industry-standard cinema camera, ARRI color science, modular design",
+    "technical_specs": {
+      "Resolution": "3424 x 2202 (3.4K)",
+      "Frame_Rates": "0.75 - 200fps",
+      "Sensor": "ARRI ALEV III CMOS (Super 35)",
+      "Sensor_Size": "Super 35 (28.17 x 18.13mm)",
+      "Bit_Depth": "16-bit (ARRIRAW)",
+      "Recording_Codec": "ARRIRAW / Apple ProRes",
+      "Media_Slots": "CFast 2.0",
+      "Mount": "Titanium LPL (PL with adapter)",
+      "ISO_Range": "EI 160-3200",
+      "Dynamic_Range": "14+ stops",
+      "SDI_Output": "1x HD-SDI (MON OUT)",
+      "Audio_Inputs": "2x Line-level inputs",
+      "Weight": "2.3kg (body only)",
+      "Dimensions": "174 x 149 x 130mm",
+      "Power_Draw": "~75W",
+      "Color_Science": "ARRI LogC / Rec 709 / ARRI Look Library"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1137589-REG/arri_k0_0015802_alexa_mini_body.html",
+      "manufacturer_link": "https://www.arri.com/en/camera-systems/cameras/alexa-mini"
+    },
+    "box_contents": [
+      "ARRI Alexa Mini Camera Body",
+      "Viewfinder Mounting Bracket",
+      "LPL Mount",
+      "Top Handle",
+      "Battery Adapter Back",
+      "Power Cable",
+      "BNC Cable",
+      "Camera Tools Set"
+    ]
+  },
+  "RED_KOMODO": {
+    "marketing_highlights": "Compact 6K cinema, Canon RF mount, global shutter available",
+    "technical_specs": {
+      "Resolution": "6144 x 3240 (6K)",
+      "Frame_Rates": "Up to 40fps (6K), 120fps (2K)",
+      "Sensor": "19.9MP Super 35 CMOS",
+      "Sensor_Size": "Super 35 (27.03 x 14.26mm)",
+      "Bit_Depth": "16-bit REDCODE RAW",
+      "Recording_Codec": "REDCODE RAW (R3D)",
+      "Media_Slots": "CFast 2.0 / RED Mini-Mag",
+      "Mount": "Canon RF",
+      "ISO_Range": "250-6400",
+      "Dynamic_Range": "16+ stops",
+      "SDI_Output": "12G-SDI (6K RAW out)",
+      "Audio_Inputs": "3.5mm stereo mic input",
+      "Weight": "1.0kg (body only)",
+      "Dimensions": "102 x 102 x 129mm",
+      "Power_Draw": "~55W",
+      "Color_Science": "IPP2 (Image Processing Pipeline 2)"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1588001-REG/red_digital_cinema_710_0344_komodo_6k_camera.html",
+      "manufacturer_link": "https://www.red.com/komodo"
+    },
+    "box_contents": [
+      "RED KOMODO 6K Camera Body",
+      "Canon RF Lens Mount",
+      "CFast 2.0 Reader",
+      "USB-C Cable",
+      "Quick Start Guide"
+    ]
+  },
+  "CANON_C70": {
+    "marketing_highlights": "Super 35 DGO sensor, RF mount, compact cinema camera",
+    "technical_specs": {
+      "Resolution": "4096 x 2160 (4K DCI)",
+      "Frame_Rates": "Up to 120fps (4K), 180fps (2K crop)",
+      "Sensor": "Super 35mm DGO (Dual Gain Output) CMOS",
+      "Sensor_Size": "Super 35 (26.2 x 13.8mm)",
+      "Bit_Depth": "10-bit 4:2:2 (XF-AVC / MP4)",
+      "Recording_Codec": "XF-AVC / MP4 (H.264/H.265)",
+      "Media_Slots": "Dual SD UHS-II",
+      "Mount": "Canon RF",
+      "ISO_Range": "100-102400",
+      "Dynamic_Range": "16+ stops (Cinema Gamut / Canon Log 2)",
+      "SDI_Output": "12G-SDI (BNC)",
+      "HDMI_Output": "Type-A Full-Size",
+      "Audio_Inputs": "2x Mini XLR (phantom 48V)",
+      "Weight": "1.19kg (body only)",
+      "Dimensions": "160 x 130 x 115mm",
+      "Power_Draw": "~22W",
+      "Autofocus": "Dual Pixel CMOS AF II (80% coverage)"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1597283-REG/canon_4507c002_eos_c70_cinema_camera.html",
+      "manufacturer_link": "https://www.usa.canon.com/cameras/cinema-eos-cameras/eos-c70"
+    },
+    "box_contents": [
+      "Canon EOS C70 Camera Body",
+      "Canon RF Body Cap",
+      "BP-A30 Battery",
+      "CG-A20 Battery Charger",
+      "DC Cable",
+      "Handle Unit",
+      "Monitor Unit (with grip)",
+      "USB-C Cable"
+    ]
+  },
+  "APUTURE_600D_PRO": {
+    "marketing_highlights": "600W daylight LED, Bowens mount, Sidus Link control",
+    "technical_specs": {
+      "Type": "LED Point Source (COB)",
+      "Output_Power": "600W",
+      "Output_Lumens": "24800 lux at 3m (Hyper Reflector)",
+      "Color_Temperature": "5600K ± 200K (Daylight)",
+      "CRI": "96+",
+      "TLCI": "97+",
+      "Beam_Angle": "120° (bare bulb), adjustable with modifiers",
+      "Dimming": "0-100% (linear, smooth)",
+      "Control": "Sidus Link Bluetooth / DMX512 / Art-net",
+      "Power": "100-240V AC (PSU included)",
+      "Weight": "7.35kg (including yoke)",
+      "Cooling": "Active fan cooling (quiet mode available)",
+      "Mount": "Bowens mount"
+    },
+    "web_references": {
+      "bh_link": "https://www.bhphotovideo.com/c/product/1635484-REG/aputure_apu0175a50_light_storm_600d_pro.html",
+      "manufacturer_link": "https://www.aputure.com/products/ls-600d-pro"
+    },
+    "box_contents": [
+      "Aputure LS 600d Pro LED Light",
+      "Hyper Reflector",
+      "Control Box",
+      "Neutrik powerCON Cable (7.5m)",
+      "Head Cable (7.5m)",
+      "Lightning Clamp",
+      "Carrying Case",
+      "Power Cable"
+    ]
+  }
+}

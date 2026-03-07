@@ -1,0 +1,1119 @@
+=== EXPORTED FROM SERVICES ===
+--- src/lib/services/ai-analytics.service.ts ---
+10:export interface ProviderStats {
+20:export interface CostBreakdown {
+30:export async function getProviderStats(): Promise<ProviderStats[]> {
+100:export async function getDailyCostBreakdown(days: number = 30): Promise<CostBreakdown[]> {
+138:export async function selectBestProvider(
+--- src/lib/services/ai-audit.service.ts ---
+10:export const AI_AUDIT_ACTIONS = {
+17:export type AiAuditAction = (typeof AI_AUDIT_ACTIONS)[keyof typeof AI_AUDIT_ACTIONS]
+31:export async function logAiAudit(input: LogAiAuditInput): Promise<void> {
+--- src/lib/services/ai-autofill.service.ts ---
+43:export type ProductData = {
+55:export type AutofillResult = {
+81:export async function autofillProduct(
+275:export async function autofillProductsBatch(
+320:export async function autofillMissingFields(
+607:export async function generateDescription(
+649:export async function generateBoxContents(
+666:export async function generateTags(
+683:export async function suggestRelatedProducts(
+--- src/lib/services/ai-confidence.service.ts ---
+37:export async function getConfidence(
+76:export async function getBulkConfidence(
+93:export async function shouldAutoApprove(
+151:export async function logFeedback(data: {
+184:export async function getProviderComparison(categoryId?: string): Promise<
+--- src/lib/services/ai-content-generation.service.ts ---
+23:export type ContentProvider = 'openai' | 'gemini'
+25:async function getSettings(provider: ContentProvider) {
+29:async function resolveApiKey(provider: ContentProvider): Promise<string> {
+54:export async function generateWithLLM(
+115:async function hasProviderKey(provider: ContentProvider): Promise<boolean> {
+129:export async function generateMasterFill(
+--- src/lib/services/ai-master-fill.service.ts ---
+16:export interface AiFillResult {
+30:async function ensureBrand(brandName: string | null): Promise<{ id: string; name: string }> {
+52:async function resolveCategory(
+118:export async function runMasterFill(productId: string): Promise<AiFillResult> {
+--- src/lib/services/ai-spec-parser.service.ts ---
+21:export type ProductForSpecInference = {
+40:export async function inferMissingSpecs(product: ProductForSpecInference | null): Promise<{
+--- src/lib/services/ai-validation.service.ts ---
+11:export interface ValidationCheck {
+18:export interface ValidationReport {
+32:export async function validateAiFill(productId: string): Promise<ValidationReport> {
+168:export async function schedulePartialRefill(
+215:export async function validateAndRetry(
+242:export async function validateAllProducts(options?: {
+--- src/lib/services/ai.service.ts ---
+26:export class AIService {
+52:  static async generateText(
+72:  static async assessRisk(input: {
+284:  static async suggestDeposit(input: {
+377:  static async recommendAlternatives(input: {
+496:  static async getCompatibleEquipment(input: {
+683:  static async buildKit(input: {
+1046:  static async suggestPricing(input: {
+1179:  static async forecastDemand(input: {
+1313:  static async chat(input: {
+1484:  static async extractSpecificationsFromProductPage(
+1607:  static async getConfig(): Promise<AIConfig> {
+--- src/lib/services/approval.service.ts ---
+13:export interface CreateApprovalRequestInput {
+23:export interface ApproveRequestInput {
+29:export interface RejectRequestInput {
+35:export class ApprovalService {
+39:  static async request(input: CreateApprovalRequestInput) {
+99:  static async approve(input: ApproveRequestInput) {
+164:  static async reject(input: RejectRequestInput) {
+230:  static async getById(approvalId: string) {
+242:  static async getPending(userId?: string) {
+274:  static async getByResource(resourceType: string, resourceId: string) {
+--- src/lib/services/audit.service.ts ---
+9:export interface AuditLogInput {
+19:export class AuditService {
+23:  static async log(input: AuditLogInput): Promise<void> {
+41:  static async getLogs(filters: {
+--- src/lib/services/blog-ai.service.ts ---
+16:async function generate(prompt: string, systemPrompt: string = BLOG_SYSTEM_PROMPT, maxTokens = 4000): Promise<string> {
+26:async function generateJson<T>(prompt: string, systemPrompt: string = BLOG_SYSTEM_PROMPT): Promise<T> {
+36:export const BlogAIService = {
+37:  async generateOutline(title: string, language: 'ar' | 'en'): Promise<string> {
+44:  async generateDraft(outline: string, title: string, language: 'ar' | 'en'): Promise<object> {
+54:  async rewrite(content: string, tone: 'professional' | 'casual' | 'technical', language: 'ar' | 'en'): Promise<string> {
+64:  async translate(content: string, from: 'ar' | 'en', to: 'ar' | 'en'): Promise<string> {
+74:  async generateSeoMeta(
+89:  async generateFaq(content: string, language: 'ar' | 'en'): Promise<Array<{ question: string; answer: string }>> {
+99:  async extractEquipment(content: string): Promise<
+113:  async generateAltText(imageUrl: string, context: string | undefined, language: 'ar' | 'en'): Promise<string> {
+121:  async qualityScore(content: string): Promise<{ score: number; feedback: Array<{ issue: string; suggestion: string }> }> {
+130:  async seoScore(
+145:  async suggestLinks(content: string): Promise<
+158:  async relatedPosts(postId: string, content: string): Promise<
+169:  async headlineOptimizer(title: string, language: 'ar' | 'en'): Promise<string[]> {
+179:  async autoTags(content: string): Promise<string[]> {
+--- src/lib/services/blog.service.ts ---
+133:export class BlogService {
+137:  static async getPostsForAdmin(params: BlogSearchParams): Promise<BlogSearchResult> {
+195:  static async getPosts(params: BlogSearchParams): Promise<BlogSearchResult> {
+252:  static async getPostBySlug(slug: string, options?: { allowDraft?: boolean; previewToken?: string }): Promise<BlogPostPublic | null> {
+283:  static async getFeaturedPosts(limit = 3): Promise<BlogPostListItem[]> {
+296:  static async getPostsByCategory(categorySlug: string, page = 1, limit = 12): Promise<BlogSearchResult> {
+308:  static async getPostsByTag(tagSlug: string, page = 1, limit = 12): Promise<BlogSearchResult> {
+320:  static async getRelatedPosts(postId: string, categoryId: string, limit = 3): Promise<BlogPostListItem[]> {
+337:  static async getTrendingPosts(limit = 5): Promise<BlogPostListItem[]> {
+372:  static async searchPosts(params: BlogSearchParams): Promise<BlogSearchResult> {
+379:  static async getPostsForFeed(limit = 100): Promise<
+420:  static async createPost(data: CreatePostInput, userId: string): Promise<BlogPostPublic> {
+445:  static async updatePost(id: string, data: UpdatePostInput, userId: string): Promise<BlogPostPublic> {
+482:  static async publishScheduledPosts(): Promise<number> {
+498:  static async getRevisions(postId: string): Promise<
+518:  static async deletePost(id: string, userId: string): Promise<void> {
+530:  static async incrementViews(postId: string, ipHash: string, userAgent?: string, referrer?: string): Promise<void> {
+540:  static async addReaction(postId: string, type: 'HELPFUL_YES' | 'HELPFUL_NO', ipHash: string): Promise<ReactionCounts> {
+552:  static async getReactionCounts(postId: string): Promise<ReactionCounts> {
+563:  static async getCategories(): Promise<{ id: string; nameAr: string; nameEn: string; slug: string; sortOrder: number }[]> {
+574:  static async getTags(): Promise<{ id: string; nameAr: string; nameEn: string; slug: string }[]> {
+585:  static async getAuthors(): Promise<{ id: string; name: string; avatar: string | null; role: string | null }[]> {
+596:  static async getCategoriesForAdmin(params: {
+656:  static async getCategoryById(id: string): Promise<BlogCategoryAdmin | null> {
+690:  static async createCategory(data: CreateCategoryInput, userId: string): Promise<BlogCategoryAdmin> {
+745:  static async updateCategory(id: string, data: UpdateCategoryInput, userId: string): Promise<BlogCategoryAdmin> {
+803:  static async deleteCategory(
+833:  static async getAuthorsForAdmin(params: {
+864:  static async getAuthorById(id: string): Promise<BlogAuthorAdmin | null> {
+875:  static async createAuthor(data: CreateAuthorInput, userId: string): Promise<BlogAuthorAdmin> {
+920:  static async updateAuthor(id: string, data: UpdateAuthorInput, userId: string): Promise<BlogAuthorAdmin> {
+969:  static async deleteAuthor(
+999:  static async logAiUsage(data: {
+1028:  static async getAiUsageStats(days = 1): Promise<BlogAiUsageStats> {
+1078:  static async getPostById(id: string): Promise<BlogPostPublic | null> {
+1094:  static async getCategoryBySlug(slug: string): Promise<{ id: string; nameAr: string; nameEn: string; slug: string; descriptionAr: string | null; descriptionEn: string | null } | null> {
+1104:  static async getTagBySlug(slug: string): Promise<{ id: string; nameAr: string; nameEn: string; slug: string } | null> {
+1114:  static async hasViewed(postId: string, ipHash: string): Promise<boolean> {
+1122:  static async hasReacted(postId: string, ipHash: string): Promise<boolean> {
+1130:  static async getAnalytics(days = 30): Promise<{
+--- src/lib/services/booking.service.ts ---
+20:export interface BookingEquipmentInput {
+25:export interface BookingCreateInput {
+55:export interface BookingUpdateInput {
+65:export interface RiskCheckResult {
+80:export class BookingService {
+118:  static async create(
+277:  static async performRiskCheck(
+452:  static async transitionState(
+614:  static async getById(id: string, userId: string) {
+698:  static async update(
+759:  static async list(
+881:  static async cancel(
+945:  static async markReturned(
+1041:  static async releaseExpiredSoftLocks() {
+--- src/lib/services/bundle-recommendations.service.ts ---
+8:export const bundleRecommendationsService = {
+15:  async getFrequentlyRentedTogether(
+105:  async getCategoryFallback(
+156:export interface FrequentlyRentedItem {
+--- src/lib/services/cart-merge.service.ts ---
+9:export const CartMergeService = {
+15:  async mergeSessionToUser(sessionCartId: string, userId: string) {
+73:  async recalculate(cartId: string) {
+--- src/lib/services/cart.service.ts ---
+80:export interface AddCartItemInput {
+92:export interface CartWithItems {
+131:export class CartService {
+135:  static async getOrCreateCart(
+172:  static async addItem(cartId: string, input: AddCartItemInput): Promise<CartWithItems> {
+259:  static async updateItem(
+312:  static async removeItem(cartId: string, itemId: string): Promise<CartWithItems> {
+320:  static async applyCoupon(cartId: string, code: string): Promise<CartWithItems> {
+393:  static async removeCoupon(cartId: string): Promise<CartWithItems> {
+407:  static async revalidate(cartId: string): Promise<CartWithItems> {
+462:  static async syncToUser(sessionCartId: string, userId: string): Promise<CartWithItems> {
+--- src/lib/services/catalog-scanner.service.ts ---
+13:export async function scanOnly(): Promise<ContentGapReport> {
+42:export async function scanAndQueue(options: BackfillOptions): Promise<{
+77:export async function queueSingleProduct(
+--- src/lib/services/client.service.ts ---
+28:export class ClientService {
+32:  static async create(
+102:  static async getById(id: string, userId: string): Promise<Client> {
+132:  static async list(
+230:  static async update(
+293:  static async delete(
+--- src/lib/services/column-mapper.service.ts ---
+10:export interface ColumnMapping {
+17:export type SystemField =
+333:export async function mapColumns(
+423:export async function saveMappingHistory(
+455:export function getFieldInfo(field: SystemField | string) {
+461:export { REQUIRED_FIELDS, AI_FILLABLE_FIELDS, SYNONYM_MAP }
+--- src/lib/services/content-health.service.ts ---
+18:export type GapType = 'translations' | 'seo' | 'description' | 'photos' | 'specs'
+20:export interface ContentGapReport {
+37:export interface ProductWithGaps {
+99:export async function calculateQualityScore(productId: string): Promise<number> {
+147:export async function findProductsWithGaps(options?: {
+315:export async function getProductIdsWithGaps(options?: {
+--- src/lib/services/contract.service.ts ---
+29:export class ContractService {
+142:  static async create(
+242:  static async getById(id: string, userId: string): Promise<Contract> {
+279:  static async list(
+388:  static async update(
+470:  static async sign(
+571:  static async delete(
+--- src/lib/services/coupon.service.ts ---
+30:export class CouponService {
+56:  static async create(
+120:  static async getById(idOrCode: string, userId: string): Promise<Coupon> {
+141:  static async list(
+208:  static async update(
+304:  static async validate(
+356:  static async apply(
+388:  static async delete(
+--- src/lib/services/dashboard.service.ts ---
+14:export interface DashboardKpis {
+25:export async function getKpis(): Promise<DashboardKpis> {
+102:export async function getCachedKpis(): Promise<DashboardKpis> {
+--- src/lib/services/delivery.service.ts ---
+21:export type DeliveryType = 'pickup' | 'return'
+22:export type DeliveryStatus =
+30:export interface DeliveryCreateInput {
+42:export interface DeliveryUpdateInput {
+53:export interface DeliveryTrackingInfo {
+82:export class DeliveryService {
+120:  static async scheduleDelivery(
+215:  static async updateDelivery(
+281:  static async updateDeliveryStatus(
+360:  static async getDeliveriesByBooking(
+411:  static async getPendingDeliveries(
+479:  static async getDriverDeliveries(
+--- src/lib/services/email.service.ts ---
+31:export const EmailService = {
+35:  async sendPasswordReset(to: string, token: string): Promise<{ ok: boolean; error?: string }> {
+54:  async sendContactFormNotification(data: {
+89:  async sendBookingConfirmation(data: {
+167:  async sendVerificationEmail(to: string, token: string): Promise<{ ok: boolean; error?: string }> {
+186:  async send(params: {
+--- src/lib/services/equipment.service.ts ---
+12:export interface EquipmentTranslationInput {
+23:export type VendorSubmissionStatus = 'pending_review' | 'approved' | 'rejected'
+25:export interface CreateEquipmentInput {
+66:export interface UpdateEquipmentInput extends Partial<CreateEquipmentInput> {
+71:export interface EquipmentFilters {
+83:export class EquipmentService {
+87:  static async getEquipmentList(filters: EquipmentFilters = {}) {
+195:  static async getEquipmentById(id: string) {
+295:  static async createEquipment(input: CreateEquipmentInput) {
+453:  static async updateEquipment(
+674:  static async deleteEquipment(id: string, deletedBy: string) {
+719:  static async checkAvailability(
+--- src/lib/services/faq.service.ts ---
+20:export interface FaqItemPublic {
+31:export interface FaqItemListItem {
+45:export class FaqService {
+49:  static async getPublicFaq(): Promise<FaqItemPublic[]> {
+84:  static async getAll(): Promise<FaqItemListItem[]> {
+107:  static async getById(id: string): Promise<FaqItemListItem> {
+130:  static async create(data: CreateFaqInput, userId?: string): Promise<FaqItemListItem> {
+165:  static async update(id: string, data: UpdateFaqInput, userId?: string): Promise<FaqItemListItem> {
+199:  static async delete(id: string, userId?: string): Promise<void> {
+225:  static async reorder(data: ReorderFaqInput, userId?: string): Promise<FaqItemListItem[]> {
+--- src/lib/services/feature-flag.service.ts ---
+11:export interface CreateFeatureFlagInput {
+20:export interface UpdateFeatureFlagInput {
+27:export class FeatureFlagService {
+31:  static async getAll() {
+43:  static async getById(id: string) {
+55:  static async getByName(name: string) {
+67:  static async isEnabled(name: string): Promise<boolean> {
+75:  static async create(input: CreateFeatureFlagInput) {
+104:  static async update(id: string, input: UpdateFeatureFlagInput) {
+152:  static async toggle(id: string, userId: string) {
+174:  static async delete(id: string, userId: string) {
+199:  static async getByScope(scope: FeatureFlagScope) {
+--- src/lib/services/hero-banner.service.ts ---
+22:export interface HeroSlidePublic {
+51:export interface HeroBannerPublic {
+61:export interface HeroBannerListItem {
+73:export interface HeroBannerWithSlides extends HeroBannerPublic {
+141:export class HeroBannerService {
+145:  static async getActiveBannerByPage(pageSlug: string): Promise<HeroBannerPublic | null> {
+189:  static async getAllBanners(): Promise<HeroBannerListItem[]> {
+213:  static async getBannerById(id: string): Promise<HeroBannerWithSlides> {
+242:  static async createBanner(
+279:  static async updateBanner(
+323:  static async deleteBanner(id: string, userId?: string): Promise<void> {
+342:  static async createSlide(
+406:  static async updateSlide(
+464:  static async deleteSlide(slideId: string, userId?: string): Promise<HeroBannerWithSlides> {
+486:  static async reorderSlides(
+--- src/lib/services/image-processing.service.ts ---
+19:export type ImageProcessingResult = {
+101:async function downloadImage(url: string, timeout: number = 10000): Promise<Buffer> {
+128:export async function uploadBufferToCloudinary(
+172:export async function processImageFromUrl(
+231:export async function processImagesBatch(
+258:export async function deleteImage(publicId: string): Promise<void> {
+--- src/lib/services/image-sourcing.service.ts ---
+20:export type ProductForSourcing = {
+35:export async function tryBrandAssets(
+89:export async function tryUnsplash(
+164:export async function tryPexels(
+245:export async function tryGoogleCSE(
+330:export async function tryDallE(
+386:export async function validateImageRelevance(
+435:export async function sourceImages(
+--- src/lib/services/import-recommendations.service.ts ---
+10:export interface Recommendation {
+27:export async function getRecommendations(): Promise<Recommendation[]> {
+151:async function countMissingArabic(): Promise<number> {
+169:async function countMissingPhotos(): Promise<number> {
+182:async function countShortSeoTitles(): Promise<number> {
+197:async function countMissingSpecs(): Promise<{
+233:async function findDuplicateBrands(): Promise<
+257:async function getLastImportSummary(): Promise<{
+--- src/lib/services/import-validation.service.ts ---
+10:export type ValidationError = {
+19:export type ValidationResult = {
+79:export async function validateImportRows(
+--- src/lib/services/import.service.ts ---
+5:export type ImportJobCreate = {
+11:export class ImportService {
+12:  static async createJob(input: ImportJobCreate) {
+26:  static async getJob(id: string) {
+38:  static async markProcessing(jobId: string) {
+45:  static async appendRows(jobId: string, rows: Array<{ rowNumber: number; payload: any }>) {
+60:  static async markRow(
+76:  static async bumpProgress(
+92:  static async markComplete(jobId: string) {
+99:  static async markFailed(jobId: string, errorMessage: string) {
+--- src/lib/services/inspection.service.ts ---
+12:export type InspectionType = 'check_in' | 'check_out'
+14:export interface InspectionChecklistItem {
+20:export interface InspectionInput {
+28:export class InspectionService {
+32:  static async create(
+136:  static async getById(id: string, userId: string) {
+176:  static async listByBooking(
+225:  static async update(
+274:  static async delete(
+--- src/lib/services/integration-config.service.ts ---
+49:export interface IntegrationConfigData {
+55:export class IntegrationConfigService {
+59:  static async getConfig(type: string): Promise<IntegrationConfigData | null> {
+81:  static getConfigFromEnv(type: string): IntegrationConfigData | null {
+133:  static async saveConfig(
+--- src/lib/services/integration.service.ts ---
+10:export interface IntegrationConfig {
+17:export interface TestConnectionResult {
+23:export class IntegrationService {
+27:  static async getConfig(type: IntegrationConfig['type']): Promise<IntegrationConfig> {
+66:  static async testConnection(type: IntegrationConfig['type']): Promise<TestConnectionResult> {
+138:  static async getAll(): Promise<IntegrationConfig[]> {
+--- src/lib/services/invoice-pdf.service.ts ---
+8:export interface InvoicePdfData {
+27:export class InvoicePdfService {
+28:  static generate(data: InvoicePdfData): Buffer {
+--- src/lib/services/invoice.service.ts ---
+36:export class InvoiceService {
+131:  static async create(
+251:  static async autoGenerateForBooking(bookingId: string): Promise<Invoice> {
+354:  static async getById(id: string, userId: string): Promise<Invoice> {
+413:  static async list(
+514:  static async update(
+620:  static async recordPayment(
+739:  static async generateFromBooking(
+844:  static async delete(
+--- src/lib/services/maintenance.service.ts ---
+37:export class MaintenanceService {
+108:  static async create(
+225:  static async getById(id: string, userId: string): Promise<Maintenance> {
+264:  static async list(
+355:  static async update(
+446:  static async complete(
+541:  static async delete(
+--- src/lib/services/marketing.service.ts ---
+31:export class MarketingService {
+62:  static async create(
+112:  static async getById(id: string, userId: string): Promise<Campaign> {
+129:  static async list(
+184:  static async update(
+243:  static async send(
+308:  static async delete(
+--- src/lib/services/media.service.ts ---
+24:export interface MediaInput {
+35:export class MediaService {
+39:  static async uploadImage(
+106:  static async createMediaFromUrl(input: MediaInput, userId: string) {
+127:  static async uploadImageForStudio(
+189:  static async getMediaByStudio(studioId: string) {
+202:  static async reorderStudioMedia(studioId: string, orderedIds: string[], userId: string) {
+217:  static async getMediaByEquipment(equipmentId: string) {
+234:  static async deleteMedia(mediaId: string, userId: string) {
+260:  static async deleteMediaByEquipment(equipmentId: string, userId: string) {
+278:  static async getFeaturedImage(equipmentId: string) {
+296:  static async getGalleryImages(equipmentId: string) {
+315:  static async getVideo(equipmentId: string) {
+--- src/lib/services/messaging-automation.service.ts ---
+49:export async function processEventForMessaging(
+--- src/lib/services/notification-queue.service.ts ---
+13:export type NotificationChannel = 'email' | 'sms' | 'whatsapp' | 'push'
+14:export type NotificationPriority = 'high' | 'normal' | 'low'
+16:export interface QueuedNotification {
+32:async function isChannelEnabled(queueChannel: NotificationChannel): Promise<boolean> {
+54:export function enqueueNotification(params: {
+99:export function getQueueStats() {
+112:async function processQueue() {
+167:async function sendNotification(notification: QueuedNotification): Promise<void> {
+--- src/lib/services/notification.service.ts ---
+13:export interface SendNotificationInput {
+22:export interface NotificationTemplate {
+30:async function isChannelEnabled(channel: NotificationChannel): Promise<boolean> {
+38:async function isOptedIn(userId: string | undefined, channel: NotificationChannel): Promise<boolean> {
+48:export class NotificationService {
+52:  static async send(input: SendNotificationInput) {
+91:  static async sendMultiChannel(
+110:  static async sendTemplate(
+134:  static getTemplate(type: string, data: Record<string, any>): NotificationTemplate {
+238:  static async getUnreadCount(userId: string): Promise<number> {
+251:  static async getUserNotifications(
+276:  static async markAsRead(notificationId: string, userId: string) {
+293:  static async markAllAsRead(userId: string) {
+--- src/lib/services/payment.service.ts ---
+16:export interface CreatePaymentInput {
+22:export interface ProcessPaymentInput {
+29:export interface RefundPaymentInput {
+36:export class PaymentService {
+40:  static async create(input: CreatePaymentInput) {
+114:  static async process(input: ProcessPaymentInput) {
+170:  static async markFailed(paymentId: string, userId: string, reason?: string) {
+212:  static async requestRefund(input: RefundPaymentInput) {
+284:  static async processRefund(paymentId: string, approvalId: string, userId: string) {
+352:  static async getById(paymentId: string, userId: string) {
+388:  static async getByBookingId(bookingId: string, userId: string) {
+421:  static async list(
+573:  static async verifyWebhookSignature(payload: string, signature: string): Promise<boolean> {
+--- src/lib/services/payout.service.ts ---
+14:export interface CreatePayoutInput {
+22:export interface PayoutFilters {
+36:export class PayoutService {
+42:  static async createVendorPayoutsForBooking(bookingId: string, createdBy?: string): Promise<void> {
+106:  static async createPayout(input: CreatePayoutInput, createdBy?: string) {
+137:  static async getPayoutsByVendor(
+179:  static async markPayoutPaid(
+228:  static async getPayoutSummary(vendorId: string, requestUserId: string) {
+264:  static async getAllPayouts(filters: PayoutFilters = {}, adminUserId: string) {
+--- src/lib/services/pdf.service.ts ---
+21:export type PdfLocale = 'ar' | 'en'
+23:export interface InvoicePdfInput {
+30:export interface ContractPdfInput {
+35:export interface QuotePdfInput {
+40:export interface ReportPdfInput extends ReportExportPdfOptions {}
+47:export class PdfService {
+51:  static async generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer> {
+62:  static generateContractPdfBuffer(input: ContractPdfInput): Buffer {
+71:  static generateQuotePdfBuffer(input: QuotePdfInput): Buffer {
+80:  static generateReportPdfBuffer(input: ReportPdfInput): Buffer {
+87:  static async generateReportExcelBuffer(
+96:export { generateInvoicePdf, generateContractPdf, generateQuotePdf }
+97:export { exportReportAsPdf, exportReportAsExcel }
+--- src/lib/services/photo-sourcing.service.ts ---
+25:export async function sourceImages(
+35:export async function validateImageRelevance(
+--- src/lib/services/policy.service.ts ---
+20:export interface PolicyItemPublic {
+31:export interface PolicyItemListItem {
+45:export class PolicyService {
+49:  static async getPublicPolicies(): Promise<PolicyItemPublic[]> {
+84:  static async getAll(): Promise<PolicyItemListItem[]> {
+107:  static async getById(id: string): Promise<PolicyItemListItem> {
+130:  static async create(data: CreatePolicyInput, userId?: string): Promise<PolicyItemListItem> {
+165:  static async update(
+203:  static async delete(id: string, userId?: string): Promise<void> {
+229:  static async reorder(data: ReorderPolicyInput, userId?: string): Promise<PolicyItemListItem[]> {
+--- src/lib/services/pricing.service.ts ---
+12:export interface PricingQuoteInput {
+24:export interface PricingQuote {
+52:export class PricingService {
+59:  static calculateRentalDays(startDate: Date, endDate: Date): number {
+89:  static async calculateEquipmentPricing(
+158:  static async calculateStudioPricing(
+195:  static async calculateDeposit(
+233:  static calculateVAT(subtotal: number): number {
+240:  static async generateQuote(input: PricingQuoteInput): Promise<PricingQuote> {
+319:  static calculateBundleDiscount(equipmentSubtotal: number, studioSubtotal: number): number {
+--- src/lib/services/product-catalog.service.ts ---
+117:async function validateCategoryHierarchy(categoryId: string, subCategoryId?: string | null) {
+132:async function validateBrand(brandId: string) {
+137:async function ensureUniqueSku(sku?: string | null, excludeId?: string) {
+159:async function ensureInventoryUniqueness(
+211:export class ProductCatalogService {
+212:  static async create(input: ProductCreateInput) {
+295:  static async update(id: string, input: ProductUpdateInput) {
+428:export const pricingDefaults = {
+--- src/lib/services/product-equipment-sync.service.ts ---
+34:async function ensureUniqueSlug(
+63:export async function syncProductToEquipment(productId: string): Promise<void> {
+243:export async function syncEquipmentToProduct(equipmentId: string): Promise<void> {
+--- src/lib/services/product-similarity.service.ts ---
+31:async function generateEmbedding(text: string): Promise<number[] | null> {
+81:export interface SimilarProduct {
+93:export async function embedProduct(productId: string): Promise<number[] | null> {
+129:export async function findSimilarProducts(
+198:export async function rebuildRelatedProducts(
+--- src/lib/services/promissory-note.service.ts ---
+20:async function generateNoteNumber(): Promise<string> {
+42:export async function createBookingPromissoryNote(
+169:export async function listPromissoryNotesForAdmin(options: {
+237:export async function enforcePromissoryNote(
+258:export interface CreatePromissoryNoteManuallyInput {
+269:export async function createPromissoryNoteManually(
+414:export async function fulfillPromissoryNote(id: string): Promise<void> {
+430:export async function getPromissoryNoteById(id: string): Promise<{
+462:export async function getBookingPreviewForPn(bookingId: string, userId: string): Promise<{
+--- src/lib/services/quality-scorer.service.ts ---
+44:export async function scoreProduct(
+141:export async function scoreAllProducts(): Promise<{
+190:export async function getProductsWithGaps(
+250:export async function captureQualitySnapshot(): Promise<void> {
+273:export async function getQualityTrend(
+294:async function runFullScan(): Promise<{
+406:export async function getCachedScan(): Promise<{
+--- src/lib/services/quote.service.ts ---
+32:export class QuoteService {
+83:  static async create(
+237:  static async getById(id: string, userId: string): Promise<Quote> {
+308:  static async list(
+409:  static async update(
+634:  static async convertToBooking(
+730:  static async updateStatus(
+859:  static async addQuoteToCart(
+933:  static async createQuoteFromCart(
+1028:  static async delete(
+--- src/lib/services/reports.service.ts ---
+25:export class ReportsService {
+29:  static async generateRevenueReport(filter: ReportFilter, userId: string): Promise<RevenueReport> {
+187:  static async generateBookingReport(filter: ReportFilter, userId: string): Promise<BookingReport> {
+337:  static async generateEquipmentReport(
+472:  static async generateCustomerReport(
+590:  static async generateFinancialReport(
+695:  static async generateInventoryReport(
+796:  static async getDashboardStats(userId: string): Promise<DashboardStats> {
+--- src/lib/services/seo-generation.service.ts ---
+13:export type SEOProvider = 'openai' | 'gemini'
+15:export type SEOContext = {
+24:export type SEOResult = {
+35:async function getAISettings(provider: SEOProvider) {
+56:async function generateSEOWithOpenAI(context: SEOContext, apiKey: string): Promise<SEOResult> {
+132:async function generateSEOWithGemini(context: SEOContext, apiKey: string): Promise<SEOResult> {
+198:export async function generateSEO(context: SEOContext, provider?: SEOProvider): Promise<SEOResult> {
+240:export async function generateSEOBatch(
+--- src/lib/services/shoot-type.service.ts ---
+22:export interface ShootTypeListItem {
+37:export interface CategoryStepConfig {
+52:export interface EquipmentRecommendationItem {
+74:export interface ShootTypeFullConfig {
+92:export interface MatchingPrebuiltKit {
+105:export class ShootTypeService {
+109:  static async getAll(includeInactive = false): Promise<ShootTypeListItem[]> {
+138:  static async getBySlug(slug: string): Promise<ShootTypeFullConfig | null> {
+227:  static async getById(id: string): Promise<ShootTypeFullConfig> {
+304:  static async create(data: CreateShootTypeInput, userId?: string): Promise<ShootTypeFullConfig> {
+335:  static async update(
+375:  static async softDelete(id: string, userId?: string): Promise<void> {
+385:  static async updateCategoryFlow(
+414:  static async setRecommendations(
+456:  static async getRecommendationsForCategory(
+504:  static async findMatchingPrebuiltKits(equipmentIds: string[]): Promise<MatchingPrebuiltKit[]> {
+--- src/lib/services/sms.service.ts ---
+24:export function normalizePhoneForSms(phone: string): string {
+41:export function isSmsConfigured(): boolean {
+46:export interface SendSmsResult {
+55:export async function sendSmsText(
+118:export async function sendSmsOtp(
+134:export async function sendSmsFromTemplate(
+145:export const SmsService = {
+--- src/lib/services/specs-db.service.ts ---
+12:export interface SpecMatch {
+72:export function lookupCuratedSpecs(productName: string, brandName?: string): SpecMatch | null {
+109:export function lookupDeepSpecs(productName: string, brandName?: string): SpecMatch | null {
+152:export function getKnownModels(): string[] {
+159:export function hasModel(modelName: string): boolean {
+167:export function addToRuntime(modelName: string, specs: Record<string, string>): void {
+--- src/lib/services/studio-faq.service.ts ---
+12:async function invalidateStudioCache(studioId: string) {
+26:export class StudioFaqService {
+27:  static async listByStudio(studioId: string, activeOnly = false) {
+38:  static async create(studioId: string, data: CreateStudioFaqInput, userId: string) {
+74:  static async update(id: string, data: UpdateStudioFaqInput, userId: string) {
+107:  static async delete(id: string, userId: string) {
+134:  static async reorder(studioId: string, faqIds: string[], userId: string) {
+--- src/lib/services/studio-package.service.ts ---
+13:async function invalidateStudioCache(studioId: string) {
+27:export class StudioPackageService {
+28:  static async listByStudio(studioId: string) {
+35:  static async create(studioId: string, data: CreateStudioPackageInput, userId: string) {
+77:  static async update(id: string, data: UpdateStudioPackageInput, userId: string) {
+116:  static async delete(id: string, userId: string) {
+143:  static async reorder(studioId: string, packageIds: string[], userId: string) {
+--- src/lib/services/studio-schedule.service.ts ---
+9:export interface ScheduleEntry {
+19:export class StudioScheduleService {
+23:  static async getSchedule(studioId: string): Promise<ScheduleEntry[]> {
+45:  static async getForDay(studioId: string, dayOfWeek: number): Promise<ScheduleEntry> {
+60:  static async saveSchedule(studioId: string, entries: ScheduleEntry[]) {
+--- src/lib/services/studio-testimonial.service.ts ---
+3:export class StudioTestimonialService {
+4:  static async list(studioId: string) {
+11:  static async create(
+40:  static async update(
+68:  static async delete(id: string, userId: string) {
+75:  static async reorder(ids: string[], userId: string) {
+--- src/lib/services/studio.service.ts ---
+15:export interface StudioInput {
+27:export interface StudioCreateInput extends StudioInput {
+32:export interface StudioUpdateInput extends Partial<StudioInput> {
+37:export interface StudioAddOnInput {
+44:export interface StudioBlackoutDateInput {
+50:export interface StudioAvailabilityCheck {
+56:export class StudioService {
+60:  static async create(
+176:  static async update(
+340:  static async getById(id: string, userId: string) {
+382:  static async getByIdForCms(id: string, userId: string) {
+420:  static async getBySlugPublic(slug: string) {
+452:  static async updateCms(id: string, data: UpdateStudioCmsInput, userId: string) {
+545:  static async list(
+614:  static async delete(
+676:  static async checkAvailability(check: StudioAvailabilityCheck): Promise<{
+794:  static async addBlackoutDate(
+876:  static async removeBlackoutDate(
+924:  static async calculateBookingDuration(
+--- src/lib/services/template-renderer.service.ts ---
+72:export interface RenderResult {
+82:export async function renderTemplate(
+115:export async function renderTemplateBody(
+127:export function renderString(
+137:export const TemplateRendererService = {
+--- src/lib/services/translation.service.ts ---
+20:export interface TranslationInput {
+26:export interface TranslationOutput {
+32:export class TranslationService {
+36:  static async saveTranslations(
+79:  static async getTranslations(entityType: string, entityId: string) {
+104:  static async getTranslationsByLocale(entityType: string, entityId: string) {
+139:  static async deleteTranslations(entityType: string, entityId: string, userId: string) {
+158:  static formatTranslationsForSave(
+203:export function getTranslationCacheKey(
+211:export function getCachedTranslation(key: string): string | null {
+215:export function setCachedTranslation(key: string, value: string): void {
+227:export interface TranslateBatchItem {
+237:export async function translateText(
+313:export async function translateProductFields(
+331:export async function translateBatch(
+--- src/lib/services/vendor.service.ts ---
+15:export interface CreateVendorInput {
+30:export interface UpdateVendorInput {
+44:export interface VendorFilters {
+51:export interface VendorEarningsFilters {
+61:export class VendorService {
+65:  static async createVendor(input: CreateVendorInput, adminUserId: string) {
+140:  static async approveVendor(vendorId: string, adminUserId: string) {
+175:  static async suspendVendor(vendorId: string, adminUserId: string, reason?: string) {
+214:  static async reactivateVendor(vendorId: string, adminUserId: string) {
+252:  static async getVendorById(id: string, userId: string) {
+278:  static async getVendorList(filters: VendorFilters = {}, adminUserId: string) {
+317:  static async updateVendor(id: string, input: UpdateVendorInput, userId: string) {
+372:  static async toggleVisibility(vendorId: string, adminUserId: string) {
+403:  static async getVendorByUserId(userId: string) {
+420:  static async getVendorEquipment(
+465:  static async getVendorEarnings(
+511:  static async getVendorDashboardStats(vendorId: string, requestUserId: string) {
+584:  static async getMonthlyEarnings(vendorId: string, months: number = 6) {
+--- src/lib/services/warehouse.service.ts ---
+18:export interface CheckOutInput {
+26:export interface CheckInInput {
+35:export interface WarehouseInventoryItem {
+46:export class WarehouseService {
+51:  static async checkOut(
+170:  static async checkIn(
+307:  static async getInventory(
+386:  static async getReadyForCheckOut(userId: string) {
+435:  static async getReadyForCheckIn(userId: string) {
+--- src/lib/services/web-researcher.service.ts ---
+9:export interface WebResearchResult {
+18:export interface ResearchSource {
+25:export interface SpecConflict {
+227:async function fetchPage(url: string): Promise<string | null> {
+264:async function searchProductPage(
+291:async function scrapeProductPage(url: string): Promise<ScrapedPage | null> {
+445:async function getCachedResearch(
+460:async function setCachedResearch(
+479:export async function researchProduct(
+646:export function getArabicSpecName(englishName: string): string {
+653:export function translateSpecsToArabic(specs: Record<string, string>): Record<string, string> {
+665:export function isWebResearchAvailable(): boolean {
+--- src/lib/services/whatsapp.service.ts ---
+22:export function normalizePhoneForWhatsApp(phone: string): string {
+36:export function isWhatsAppConfigured(): boolean {
+42:export interface SendWhatsAppResult {
+48:async function callMessagesApi(phoneNumberId: string, accessToken: string, body: object): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+73:export async function sendWhatsAppText(
+121:export async function sendWhatsAppTemplate(
+175:export async function sendWhatsAppInteractiveButtons(
+228:export async function sendWhatsAppDocument(
+272:export async function updateMessageLogStatus(
+287:export const WhatsAppService = {
+=== EXPORTED FROM UTILS ===
+--- src/lib/utils/__tests__/api-helpers.test.ts ---
+=== EXPORTED FROM VALIDATORS ===
+--- src/lib/validators/ai.validator.ts ---
+9:export const riskAssessmentInputSchema = z.object({
+18:export const kitBuilderInputSchema = z.object({
+27:export const pricingSuggestionInputSchema = z.object({
+33:export const demandForecastInputSchema = z.object({
+39:export const chatbotMessageSchema = z.object({
+45:export const equipmentRecommendationInputSchema = z.object({
+52:export const aiConfigSchema = z.object({
+--- src/lib/validators/auth.validator.ts ---
+12:export const loginSchema = z.object({
+23:export type LoginFormData = z.infer<typeof loginSchema>
+28:export const forgotPasswordSchema = z.object({
+35:export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
+40:export const resetPasswordSchema = z
+57:export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+71:export const sendOtpSchema = z.object({
+82:export const verifyOtpSchema = z.object({
+94:export const deferredRegisterSchema = z.object({
+106:export const registerFormSchema = deferredRegisterSchema
+115:export type SendOtpInput = z.infer<typeof sendOtpSchema>
+116:export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>
+117:export type DeferredRegisterInput = z.infer<typeof deferredRegisterSchema>
+118:export type RegisterFormData = z.infer<typeof registerFormSchema>
+--- src/lib/validators/automation-rule.validator.ts ---
+28:export const createAutomationRuleSchema = z.object({
+50:export const updateAutomationRuleSchema = createAutomationRuleSchema.partial()
+52:export type CreateAutomationRuleInput = z.infer<typeof createAutomationRuleSchema>
+53:export type UpdateAutomationRuleInput = z.infer<typeof updateAutomationRuleSchema>
+--- src/lib/validators/blog-ai.validator.ts ---
+7:export const generateOutlineSchema = z.object({
+12:export const generateDraftSchema = z.object({
+18:export const rewriteSchema = z.object({
+24:export const translateSchema = z.object({
+30:export const seoMetaSchema = z.object({
+36:export const faqSchema = z.object({
+41:export const extractEquipmentSchema = z.object({
+45:export const altTextSchema = z.object({
+51:export const qualityScoreSchema = z.object({
+55:export const seoScoreSchema = z.object({
+67:export const suggestLinksSchema = z.object({
+71:export const relatedPostsSchema = z.object({
+76:export const headlineOptimizerSchema = z.object({
+81:export const autoTagsSchema = z.object({
+--- src/lib/validators/blog.validator.ts ---
+18:export const createPostSchema = z.object({
+57:export const updatePostSchema = createPostSchema.partial()
+59:export const searchParamsSchema = z.object({
+71:export const reactionSchema = z.object({
+76:export const createCategorySchema = z.object({
+95:export const updateCategorySchema = createCategorySchema.partial()
+97:export const categoryListParamsSchema = z.object({
+103:export const createTagSchema = z.object({
+113:export const authorRoleSchema = z.enum(['WRITER', 'EDITOR', 'ADMIN'])
+115:export const createAuthorSchema = z.object({
+139:export const updateAuthorSchema = createAuthorSchema.partial()
+141:export const authorListParamsSchema = z.object({
+147:export type CreatePostInput = z.infer<typeof createPostSchema>
+149:export type CreatePostFormValues = z.output<typeof createPostSchema>
+150:export type UpdatePostInput = z.infer<typeof updatePostSchema>
+151:export type SearchParamsInput = z.infer<typeof searchParamsSchema>
+152:export type ReactionInput = z.infer<typeof reactionSchema>
+153:export type CreateCategoryInput = z.infer<typeof createCategorySchema>
+154:export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>
+155:export type CreateTagInput = z.infer<typeof createTagSchema>
+156:export type CreateAuthorInput = z.infer<typeof createAuthorSchema>
+157:export type UpdateAuthorInput = z.infer<typeof updateAuthorSchema>
+--- src/lib/validators/booking.validator.ts ---
+13:export const createBookingSchema = z
+38:export const updateBookingSchema = z
+64:export const stateTransitionSchema = z.object({
+75:export const requestChangeSchema = z.object({
+90:export const requestExtensionSchema = z
+106:export const cancelBookingSchema = z.object({
+113:export type CreateBookingInput = z.infer<typeof createBookingSchema>
+114:export type UpdateBookingInput = z.infer<typeof updateBookingSchema>
+115:export type StateTransitionInput = z.infer<typeof stateTransitionSchema>
+116:export type RequestChangeInput = z.infer<typeof requestChangeSchema>
+117:export type RequestExtensionInput = z.infer<typeof requestExtensionSchema>
+118:export type CancelBookingInput = z.infer<typeof cancelBookingSchema>
+--- src/lib/validators/brand.validator.ts ---
+9:export const createBrandSchema = z.object({
+17:export const updateBrandSchema = createBrandSchema.partial()
+19:export type CreateBrandInput = z.infer<typeof createBrandSchema>
+20:export type UpdateBrandInput = z.infer<typeof updateBrandSchema>
+--- src/lib/validators/business-recipient.validator.ts ---
+68:export const createBusinessRecipientSchema = baseBusinessRecipientSchema.refine(
+73:export const updateBusinessRecipientSchema = baseBusinessRecipientSchema.partial()
+75:export type CreateBusinessRecipientInput = z.infer<typeof createBusinessRecipientSchema>
+76:export type UpdateBusinessRecipientInput = z.infer<typeof updateBusinessRecipientSchema>
+--- src/lib/validators/category.validator.ts ---
+11:export const createCategorySchema = z.object({
+22:export const updateCategorySchema = createCategorySchema.partial()
+24:export type CreateCategoryInput = z.infer<typeof createCategorySchema>
+25:export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>
+--- src/lib/validators/checkout-form.validator.ts ---
+28:export const createSectionSchema = z.object({
+37:export const updateSectionSchema = createSectionSchema.partial()
+39:export const createFieldSchema = z.object({
+61:export const updateFieldSchema = createFieldSchema
+68:export type CreateSectionInput = z.infer<typeof createSectionSchema>
+69:export type UpdateSectionInput = z.infer<typeof updateSectionSchema>
+70:export type CreateFieldInput = z.infer<typeof createFieldSchema>
+71:export type UpdateFieldInput = z.infer<typeof updateFieldSchema>
+--- src/lib/validators/checkout.validator.ts ---
+15:export const checkoutDetailsSchema = z
+37:export type CheckoutDetailsInput = z.infer<typeof checkoutDetailsSchema>
+--- src/lib/validators/client.validator.ts ---
+12:export const clientStatusSchema = z.enum(['active', 'suspended', 'inactive'], {
+16:export const createClientSchema = z.object({
+25:export const updateClientSchema = z.object({
+32:export const clientFilterSchema = z.object({
+43:export type CreateClientInput = z.infer<typeof createClientSchema>
+44:export type UpdateClientInput = z.infer<typeof updateClientSchema>
+45:export type ClientFilterInput = z.infer<typeof clientFilterSchema>
+--- src/lib/validators/contract.validator.ts ---
+11:export const contractStatusSchema = z.enum(
+18:export const signatureDataSchema = z.object({
+26:export const contractContentSchema = z.object({
+53:export const createContractSchema = z.object({
+58:export const updateContractSchema = z.object({
+63:export const signContractSchema = z.object({
+69:export const contractFilterSchema = z.object({
+81:export type CreateContractInput = z.infer<typeof createContractSchema>
+82:export type UpdateContractInput = z.infer<typeof updateContractSchema>
+83:export type SignContractInput = z.infer<typeof signContractSchema>
+84:export type ContractFilterInput = z.infer<typeof contractFilterSchema>
+--- src/lib/validators/coupon.validator.ts ---
+11:export const couponTypeSchema = z.enum(['percent', 'fixed'], {
+15:export const couponStatusSchema = z.enum(['active', 'inactive', 'expired', 'scheduled'], {
+19:export const createCouponSchema = z
+56:export const updateCouponSchema = z.object({
+70:export const validateCouponSchema = z.object({
+76:export const couponFilterSchema = z.object({
+87:export type CreateCouponInput = z.infer<typeof createCouponSchema>
+88:export type UpdateCouponInput = z.infer<typeof updateCouponSchema>
+89:export type ValidateCouponInput = z.infer<typeof validateCouponSchema>
+90:export type CouponFilterInput = z.infer<typeof couponFilterSchema>
+--- src/lib/validators/customer-segment.validator.ts ---
+11:export const createCustomerSegmentSchema = z.object({
+25:export const updateCustomerSegmentSchema = createCustomerSegmentSchema.partial()
+27:export type CreateCustomerSegmentInput = z.infer<typeof createCustomerSegmentSchema>
+28:export type UpdateCustomerSegmentInput = z.infer<typeof updateCustomerSegmentSchema>
+--- src/lib/validators/damage-claim.validator.ts ---
+27:export const createDamageClaimSchema = z.object({
+39:export const updateDamageClaimSchema = z.object({
+52:export const resolveDamageClaimSchema = z.object({
+59:export type CreateDamageClaimInput = z.infer<typeof createDamageClaimSchema>
+60:export type UpdateDamageClaimInput = z.infer<typeof updateDamageClaimSchema>
+61:export type ResolveDamageClaimInput = z.infer<typeof resolveDamageClaimSchema>
+--- src/lib/validators/delivery.validator.ts ---
+11:export const deliveryTypeSchema = z.enum(['pickup', 'return'], {
+15:export const deliveryStatusSchema = z.enum(
+22:export const scheduleDeliverySchema = z.object({
+36:export const updateDeliverySchema = z.object({
+48:export const updateDeliveryStatusSchema = z.object({
+53:export const deliveryFilterSchema = z.object({
+61:export type ScheduleDeliveryInput = z.infer<typeof scheduleDeliverySchema>
+62:export type UpdateDeliveryInput = z.infer<typeof updateDeliverySchema>
+63:export type UpdateDeliveryStatusInput = z.infer<typeof updateDeliveryStatusSchema>
+64:export type DeliveryFilterInput = z.infer<typeof deliveryFilterSchema>
+--- src/lib/validators/equipment.validator.ts ---
+9:export const equipmentConditionSchema = z.enum(['EXCELLENT', 'GOOD', 'FAIR', 'POOR', 'MAINTENANCE'])
+12:export const equipmentTranslationSchema = z.object({
+127:export const createEquipmentSchema = baseEquipmentSchema.refine(
+140:export const updateEquipmentSchema = baseEquipmentSchema.partial().extend({
+144:export type CreateEquipmentFormData = z.infer<typeof createEquipmentSchema>
+145:export type UpdateEquipmentFormData = z.infer<typeof updateEquipmentSchema>
+146:export type EquipmentTranslationFormData = z.infer<typeof equipmentTranslationSchema>
+--- src/lib/validators/faq.validator.ts ---
+11:export const createFaqSchema = z.object({
+22:export const updateFaqSchema = createFaqSchema.partial()
+24:export const reorderFaqSchema = z.object({
+28:export type CreateFaqInput = z.infer<typeof createFaqSchema>
+29:export type UpdateFaqInput = z.infer<typeof updateFaqSchema>
+30:export type ReorderFaqInput = z.infer<typeof reorderFaqSchema>
+--- src/lib/validators/footer.validator.ts ---
+7:export const footerGeneralSchema = z.object({
+18:export const footerBrandSchema = z.object({
+28:export const footerContactSchema = z.object({
+40:export const footerSocialLinkSchema = z.object({
+50:export const footerColumnSchema = z.object({
+58:export const footerLinkSchema = z.object({
+71:export const footerLegalLinkSchema = z.object({
+79:export const footerLegalSchema = z.object({
+87:export const footerNewsletterSchema = z.object({
+101:export type FooterGeneralInput = z.infer<typeof footerGeneralSchema>
+102:export type FooterBrandInput = z.infer<typeof footerBrandSchema>
+103:export type FooterContactInput = z.infer<typeof footerContactSchema>
+104:export type FooterSocialLinkInput = z.infer<typeof footerSocialLinkSchema>
+105:export type FooterColumnInput = z.infer<typeof footerColumnSchema>
+106:export type FooterLinkInput = z.infer<typeof footerLinkSchema>
+107:export type FooterLegalInput = z.infer<typeof footerLegalSchema>
+108:export type FooterNewsletterInput = z.infer<typeof footerNewsletterSchema>
+--- src/lib/validators/hero-banner.validator.ts ---
+12:export const createBannerSchema = z.object({
+25:export const updateBannerSchema = createBannerSchema.partial()
+27:export const createSlideSchema = z.object({
+65:export const updateSlideSchema = createSlideSchema.partial()
+67:export const reorderSlidesSchema = z.object({
+71:export type CreateBannerInput = z.infer<typeof createBannerSchema>
+72:export type UpdateBannerInput = z.infer<typeof updateBannerSchema>
+73:export type CreateSlideInput = z.infer<typeof createSlideSchema>
+74:export type UpdateSlideInput = z.infer<typeof updateSlideSchema>
+75:export type ReorderSlidesInput = z.infer<typeof reorderSlidesSchema>
+--- src/lib/validators/invoice.validator.ts ---
+11:export const invoiceStatusSchema = z.enum(
+18:export const invoiceTypeSchema = z.enum(['booking', 'deposit', 'refund', 'adjustment'], {
+23:export const invoiceItemSchema = z.object({
+33:export const createInvoiceSchema = z
+54:export const updateInvoiceSchema = z.object({
+64:export const invoicePaymentSchema = z.object({
+72:export const invoiceFilterSchema = z.object({
+82:export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>
+83:export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>
+84:export type InvoicePaymentInput = z.infer<typeof invoicePaymentSchema>
+85:export type InvoiceFilterInput = z.infer<typeof invoiceFilterSchema>
+--- src/lib/validators/kit.validator.ts ---
+14:export const createKitSchema = z.object({
+27:export const updateKitSchema = z.object({
+41:export type CreateKitInput = z.infer<typeof createKitSchema>
+42:export type UpdateKitInput = z.infer<typeof updateKitSchema>
+--- src/lib/validators/maintenance.validator.ts ---
+12:export const maintenanceStatusSchema = z.enum(
+19:export const maintenanceTypeSchema = z.enum(
+26:export const maintenancePrioritySchema = z.enum(['low', 'medium', 'high', 'urgent'], {
+30:export const createMaintenanceSchema = z.object({
+42:export const updateMaintenanceSchema = z.object({
+52:export const completeMaintenanceSchema = z.object({
+68:export const maintenanceFilterSchema = z.object({
+78:export type CreateMaintenanceInput = z.infer<typeof createMaintenanceSchema>
+79:export type UpdateMaintenanceInput = z.infer<typeof updateMaintenanceSchema>
+80:export type CompleteMaintenanceInput = z.infer<typeof completeMaintenanceSchema>
+81:export type MaintenanceFilterInput = z.infer<typeof maintenanceFilterSchema>
+--- src/lib/validators/marketing.validator.ts ---
+11:export const campaignTypeSchema = z.enum(['email', 'sms', 'push', 'whatsapp'], {
+15:export const campaignStatusSchema = z.enum(
+22:export const createCampaignSchema = z.object({
+31:export const updateCampaignSchema = z.object({
+41:export const campaignSendSchema = z.object({
+46:export const campaignFilterSchema = z.object({
+56:export type CreateCampaignInput = z.infer<typeof createCampaignSchema>
+57:export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>
+58:export type CampaignSendInput = z.infer<typeof campaignSendSchema>
+59:export type CampaignFilterInput = z.infer<typeof campaignFilterSchema>
+--- src/lib/validators/notification-template.validator.ts ---
+48:export const createNotificationTemplateSchema = z.object({
+67:export const updateNotificationTemplateSchema = createNotificationTemplateSchema.partial()
+69:export const previewNotificationTemplateSchema = z.object({
+76:export type CreateNotificationTemplateInput = z.infer<typeof createNotificationTemplateSchema>
+77:export type UpdateNotificationTemplateInput = z.infer<typeof updateNotificationTemplateSchema>
+78:export type PreviewNotificationTemplateInput = z.infer<typeof previewNotificationTemplateSchema>
+--- src/lib/validators/payment.validator.ts ---
+12:export const paymentStatusSchema = z.nativeEnum(PaymentStatus, {
+16:export const createPaymentSchema = z.object({
+23:export const updatePaymentSchema = z.object({
+29:export const paymentRefundSchema = z.object({
+35:export const paymentFilterSchema = z.object({
+48:export type CreatePaymentInput = z.infer<typeof createPaymentSchema>
+49:export type UpdatePaymentInput = z.infer<typeof updatePaymentSchema>
+50:export type PaymentRefundInput = z.infer<typeof paymentRefundSchema>
+51:export type PaymentFilterInput = z.infer<typeof paymentFilterSchema>
+--- src/lib/validators/policy.validator.ts ---
+13:export const createPolicySchema = z.object({
+24:export const updatePolicySchema = createPolicySchema.partial()
+26:export const reorderPolicySchema = z.object({
+30:export type CreatePolicyInput = z.infer<typeof createPolicySchema>
+31:export type UpdatePolicyInput = z.infer<typeof updatePolicySchema>
+32:export type ReorderPolicyInput = z.infer<typeof reorderPolicySchema>
+--- src/lib/validators/pricing-rule.validator.ts ---
+32:export const createPricingRuleSchema = z.object({
+45:export const updatePricingRuleSchema = createPricingRuleSchema.partial()
+47:export const previewPricingSchema = z.object({
+55:export type CreatePricingRuleInput = z.infer<typeof createPricingRuleSchema>
+56:export type UpdatePricingRuleInput = z.infer<typeof updatePricingRuleSchema>
+57:export type PreviewPricingInput = z.infer<typeof previewPricingSchema>
+--- src/lib/validators/promissory-note.validator.ts ---
+3:export const createBookingPromissoryNoteSchema = z.object({
+15:export type CreateBookingPromissoryNoteInput = z.infer<typeof createBookingPromissoryNoteSchema>
+--- src/lib/validators/quote.validator.ts ---
+11:export const quoteStatusSchema = z.enum(
+18:export const quoteEquipmentItemSchema = z.object({
+23:export const createQuoteSchema = z
+45:export const updateQuoteSchema = z.object({
+57:export const convertQuoteSchema = z.object({
+61:export const quoteFilterSchema = z.object({
+68:export type CreateQuoteInput = z.infer<typeof createQuoteSchema>
+69:export type UpdateQuoteInput = z.infer<typeof updateQuoteSchema>
+70:export type ConvertQuoteInput = z.infer<typeof convertQuoteSchema>
+71:export type QuoteFilterInput = z.infer<typeof quoteFilterSchema>
+--- src/lib/validators/receiver.validator.ts ---
+9:export const createReceiverSchema = z.object({
+17:export const updateReceiverSchema = createReceiverSchema.partial()
+19:export type CreateReceiverInput = z.infer<typeof createReceiverSchema>
+20:export type UpdateReceiverInput = z.infer<typeof updateReceiverSchema>
+--- src/lib/validators/recurring.validator.ts ---
+15:export const createRecurringSeriesSchema = z
+34:export const updateRecurringSeriesSchema = z.object({
+39:export type CreateRecurringSeriesInput = z.infer<typeof createRecurringSeriesSchema>
+40:export type UpdateRecurringSeriesInput = z.infer<typeof updateRecurringSeriesSchema>
+--- src/lib/validators/reports.validator.ts ---
+11:export const reportTypeSchema = z.enum(
+18:export const reportPeriodSchema = z.enum(
+25:export const reportFilterSchema = z
+44:export type ReportFilterInput = z.infer<typeof reportFilterSchema>
+--- src/lib/validators/review.validator.ts ---
+11:export const createReviewSchema = z.object({
+18:export const updateReviewSchema = z.object({
+23:export const respondToReviewSchema = z.object({
+27:export type CreateReviewInput = z.infer<typeof createReviewSchema>
+28:export type UpdateReviewInput = z.infer<typeof updateReviewSchema>
+29:export type RespondToReviewInput = z.infer<typeof respondToReviewSchema>
+--- src/lib/validators/shoot-type.validator.ts ---
+9:export const budgetTierSchema = z.enum(['ESSENTIAL', 'PROFESSIONAL', 'PREMIUM'])
+11:export const questionnaireOptionSchema = z.object({
+19:export const questionnaireQuestionSchema = z.object({
+29:export const questionnaireSchema = z.array(questionnaireQuestionSchema).optional()
+31:export const createShootTypeSchema = z.object({
+50:export const updateShootTypeSchema = createShootTypeSchema.partial().extend({
+54:export const categoryFlowItemSchema = z.object({
+67:export const updateCategoryFlowsSchema = z.object({
+71:export const recommendationItemSchema = z.object({
+82:export const updateRecommendationsSchema = z.object({
+87:export const setBudgetTierSchema = z.object({
+91:export type CreateShootTypeInput = z.infer<typeof createShootTypeSchema>
+92:export type UpdateShootTypeInput = z.infer<typeof updateShootTypeSchema>
+93:export type CategoryFlowItemInput = z.infer<typeof categoryFlowItemSchema>
+94:export type RecommendationItemInput = z.infer<typeof recommendationItemSchema>
+95:export type BudgetTierType = z.infer<typeof budgetTierSchema>
+--- src/lib/validators/studio-faq.validator.ts ---
+11:export const createStudioFaqSchema = z.object({
+22:export const updateStudioFaqSchema = createStudioFaqSchema.partial()
+24:export const reorderStudioFaqSchema = z.object({
+28:export type CreateStudioFaqInput = z.infer<typeof createStudioFaqSchema>
+29:export type UpdateStudioFaqInput = z.infer<typeof updateStudioFaqSchema>
+30:export type ReorderStudioFaqInput = z.infer<typeof reorderStudioFaqSchema>
+--- src/lib/validators/studio-package.validator.ts ---
+11:export const createStudioPackageSchema = z.object({
+28:export const updateStudioPackageSchema = createStudioPackageSchema.partial()
+30:export const reorderStudioPackageSchema = z.object({
+34:export type CreateStudioPackageInput = z.infer<typeof createStudioPackageSchema>
+35:export type UpdateStudioPackageInput = z.infer<typeof updateStudioPackageSchema>
+36:export type ReorderStudioPackageInput = z.infer<typeof reorderStudioPackageSchema>
+--- src/lib/validators/studio-testimonial.validator.ts ---
+9:export const createStudioTestimonialSchema = z.object({
+19:export const updateStudioTestimonialSchema = createStudioTestimonialSchema.partial()
+21:export type CreateStudioTestimonialInput = z.infer<typeof createStudioTestimonialSchema>
+22:export type UpdateStudioTestimonialInput = z.infer<typeof updateStudioTestimonialSchema>
+--- src/lib/validators/studio.validator.ts ---
+11:export const createStudioSchema = z.object({
+23:export const updateStudioSchema = createStudioSchema.partial()
+26:export const updateStudioCmsSchema = z.object({
+74:export type CreateStudioInput = z.infer<typeof createStudioSchema>
+75:export type UpdateStudioInput = z.infer<typeof updateStudioSchema>
+76:export type UpdateStudioCmsInput = z.infer<typeof updateStudioCmsSchema>
+--- src/lib/validators/verification.validator.ts ---
+12:export const updateUserVerificationSchema = z.object({
+17:export const reviewDocumentSchema = z.object({
+22:export const createVerificationDocumentSchema = z.object({
+30:export type UpdateUserVerificationInput = z.infer<typeof updateUserVerificationSchema>
+31:export type ReviewDocumentInput = z.infer<typeof reviewDocumentSchema>
+32:export type CreateVerificationDocumentInput = z.infer<typeof createVerificationDocumentSchema>
+--- src/lib/validators/warehouse.validator.ts ---
+12:export const inspectionChecklistItemSchema = z.object({
+20:export const checkOutSchema = z.object({
+28:export const checkInSchema = z.object({
+37:export const inventoryFilterSchema = z.object({
+43:export type CheckOutInput = z.infer<typeof checkOutSchema>
+44:export type CheckInInput = z.infer<typeof checkInSchema>
+45:export type InventoryFilterInput = z.infer<typeof inventoryFilterSchema>
+=== EXPORTED FROM STORES ===
+--- src/lib/stores/cart.store.ts ---
+7:export interface CartItem {
+36:export interface CartState {
+90:export const useCartStore = create<CartState>((set, get) => ({
+--- src/lib/stores/checkout.store.ts ---
+8:export type DeliveryMethod = 'PICKUP' | 'DELIVERY'
+10:export interface DeliveryAddress {
+16:export interface CheckoutDetails {
+24:export interface CheckoutDates {
+29:export interface CheckoutFulfillment {
+36:export interface CheckoutAddonAccessory {
+43:export interface CheckoutAddons {
+52:export type CheckoutStepIndex = 1 | 2 | 3
+88:export const useCheckoutStore = create<CheckoutState>()(
+--- src/lib/stores/kit-wizard.store.ts ---
+9:export type KitWizardPhase =
+17:export type KitWizardView = 'setup' | 'building' | 'review'
+19:export type BudgetTier = 'ESSENTIAL' | 'PROFESSIONAL' | 'PREMIUM'
+21:export interface CategoryStepConfig {
+36:export interface ShootTypeFullConfig {
+52:export type KitWizardStepIndex = 0 | 1 | 2 | 3
+54:export interface KitSelectedItem {
+64:export interface EquipmentRecommendationItem {
+159:export const useKitWizardStore = create<KitWizardState>()(
+290:export function getKitWizardTotalDaily(state: {
+300:export function getKitWizardTotalAmount(state: {
+309:export function getKitWizardSelectedCount(state: {
+316:export function getKitWizardTotalUnits(state: {
+323:export function getCurrentCategoryStep(state: {
+331:export function getSelectedByCategory(state: {
+355:export function getMissingCategories(state: {
+--- src/lib/stores/locale.store.ts ---
+19:export const useLocaleStore = create<LocaleState>((set) => ({
+=== EXPORTED FROM AUTH ===
+--- src/lib/auth/__tests__/auth-helpers.test.ts ---
+=== EXPORTED FROM POLICIES ===
+--- src/lib/policies/__tests__/booking.policy.test.ts ---

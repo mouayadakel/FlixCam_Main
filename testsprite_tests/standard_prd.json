@@ -1,0 +1,241 @@
+{
+  "meta": {
+    "project": "Cinematic Equipment & Studio Rental Platform",
+    "date": "2026-01-21",
+    "prepared_by": "Engineering Team"
+  },
+  "product_overview": "A comprehensive multi-language (Arabic-first) online platform for cinematic equipment and studio rentals based in Riyadh, Saudi Arabia. It supports equipment, studio, and package rentals with a robust booking engine including state machine workflow, financial integrations, AI-powered recommendations, and a full admin dashboard with granular role-based access control.",
+  "core_goals": [
+    "Enable browsing and rental of cinema equipment and studios with comprehensive details and availability.",
+    "Implement a smart booking system with state machine handling, risk scoring, and payment integration.",
+    "Provide an admin and client portal with multilingual support and role-based access control.",
+    "Support financial management including invoicing, payments, refunds, and ZATCA tax compliance.",
+    "Integrate AI features for kit building, pricing suggestions, demand forecasting, and smart search.",
+    "Ensure system security with audit logging, approval workflows, and fine-grained permissions.",
+    "Facilitate warehouse operations and delivery with tracking and damage reporting.",
+    "Allow marketing campaigns, coupon management, and notifications.",
+    "Support extensibility with feature toggles, integration layers, and future mobile app.",
+    "Maintain high performance and accessibility with RTL support and responsive design."
+  ],
+  "key_features": [
+    "Multi-language support (Arabic, English, Chinese) with Arabic-first RTL UI and professional design system.",
+    "Equipment, studio, and package rentals with detailed CRUD, availability, and condition lifecycle.",
+    "Advanced booking state machine with 8 states, transitions, risk check, soft locks, and approval workflows.",
+    "AI-powered tools: risk scoring, deposit calculation, equipment suggestion, pricing optimization, demand prediction.",
+    "Comprehensive admin dashboard with sidebar navigation, permission-based controls and audit trail.",
+    "Full financial management including invoice generation, VAT calculation, payment processing with Tap gateway, refund workflows, and ZATCA compliance.",
+    "Client portal for self-service booking, contract signing with e-signature placeholders.",
+    "Warehouse and delivery management with scan-based check-in/out, packing lists, driver assignment, and delivery states.",
+    "Marketing and coupon management with campaign tracking and multi-channel notifications (email, WhatsApp, SMS).",
+    "File upload components for IDs and documentation with progress indicator.",
+    "Robust API layer with validation, authorization policies, event-driven notifications, and error handling."
+  ],
+  "user_flow_summary": [
+    "Create Booking Flow: Staff or admin selects client, chooses equipment/studio/packages, picks dates, delivery options, reviews pricing, submits booking triggering risk check.",
+    "Booking State Transitions: Bookings move through draft, risk check, payment pending, confirmed, active, returned, closed, or cancelled with relevant conditions and permissions.",
+    "Warehouse Checkout Flow: Warehouse team scans booking, verifies items and condition, generates packing list, confirms check-out transitioning booking to active.",
+    "Client Portal Booking Flow: Client browses equipment, adds to cart, logs in, completes KYC, pays deposit, signs contract electronically, and views booking confirmation.",
+    "AI Kit Builder Flow: Staff/admin inputs project requirements, AI generates equipment suggestions, reviews, modifies, and adds to booking.",
+    "Invoice Generation Flow: Admin selects booking, calculates charges, taxes, reviews invoice, submits to ZATCA, and sends to client.",
+    "Maintenance Scheduling Flow: Admin schedules maintenance by equipment and type, assigns technician, and technician completes with logging."
+  ],
+  "validation_criteria": [
+    "All API routes implement Zod validation schemas and return standardized JSON responses.",
+    "Role-based permission enforcement with policy checks on all sensitive operations.",
+    "Booking state machine enforces valid transitions with required conditions and actions.",
+    "Multi-language UI components support Arabic RTL and English LTR with accessible keyboard navigation and ARIA labels.",
+    "AI results are always logged with reasoning and human override capability.",
+    "Financial operations require mandatory admin approvals and audit trails.",
+    "File uploads enforce accepted file types and size limits with progress indicators.",
+    "System supports feature toggles with emergency modes like Maintenance and Read-Only.",
+    "All admin and client UI components are responsive, keyboard accessible, and tested in Arabic and English.",
+    "Comprehensive audit logging and event-driven notifications trigger on all critical state changes and financial transactions."
+  ],
+  "code_summary": {
+    "tech_stack": ["TypeScript", "Next.js 14", "PostgreSQL", "Prisma", "NextAuth.js"],
+    "features": [
+      {
+        "name": "Authentication",
+        "description": "NextAuth.js signin, signout, session. Auth via /api/auth/*.",
+        "files": ["src/app/api/auth/[...nextauth]/route.ts", "src/lib/auth/index.ts"],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/auth/signin": {
+              "post": {
+                "summary": "Sign in"
+              }
+            },
+            "/api/auth/signout": {
+              "post": {
+                "summary": "Sign out"
+              }
+            },
+            "/api/auth/session": {
+              "get": {
+                "summary": "Get session"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Bookings",
+        "description": "CRUD and status transitions for equipment rental bookings.",
+        "files": [
+          "src/app/api/bookings/route.ts",
+          "src/app/api/bookings/[id]/route.ts",
+          "src/app/api/bookings/[id]/transition/route.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/bookings": {
+              "get": {},
+              "post": {}
+            },
+            "/api/bookings/{id}": {
+              "get": {},
+              "patch": {},
+              "delete": {}
+            },
+            "/api/bookings/{id}/transition": {
+              "post": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Equipment",
+        "description": "Equipment CRUD and availability check.",
+        "files": [
+          "src/app/api/equipment/route.ts",
+          "src/app/api/equipment/[id]/route.ts",
+          "src/app/api/equipment/[id]/availability/route.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/equipment": {
+              "get": {},
+              "post": {}
+            },
+            "/api/equipment/{id}": {
+              "get": {},
+              "patch": {},
+              "delete": {}
+            },
+            "/api/equipment/{id}/availability": {
+              "get": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Payments",
+        "description": "List payments and process refunds.",
+        "files": [
+          "src/app/api/payments/route.ts",
+          "src/app/api/payments/[id]/route.ts",
+          "src/app/api/payments/[id]/refund/route.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/payments": {
+              "get": {}
+            },
+            "/api/payments/{id}": {
+              "get": {},
+              "patch": {}
+            },
+            "/api/payments/{id}/refund": {
+              "post": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Invoices",
+        "description": "Generate and manage invoices for bookings.",
+        "files": [
+          "src/app/api/invoices/route.ts",
+          "src/app/api/invoices/[id]/route.ts",
+          "src/app/api/invoices/generate/[bookingId]/route.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/invoices": {
+              "get": {},
+              "post": {}
+            },
+            "/api/invoices/{id}": {
+              "get": {},
+              "patch": {},
+              "delete": {}
+            },
+            "/api/invoices/generate/{bookingId}": {
+              "post": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Clients",
+        "description": "Client CRUD for admin dashboard.",
+        "files": ["src/app/api/clients/route.ts", "src/app/api/clients/[id]/route.ts"],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/clients": {
+              "get": {},
+              "post": {}
+            },
+            "/api/clients/{id}": {
+              "get": {},
+              "patch": {},
+              "delete": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Reports Dashboard",
+        "description": "Dashboard statistics and reports for admin.",
+        "files": [
+          "src/app/api/reports/dashboard/route.ts",
+          "src/app/api/reports/[type]/route.ts",
+          "src/app/api/reports/[type]/export/route.ts"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/reports/dashboard": {
+              "get": {}
+            },
+            "/api/reports/{type}": {
+              "post": {}
+            },
+            "/api/reports/{type}/export": {
+              "post": {}
+            }
+          }
+        }
+      },
+      {
+        "name": "Admin Health",
+        "description": "Admin health check endpoint.",
+        "files": ["src/app/api/admin/health/route.ts"],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/admin/health": {
+              "get": {}
+            }
+          }
+        }
+      }
+    ]
+  }
+}

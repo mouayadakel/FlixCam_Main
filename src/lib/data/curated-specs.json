@@ -1,0 +1,170 @@
+{
+  "Sony FX6": {
+    "Sensor": "10.2MP Full-Frame Exmor R CMOS",
+    "Resolution": "4K DCI (4096×2160) up to 120fps",
+    "Mount": "Sony E-mount",
+    "ISO Range": "800-12800 (expandable 80-409600)",
+    "Dynamic Range": "15+ stops",
+    "Recording Media": "CFexpress Type A / SD UHS-II",
+    "Weight": "890g (body only)",
+    "Stabilization": "Electronic IS (Active Mode)"
+  },
+  "Sony FX3": {
+    "Sensor": "12.1MP Full-Frame Exmor R CMOS",
+    "Resolution": "4K (3840×2160) up to 120fps",
+    "Mount": "Sony E-mount",
+    "ISO Range": "80-102400 (expandable to 409600)",
+    "Dynamic Range": "15+ stops S-Log3",
+    "Recording Media": "CFexpress Type A / SD UHS-II",
+    "Weight": "640g (body only)",
+    "Stabilization": "5-axis IBIS"
+  },
+  "Sony FX9": {
+    "Sensor": "6K Full-Frame Exmor R CMOS",
+    "Resolution": "6K sensor, 4K DCI/UHD output",
+    "Mount": "Sony E-mount",
+    "ISO Range": "800-4000 base dual ISO",
+    "Dynamic Range": "15+ stops",
+    "Recording Media": "XQD / SD",
+    "Weight": "2.0kg (body only)",
+    "Color Science": "S-Cinetone"
+  },
+  "Sony A7S III": {
+    "Sensor": "12.1MP Full-Frame Exmor R CMOS",
+    "Resolution": "4K 120p, 1080p 240p",
+    "Mount": "Sony E-mount",
+    "ISO Range": "80-102400 (expandable to 409600)",
+    "Autofocus": "759-point Fast Hybrid AF",
+    "Recording Media": "CFexpress Type A / SD UHS-II",
+    "Weight": "699g (body only)",
+    "Screen": "3.0\" Vari-angle touchscreen"
+  },
+  "Sony A7 IV": {
+    "Sensor": "33MP Full-Frame Exmor R CMOS",
+    "Resolution": "4K 60p (Super 35mm), 4K 30p (Full-Frame)",
+    "Mount": "Sony E-mount",
+    "ISO Range": "100-51200 (expandable to 204800)",
+    "Autofocus": "759-point Phase Detection AF",
+    "Recording Media": "CFexpress Type A / SD UHS-II",
+    "Weight": "658g (body only)",
+    "Stabilization": "5-axis IBIS (5.5 stops)"
+  },
+  "ARRI Alexa Mini": {
+    "Sensor": "ARRI ALEV III CMOS",
+    "Resolution": "3.4K (3424×2202)",
+    "Mount": "LPL / PL (with adapter)",
+    "ISO Range": "160-3200 (EI)",
+    "Dynamic Range": "14+ stops",
+    "Recording Media": "CFast 2.0",
+    "Weight": "2.3kg (body only)",
+    "Color Science": "ARRI LogC / Rec 709"
+  },
+  "ARRI Alexa Mini LF": {
+    "Sensor": "Large Format ALEV III",
+    "Resolution": "4.5K (4448×3096)",
+    "Mount": "LPL (PL with adapter)",
+    "ISO Range": "160-3200 (EI)",
+    "Dynamic Range": "14+ stops",
+    "Recording Media": "CFast 2.0 / Codex Compact Drive",
+    "Weight": "2.6kg (body only)",
+    "Color Science": "ARRI LogC / Rec 709"
+  },
+  "RED Komodo": {
+    "Sensor": "19.9MP Super 35 CMOS",
+    "Resolution": "6K (6144×3240) up to 40fps",
+    "Mount": "Canon RF",
+    "ISO Range": "250-6400",
+    "Dynamic Range": "16+ stops",
+    "Recording Media": "CFast 2.0 / RED Mini-Mag",
+    "Weight": "1.0kg (body only)",
+    "Color Science": "IPP2"
+  },
+  "Blackmagic Pocket 6K Pro": {
+    "Sensor": "Super 35 HDR",
+    "Resolution": "6K (6144×3456)",
+    "Mount": "Canon EF",
+    "ISO Range": "100-25600 Dual Native ISO",
+    "Dynamic Range": "13 stops",
+    "Recording Media": "CFast 2.0 / SD UHS-II",
+    "Weight": "1.4kg (with battery & SSD)",
+    "Recording Codec": "Blackmagic RAW / ProRes"
+  },
+  "Canon C70": {
+    "Sensor": "Super 35mm DGO CMOS",
+    "Resolution": "4K DCI up to 120fps",
+    "Mount": "Canon RF",
+    "ISO Range": "100-102400",
+    "Dynamic Range": "16+ stops (Cinema Gamut)",
+    "Recording Media": "SD UHS-II (dual slots)",
+    "Weight": "1.19kg (body only)",
+    "Autofocus": "Dual Pixel CMOS AF II"
+  },
+  "Canon C300 Mark III": {
+    "Sensor": "Super 35mm DGO CMOS",
+    "Resolution": "4K DCI up to 120fps",
+    "Mount": "Canon EF (PL with adapter)",
+    "ISO Range": "100-102400",
+    "Dynamic Range": "16+ stops",
+    "Recording Media": "CFexpress",
+    "Weight": "1.75kg (body only)",
+    "Color Science": "Canon Log 2/3"
+  },
+  "DJI Ronin RS 3 Pro": {
+    "Max Payload": "4.5kg",
+    "Battery Life": "12 hours",
+    "Stabilization": "3-axis",
+    "Weight": "1.5kg (gimbal only)",
+    "Control": "Touchscreen + Bluetooth",
+    "Mounting": "NATO Rail / Arca-Swiss"
+  },
+  "Sennheiser MKH 416": {
+    "Type": "Short shotgun",
+    "Polar Pattern": "Super-cardioid/lobar",
+    "Frequency Response": "40Hz-20kHz",
+    "Sensitivity": "25 mV/Pa",
+    "Self Noise": "13 dB(A)",
+    "Connector": "XLR-3",
+    "Weight": "175g",
+    "Length": "250mm"
+  },
+  "Rode NTG5": {
+    "Type": "Short shotgun",
+    "Polar Pattern": "Super-cardioid",
+    "Frequency Response": "50Hz-20kHz",
+    "Sensitivity": "-30 dBV/Pa",
+    "Self Noise": "10 dB(A)",
+    "Connector": "XLR",
+    "Weight": "76g",
+    "Phantom Power": "24V/48V"
+  },
+  "Zoom F6": {
+    "Type": "Field Recorder",
+    "Channels": "6 inputs / 14 tracks",
+    "Bit Depth": "32-bit float",
+    "Sample Rate": "Up to 192kHz",
+    "Inputs": "6x XLR/TRS combo",
+    "Recording Media": "SD/SDHC/SDXC",
+    "Weight": "920g",
+    "Timecode": "SMPTE / Free Run / Record Run"
+  },
+  "ARRI SkyPanel S60-C": {
+    "Type": "LED Soft Light",
+    "Output": "2300 lux at 3m (5600K)",
+    "Color Temperature": "2800K-10000K",
+    "CRI": "95+",
+    "TLCI": "96+",
+    "Power": "455W max",
+    "Weight": "11.8kg",
+    "Dimming": "0-100% smooth"
+  },
+  "Aputure 600d Pro": {
+    "Type": "LED Point Source",
+    "Output": "24800 lux at 3m (w/ Hyper Reflector)",
+    "Color Temperature": "5600K (Daylight)",
+    "CRI": "96+",
+    "TLCI": "97+",
+    "Power": "600W",
+    "Weight": "7.35kg (including yoke)",
+    "Control": "Sidus Link Bluetooth / DMX"
+  }
+}

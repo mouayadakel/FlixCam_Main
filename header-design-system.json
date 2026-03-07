@@ -1,0 +1,70 @@
+{
+  "design_system_profile": {
+    "component": "Floating Pill Header",
+    "visual_style": "A modern, floating, fully-rounded top navigation bar that sits distinctly above the page content. It features a clean, high-contrast aesthetic with soft internal padding and pill-shaped interactive elements.",
+    "tokens": {
+      "colors": {
+        "header_container_bg": "#FFFFFF",
+        "nav_item_bg_default": "transparent",
+        "nav_item_bg_hover": "#F3F4F6",
+        "nav_item_bg_active": "#F9FAFB",
+        "cta_primary_bg": "#8DC63F",
+        "cta_secondary_bg": "#1A1A1A",
+        "text_primary": "#1A1A1A",
+        "text_secondary": "#4B5563",
+        "text_inverse": "#FFFFFF",
+        "border_subtle": "rgba(0,0,0,0.05)"
+      },
+      "geometry": {
+        "header_radius": "9999px",
+        "nav_item_radius": "9999px",
+        "cta_button_radius": "9999px",
+        "cta_icon_radius": "50%"
+      },
+      "spacing": {
+        "header_outer_margin": "24px auto",
+        "header_inner_padding": "12px 24px",
+        "nav_group_gap": "8px",
+        "nav_item_padding": "10px 16px",
+        "cta_group_gap": "8px",
+        "cta_button_padding": "12px 24px"
+      },
+      "effects": {
+        "header_shadow": "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)"
+      }
+    },
+    "structure": {
+      "layout": "flex_row",
+      "alignment": "space-between_center",
+      "sections": {
+        "left": {
+          "role": "Brand Area",
+          "layout": "flex_row_center",
+          "content_placeholder": "Keep existing Logo/Wordmark logic"
+        },
+        "center": {
+          "role": "Navigation Area",
+          "layout": "flex_row_center",
+          "elements": "Group of individual pill-shaped links with icons and text",
+          "content_placeholder": "Keep existing navigation links"
+        },
+        "right": {
+          "role": "Action Area",
+          "layout": "flex_row_center",
+          "elements": "Split button: Primary text pill + Secondary circular icon",
+          "content_placeholder": "Keep existing CTA/Language logic"
+        }
+      }
+    },
+    "cursor_ai_directives": {
+      "mandatory_instruction": "Before writing the final code, you MUST pause and ask the user about the background context.",
+      "question_to_ask": "What will be behind the border of this floating header? (e.g., A solid light color, a dark hero image, a video, or a colorful gradient?)",
+      "recommendation_engine": {
+        "if_user_says_image_or_video": "Recommend changing the 'header_container_bg' to rgba(255, 255, 255, 0.8) and adding a CSS backdrop-blur (glassmorphism) so the header blends beautifully with the media behind it.",
+        "if_user_says_solid_light_color": "Recommend keeping the solid white background but slightly increasing the drop shadow to ensure it 'pops' off the page.",
+        "if_user_says_dark_color": "Recommend a 'Dark Mode' inversion of the header (dark gray pill, white text) so it doesn't clash aggressively with the dark background.",
+        "scroll_behavior": "Also recommend whether the header should stay fixed on scroll or fade out."
+      }
+    }
+  }
+}

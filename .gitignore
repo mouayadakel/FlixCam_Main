@@ -1,39 +1,106 @@
 # Dependencies
 node_modules/
-.pnp
+/.pnp
 .pnp.js
 
-# Build / runtime
-.next/
-out/
-build/
+# Testing
+/coverage
+coverage/
+
+# Next.js
+/.next/
+/out/
+/build
 dist/
-*.tsbuildinfo
 
-# Env and secrets
-.env
-.env.*
-!.env.example
-
-# Logs and debug
-npm-debug.log*
-logs/
-*.log
-
-# OS and IDE
+# Misc
 .DS_Store
-.idea/
-*.swp
-.cursor/
-
-# Large or binary
+*.pem
 *.zip
 *.tar.gz
 
-# Prisma
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files — .env.example must NOT be ignored (keep for CI/docs)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma — do NOT ignore migration SQL files; they must be in repo for db:deploy / migrate deploy
 app/prisma/*.db
 app/prisma/*.db-journal
 
-# Uploads (often symlinked or on shared storage)
+# IDE
+.vscode/
+.idea/
+.history/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Local file storage (uploads)
+storage/
+uploads/
 app/storage/uploads/*
 !app/storage/uploads/.gitkeep
+
+# Sentry
+.sentryclirc
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Lighthouse
+/reports/
+
+# Audit artifacts (generated)
+docs/audit.zip
+
+# Turbo
+.turbo/
+
+# VPS server files (not project code)
+.bash_history
+.gitconfig
+.bash_logout
+.bash_profile
+.bashrc
+
+# AWStats: password file and analytics data (secrets + PII; never commit)
+.awstats-htpasswd
+awstats/
+
+# VPS deployment directory (production build + runtime, not source)
+public_html/FlixCam_Main/FlixCam_Main/

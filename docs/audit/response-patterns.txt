@@ -1,0 +1,30 @@
+src/app/api//waitlist/route.ts:7:import { NextRequest, NextResponse } from 'next/server'
+src/app/api//waitlist/route.ts:36:      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+src/app/api//waitlist/route.ts:41:      return NextResponse.json(
+src/app/api//waitlist/route.ts:50:      return NextResponse.json(
+src/app/api//waitlist/route.ts:62:      return NextResponse.json({ error: 'Equipment not found' }, { status: 404 })
+src/app/api//waitlist/route.ts:69:      return NextResponse.json(
+src/app/api//waitlist/route.ts:93:      return NextResponse.json(
+src/app/api//waitlist/route.ts:130:    return NextResponse.json(
+src/app/api//waitlist/route.ts:136:    return NextResponse.json(
+src/app/api//waitlist/route.ts:152:      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+src/app/api//waitlist/route.ts:167:    return NextResponse.json({ success: true, data: entries })
+src/app/api//waitlist/route.ts:170:    return NextResponse.json(
+src/app/api//discount-codes/validate/route.ts:7:import { NextRequest, NextResponse } from 'next/server'
+src/app/api//discount-codes/validate/route.ts:27:      return NextResponse.json(
+src/app/api//discount-codes/validate/route.ts:37:      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+src/app/api//discount-codes/validate/route.ts:42:      return NextResponse.json(
+src/app/api//discount-codes/validate/route.ts:60:      return NextResponse.json({ valid: false, error: 'Invalid discount code' })
+src/app/api//discount-codes/validate/route.ts:64:      return NextResponse.json({ valid: false, error: 'This code is not yet active' })
+src/app/api//discount-codes/validate/route.ts:68:      return NextResponse.json({ valid: false, error: 'This code has expired' })
+src/app/api//discount-codes/validate/route.ts:75:      return NextResponse.json({ valid: false, error: 'This code has reached its usage limit' })
+src/app/api//discount-codes/validate/route.ts:87:        return NextResponse.json({
+src/app/api//discount-codes/validate/route.ts:98:      return NextResponse.json({
+src/app/api//discount-codes/validate/route.ts:123:    return NextResponse.json({
+src/app/api//discount-codes/validate/route.ts:131:    return NextResponse.json(
+src/app/api//clients/route.ts:10:import { NextRequest, NextResponse } from 'next/server'
+src/app/api//clients/route.ts:22:      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+src/app/api//clients/route.ts:30:      return NextResponse.json({ error: policy.reason || 'Forbidden' }, { status: 403 })
+src/app/api//clients/route.ts:76:    return NextResponse.json({
+src/app/api//clients/route.ts:85:      return NextResponse.json({ error: error.message }, { status: 403 })
+src/app/api//clients/route.ts:89:      return NextResponse.json(

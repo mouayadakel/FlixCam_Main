@@ -1,0 +1,61 @@
+/**
+ * Category bar – horizontal text links below main header.
+ * Hidden on small; horizontal scroll on md+ or include in mobile nav.
+ */
+
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useLocale } from '@/hooks/use-locale'
+import { cn } from '@/lib/utils'
+
+const CATEGORY_LINKS = [
+  { href: '/equipment', key: 'nav.equipment' },
+  { href: '/studios', key: 'nav.studios' },
+  { href: '/packages', key: 'nav.packages' },
+  { href: '/build-your-kit', key: 'nav.buildKit' },
+  { href: '/how-it-works', key: 'nav.howItWorks' },
+] as const
+
+interface CategoryBarProps {
+  hiddenRoutes?: Set<string>
+}
+
+export function CategoryBar({ hiddenRoutes }: CategoryBarProps = {}) {
+  const { t } = useLocale()
+  const pathname = usePathname()
+  const visibleLinks = hiddenRoutes?.size
+    ? CATEGORY_LINKS.filter(({ href }) => !hiddenRoutes.has(href))
+    : CATEGORY_LINKS
+
+  return (
+    <nav
+      className="hidden border-t border-border-light/50 bg-white/80 md:block"
+      aria-label="Categories"
+    >
+      <div className="mx-auto flex w-full max-w-public-container items-center gap-1 overflow-x-auto px-4 py-1">
+        {visibleLinks.map(({ href, key }) => {
+          const isActive = pathname ? pathname === href || pathname.startsWith(href + '/') : false
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'relative whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200',
+                isActive
+                  ? 'bg-brand-primary/5 text-brand-primary'
+                  : 'text-text-body hover:bg-brand-primary/5 hover:text-brand-primary'
+              )}
+            >
+              {t(key)}
+              {isActive && (
+                <span className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-brand-primary" />
+              )}
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}

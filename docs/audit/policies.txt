@@ -1,0 +1,16 @@
+src/lib/policies/__tests__/booking.policy.test.ts
+src/lib/policies/ai.policy.ts
+src/lib/policies/base.policy.ts
+src/lib/policies/booking.policy.ts
+src/lib/policies/client.policy.ts
+src/lib/policies/contract.policy.ts
+src/lib/policies/coupon.policy.ts
+src/lib/policies/delivery.policy.ts
+src/lib/policies/equipment.policy.ts
+src/lib/policies/invoice.policy.ts
+src/lib/policies/maintenance.policy.ts
+src/lib/policies/marketing.policy.ts
+src/lib/policies/payment.policy.ts
+src/lib/policies/quote.policy.ts
+src/lib/policies/reports.policy.ts
+src/lib/policies/warehouse.policy.ts
