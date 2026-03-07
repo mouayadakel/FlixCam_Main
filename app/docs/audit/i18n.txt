@@ -1,0 +1,8 @@
+src/lib/i18n/content-helper.ts
+src/lib/i18n/cookie.ts
+src/lib/i18n/formatting.ts
+src/lib/i18n/index.ts
+src/lib/i18n/lazy-loader.ts
+src/lib/i18n/locales.ts
+src/lib/i18n/translate.ts
+src/lib/i18n/translation-memory.ts

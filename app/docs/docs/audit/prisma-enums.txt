@@ -1,0 +1,480 @@
+enum ImageSource {
+  UPLOAD
+  BRAND_ASSET
+  AI_GENERATED
+  STOCK_PHOTO
+  WEB_SCRAPED
+}
+
+model ProductImage {
+  id            String      @id @default(cuid())
+  productId     String
+--
+enum AiJobType {
+  TEXT_BACKFILL
+  PHOTO_BACKFILL
+  SPEC_BACKFILL
+  FULL_BACKFILL
+  EMBEDDING_BACKFILL
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model AiJob {
+  id          String    @id @default(cuid())
+  type        AiJobType
+--
+enum BlogPostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum BlogReactionType {
+  HELPFUL_YES
+  HELPFUL_NO
+}
+
+model BlogCategory {
+  id               String        @id @default(cuid())
+  nameAr           String
+  nameEn           String
+  slug             String         @unique
+  descriptionAr    String?        @db.Text
+--
+enum UserRole {
+  ADMIN
+  VENDOR
+  WAREHOUSE_MANAGER
+  TECHNICIAN
+  SALES_MANAGER
+  ACCOUNTANT
+  CUSTOMER_SERVICE
+  MARKETING_MANAGER
+  DATA_ENTRY
+  RISK_MANAGER
+--
+enum BookingStatus {
+  DRAFT
+  RISK_CHECK
+  PAYMENT_PENDING
+  CONFIRMED
+  ACTIVE
+  RETURNED
+  CLOSED
+  CANCELLED
+}
+
+enum EquipmentCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  MAINTENANCE
+  DAMAGED
+}
+
+enum BudgetTier {
+  ESSENTIAL
+  PROFESSIONAL
+  PREMIUM
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum FeatureFlagScope {
+  MODULE
+  UI
+  INTEGRATION
+  JOB
+  EMERGENCY
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+  SMS
+}
+
+enum NotificationTrigger {
+  BOOKING_CONFIRMED
+  BOOKING_REMINDER
+  BOOKING_CREATED
+  BOOKING_CANCELLED
+  BOOKING_UPDATED
+  BOOKING_EXTENSION
+  PICKUP_REMINDER_24H
+  PICKUP_REMINDER_3H
+  RETURN_REMINDER_24H
+  RETURN_REMINDER_6H
+--
+enum MessageLogStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum RecipientType {
+  CUSTOMER
+  BUSINESS
+  WAREHOUSE
+  ALL
+}
+
+enum NotificationCategory {
+  TRANSACTIONAL
+  MARKETING
+  REMINDER
+}
+
+enum BusinessRecipientRole {
+  OWNER
+  CO_OWNER
+  GENERAL_MANAGER
+  OPERATIONS_MANAGER
+  WAREHOUSE_MANAGER
+  INVENTORY_MANAGER
+  CUSTOMER_SUPPORT
+  TECHNICAL_SUPPORT
+  ACCOUNTANT
+  SALES_MANAGER
+--
+enum DigestFrequency {
+  HOURLY
+  DAILY
+  WEEKLY
+}
+
+enum ReviewStatus {
+  PENDING_MODERATION
+  APPROVED
+  REJECTED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum EventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  HIDDEN
+  ARCHIVED
+}
+
+enum ProductType {
+  RENTAL
+  SALE
+}
+
+enum TranslationLocale {
+  en
+  ar
+  zh
+}
+
+enum InventoryItemStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  DAMAGED
+  LOST
+}
+
+enum ImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ImportRowStatus {
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  INSPECTION
+  REPAIR
+  CALIBRATION
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum DamageType {
+  PHYSICAL_DAMAGE
+  MALFUNCTION
+  MISSING_PARTS
+  EXCESSIVE_WEAR
+  LOSS
+  OTHER
+}
+
+enum DamageSeverity {
+  MINOR
+  MODERATE
+  SEVERE
+  TOTAL_LOSS
+}
+
+enum ClaimStatus {
+  PENDING
+  INVESTIGATING
+  APPROVED
+  REJECTED
+  RESOLVED
+  DISPUTED
+}
+
+enum PricingRuleType {
+  SEASONAL
+  DEMAND_BASED
+  DURATION
+  CUSTOMER
+  EARLY_BIRD
+  BUNDLE
+}
+
+enum PriceAdjustmentType {
+  PERCENTAGE
+  FIXED
+  REPLACE
+}
+
+enum InvoiceType {
+  BOOKING
+  DEPOSIT
+  REFUND
+  ADJUSTMENT
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  PARTIALLY_PAID
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  SCHEDULED
+}
+
+enum CampaignType {
+  EMAIL
+  SMS
+  PUSH
+  WHATSAPP
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryType {
+  PICKUP
+  RETURN
+}
+
+enum DeliveryStatus {
+  PENDING
+  SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum BookingRequestType {
+  CHANGE
+  EXTENSION
+}
+
+enum BookingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum WebsiteContentType {
+  TEXT
+  RICHTEXT
+  IMAGE
+  VIDEO
+  LINK
+  JSON
+}
+
+enum WebsiteSectionType {
+  HERO
+  FEATURED_EQUIPMENT
+  STUDIOS_TEASER
+  PACKAGES
+  HOW_IT_WORKS
+  TESTIMONIALS
+  BRANDS
+  FAQ
+  CTA_BANNER
+  CUSTOM
+--
+enum WebsiteLayoutType {
+  HEADER
+  FOOTER
+  MOBILE_NAV
+}
+
+enum CartItemType {
+  EQUIPMENT
+  STUDIO
+  PACKAGE
+  KIT
+}
+
+// ──────────────────────────────────────────────────────────────────
+// AI Smart Import: Feedback Loop & Column Mapping Memory
+// ──────────────────────────────────────────────────────────────────
+
+--
+enum ScanAction {
+  DISPATCH
+  RETURN
+  CHECK
+}
+
+// FIX-004: Booking item status in warehouse workflow
+enum BookingItemStatus {
+  PENDING
+  DISPATCHED
+  RETURNED
+  DAMAGED
+}
+
+// FIX-006: Deposit lifecycle status
+enum DepositStatus {
+  PENDING
+  HELD
+  RETURNED
+  PARTIALLY_RETURNED
+  FORFEITED
+}
+
+// FIX-007: Refund status
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum IdDocumentType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVING_LICENSE
+  IQAMA
+}
+
+enum IdVerificationStatus {
+  NOT_SUBMITTED
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED
+  BOOKED
+  EXPIRED
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum DiscountAppliesTo {
+  ALL
+  EQUIPMENT
+  STUDIO
+  BUNDLES
+}

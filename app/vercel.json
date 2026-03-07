@@ -1,0 +1,9 @@
+{
+  "crons": [
+    { "path": "/api/cron/booking-reminders", "schedule": "0 * * * *" },
+    { "path": "/api/cron/return-reminders", "schedule": "0 * * * *" },
+    { "path": "/api/cron/overdue-alerts", "schedule": "0 * * * *" },
+    { "path": "/api/cron/waitlist-expiry", "schedule": "0 0 * * *" },
+    { "path": "/api/cron/invoice-overdue", "schedule": "0 9 * * *" }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-02-27T17:24:26.941Z",
+  "baseUrl": "http://localhost:3000",
+  "thresholds": {
+    "performance": 0.85,
+    "accessibility": 0.95,
+    "best-practices": 0.9,
+    "seo": 0.95
+  },
+  "results": [
+    {
+      "url": "/",
+      "scores": {
+        "performance": 41,
+        "accessibility": 88,
+        "best-practices": 93,
+        "seo": 100
+      },
+      "passed": false
+    },
+    {
+      "url": "/blog",
+      "scores": {
+        "performance": 60,
+        "accessibility": 92,
+        "best-practices": 96,
+        "seo": 100
+      },
+      "passed": false
+    },
+    {
+      "url": "/blog/film-industry-trends-2024",
+      "scores": {
+        "performance": 56,
+        "accessibility": 90,
+        "best-practices": 96,
+        "seo": 92
+      },
+      "passed": false
+    }
+  ]
+}

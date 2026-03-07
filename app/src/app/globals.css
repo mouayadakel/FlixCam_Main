@@ -1,0 +1,363 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* text-wrap: balance — Chrome 114+; older browsers ignore (no fallback needed) */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .stepper-progress-fill {
+    width: var(--stepper-progress, 0);
+  }
+
+  /* Dynamic values via CSS vars (set inline only as --var, no layout props) */
+  .hero-slide-overlay {
+    opacity: var(--overlay-opacity, 0.5);
+  }
+  .pull-to-refresh-indicator {
+    height: var(--pull-height, 0);
+    opacity: var(--pull-opacity, 0);
+  }
+  .hero-carousel-overlay {
+    opacity: var(--hero-overlay-opacity, 0.5);
+  }
+  .hero-carousel-progress-fill {
+    width: var(--hero-progress, 0);
+  }
+  .trust-stat-card {
+    animation-delay: var(--animation-delay, 0s);
+  }
+  .swipe-content {
+    transform: translateX(calc(var(--swipe-direction, -1) * var(--swipe-offset, 0px)));
+  }
+  .header-logo-bg {
+    background-image: var(--header-logo-url, none);
+  }
+
+  /* Footer CMS: social icon hover (color from --footer-social-hover) */
+  .footer-social-hover-bg:hover {
+    background-color: var(--footer-social-hover, hsl(var(--primary))) !important;
+  }
+  .footer-social-hover-glow:hover {
+    box-shadow: 0 0 20px var(--footer-social-hover, hsl(var(--primary)));
+  }
+}
+
+@layer base {
+  :root {
+    /* FLIXCAM light mode: backgroundLight #FFFFFF, textOnLight #1A1A1A */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    /* FLIXCAM primary green #8CC63F → hsl(84, 52%, 51%) */
+    --primary: 84 52% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 84 52% 51%;
+    --chart-1: 84 52% 51%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 4px;
+  }
+  .dark {
+    /* FLIXCAM dark mode: backgroundDark #1A1A1A, textOnDark #FFFFFF */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 84 52% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 84 52% 51%;
+    --chart-1: 84 52% 51%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Mobile: prevent text size inflation; -webkit for Safari/iOS, text-size-adjust for Chrome/Edge */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Stagger animation utility classes */
+@layer utilities {
+  .animate-stagger-1 {
+    animation-delay: 0.1s;
+  }
+  .animate-stagger-2 {
+    animation-delay: 0.2s;
+  }
+  .animate-stagger-3 {
+    animation-delay: 0.3s;
+  }
+  .animate-stagger-4 {
+    animation-delay: 0.4s;
+  }
+  .animate-stagger-5 {
+    animation-delay: 0.5s;
+  }
+  .animate-stagger-6 {
+    animation-delay: 0.6s;
+  }
+
+  /* Shimmer skeleton effect */
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Brand-colored skeleton (portal/public theme) – uses primary/10 and primary/20 */
+  .skeleton-brand {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.08) 25%,
+      hsl(var(--primary) / 0.15) 50%,
+      hsl(var(--primary) / 0.08) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Glass morphism utility; -webkit prefix first for hint-css-prefix-order */
+  .glass {
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  .glass-heavy {
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    backdrop-filter: blur(20px) saturate(200%);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* Hide scrollbars: -webkit/ms for Safari/IE; scrollbar-width for Firefox, Chrome 121+ */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ============================================================================
+   Specifications component – transitions & animations
+   ============================================================================ */
+
+.spec-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.spec-card:hover {
+  transform: translateY(-2px);
+}
+
+.spec-row {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.spec-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+@keyframes spec-rangeBarGrow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--range-percent, 0);
+  }
+}
+
+.spec-range-bar {
+  animation: spec-rangeBarGrow 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+  width: 0;
+}
+
+.hero-highlight {
+  animation: spec-fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.hero-highlight:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.hero-highlight:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.hero-highlight:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.hero-highlight:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes spec-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-highlight:hover .hero-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.quick-spec-pill {
+  animation: spec-fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  transition: all 0.2s ease;
+}
+
+.quick-spec-pill:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.quick-spec-pill:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.quick-spec-pill:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.quick-spec-pill:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.quick-spec-pill:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.quick-spec-pill:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+@keyframes spec-fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quick-spec-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.spec-group-card {
+  animation: spec-slideInFromBottom 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.spec-group-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.spec-group-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.spec-group-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.spec-group-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes spec-slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion: disable spec animations */
+@media (prefers-reduced-motion: reduce) {
+  .spec-range-bar {
+    animation: none;
+    width: var(--range-percent, 0);
+  }
+
+  .hero-highlight,
+  .quick-spec-pill,
+  .spec-group-card {
+    animation: none;
+  }
+}
+
+/* Print: avoid breaking and hide interactive spec controls */
+@media print {
+  .spec-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .hero-highlight,
+  .quick-spec-pill,
+  .spec-group-card {
+    animation: none !important;
+  }
+
+  .quick-spec-pill {
+    border: 1px solid #ccc !important;
+  }
+
+  .spec-group-card {
+    page-break-inside: avoid;
+  }
+}

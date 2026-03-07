@@ -1,0 +1,6 @@
+src/lib/integrations/__tests__/tap.test.ts
+src/lib/integrations/__tests__/whatsapp.test.ts
+src/lib/integrations/__tests__/zatca.test.ts
+src/lib/integrations/tap/client.ts
+src/lib/integrations/whatsapp/client.ts
+src/lib/integrations/zatca/invoice-generator.ts

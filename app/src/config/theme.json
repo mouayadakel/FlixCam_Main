@@ -1,0 +1,27 @@
+{
+  "brandName": "FLIXCAM",
+  "industry": "Podcast Studio & Equipment Rental",
+  "colors": {
+    "primary": "#8CC63F",
+    "backgroundDark": "#1A1A1A",
+    "backgroundLight": "#FFFFFF",
+    "textOnDark": "#FFFFFF",
+    "textOnLight": "#1A1A1A",
+    "accent": "#4D4D4D"
+  },
+  "assets": {
+    "logoMain": "/images/flixcam-logo.png",
+    "logoInverted": "/images/flixcam-logo.png"
+  },
+  "uiStyle": {
+    "borderRadius": "4px",
+    "buttonStyle": "uppercase-bold",
+    "headerHeight": "80px",
+    "fontFamily": "Inter, system-ui, sans-serif"
+  },
+  "invoiceSettings": {
+    "primaryAccent": "#8CC63F",
+    "showTagline": true,
+    "layout": "modern-minimalist"
+  }
+}

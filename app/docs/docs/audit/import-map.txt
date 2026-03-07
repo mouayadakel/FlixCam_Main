@@ -1,0 +1,70 @@
+=== IMPORT MAP ===
+
+FILE: src/lib/services/ai-analytics.service.ts
+IMPORTS:
+8:import { prisma } from '@/lib/db/prisma'
+PRISMA MODELS USED:
+.aIProcessingJob.
+.aiFeedback.
+
+FILE: src/lib/services/ai-audit.service.ts
+IMPORTS:
+7:import { Prisma } from '@prisma/client'
+8:import { prisma } from '@/lib/db/prisma'
+PRISMA MODELS USED:
+.aiAuditLog.
+
+FILE: src/lib/services/ai-autofill.service.ts
+IMPORTS:
+8:import { prisma } from '@/lib/db/prisma'
+9:import { TranslationLocale } from '@prisma/client'
+10:import {
+15:} from './translation.service'
+16:import { generateSEOBatch, type SEOResult } from './seo-generation.service'
+17:import { recordCost } from '@/lib/utils/cost-tracker'
+PRISMA MODELS USED:
+.product.
+
+FILE: src/lib/services/ai-confidence.service.ts
+IMPORTS:
+8:import { prisma } from '@/lib/db/prisma'
+PRISMA MODELS USED:
+.aiFeedback.
+
+FILE: src/lib/services/ai-content-generation.service.ts
+IMPORTS:
+8:import { prisma } from '@/lib/db/prisma'
+9:import OpenAI from 'openai'
+10:import { GoogleGenerativeAI } from '@google/generative-ai'
+11:import {
+15:} from '@/lib/prompts/master-fill'
+16:import { decrypt, isEncrypted } from '@/lib/utils/encryption'
+17:import type {
+21:} from '@/lib/prompts/master-fill'
+PRISMA MODELS USED:
+.aISettings.
+
+FILE: src/lib/services/ai-master-fill.service.ts
+IMPORTS:
+9:import { prisma } from '@/lib/db/prisma'
+10:import { generateMasterFill, type ContentProvider } from './ai-content-generation.service'
+11:import { sourceImages, type ProductForSourcing } from './image-sourcing.service'
+12:import { syncProductToEquipment } from './product-equipment-sync.service'
+13:import { slugify } from '@/lib/utils'
+14:import type { MasterFillOutput } from '@/lib/prompts/master-fill'
+PRISMA MODELS USED:
+.brand.
+.category.
+.product.
+
+FILE: src/lib/services/ai-spec-parser.service.ts
+IMPORTS:
+8:import { getExpectedSpecs } from '@/lib/ai/spec-templates'
+9:import type { InferredSpec } from '@/lib/types/backfill.types'
+10:import {
+13:} from '@/lib/types/specifications.types'
+14:import {
+17:} from '@/lib/utils/specifications.utils'
+18:import OpenAI from 'openai'
+19:import { GoogleGenerativeAI } from '@google/generative-ai'
+PRISMA MODELS USED:

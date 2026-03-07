@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build / runtime
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and debug
+npm-debug.log*
+logs/
+*.log
+
+# OS and IDE
+.DS_Store
+.idea/
+*.swp
+.cursor/
+
+# Large or binary
+*.zip
+*.tar.gz
+
+# Prisma
+app/prisma/*.db
+app/prisma/*.db-journal
+
+# Uploads (often symlinked or on shared storage)
+app/storage/uploads/*
+!app/storage/uploads/.gitkeep

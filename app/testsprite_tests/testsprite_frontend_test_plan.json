@@ -1,0 +1,700 @@
+[
+  {
+    "id": "TC001",
+    "title": "Create New Booking Successfully",
+    "description": "Verify that staff/admin can create a new booking with valid client, equipment, studio, dates, delivery options, and notes, triggering risk check and payment state.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff/admin user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to new booking creation page"
+      },
+      {
+        "type": "action",
+        "description": "Select existing client"
+      },
+      {
+        "type": "action",
+        "description": "Add equipment items and/or studio and/or bundles to the booking"
+      },
+      {
+        "type": "action",
+        "description": "Choose valid start and end dates/times with proper setup/cleaning buffers"
+      },
+      {
+        "type": "action",
+        "description": "Select delivery options and add-ons"
+      },
+      {
+        "type": "action",
+        "description": "Fill in optional notes"
+      },
+      {
+        "type": "action",
+        "description": "Submit booking to the system"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking is created in draft state"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify risk check process is triggered"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment pending state is set after risk check passes"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Prevent Booking on Conflicting Equipment Availability",
+    "description": "Booking creation should fail if selected equipment is not available for the requested dates due to overlapping bookings.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff/admin user"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to create booking with equipment already booked overlapping requested dates"
+      },
+      {
+        "type": "action",
+        "description": "Submit booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking is rejected with conflict error message"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no booking record is created"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Booking State Transitions Workflow",
+    "description": "Verify the booking state machine enforces valid state transitions (draft -> risk check -> payment pending -> confirmed -> active -> returned -> closed -> cancelled) with side effects.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create booking in draft state"
+      },
+      {
+        "type": "action",
+        "description": "Trigger risk check transition"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state moves to payment pending if risk passes"
+      },
+      {
+        "type": "action",
+        "description": "Process payment transition"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state moves to confirmed on successful payment"
+      },
+      {
+        "type": "action",
+        "description": "Activate booking transition on check-out"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state moves to active"
+      },
+      {
+        "type": "action",
+        "description": "Process return and check-in booking transition"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state moves to returned and then closed on finalization"
+      },
+      {
+        "type": "action",
+        "description": "Cancel booking from allowed states"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state moves to cancelled"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Equipment CRUD Operations",
+    "description": "Verify full create, retrieve, update, and delete operations for equipment including condition updates and availability checks.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create new equipment with valid details, category, brand, condition, and media"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm equipment is created with correct attributes"
+      },
+      {
+        "type": "action",
+        "description": "Retrieve equipment by ID"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify returned details match created data"
+      },
+      {
+        "type": "action",
+        "description": "Update equipment attributes including condition and activation status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify equipment details are updated accurately"
+      },
+      {
+        "type": "action",
+        "description": "Check equipment availability for a given time range"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify correct availability status based on existing bookings"
+      },
+      {
+        "type": "action",
+        "description": "Delete equipment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify equipment is removed and no longer retrievable"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Create and Manage Studio Bookings with Buffers",
+    "description": "Verify hourly studio bookings allow setup and cleaning buffers properly, preventing conflicts.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to create studio booking with valid time slots including setup and cleaning buffers"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking succeeds without conflicts"
+      },
+      {
+        "type": "action",
+        "description": "Attempt overlapping studio booking violating buffer times"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking is rejected due to buffer conflict"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Process Payment and Refund Workflow",
+    "description": "Verify payment processing, status updates, and refund handling through Tap Payment Gateway integration with webhook simulation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate payment for booking deposit"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment record created with pending status"
+      },
+      {
+        "type": "action",
+        "description": "Simulate successful payment webhook callback"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment status updated to successful"
+      },
+      {
+        "type": "action",
+        "description": "Request refund for payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Refund processed and payment status updated accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Simulate failed payment webhook callback"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment status updated to failed and booking state handled correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Invoice Generation and Compliance with ZATCA",
+    "description": "Generate invoice for a booking including tax calculations, submit to ZATCA, and verify client notifications.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select confirmed booking for invoicing"
+      },
+      {
+        "type": "action",
+        "description": "Generate invoice with correct charges and tax compliance"
+      },
+      {
+        "type": "assertion",
+        "description": "Invoice created with accurate data including tax details"
+      },
+      {
+        "type": "action",
+        "description": "Submit invoice to ZATCA tax authority"
+      },
+      {
+        "type": "assertion",
+        "description": "Submission confirmed with no errors"
+      },
+      {
+        "type": "assertion",
+        "description": "Client receives invoice notification via email and WhatsApp"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Contract Lifecycle Management with Electronic Signing",
+    "description": "Verify contract creation, versioning, electronic signing, legal snapshot preservation, and immutable record enforcement.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create new rental contract linked to booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Contract saved with accurate details and initial version"
+      },
+      {
+        "type": "action",
+        "description": "Update contract creating new version"
+      },
+      {
+        "type": "assertion",
+        "description": "Versioning reflected and previous versions immutable"
+      },
+      {
+        "type": "action",
+        "description": "Initiate electronic signing process"
+      },
+      {
+        "type": "assertion",
+        "description": "Legal snapshot of contract preserved at sign time"
+      },
+      {
+        "type": "action",
+        "description": "Complete contract signing"
+      },
+      {
+        "type": "assertion",
+        "description": "Contract status updated to signed and record immutable"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Warehouse Equipment Check-out with Condition Assessment",
+    "description": "Test warehouse equipment check-out flow including scanning booking, verifying items, assessing condition, and generating packing list.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as warehouse staff"
+      },
+      {
+        "type": "action",
+        "description": "Scan booking ID for check-out"
+      },
+      {
+        "type": "action",
+        "description": "Verify all equipment items for the booking"
+      },
+      {
+        "type": "action",
+        "description": "Record equipment condition assessment"
+      },
+      {
+        "type": "action",
+        "description": "Generate packing list report"
+      },
+      {
+        "type": "action",
+        "description": "Confirm equipment check-out to transition booking to active"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking state is updated to active"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Maintenance Scheduling and Completion Workflow",
+    "description": "Verify scheduling maintenance, assigning technicians, technician logging findings, updating equipment condition, and completing maintenance.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Schedule maintenance for specified equipment and maintenance type"
+      },
+      {
+        "type": "action",
+        "description": "Assign technician to maintenance task"
+      },
+      {
+        "type": "action",
+        "description": "Technician logs findings and updates equipment condition"
+      },
+      {
+        "type": "action",
+        "description": "Technician marks maintenance as complete"
+      },
+      {
+        "type": "assertion",
+        "description": "Maintenance record shows completed status with details"
+      },
+      {
+        "type": "assertion",
+        "description": "Equipment condition reflects updates"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Multi-language UI Display and RTL Support",
+    "description": "Verify that UI correctly displays in Arabic (RTL), English, and Chinese with proper layout, text direction, and accessibility compliance.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Set UI language to Arabic"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm UI layout adjusts to right-to-left orientation"
+      },
+      {
+        "type": "assertion",
+        "description": "All texts render in Arabic accurately"
+      },
+      {
+        "type": "action",
+        "description": "Set UI language to English"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm UI layout is left-to-right and texts are English"
+      },
+      {
+        "type": "action",
+        "description": "Set UI language to Chinese"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm UI layout is left-to-right and texts are Chinese"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify keyboard accessibility and screen reader compatibility across languages"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Role-Based Access Control Enforcement",
+    "description": "Verify that user roles (admin, staff, client) have correct permissions for CRUD operations, state transitions, and access to sensitive data.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as client and attempt to create a booking for another client"
+      },
+      {
+        "type": "assertion",
+        "description": "Access denied error received"
+      },
+      {
+        "type": "action",
+        "description": "Login as staff and attempt to approve booking state transition"
+      },
+      {
+        "type": "assertion",
+        "description": "Operation allowed if role has permission"
+      },
+      {
+        "type": "action",
+        "description": "Login as admin and perform full CRUD on clients and equipment"
+      },
+      {
+        "type": "assertion",
+        "description": "All operations succeed"
+      },
+      {
+        "type": "action",
+        "description": "Attempt unauthorized access to financial or contract resources"
+      },
+      {
+        "type": "assertion",
+        "description": "Access denied enforced"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Audit Logging of Sensitive Operations",
+    "description": "Verify that all sensitive operations including financial transactions, booking state changes, and approvals are logged with user identity and timestamp.",
+    "category": "security",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform booking state transitions"
+      },
+      {
+        "type": "action",
+        "description": "Process payments and refunds"
+      },
+      {
+        "type": "action",
+        "description": "Update contract records"
+      },
+      {
+        "type": "assertion",
+        "description": "Check audit logs contain detailed records with user, timestamp, action, and before/after states"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Feature Flags Enable/Disable System Modules",
+    "description": "Verify feature toggles can enable or disable system modules or emergency modes without downtime and interface reflects changes.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Admin enables a feature flag to disable booking module"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking UI and APIs become inaccessible or show maintenance message"
+      },
+      {
+        "type": "action",
+        "description": "Admin disables feature flag to re-enable module"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking functionality restores without restart"
+      },
+      {
+        "type": "action",
+        "description": "Enable emergency read-only mode"
+      },
+      {
+        "type": "assertion",
+        "description": "All write actions are blocked, read actions accessible"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Admin Bulk Data Import with AI-Powered Enrichment and Validation",
+    "description": "Verify import of bulk equipment data, validation of input files, AI enrichment of imported data, error handling, and progress tracking.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Upload equipment import file with valid data"
+      },
+      {
+        "type": "assertion",
+        "description": "File validation passes with no errors"
+      },
+      {
+        "type": "action",
+        "description": "Trigger AI-powered data enrichment during import"
+      },
+      {
+        "type": "assertion",
+        "description": "Enrichment data added correctly"
+      },
+      {
+        "type": "action",
+        "description": "Submit import job"
+      },
+      {
+        "type": "assertion",
+        "description": "Import job processes and updates status accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Upload invalid import file with missing mandatory fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Validation fails with relevant errors"
+      },
+      {
+        "type": "action",
+        "description": "Retry a failed import job after fixing errors"
+      },
+      {
+        "type": "assertion",
+        "description": "Import job completes successfully"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Notifications Delivery via Multiple Channels",
+    "description": "Verify that booking, payment, maintenance, and delivery events trigger notifications via email, WhatsApp, SMS, and in-app channels correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create booking and progress through states"
+      },
+      {
+        "type": "assertion",
+        "description": "Notification sent via configured channels for each event"
+      },
+      {
+        "type": "action",
+        "description": "Process payment and receive webhook"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment confirmation notifications sent to client"
+      },
+      {
+        "type": "action",
+        "description": "Schedule maintenance and assign technician"
+      },
+      {
+        "type": "assertion",
+        "description": "Maintenance notifications sent to technician and admin"
+      },
+      {
+        "type": "action",
+        "description": "Schedule delivery and update status"
+      },
+      {
+        "type": "assertion",
+        "description": "Delivery status notifications sent to driver and client"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Quote Creation, Status Tracking, and Conversion to Booking",
+    "description": "Verify full lifecycle of quotes including creation, updating status, and conversion into bookings.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create new quote with customer and equipment details"
+      },
+      {
+        "type": "assertion",
+        "description": "Quote saved with correct initial status"
+      },
+      {
+        "type": "action",
+        "description": "Update quote status (e.g., approved, rejected)"
+      },
+      {
+        "type": "assertion",
+        "description": "Quote status updates reflected correctly"
+      },
+      {
+        "type": "action",
+        "description": "Convert approved quote to booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Booking created with matching details from quote"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Client Profile Management",
+    "description": "Verify client CRUD operations and view permissions in client portal.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create new client via API or admin panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Client details saved correctly"
+      },
+      {
+        "type": "action",
+        "description": "Update client contact and profile info"
+      },
+      {
+        "type": "assertion",
+        "description": "Updates persisted and visible"
+      },
+      {
+        "type": "action",
+        "description": "Delete client record"
+      },
+      {
+        "type": "assertion",
+        "description": "Client record no longer retrievable"
+      },
+      {
+        "type": "action",
+        "description": "Client user views own profile on portal"
+      },
+      {
+        "type": "assertion",
+        "description": "Client can view and edit permitted fields"
+      }
+    ]
+  }
+]

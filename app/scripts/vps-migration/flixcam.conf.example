@@ -1,0 +1,26 @@
+# FlixCam Apache reverse proxy (production, port 3000)
+# Copy to /etc/httpd/conf.d/flixcam.conf. Replace flixcam.com with your domain.
+# For staging/dev: duplicate block, change ServerName (e.g. staging.flixcam.rent), ProxyPass to 127.0.0.1:3001 or :3002, and log paths to logs/staging or logs/dev.
+# Then: apachectl configtest && systemctl reload httpd
+
+<VirtualHost *:80>
+    ServerName flixcam.com
+    ServerAlias www.flixcam.com
+    Redirect permanent / https://flixcam.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName flixcam.com
+    ServerAlias www.flixcam.com
+
+    SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/flixcam.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/flixcam.com/privkey.pem
+
+    ProxyPreserveHost On
+    ProxyPass        / http://127.0.0.1:3000/
+    ProxyPassReverse / http://127.0.0.1:3000/
+
+    ErrorLog  /home/flixcam/logs/apache/error.log
+    CustomLog /home/flixcam/logs/apache/access.log combined
+</VirtualHost>

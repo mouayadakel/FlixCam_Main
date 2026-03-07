@@ -1,0 +1,217 @@
+# FlixCam Server & Deploy — Cursor Context Prompt
+
+## YOUR FIRST JOB BEFORE TOUCHING ANYTHING
+Before making any fix, feature, or deploy — read and internalize this entire prompt.
+You are working on a Next.js app deployed to a Hostinger VPS. The codebase has a
+history of path confusion. Every script, config, and deploy command must use the
+single source of truth defined below. No exceptions.
+
+---
+
+## 1. SERVER STRUCTURE (Real Layout)
+```
+/home/flixcam/
+├── public_html/
+│   └── app/                  ← THE PRODUCTION APP (single source of truth)
+│       ├── .env              ← environment variables (never commit this)
+│       ├── package.json
+│       ├── next.config.js
+│       ├── prisma/
+│       ├── app/              ← Next.js app router
+│       ├── scripts/          ← build & deploy scripts
+│       └── .next/            ← built output (generated, never edit)
+│
+├── shared/
+│   ├── uploads/              ← user uploaded files (persistent, shared)
+│   └── backups/              ← database + uploads backups
+│
+├── scripts/                  ← server-side scripts (backup, deploy hooks)
+│   └── paths.config.sh       ← SINGLE SOURCE OF TRUTH for all paths
+│
+├── pm2/
+│   └── ecosystem.config.js   ← PM2 process manager config
+│
+└── repos/
+    └── flixcam.git/          ← bare git repo for push-to-deploy (optional)
+        └── hooks/
+            └── post-receive
+```
+
+### PATH HISTORY WARNING
+The codebase contains references to TWO old paths that are WRONG for this server:
+- `/home/flixcam/apps/production/flixcam` ← multi-env layout, NOT used
+- `/home/flixcam/app`                      ← old single-app, NOT used
+
+CORRECT PATH: `/home/flixcam/public_html/app`
+
+If you see any script, config, or comment pointing to the wrong path → fix it.
+
+---
+
+## 2. SINGLE SOURCE OF TRUTH FOR PATHS
+
+File: `/home/flixcam/scripts/paths.config.sh`
+(also at: `app/scripts/vps-migration/paths.config.sh` in the repo)
+```bash
+HOME_FLIXCAM="/home/flixcam"
+PRODUCTION_APP_PATH="/home/flixcam/public_html/app"
+SHARED_UPLOADS="/home/flixcam/shared/uploads"
+SHARED_BACKUPS="/home/flixcam/shared/backups"
+```
+
+Every script MUST source this file or use `PRODUCTION_APP_PATH` env var.
+Never hardcode a path anywhere else.
+
+---
+
+## 3. HOW THE SERVER RUNS THE APP
+
+- **Process manager:** PM2
+- **Config:** `/home/flixcam/pm2/ecosystem.config.js`
+- **App starts from:** `PRODUCTION_APP_PATH` = `/home/flixcam/public_html/app`
+- **Node command:** `npm start` (which runs `next start`)
+- **Port:** defined in `.env` as `PORT=3000` (or proxied via Nginx/Apache)
+- **Uploads:** symlinked or mounted from `SHARED_UPLOADS` into app's storage/uploads
+
+### PM2 key commands (run on server):
+```bash
+pm2 list                        # see running processes
+pm2 logs flixcam-production     # live logs
+pm2 restart flixcam-production  # restart app
+pm2 reload flixcam-production   # zero-downtime reload
+pm2 stop flixcam-production     # stop
+pm2 start /home/flixcam/pm2/ecosystem.config.js --update-env  # start fresh
+```
+
+---
+
+## 4. HOW DEPLOY WORKS
+
+### Option A — rsync push (from local machine)
+```bash
+# Script: app/scripts/push-to-vps.sh
+REMOTE_DIR="/home/flixcam/public_html/app"
+```
+This rsyncs local code to server, then runs build on server.
+
+### Option B — deploy script (from server or CI)
+```bash
+# Script: app/scripts/deploy-to-hostinger.sh
+SERVER_APP_PATH="/home/flixcam/public_html/app"
+```
+
+### Option C — git push-to-deploy
+```bash
+git push vps main
+# Triggers: /home/flixcam/repos/flixcam.git/hooks/post-receive
+# Which: checks out code to PRODUCTION_APP_PATH, runs build
+```
+
+### After ANY deploy, these steps MUST run (in order):
+```bash
+cd /home/flixcam/public_html/app
+
+1. npm ci --omit=dev          # install exact deps (no devDeps in prod)
+2. npx prisma generate        # regenerate Prisma client
+3. npx prisma migrate deploy  # run any pending DB migrations
+4. npm run build              # build Next.js app
+5. pm2 reload flixcam-production  # reload with zero downtime
+```
+
+---
+
+## 5. BUILD SYSTEM DETAILS
+
+### Build command:
+```bash
+npm run build
+# runs: bash scripts/build-with-uploads-workaround.sh
+```
+
+### Why the workaround script exists:
+Next.js/Turbopack resolves paths under the app at build time. On the server, `storage/uploads` is a symlink to `shared/uploads` (outside app dir). The workaround script temporarily replaces the symlink so the build does not fail.
+
+### Key build dependencies (must be in `dependencies`, NOT `devDependencies`):
+- `autoprefixer`
+- `postcss`
+- `typescript`
+- Any `@types/*` needed at build
+
+---
+
+## 6. ENVIRONMENT & CONFIG
+
+- `.env` file lives at: `/home/flixcam/public_html/app/.env`
+- NEVER commit `.env` to git
+- Required variables (check `.env.example` for full list):
+  DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, PORT=3000, NODE_ENV=production
+
+---
+
+## 7. DATABASE
+
+- **ORM:** Prisma
+- **Schema:** `app/prisma/schema.prisma`
+- After any schema change:
+  1. Create migration locally: `npx prisma migrate dev --name description`
+  2. Commit the migration file
+  3. On server after deploy: `npx prisma migrate deploy`
+- Never run `prisma migrate dev` on production server
+
+---
+
+## 8. UPLOADS / SHARED FILES
+
+- User uploads live at: `/home/flixcam/shared/uploads/`
+- The app accesses them via `storage/uploads` symlink to `shared/uploads`
+- When creating the symlink:
+  ln -sfn /home/flixcam/shared/uploads /home/flixcam/public_html/app/storage/uploads
+- Backups of uploads: `/home/flixcam/shared/backups/`
+
+---
+
+## 9. RULES — WHEN MAKING ANY CHANGE
+
+### Before writing code:
+- Confirm which path is affected (use `PRODUCTION_APP_PATH`)
+- Check if a deploy step is needed after this change
+- Check if a DB migration is needed
+
+### Before deploying:
+- All changes committed to git
+- `.env` on server is up to date
+- Run the 5 deploy steps in order (section 4)
+- Check `pm2 logs flixcam-production` after reload for errors
+
+### When editing any script that has a path:
+- It must use `PRODUCTION_APP_PATH` or source `paths.config.sh`
+- Never hardcode `/home/flixcam/apps/...` or `/home/flixcam/app`
+
+### When adding npm packages:
+- If needed at build time, put in `dependencies` (not devDependencies)
+- Run `npm ci --omit=dev` on server after updating package.json
+
+---
+
+## 10. QUICK REFERENCE — FILE TO RESPONSIBILITY MAP
+
+| File | Purpose |
+|------|---------|
+| scripts/vps-migration/paths.config.sh | All path definitions |
+| scripts/vps-migration/ecosystem.config.js | PM2 process config |
+| scripts/deploy-to-hostinger.sh | Full deploy script |
+| push-to-vps.sh | rsync push to server |
+| scripts/build-with-uploads-workaround.sh | Safe build command |
+| scripts/vps-migration/backup.sh | Full backup (DB + uploads) |
+| scripts/vps-migration/backup-db.sh | DB-only backup |
+| scripts/vps-migration/post-receive | Git hook for push-deploy |
+| docs/AUDIT-SERVER-PATHS.md | History of path issues + fixes |
+
+---
+
+## 11. IF SOMETHING IS BROKEN — CHECKLIST
+
+- App not starting? → pm2 logs flixcam-production; check .env and that npm ci + npm run build ran.
+- Build failing? → autoprefixer/postcss/typescript in dependencies; storage/uploads symlink; run scripts/build-with-uploads-workaround.sh.
+- Deploy not working? → Confirm PRODUCTION_APP_PATH; run all 5 deploy steps; PM2 cwd correct.
+- Wrong path somewhere? → Check paths.config.sh; grep for "apps/production" or "/home/flixcam/app" in .sh, .js, .md and fix any that are not historical comments.

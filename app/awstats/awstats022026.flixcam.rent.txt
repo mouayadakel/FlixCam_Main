@@ -1,0 +1,360 @@
+AWSTATS DATA FILE 7.8 (build 20200416)
+# If you remove this file, all statistics for date 202602 will be lost/reset.
+# Last config file used to build this data file was /etc/awstats/awstats.flixcam.rent.conf.
+
+# Position (offset in bytes) in this file for beginning of each section for
+# direct I/O access. If you made changes somewhere in this file, you should
+# also remove completely the MAP section (AWStats will rewrite it at next
+# update).
+BEGIN_MAP 30
+POS_GENERAL 2065                
+POS_TIME 2752                
+POS_VISITOR 3547                
+POS_DAY 4131                
+POS_DOMAIN 4307                
+POS_LOGIN 4537                
+POS_ROBOT 4692                
+POS_WORMS 5005                
+POS_EMAILSENDER 5136                
+POS_EMAILRECEIVER 5279                
+POS_SESSION 5355                
+POS_SIDER 5512                
+POS_FILETYPES 7897                
+POS_DOWNLOADS 8061                
+POS_OS 8109                
+POS_BROWSER 8264                
+POS_SCREENSIZE 8491                
+POS_UNKNOWNREFERER 8565                
+POS_UNKNOWNREFERERBROWSER 8709                
+POS_ORIGIN 8932                
+POS_SEREFERRALS 9068                
+POS_PAGEREFS 9212                
+POS_SEARCHWORDS 9360                
+POS_KEYWORDS 9512                
+POS_MISC 2416                
+POS_ERRORS 9571                
+POS_CLUSTER 4393                
+POS_SIDER_404 9731                
+POS_SIDER_400 10897               
+POS_SIDER_403 11050               
+END_MAP
+
+# LastLine    = Date of last record processed - Last record line number in last log - Last record offset in last log - Last record signature value
+# FirstTime   = Date of first visit for history file
+# LastTime    = Date of last visit for history file
+# LastUpdate  = Date of last update - Nb of parsed records - Nb of parsed old records - Nb of parsed new records - Nb of parsed corrupted - Nb of parsed dropped
+# TotalVisits = Number of visits
+# TotalUnique = Number of unique visitors
+# MonthHostsKnown   = Number of hosts known
+# MonthHostsUnKnown = Number of hosts unknown
+BEGIN_GENERAL 8
+LastLine 20260224134652 2404 697468 16695552928425
+FirstTime 20260223175315
+LastTime 20260224134652
+LastUpdate 20260224134701 2404 0 2354 47 3
+TotalVisits 14                  
+TotalUnique 12                  
+MonthHostsKnown 0                   
+MonthHostsUnknown 12                  
+END_GENERAL
+
+# Misc ID - Pages - Hits - Bandwidth
+BEGIN_MISC 10
+TotalMisc 0 0 0
+RealPlayerSupport 0 0 0
+QuickTimeSupport 0 0 0
+JavaEnabled 0 0 0
+WindowsMediaPlayerSupport 0 0 0
+JavascriptDisabled 0 0 0
+DirectorSupport 0 0 0
+PDFSupport 0 0 0
+FlashSupport 0 0 0
+AddToFavourites 0 8 0
+END_MISC
+
+# Hour - Pages - Hits - Bandwidth - Not viewed Pages - Not viewed Hits - Not viewed Bandwidth
+BEGIN_TIME 24
+0 0 0 0 3 14 4186
+1 0 0 0 2 13 3887
+2 0 0 0 3 15 4527
+3 0 0 0 1 6 1794
+4 0 0 0 1 1 299
+5 0 0 0 5 8 2392
+6 0 0 0 1 11 3289
+7 0 0 0 0 11 3289
+8 0 0 0 1 10 2990
+9 0 0 0 2 6 1794
+10 0 0 0 1 8 2392
+11 0 1 208 5 16 31979
+12 62 93 387842 96 146 1149674
+13 233 249 274293 89 97 417975
+14 0 0 0 0 0 0
+15 0 0 0 0 0 0
+16 0 0 0 0 0 0
+17 3 3 235203 4 4 784
+18 5 5 232264 67 128 1010466
+19 22 24 361739 131 287 2327677
+20 18 19 538526 253 1135 2947874
+21 0 0 0 9 15 4485
+22 0 0 0 4 14 4186
+23 0 0 0 4 15 4485
+END_TIME
+
+# Host - Pages - Hits - Bandwidth - Last visit date - [Start date of last visit] - [Last page of last visit]
+# [Start date of last visit] and [Last page of last visit] are saved only if session is not finished
+# The 10 first Hits must be first (order not required for others)
+BEGIN_VISITOR 12
+82.197.48.201 295 343 662343 20260224134652 20260224130715 /api/notifications
+176.44.22.46 27 30 892938 20260223202933
+54.89.172.138 6 6 17914 20260223200356
+35.175.106.146 3 3 8960 20260223195838
+44.199.226.107 3 3 8960 20260223201601
+103.196.9.29 2 2 156802 20260223175332
+107.172.195.86 2 2 50344 20260223185845
+103.4.250.168 1 1 78401 20260223175315
+182.69.179.106 1 1 78401 20260223180532
+103.4.251.115 1 1 25118 20260223185839
+192.71.142.146 1 1 24814 20260223194950
+93.158.91.11 1 1 25080 20260223203701
+END_VISITOR
+
+# Date - Pages - Hits - Bandwidth - Visits
+BEGIN_DAY 2
+20260223 48 51 1367732 12
+20260224 295 343 662343 2
+END_DAY
+
+# Domain - Pages - Hits - Bandwidth
+# The 10 first Pages must be first (order not required for others)
+BEGIN_DOMAIN 1
+ip 343 394 2030075
+END_DOMAIN
+
+# Cluster ID - Pages - Hits - Bandwidth
+BEGIN_CLUSTER 0
+END_CLUSTER
+
+# Login - Pages - Hits - Bandwidth - Last visit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_LOGIN 0
+END_LOGIN
+
+# Robot ID - Hits - Bandwidth - Last visit - Hits on robots.txt
+# The 10 first Hits must be first (order not required for others)
+BEGIN_ROBOT 5
+cursor 999 7542561 20260224134145 0
+robot 2 314 20260223190549 2
+no_user_agent 1 18448 20260224115910 0
+facebookexternalhit/ 1 25264 20260223193949 0
+unknown 1 156 20260224132516 1
+END_ROBOT
+
+# Worm ID - Hits - Bandwidth - Last visit
+# The 5 first Hits must be first (order not required for others)
+BEGIN_WORMS 0
+END_WORMS
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first Hits must be first (order not required for others)
+BEGIN_EMAILSENDER 0
+END_EMAILSENDER
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first hits must be first (order not required for others)
+BEGIN_EMAILRECEIVER 0
+END_EMAILRECEIVER
+
+# Session range - Number of visits
+BEGIN_SESSION 2
+0s-30s 11
+30mn-1h 2
+END_SESSION
+
+# URL - Pages - Bandwidth - Entry - Exit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_SIDER 65
+/api/notifications 142 2414 0 0
+/equipment 30 106730 0 0
+/api/cart 18 3426 0 0
+/_next/image 18 746045 0 1
+/ 17 658648 11 8
+/api/auth/session 15 1172 0 0
+/login 13 39016 3 3
+/api/public/brands 6 35760 0 0
+/cart 5 14393 0 0
+/api/public/studios 4 11036 0 0
+/equipment/cmlzifh4t005b8modsin3cm0e 1 867 0 0
+/equipment/cmlzifbuo00c5q3itn6njqifh 1 967 0 0
+/api/auth/callback/credentials 2 66 0 0
+/equipment/cmlzifh4q00578modsoohum9f 1 867 0 0
+/equipment/cmlxlujv6005bwkl9vfl00urc 1 941 0 0
+/api/auth/csrf 2 160 0 0
+/portal/notifications 1 697 0 0
+/policies 1 3678 0 1
+/portal/contracts 1 693 0 0
+/studios/photo-studio-riyadh 1 1319 0 0
+/portal/bookings 2 2082 0 0
+/api/public/categories 2 5532 0 0
+/equipment/cmlzifbvd00cxq3itfxqcuye4 1 948 0 0
+/equipment/cmlzifc0u00jpq3it6k0snccr 1 943 0 0
+/build-your-kit 1 3586 0 0
+/equipment/cmlzifh4s00598modepcivxe4 1 905 0 0
+/equipment/cmlzifboc004lq3itxpjr15t1 1 954 0 0
+/equipment/cmlxluk7500hkwkl90t73emtx 1 940 0 0
+/api/auth/providers 2 810 0 0
+/api/user/saved-gear 1 11 0 0
+/equipment/cmlzifh4w005f8modaoqgpl1g 1 874 0 0
+/equipment/cmlzifbw600dwq3it0j8klr4b 1 942 0 0
+/studios 2 11084 0 0
+/contact 1 5000 0 0
+/equipment/cmlzifh4y005h8modqql6byr8 1 894 0 0
+/equipment/cmlzifbw100dpq3ityq34jqoh 1 943 0 0
+/about 1 5886 0 0
+/equipment/cmlzifbuv00ccq3itr7jtc7kp 1 933 0 0
+/how-it-works 1 3727 0 0
+/api/public/equipment 2 28512 0 0
+/equipment/cmlxluk3l00dpwkl92kyui1dg 1 940 0 0
+/equipment/cmlzifbto00avq3itifpvjvkq 1 955 0 0
+/equipment/cmlzifc1800k7q3it8wb5lms3 2 1906 0 0
+/portal/documents 2 2402 0 0
+/support 2 9766 0 0
+/api/public/faq 4 48536 0 0
+/equipment/cmlzifh4v005d8mod6wfupn6c 1 886 0 0
+/equipment/cmlzifc1d00kdq3it3zlqczr0 1 971 0 0
+/equipment/cmlzifbz500hkq3itwedts3ro 1 960 0 0
+/forgot-password 1 3192 0 0
+/api/me 1 90 0 0
+/portal/invoices 2 1576 0 0
+/equipment/cmlzifbwc00e3q3it8zwsnx6b 2 1894 0 0
+/portal/saved 2 1500 0 0
+/api/auth/register 1 99 0 0
+/equipment/cmlzifc0500itq3itacmcrpak 1 958 0 0
+/faq 1 3738 0 0
+/equipment/cmlzifh4z005j8mod13w7tdju 1 886 0 0
+/equipment/cmlzifbvj00d4q3it7rb4tneu 1 926 0 0
+/studios/compact-production-studio 1 1306 0 0
+/packages 3 7446 0 0
+/equipment/cmlzifh4p00558modp8c163dh 1 910 0 0
+/portal/dashboard 2 6818 0 0
+/portal/profile 2 1892 0 0
+/studios/live-stream-studio 1 1290 0 0
+END_SIDER
+
+# Files type - Hits - Bandwidth - Bandwidth without compression - Bandwidth after compression
+BEGIN_FILETYPES 6
+css 1 20639 0 0
+png 5 0 0 0
+Unknown 326 1147596 0 0
+js 41 203180 0 0
+php 17 658648 0 0
+jpg 4 12 0 0
+END_FILETYPES
+
+# Downloads - Hits - Bandwidth
+BEGIN_DOWNLOADS 0
+END_DOWNLOADS
+
+# OS ID - Hits
+BEGIN_OS ID - Hits - Pages 7
+linux 3 3
+os/2 3 3
+win10 3 3
+Unknown 12 12
+ios_iphone 129 123
+macosx15 243 198
+win8.1 1 1
+END_OS
+
+# Browser ID - Hits - Pages
+BEGIN_BROWSER 10
+chrome117.0.0.0 3 3
+firefox115 1 1
+chrome105.0.0.0 1 1
+chrome116.0.0.0 3 3
+Unknown 15 15
+safari18.5 115 111
+safari26.2 14 12
+netscape5.0 1 1
+edge44 1 1
+chrome145.0.0.0 240 195
+END_BROWSER
+
+# Screen size - Hits
+BEGIN_SCREENSIZE 0
+END_SCREENSIZE
+
+# Unknown referer OS - Last visit date
+BEGIN_UNKNOWNREFERER 1
+got_(https://github.com/sindresorhus/got) 20260223201601
+END_UNKNOWNREFERER
+
+# Unknown referer Browser - Last visit date
+BEGIN_UNKNOWNREFERERBROWSER 2
+got_(https://github.com/sindresorhus/got) 20260223201601
+NetworkingExtension/8623.1.14.10.9_Network/5569.60.39.0.3_iOS/26.2.1 20260223193949
+END_UNKNOWNREFERERBROWSER
+
+# Origin - Pages - Hits 
+BEGIN_ORIGIN 6
+From0 30 30
+From1 0 0
+From2 0 0
+From3 0 0
+From4 313 364
+From5 0 0
+END_ORIGIN
+
+# Search engine referers ID - Pages - Hits
+BEGIN_SEREFERRALS 0
+END_SEREFERRALS
+
+# External page referers - Pages - Hits
+# The 10 first Pages must be first (order not required for others)
+BEGIN_PAGEREFS 0
+END_PAGEREFS
+
+# Search keyphrases - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_SEARCHWORDS 0
+END_SEARCHWORDS
+
+# Search keywords - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_KEYWORDS 0
+END_KEYWORDS
+
+# Errors - Hits - Bandwidth
+BEGIN_ERRORS 7
+503 161 48139
+400 2 264
+404 45 272585
+307 17 603
+500 713 18671
+502 1 341
+409 9 1570
+END_ERRORS
+
+# URL with 404 errors - Hits - Last URL referrer
+BEGIN_SIDER_404 12
+/https%3A/forum.virtualmin.com/ 1 -
+/sw.js 30 https://flixcam.rent/sw.js
+/data%3Aimage/png%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAAAqMAAAKjAWTcX4kAAALKUExURUxpcVOaIVijI1mlJFOaIVOaIVeiI1OaIVOaIVOaIVOaIVOaIVehI2O2KWGyKFOaIWK1KVOaIVuoJFagI1ehI2K1KVagIl2rJVikI12rJVa 1 -
+/apple-touch-icon-120x120-precomposed.png 1 -
+/apple-touch-icon-precomposed.png 2 -
+/wp-admin/setup-config.php 2 -
+/wordpress/wp-admin/setup-config.php 2 -
+//.env 1 -
+/data%3Aimage/png%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAACcUExURUxpcWK0KWGzKF2rJVOaIV6tJ1%2BvJ1OaIWW5KmK1KVypJWO2KWK1KVOaIWK0KGO2KVuoJGCwKFumJF6tJ1%2BvJ16tJ2KzKFijI2CxKGO2KWCxKFeiI2S5KlOaIWK0KV2sJWG 1 -
+/apple-touch-icon-120x120.png 1 -
+/data%3Aimage/png%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAE4UExURUxpcWO2KWK0KGO2KVafIl%2BvJ2S4KmS4KV6sJ1%2BuJ16tJ2O3KWO2KWS4KWS5Kl2rJWGzKFuoJGK1KWGzKF6tJ1mlJF%2BvJ2O3KWO2KV2qJV6tJ2CwJ2S5KmCyKF2rJVyqJ 1 -
+/apple-touch-icon.png 2 -
+END_SIDER_404
+
+# URL with 400 errors - Hits - Last URL referrer
+BEGIN_SIDER_400 1
+/api/admin/ai/pending-images 2 https://flixcam.rent/admin/ai-dashboard
+END_SIDER_400
+
+# URL with 403 errors - Hits - Last URL referrer
+BEGIN_SIDER_403 0
+END_SIDER_403

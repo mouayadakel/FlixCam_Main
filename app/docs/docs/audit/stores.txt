@@ -1,0 +1,4 @@
+src/lib/stores/cart.store.ts
+src/lib/stores/checkout.store.ts
+src/lib/stores/kit-wizard.store.ts
+src/lib/stores/locale.store.ts

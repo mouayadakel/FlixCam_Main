@@ -1,0 +1,49 @@
+# FlixCam.rent - Local development with Docker
+# Run: docker-compose up -d
+# App: http://localhost:3000
+# DB: localhost:5432 (user: flixcam, password: flixcam, db: flixcam_rent)
+
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://flixcam:flixcam@db:5432/flixcam_rent?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-generate-with-openssl-rand-base64-32}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: sh -c "npx prisma migrate deploy && npm start"
+    restart: unless-stopped
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: flixcam
+      POSTGRES_PASSWORD: flixcam
+      POSTGRES_DB: flixcam_rent
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U flixcam -d flixcam_rent']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

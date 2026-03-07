@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Git post-receive hook: deploy to production app on push.
+# Install: cp scripts/vps-migration/post-receive /home/flixcam/repos/flixcam.git/hooks/post-receive
+#          chmod +x /home/flixcam/repos/flixcam.git/hooks/post-receive
+#
+# Default: single-app at public_html/app. Override: set PRODUCTION_APP_PATH in hook or git config.
+#   git config -f /home/flixcam/repos/flixcam.git/config core.worktree /home/flixcam/public_html/app
+
+set -e
+GIT_DIR="$(git rev-parse --git-dir)"
+WORK_TREE="${PRODUCTION_APP_PATH:-/home/flixcam/public_html/app}"
+BRANCH="main"
+
+while read oldrev newrev refname; do
+  if [ "$refname" = "refs/heads/$BRANCH" ]; then
+    git --work-tree="$WORK_TREE" --git-dir="$GIT_DIR" checkout -f "$BRANCH"
+    echo "Deployed $BRANCH to $WORK_TREE"
+    # Optional: run build and restart (uncomment and ensure PATH/npm available)
+    # (cd "$WORK_TREE" && /usr/bin/npm run build && /usr/bin/pm2 restart flixcam-production) || true
+    break
+  fi
+done

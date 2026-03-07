@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "signin api should authenticate user correctly",
+    "description": "Test the /api/auth/signin POST endpoint to verify that users can sign in with valid credentials and receive appropriate authentication tokens or session information."
+  },
+  {
+    "id": "TC002",
+    "title": "signout api should terminate user session",
+    "description": "Test the /api/auth/signout POST endpoint to ensure that user sessions are properly terminated and subsequent requests require re-authentication."
+  },
+  {
+    "id": "TC003",
+    "title": "session api should return current user session",
+    "description": "Test the /api/auth/session GET endpoint to verify that it returns the current authenticated user's session details or an appropriate error if no session exists."
+  },
+  {
+    "id": "TC004",
+    "title": "bookings api should support create read update delete operations",
+    "description": "Test the /api/bookings endpoints (GET, POST, PATCH, DELETE) to verify CRUD operations for bookings including validation, authorization, and correct data persistence."
+  },
+  {
+    "id": "TC005",
+    "title": "bookings transition api should handle valid state transitions",
+    "description": "Test the /api/bookings/{id}/transition POST endpoint to ensure booking state machine transitions are enforced correctly with required conditions and permissions."
+  },
+  {
+    "id": "TC006",
+    "title": "equipment api should support equipment management and availability check",
+    "description": "Test the /api/equipment endpoints including CRUD operations and the /api/equipment/{id}/availability GET endpoint to verify equipment availability logic."
+  },
+  {
+    "id": "TC007",
+    "title": "payments api should list payments and process refunds",
+    "description": "Test the /api/payments endpoints to verify listing of payments, updating payment details, and processing refunds through the /api/payments/{id}/refund POST endpoint."
+  },
+  {
+    "id": "TC008",
+    "title": "invoices api should generate and manage invoices",
+    "description": "Test the /api/invoices endpoints including invoice generation for bookings, retrieval, update, and deletion of invoices with proper validation and financial compliance."
+  },
+  {
+    "id": "TC009",
+    "title": "clients api should support client management",
+    "description": "Test the /api/clients endpoints to verify CRUD operations for client records with role-based access control and data validation."
+  },
+  {
+    "id": "TC010",
+    "title": "reports dashboard api should provide statistics and export functionality",
+    "description": "Test the /api/reports/dashboard GET and /api/reports/{type} POST endpoints including export functionality to ensure accurate report generation and data export."
+  }
+]

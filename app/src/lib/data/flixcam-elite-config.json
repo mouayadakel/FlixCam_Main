@@ -1,0 +1,99 @@
+{
+  "project": "FlixCam_Elite_Import_v2",
+  "author": "AI Strategy Implementation",
+  "system_gates": {
+    "min_photo_requirement": 4,
+    "photo_failure_action": "BLOCK_AND_HIGHLIGHT_RED",
+    "required_human_fields": ["name", "brand", "base_daily_price"],
+    "graceful_degradation": {
+      "scraper_blocked": "fallback_to_curated_db_then_ai_inference",
+      "ai_rate_limited": "queue_and_retry_with_backoff",
+      "no_search_api": "use_curated_specs_only"
+    }
+  },
+  "research_engine": {
+    "sources": ["B&H Photo", "Amazon", "Manufacturer Official Sites"],
+    "scraping_mode": "LIVE_SYNC",
+    "data_extraction": ["Full Tech Specs", "In the Box contents", "Marketing Highlights"],
+    "fallback_chain": ["deep_specs_db", "curated_specs_db", "ai_inference"],
+    "cache_ttl_hours": 168,
+    "rate_limit": {
+      "max_requests_per_minute": 10,
+      "delay_between_sources_ms": 2000
+    }
+  },
+  "content_intelligence": {
+    "languages": {
+      "AR": {
+        "style": "Formal Fusha (Modern Standard Arabic)",
+        "location_tag": "Riyadh",
+        "direction": "RTL",
+        "mandatory_keywords": ["تأجير", "استأجر", "الرياض", "السعودية"],
+        "cultural_context": [
+          "desert cinematography",
+          "Al-Diriyah wedding shoots",
+          "Riyadh commercial production"
+        ]
+      },
+      "EN": {
+        "style": "Professional Marketing",
+        "focus": "High-conversion rental copywriting",
+        "mandatory_keywords": ["rent", "rental", "Riyadh", "Saudi Arabia"]
+      },
+      "ZH": {
+        "style": "Simplified Chinese",
+        "context": "Business/Professional",
+        "mandatory_keywords": ["租赁", "利雅得", "沙特阿拉伯"]
+      }
+    },
+    "fields_auto_generated": 22,
+    "creative_directive": "Sell the result, not just the gear. Transcreation over translation. Mention Riyadh-specific production scenarios.",
+    "content_tone": "Persuasive, Professional, Creative — focused on rental use cases and emotional benefits"
+  },
+  "technical_automation": {
+    "sku_logic": "{CATEGORY_PREFIX}-{BRAND_ABBR}-{RANDOM_4_DIGITS}",
+    "pricing_logic": {
+      "weekly": "daily * 4",
+      "monthly": "daily * 12"
+    },
+    "specs_matching": "DEEP_DB -> CURATED_DB -> LIVE_SCRAPE -> AI_INFERENCE"
+  },
+  "quality_gate": {
+    "min_score": 70,
+    "hard_requirements": {
+      "name_all_locales": true,
+      "min_photos": 4,
+      "min_specs": 3
+    },
+    "status_flow": ["DRAFT", "NEEDS_REVIEW", "READY", "PUBLISHED"],
+    "auto_approve": {
+      "enabled": true,
+      "min_samples": 50,
+      "approval_rate_threshold": 95,
+      "safety_check": "Suspended if rejection rate > 10% in last 7 days"
+    }
+  },
+  "feedback_loop": {
+    "model": "AiFeedback",
+    "tracked_actions": ["approved", "rejected", "edited"],
+    "rejection_reasons": [
+      "inaccurate",
+      "wrong_locale",
+      "too_generic",
+      "factually_incorrect",
+      "formatting",
+      "other"
+    ],
+    "maintenance_script": "scripts/analyze-ai-feedback.ts",
+    "run_frequency": "weekly"
+  },
+  "pipeline": {
+    "stages": [
+      "1. Validate (Photo Gate + Required Fields)",
+      "2. Research (Deep DB → Curated DB → Live Scrape)",
+      "3. Generate (Master Prompt → 22 columns × 3 languages)",
+      "4. Review (Human-in-the-Loop with Confidence Badges)",
+      "5. Publish & Learn (Feedback Loop → Adaptive Confidence)"
+    ]
+  }
+}

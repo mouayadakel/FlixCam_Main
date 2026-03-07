@@ -1,0 +1,46 @@
+/**
+ * GET /api/auth/verify-email?token=... – Verify email from link.
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db/prisma'
+import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
+import { handleApiError } from '@/lib/utils/api-helpers'
+
+export async function GET(request: NextRequest) {
+  try {
+    const rate = await checkRateLimitUpstash(request, 'auth')
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '300' } }
+      )
+    }
+
+    const token = request.nextUrl.searchParams.get('token')
+    if (!token) {
+      return NextResponse.json({ error: 'Token required' }, { status: 400 })
+    }
+
+    const authToken = await prisma.authToken.findFirst({
+      where: { token, type: 'email_verification', expiresAt: { gt: new Date() } },
+      include: { user: true },
+    })
+
+    if (!authToken) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 })
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: authToken.userId },
+        data: { verificationStatus: 'VERIFIED' },
+      }),
+      prisma.authToken.delete({ where: { id: authToken.id } }),
+    ])
+
+    return NextResponse.json({ verified: true })
+  } catch (error) {
+    return handleApiError(error)
+  }
+}

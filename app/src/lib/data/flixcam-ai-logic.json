@@ -1,0 +1,91 @@
+{
+  "project": "FlixCam_AI_Final",
+  "version": "2.0.0",
+  "implementation_summary": {
+    "validation_gate": "4_photo_minimum_required",
+    "ai_role": "Creative_Marketing_Automation",
+    "market_focus": "Riyadh_Saudi_Arabia"
+  },
+  "validation_rules": {
+    "human_required_fields": ["product_name", "brand", "sku", "daily_price", "quantity"],
+    "media_requirements": {
+      "min_photos": 4,
+      "action_on_fail": "highlight_row_red",
+      "block_ai_generation": true
+    }
+  },
+  "automation_map": {
+    "human_only": ["Name", "Brand", "4+ Photos", "Price"],
+    "ai_auto_fill": [
+      "Descriptions_EN_AR_ZH",
+      "SEO_Metadata_EN_AR_ZH",
+      "Advanced_Specifications",
+      "Box_Contents",
+      "Tags",
+      "Related_Products"
+    ],
+    "auto_calc": ["Weekly_Price", "Monthly_Price", "SKU"]
+  },
+  "ai_automation_strategy": {
+    "trigger": "on_valid_ground_truth",
+    "target_fields": 22,
+    "creative_directives": {
+      "tone": "Persuasive, Professional, Creative",
+      "focus": "Rental use cases and emotional benefits",
+      "seo_target": "Riyadh, Saudi Arabia Rental Market"
+    },
+    "descriptions": {
+      "short_desc": "2-sentence punchy hook highlighting the primary rental benefit.",
+      "long_desc": "3 paragraphs: 1. Technical prowess, 2. Real-world rental scenarios (weddings/commercials/documentaries), 3. Reliability and kit vibe."
+    },
+    "advanced_specs": {
+      "format": "JSON key-value pairs",
+      "max_keys": 10,
+      "logic": "If known model, pull from curated DB; if unknown, extract from name pattern."
+    },
+    "seo_and_localization": {
+      "languages": ["EN", "AR", "ZH"],
+      "ar_style": "Modern Standard Arabic (Fusha), professional rental tone, right-to-left optimized",
+      "ar_keywords_required": ["تأجير", "استأجر", "الرياض", "السعودية"],
+      "ar_cultural_context": [
+        "desert cinematography",
+        "Riyadh-based commercial production",
+        "Saudi wedding videography"
+      ],
+      "zh_style": "Simplified Chinese, include 利雅得 (Riyadh) and 沙特阿拉伯 (Saudi Arabia)",
+      "en_keywords_required": ["rent", "rental", "Riyadh", "Saudi Arabia"]
+    }
+  },
+  "automated_calculations": {
+    "weekly_price": "daily_price * 4",
+    "monthly_price": "daily_price * 12",
+    "sku_generator": "{CATEGORY_PREFIX}-{BRAND_ABBR}-{RANDOM_4_DIGITS}"
+  },
+  "quality_gate": {
+    "min_quality_score": 70,
+    "requirements": {
+      "name_all_locales": true,
+      "min_photos": 4,
+      "min_specs": 3
+    },
+    "status_flow": "DRAFT -> NEEDS_REVIEW -> READY -> PUBLISHED"
+  },
+  "feedback_loop": {
+    "model": "AiFeedback",
+    "tracked_actions": ["approved", "rejected", "edited"],
+    "rejection_reasons": [
+      "inaccurate",
+      "wrong_locale",
+      "too_generic",
+      "factually_incorrect",
+      "formatting",
+      "other"
+    ],
+    "auto_approve_threshold": {
+      "min_samples": 50,
+      "approval_rate": 95,
+      "safety_check": "Suspended if rejection rate > 10% in last 7 days"
+    }
+  },
+  "logic_flow": "Validation -> Fuzzy Mapping -> AI Generation -> Human Review -> Feedback Loop"
+}
