@@ -22,7 +22,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import XLSX from 'xlsx'
+import XLSX from '@e965/xlsx'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBNoiZ-ky8diZxKMFShoTwR3IawAStPECQ'

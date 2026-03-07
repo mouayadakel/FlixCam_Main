@@ -69,9 +69,11 @@ npm run db:seed
 **Optional seeds (run only if needed for this environment):**
 
 ```bash
-npm run db:seed:rbac              # RBAC roles/permissions
-npm run db:seed:qsmrent           # QSM rent equipment data
-npm run db:seed:lighting-subcategories  # Lighting subcategories
+npm run db:seed:rbac                    # RBAC roles/permissions
+npm run db:seed:footer                   # Footer CMS (brand, legal, social, newsletter)
+npm run db:seed:blog                     # Blog categories, author, sample posts
+npm run db:seed:lighting-subcategories  # Lighting subcategories (run after main seed)
+npx tsx scripts/seed-policies.ts        # Policy items (6 defaults + full Terms)
 ```
 
 ### 3.5 Build for production

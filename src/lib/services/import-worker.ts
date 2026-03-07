@@ -21,6 +21,7 @@ import { prisma } from '@/lib/db/prisma'
 import { generateUniqueSKU } from '@/lib/utils/sku-generator'
 import { mapColumns, saveMappingHistory, type ColumnMapping } from './column-mapper.service'
 import { lookupDeepSpecs } from './specs-db.service'
+import { getRowNameValue } from './import-validation.service'
 import { ValidationError } from '@/lib/errors'
 
 type RowPayload = {
@@ -99,15 +100,16 @@ async function ensureBrand(brandName: string | null) {
   const name = brandName?.trim()
   if (!name) throw new Error('Brand is required')
   const slug = slugify(name)
+  if (!slug) throw new Error('Brand name produced an empty slug')
   try {
     const brand = await prisma.brand.upsert({
-      where: { name },
+      where: { slug },
       create: { name, slug },
-      update: {},
+      update: { name },
     })
     return brand.id
   } catch (err: unknown) {
-    const brand = await prisma.brand.findUnique({ where: { name } })
+    const brand = await prisma.brand.findFirst({ where: { slug } })
     if (brand) return brand.id
     throw err
   }
@@ -265,8 +267,10 @@ export async function processImportJob(
 
         const categoryId = payload.categoryId
 
-        // Resolve fields via column mapper (SYNONYM_MAP handles all aliases)
-        const nameRaw = resolveField(r, 'name', columnMappings) ?? r['*'] ?? ''
+        // Resolve fields via column mapper (SYNONYM_MAP handles all aliases).
+        // Fallback to getRowNameValue so rows accepted by the API (same logic) never fail here with "Name is required".
+        const nameRaw =
+          resolveField(r, 'name', columnMappings) ?? r['*'] ?? getRowNameValue(r as Record<string, unknown>)
         const name = typeof nameRaw === 'string' ? nameRaw : String(nameRaw ?? '').trim()
         if (!name) throw new Error('Name is required')
 
@@ -314,12 +318,14 @@ export async function processImportJob(
         const priceMonthly = safePrice(monthly) ?? (priceDaily > 0 ? safePrice(priceDaily * MONTHLY_FACTOR) ?? null : null)
         const status = priceDaily > 0 ? ProductStatus.ACTIVE : ProductStatus.DRAFT
 
-        const featuredImageRaw =
-          resolveField(r, 'featured_image', columnMappings) ?? '/images/placeholder.jpg'
+        const PLACEHOLDER_IMAGE = '/images/placeholder.jpg'
+        const featuredImageRaw = resolveField(r, 'featured_image', columnMappings)
         const featuredImage =
           typeof featuredImageRaw === 'string' && featuredImageRaw.trim()
             ? featuredImageRaw.trim()
-            : '/images/placeholder.jpg'
+            : PLACEHOLDER_IMAGE
+        const featuredImageSafe =
+          featuredImage && featuredImage !== '/' ? featuredImage : PLACEHOLDER_IMAGE
         const galleryImages = arr(resolveField(r, 'gallery', columnMappings))
         const tagsRaw = resolveField(r, 'tags', columnMappings)
         const tags = tagsRaw ? String(tagsRaw).trim() : null
@@ -384,7 +390,11 @@ export async function processImportJob(
             const parsed = typeof specsRaw === 'string' ? JSON.parse(specsRaw) : specsRaw
             specifications = normalizeSpecs(parsed)
           } catch {
-            throw new Error('Specifications JSON invalid')
+            // Plain text (e.g. specifications_notes) — store as notes so row still imports
+            const rawStr = typeof specsRaw === 'string' ? specsRaw : String(specsRaw)
+            if (rawStr.trim()) {
+              specifications = { notes: rawStr.trim() }
+            }
           }
         }
         if (suggestion?.specifications && typeof suggestion.specifications === 'object') {
@@ -543,7 +553,7 @@ export async function processImportJob(
           quantity,
           bufferTime: bufferTimeInHours,
           boxContents: boxContentsValue,
-          featuredImage,
+          featuredImage: featuredImageSafe,
           galleryImages,
           videoUrl,
           relatedProducts: relatedProducts.length ? relatedProducts : null,
@@ -583,7 +593,7 @@ export async function processImportJob(
           quantity,
           bufferTime: bufferTimeInHours,
           boxContents: boxContentsValue,
-          featuredImage,
+          featuredImage: featuredImageSafe,
           galleryImages,
           videoUrl,
           relatedProducts: relatedProducts.length ? relatedProducts : null,

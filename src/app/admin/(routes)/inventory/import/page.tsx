@@ -29,7 +29,10 @@ import { ColumnMapper, type MappedColumn } from '@/components/features/import/co
 import { ValidationReport } from '@/components/features/import/validation-report'
 import { ImportSummary } from '@/components/features/import/import-summary'
 import { StatusBadge } from '@/components/shared/status-badge'
-import type { ValidationResult } from '@/lib/services/import-validation.service'
+import {
+  type ValidationResult,
+  getRowNameValue,
+} from '@/lib/services/import-validation.service'
 import {
   type ImportMode,
   IMPORT_MODE_LABELS,
@@ -68,19 +71,6 @@ type ValidationWarning = {
 }
 
 type SheetSkipMap = Record<string, number[]>
-
-const NAME_KEYS = ['Name', 'name', 'Product Name', 'Product', 'اسم', '*']
-
-const getRowNameValue = (row: Record<string, any>) => {
-  for (const key of NAME_KEYS) {
-    const value = row[key]
-    if (value !== undefined && value !== null) {
-      const normalized = String(value).trim()
-      if (normalized) return normalized
-    }
-  }
-  return ''
-}
 
 /** Normalize a string for matching: lowercase, trim, collapse spaces, remove common punctuation */
 function normalizeForMatch(s: string): string {
@@ -263,13 +253,13 @@ export default function ImportPage() {
 
       // Auto-match sheet names to categories/subcategories
       const categories = lookups?.categories ?? []
-      const initialMapping: SheetMapping[] = sheets.map((sheet: SheetMetadata, index: number) => {
+      const initialMapping: SheetMapping[] = sheets.map((sheet: SheetMetadata) => {
         const matched = matchSheetToCategory(sheet.name, categories)
         return {
           sheetName: sheet.name,
           categoryId: matched.categoryId,
           subCategoryId: matched.subCategoryId,
-          selected: index === 0,
+          selected: true,
           selectedRows: [],
         }
       })
@@ -416,16 +406,18 @@ export default function ImportPage() {
 
   const handleSheetSelectionChange = (sheetName: string, checked: boolean) => {
     setMapping((prev) =>
-      prev.map((m) => {
-        if (m.sheetName === sheetName) {
-          return { ...m, selected: checked }
-        }
-        if (checked) {
-          return { ...m, selected: false }
-        }
-        return m
-      })
+      prev.map((m) =>
+        m.sheetName === sheetName ? { ...m, selected: checked } : m
+      )
     )
+  }
+
+  const selectAllSheets = () => {
+    setMapping((prev) => prev.map((m) => ({ ...m, selected: true })))
+  }
+
+  const deselectAllSheets = () => {
+    setMapping((prev) => prev.map((m) => ({ ...m, selected: false })))
   }
 
   const handleAIPreview = () => {
@@ -1041,9 +1033,31 @@ export default function ImportPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="text-sm text-muted-foreground">
-                {selectedSheetsCount} of {sheetsMetadata.length} sheets selected
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedSheetsCount} of {sheetsMetadata.length} sheets selected
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllSheets}
+                    aria-label="Select all sheets"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={deselectAllSheets}
+                    aria-label="Deselect all sheets"
+                  >
+                    Deselect All
+                  </Button>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button

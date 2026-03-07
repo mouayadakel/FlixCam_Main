@@ -69,7 +69,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${cairo.variable} ${inter.variable} ${ibmPlexArabic.variable} font-arabic`}>
         <script dangerouslySetInnerHTML={{ __html: LOCALE_INIT_SCRIPT }} />
         <Providers>

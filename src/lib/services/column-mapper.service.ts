@@ -73,11 +73,14 @@ const SYNONYM_MAP: Record<string, SystemField> = {
   'name (en)': 'name',
   'english name': 'name',
   'product name': 'name',
+  'product title': 'name',
   product: 'name',
   اسم: 'name',
   '*': 'name',
   'item name': 'name',
   title: 'name',
+  'arabic name': 'name',
+  'chinese name': 'name',
 
   // ── Brand ──
   brand: 'brand',

@@ -33,7 +33,25 @@ export type ValidationResult = {
   }
 }
 
-const NAME_KEYS = ['Name', 'name', '*', 'Product Name', 'Product', 'اسم', 'item name', 'title']
+/** Headers accepted as product name (exact + standard template name_en/name_ar/name_zh) */
+const NAME_KEYS = [
+  'Name',
+  'name',
+  '*',
+  'Product Name',
+  'Product',
+  'اسم',
+  'item name',
+  'title',
+  'name_en',
+  'name_ar',
+  'name_zh',
+  'Product Title',
+  'English Name',
+  'Arabic Name',
+  'Chinese Name',
+]
+
 const SKU_KEYS = ['SKU', 'sku', 'Barcode', 'barcode', 'Internal Reference', 'Product Code']
 const PRICE_KEYS = [
   'Daily Price',
@@ -55,6 +73,28 @@ function getField(row: Record<string, unknown>, keys: string[]): string {
     if (value !== undefined && value !== null) {
       const normalized = String(value).trim()
       if (normalized) return normalized
+    }
+  }
+  return ''
+}
+
+/**
+ * Resolve product name from a row. Tries exact NAME_KEYS first, then case-insensitive
+ * key match so headers like "Name_En", "NAME_EN" or "name_en" from the standard template work.
+ * Use this in import page, API route, and validation so behaviour is consistent.
+ */
+export function getRowNameValue(row: Record<string, unknown>): string {
+  const exact = getField(row, NAME_KEYS)
+  if (exact) return exact
+  const nameKeysNorm = new Set(NAME_KEYS.map((k) => k.trim().toLowerCase()))
+  for (const key of Object.keys(row)) {
+    const kNorm = key.trim().toLowerCase()
+    if (nameKeysNorm.has(kNorm)) {
+      const value = row[key]
+      if (value !== undefined && value !== null) {
+        const normalized = String(value).trim()
+        if (normalized) return normalized
+      }
     }
   }
   return ''
@@ -95,7 +135,7 @@ export async function validateImportRows(
     const rn = item.rowNumber
     const sn = item.payload?.sheetName
 
-    const name = getField(row, NAME_KEYS)
+    const name = getRowNameValue(row)
     if (!name) {
       errors.push({
         rowNumber: rn,
@@ -213,7 +253,7 @@ export async function validateImportRows(
   // All valid products are Smart Fill eligible; AI generates 4+ images when missing
   const smartFillEligible = rows.filter((r) => {
     const row = r.payload?.row ?? {}
-    const name = getField(row, NAME_KEYS)
+    const name = getRowNameValue(row)
     return name && !errorRowNumbers.has(r.rowNumber)
   }).length
 

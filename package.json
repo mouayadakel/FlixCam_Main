@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:3002": "next dev -p 3002",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -158,7 +159,7 @@
     "ts-jest": "^29.4.6",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
-    "xlsx": "^0.18.5"
+    "@e965/xlsx": "^0.20.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

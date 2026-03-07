@@ -1,5 +1,7 @@
 # Deployment Guide — FlixCam.rent
 
+**Current production VPS (paths, PM2 name `flixcam-rent`, port 3001):** see **[docs/PRODUCTION_VPS_DEPLOY.md](docs/PRODUCTION_VPS_DEPLOY.md)** for the full checklist and copy-paste deploy block.
+
 ## Prerequisites
 
 - Node.js 20+

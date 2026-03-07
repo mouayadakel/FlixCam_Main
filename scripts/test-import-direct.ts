@@ -5,18 +5,18 @@
 import { parseSpreadsheetBuffer } from '@/lib/utils/excel-parser'
 import { ImportService } from '@/lib/services/import.service'
 import { processImportJob } from '@/lib/services/import-worker'
+import { getRowNameValue } from '@/lib/services/import-validation.service'
 import { prisma } from '@/lib/db/prisma'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const EXCEL_PATH =
-  path.join(process.cwd(), 'docs', 'Flix Stock invintory  (1).xlsx') ||
-  '/Users/mohammedalakel/Desktop/WEBSITE/FlixCamFinal 3/docs/Flix Stock invintory  (1).xlsx'
+const TEMPLATE_PATH = path.join(process.cwd(), 'docs', 'templates', 'equipment-full-ai-filled.xlsx')
+const MAX_ROWS_PER_SHEET = 20
 
 async function main() {
-  const resolvedPath = fs.existsSync(EXCEL_PATH)
-    ? EXCEL_PATH
-    : '/Users/mohammedalakel/Desktop/WEBSITE/FlixCamFinal 3/docs/Flix Stock invintory  (1).xlsx'
+  const resolvedPath = fs.existsSync(TEMPLATE_PATH)
+    ? TEMPLATE_PATH
+    : path.join(process.cwd(), 'docs', 'templates', 'equipment-full-ai-filled.xlsx')
 
   if (!fs.existsSync(resolvedPath)) {
     console.error('Excel file not found:', resolvedPath)
@@ -24,7 +24,9 @@ async function main() {
   }
 
   const buffer = fs.readFileSync(resolvedPath)
-  const wb = await parseSpreadsheetBuffer(buffer, 'Flix Stock invintory (1).xlsx')
+  const filename = path.basename(resolvedPath)
+  const wb = await parseSpreadsheetBuffer(buffer, filename)
+  console.log('Sheets:', wb.sheetNames.join(', '))
 
   const admin = await prisma.user.findFirst({
     where: { deletedAt: null },
@@ -36,7 +38,7 @@ async function main() {
   }
 
   const job = await ImportService.createJob({
-    filename: 'Flix Stock invintory (1).xlsx',
+    filename,
     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     createdBy: admin.id,
   })
@@ -45,22 +47,23 @@ async function main() {
     where: { deletedAt: null },
     select: { id: true, name: true, parentId: true },
   })
-  const cameraCat = categories.find((c) =>
-    /camera|cine|film|lens/i.test(c.name)
-  ) || categories[0]
+  const cameraCat = categories.find((c) => /camera|cine|film|lens/i.test(c.name)) ?? categories[0]
   if (!cameraCat) {
     console.error('No category found')
     process.exit(1)
   }
+  console.log('Using category:', cameraCat.name)
 
   const rowsToInsert: Array<{ rowNumber: number; payload: unknown }> = []
   let totalRows = 0
 
   for (const sheetName of wb.sheetNames) {
     const data = wb.getSheetData(sheetName) as Record<string, unknown>[]
-    data.slice(0, 50).forEach((row, index) => {
-      const name = row['Name'] ?? row['name'] ?? row['*']
-      if (!name || String(name).trim() === '') return
+    const slice = data.slice(0, MAX_ROWS_PER_SHEET)
+    for (let index = 0; index < slice.length; index++) {
+      const row = slice[index] ?? {}
+      const name = getRowNameValue(row as Record<string, unknown>)
+      if (!name) continue
       rowsToInsert.push({
         rowNumber: totalRows + 1,
         payload: {
@@ -72,7 +75,12 @@ async function main() {
         },
       })
       totalRows++
-    })
+    }
+  }
+
+  if (rowsToInsert.length === 0) {
+    console.error('No rows with a name found in file')
+    process.exit(1)
   }
 
   await ImportService.appendRows(job.id, rowsToInsert)
@@ -85,7 +93,12 @@ async function main() {
     where: { jobId: job.id },
     select: { rowNumber: true, status: true, productId: true },
   })
-  console.log('Results:', results)
+  const ok = results.filter((r) => r.status === 'SUCCESS')
+  const failed = results.filter((r) => r.status === 'FAILED')
+  console.log('Results:', ok.length, 'success', failed.length, 'failed')
+  if (failed.length > 0) {
+    console.log('Failed rows:', failed.map((r) => r.rowNumber))
+  }
 }
 
 main().catch((e) => {

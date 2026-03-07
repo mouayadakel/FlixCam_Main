@@ -201,8 +201,25 @@ export async function generateMasterFill(
     }
   }
 
+  const keyHint = getGeminiKeyHint(lastError)
   console.error(
-    `[MasterFill] All ${MASTER_FILL_MAX_RETRIES} attempts failed for "${input.name}". Using fallback.`
+    `[MasterFill] All ${MASTER_FILL_MAX_RETRIES} attempts failed for "${input.name}". Using fallback.${keyHint ? ` ${keyHint}` : ''}`
   )
   return parseMasterFillOutput('', input.name)
+}
+
+/**
+ * If the error is a known Gemini API key issue, return a short hint for fixing it.
+ * See docs/GEMINI_API_KEY_SETUP.md for full steps.
+ */
+function getGeminiKeyHint(error: Error | null): string {
+  if (!error?.message) return ''
+  const msg = error.message
+  if (msg.includes('API_KEY_HTTP_REFERRER_BLOCKED') || msg.includes('referer <empty>')) {
+    return 'Fix: Use a Gemini API key with no HTTP referrer restriction (server-side has no referer). See docs/GEMINI_API_KEY_SETUP.md'
+  }
+  if (msg.includes('API_KEY_INVALID') || msg.includes('API key expired') || msg.includes('API Key not found')) {
+    return 'Fix: Create a new Gemini API key in Google AI Studio, set it in Admin > AI Settings or .env GEMINI_API_KEY. See docs/GEMINI_API_KEY_SETUP.md'
+  }
+  return ''
 }

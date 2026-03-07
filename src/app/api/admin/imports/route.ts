@@ -4,21 +4,9 @@ import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@prisma/client'
+import { getRowNameValue } from '@/lib/services/import-validation.service'
 
 export const dynamic = 'force-dynamic'
-
-const NAME_KEYS = ['Name', 'name', 'Product Name', 'Product', 'اسم', '*']
-
-const getRowNameValue = (row: Record<string, any>) => {
-  for (const key of NAME_KEYS) {
-    const value = row[key]
-    if (value !== undefined && value !== null) {
-      const normalized = String(value).trim()
-      if (normalized) return normalized
-    }
-  }
-  return ''
-}
 
 const getExcelRowNumber = (row: Record<string, any>, fallback: number) => {
   return (
