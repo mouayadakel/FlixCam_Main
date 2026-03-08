@@ -84,7 +84,7 @@ REDIS_URL="redis://localhost:6379"
 
 ## 5. PM2 (process manager)
 
-Used to run the Next.js app and keep it running (port 3001 in your setup).
+Used to run the Next.js app and keep it running (port 3000 in your setup).
 
 ```bash
 sudo npm install -g pm2
@@ -95,7 +95,7 @@ After first deploy you’ll start the app with something like:
 
 ```bash
 cd /path/to/FlixCam_Main
-PORT=3001 pm2 start npm --name "flixcam-rent" -- start
+PORT=3000 pm2 start npm --name "flixcam-rent" -- start
 # or use an ecosystem.config.js / ecosystem.yml
 ```
 
@@ -103,13 +103,13 @@ PORT=3001 pm2 start npm --name "flixcam-rent" -- start
 
 ## 6. Reverse proxy & SSL (production)
 
-So the app is served over HTTPS (e.g. `https://flixcam.rent`) and traffic goes to your Node app on port 3001.
+So the app is served over HTTPS (e.g. `https://flixcam.rent`) and traffic goes to your Node app on port 3000.
 
 - **Nginx**
 
 ```bash
 sudo apt install -y nginx certbot python3-certbot-nginx
-# Configure a server block that proxy_pass to http://127.0.0.1:3001
+# Configure a server block that proxy_pass to http://127.0.0.1:3000
 # Then: sudo certbot --nginx -d flixcam.rent
 ```
 
@@ -118,7 +118,7 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 ```bash
 sudo apt install -y debian-keyring debian-archive-keyring curl
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-# Add Caddy repo and install, then configure Caddyfile to reverse_proxy to 127.0.0.1:3001
+# Add Caddy repo and install, then configure Caddyfile to reverse_proxy to 127.0.0.1:3000
 ```
 
 ---
@@ -182,4 +182,4 @@ sudo ufw status
 
 4. Point your domain’s DNS to the VPS and complete SSL (Certbot or Caddy).
 
-5. Verify: `curl -s http://localhost:3001/api/health` and open `https://yourdomain.com` in a browser.
+5. Verify: `curl -s http://localhost:3000/api/health` and open `https://yourdomain.com` in a browser.

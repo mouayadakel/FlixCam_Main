@@ -9,11 +9,11 @@ This doc is the **single source of truth** for deploying to the live FlixCam VPS
 | Item | Value |
 |------|--------|
 | SSH | `ssh root@your-vps-ip` (or your user/host) |
-| App directory | `/home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main` |
+| App directory | `/home/flixcam.rent` |
 | Git root | `/home/flixcam.rent` (parent of FlixCam_Main) |
 | Process manager | PM2 |
 | PM2 app name | **flixcam-rent** (not `flixcam`) |
-| App port | **3001** (not 3000) |
+| App port | **3000** (not 3000) |
 
 ---
 
@@ -49,7 +49,7 @@ See the table at the top of this doc.
 ### Step 3 – Go to the app and pull
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 git fetch origin
 git pull origin main
 git log -1 --oneline
@@ -60,7 +60,7 @@ Note the commit hash; that’s the code the server has.
 ### Step 4 – Install deps and Prisma
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 npm ci --omit=dev
 npx prisma generate
 npx prisma migrate deploy
@@ -72,7 +72,7 @@ Fix any migration errors before continuing.
 ### Step 5 – Clean build (so UI/code changes show)
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 rm -rf .next
 npm run build
 ```
@@ -88,10 +88,10 @@ pm2 list
 
 (You use **flixcam-rent**, not `flixcam`.)
 
-### Step 7 – Check health (port 3001)
+### Step 7 – Check health (port 3000)
 
 ```bash
-curl -s http://localhost:3001/api/health
+curl -s http://localhost:3000/api/health
 ```
 
 Expect something like: `{"status":"ok","db":"connected"}`. If not, check `pm2 logs flixcam-rent`.
@@ -101,7 +101,7 @@ Expect something like: `{"status":"ok","db":"connected"}`. If not, check `pm2 lo
 On the VPS, open the app’s `.env`:
 
 ```bash
-nano /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main/.env
+nano /home/flixcam.rent/.env
 ```
 
 Set/verify (keep existing real secrets; only fix placeholders or wrong values):
@@ -111,8 +111,8 @@ Set/verify (keep existing real secrets; only fix placeholders or wrong values):
   - `APP_URL="https://flixcam.rent"`
   - `NEXT_PUBLIC_APP_URL="https://flixcam.rent"`
 
-- **Port** (optional; PM2 ecosystem already sets 3001):
-  - `PORT=3001`
+- **Port** (optional; PM2 ecosystem already sets 3000):
+  - `PORT=3000`
 
 - **Supabase** (if you use it for blog/auth/storage):
   - `NEXT_PUBLIC_SUPABASE_URL` → real project URL
@@ -139,7 +139,7 @@ pm2 restart flixcam-rent
 If you changed any `NEXT_PUBLIC_*` or other build-time env, rebuild and restart:
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 npm run build
 pm2 restart flixcam-rent
 ```
@@ -158,10 +158,10 @@ If something is still missing, it’s likely env (e.g. Supabase or a feature fla
 
 ### Step 10 – Full deploy after every pull
 
-On the VPS, every time you pull new code, run the full sequence. Your app uses port **3001** and PM2 name **flixcam-rent**, so `scripts/deploy.sh` (which uses port 3000 and `flixcam`) doesn’t match. Use this block:
+On the VPS, every time you pull new code, run the full sequence. Your app uses port **3000** and PM2 name **flixcam-rent**, so `scripts/deploy.sh` (which uses port 3000 and `flixcam`) doesn’t match. Use this block:
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 git pull origin main
 npm ci --omit=dev
 npx prisma generate
@@ -169,7 +169,7 @@ npx prisma migrate deploy
 npm run build
 pm2 restart flixcam-rent
 sleep 4
-curl -s http://localhost:3001/api/health
+curl -s http://localhost:3000/api/health
 ```
 
 **Never** only `git pull` without build + restart if you want new changes to appear.
@@ -179,7 +179,7 @@ curl -s http://localhost:3001/api/health
 On the VPS you can add an alias (e.g. in `~/.bashrc`):
 
 ```bash
-alias deploy-flixcam='cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main && git pull origin main && npm ci --omit=dev && npx prisma generate && npx prisma migrate deploy && npm run build && pm2 restart flixcam-rent && sleep 4 && curl -s http://localhost:3001/api/health'
+alias deploy-flixcam='cd /home/flixcam.rent && git pull origin main && npm ci --omit=dev && npx prisma generate && npx prisma migrate deploy && npm run build && pm2 restart flixcam-rent && sleep 4 && curl -s http://localhost:3000/api/health'
 ```
 
 Then after SSH you run:
@@ -194,10 +194,10 @@ deploy-flixcam
 
 | Goal | Command / action |
 |------|-------------------|
-| Deploy latest code | On VPS: `cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main` → `git pull origin main` → `npm ci --omit=dev` → `npx prisma generate` → `npx prisma migrate deploy` → `npm run build` → `pm2 restart flixcam-rent`. |
+| Deploy latest code | On VPS: `cd /home/flixcam.rent` → `git pull origin main` → `npm ci --omit=dev` → `npx prisma generate` → `npx prisma migrate deploy` → `npm run build` → `pm2 restart flixcam-rent`. |
 | Blog/features missing | Fix `.env` on VPS: real Supabase keys (if used), `APP_URL`/`NEXTAUTH_URL`/`NEXT_PUBLIC_APP_URL` = `https://flixcam.rent`, and any `ENABLE_*` flags. Then `pm2 restart flixcam-rent` (and rebuild if you changed `NEXT_PUBLIC_*`). |
 | Still old after deploy | Ensure you ran `npm run build` and then `pm2 restart flixcam-rent`; confirm PM2 is running from that app directory. |
-| Check what’s running | `pm2 list`; `pm2 logs flixcam-rent`; `curl -s http://localhost:3001/api/health`. |
+| Check what’s running | `pm2 list`; `pm2 logs flixcam-rent`; `curl -s http://localhost:3000/api/health`. |
 
 ---
 
@@ -206,7 +206,7 @@ deploy-flixcam
 Use this after SSH for a full deploy (Steps 3–7 and 10). Do Step 8 (.env) separately if blog/features still don’t work, then Step 9 in the browser to confirm.
 
 ```bash
-cd /home/flixcam.rent/public_html/FlixCam_Main/FlixCam_Main
+cd /home/flixcam.rent
 git fetch origin && git pull origin main
 git log -1 --oneline
 npm ci --omit=dev
@@ -216,5 +216,5 @@ npx prisma migrate status
 rm -rf .next && npm run build
 pm2 restart flixcam-rent
 sleep 4
-curl -s http://localhost:3001/api/health
+curl -s http://localhost:3000/api/health
 ```

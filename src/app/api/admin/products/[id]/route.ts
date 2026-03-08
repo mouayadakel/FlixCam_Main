@@ -66,25 +66,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       tags: body.tags ?? undefined,
       translations: body.translations
         ? (body.translations as any[]).map((t) => ({
-            locale: t.locale as TranslationLocale,
-            name: t.name,
-            shortDescription: t.shortDescription,
-            longDescription: t.longDescription,
-            specifications: t.specifications ?? null,
-            seoTitle: t.seoTitle,
-            seoDescription: t.seoDescription,
-            seoKeywords: t.seoKeywords,
-          }))
+          locale: t.locale as TranslationLocale,
+          name: t.name,
+          shortDescription: t.shortDescription,
+          longDescription: t.longDescription,
+          specifications: t.specifications ?? null,
+          seoTitle: t.seoTitle,
+          seoDescription: t.seoDescription,
+          seoKeywords: t.seoKeywords,
+        }))
         : undefined,
       inventoryItems: body.inventoryItems
         ? (body.inventoryItems as any[]).map((item) => ({
-            serialNumber: item.serialNumber,
-            barcode: item.barcode,
-            itemStatus: item.itemStatus as InventoryItemStatus,
-            location: item.location ?? null,
-            purchaseDate: item.purchaseDate ? new Date(item.purchaseDate) : null,
-            purchasePrice: item.purchasePrice ?? null,
-          }))
+          serialNumber: item.serialNumber,
+          barcode: item.barcode,
+          itemStatus: item.itemStatus as InventoryItemStatus,
+          location: item.location ?? null,
+          purchaseDate: item.purchaseDate ? new Date(item.purchaseDate) : null,
+          purchasePrice: item.purchasePrice ?? null,
+        }))
         : undefined,
       updatedBy: session.user.id,
     })
@@ -114,9 +114,22 @@ export async function DELETE(
 
   try {
     const { id } = await params
-    await prisma.product.update({
-      where: { id },
-      data: { deletedAt: new Date(), deletedBy: session.user.id },
+    await prisma.$transaction(async (tx) => {
+      // Soft-delete product
+      await tx.product.update({
+        where: { id },
+        data: { deletedAt: new Date(), deletedBy: session.user.id },
+      })
+      // Soft-delete associated equipment
+      await tx.equipment.updateMany({
+        where: { productId: id, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: session.user.id, isActive: false },
+      })
+      // Also check if equipment ID matches product ID (common pattern in this DB)
+      await tx.equipment.updateMany({
+        where: { id, productId: null, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: session.user.id, isActive: false },
+      })
     })
     return NextResponse.json({ success: true })
   } catch (error: any) {

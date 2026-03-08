@@ -701,13 +701,40 @@ export class EquipmentService {
       throw new Error('Cannot delete equipment that is in active bookings')
     }
 
-    await prisma.equipment.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedBy,
-        isActive: false,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.equipment.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          deletedBy,
+          isActive: false,
+        },
+      })
+
+      // Soft-delete associated product if linked
+      if (equipment.productId) {
+        await tx.product.update({
+          where: { id: equipment.productId },
+          data: {
+            deletedAt: new Date(),
+            deletedBy,
+          },
+        })
+      } else {
+        // Check if product ID matches equipment ID (common in this DB)
+        const productMatch = await tx.product.findFirst({
+          where: { id: equipment.id, deletedAt: null },
+        })
+        if (productMatch) {
+          await tx.product.update({
+            where: { id: equipment.id },
+            data: {
+              deletedAt: new Date(),
+              deletedBy,
+            },
+          })
+        }
+      }
     })
 
     return { success: true }

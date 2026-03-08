@@ -143,6 +143,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
       specifications: specsValue,
       specSource: specsValue ? 'import' : undefined,
       customFields: customFieldsValue,
+      isActive: true,
       updatedAt: new Date(),
       ...(existing?.deletedAt && { deletedAt: null, deletedBy: null }),
     }
@@ -174,6 +175,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
           monthlyPrice: product.priceMonthly ?? undefined,
           quantityTotal: product.quantity ?? 1,
           quantityAvailable: product.quantity ?? 1,
+          isActive: true,
           specifications: specsValue,
           specSource: specsValue ? 'import' : undefined,
           customFields: customFieldsValue,
