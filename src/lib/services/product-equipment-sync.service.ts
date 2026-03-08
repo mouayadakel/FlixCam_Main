@@ -206,11 +206,11 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
       const lang = LOCALE_TO_LANG[pt.locale]
       const fields = [
         { field: 'name', value: pt.name },
-        { field: 'shortDescription', value: pt.shortDescription },
-        { field: 'longDescription', value: pt.longDescription },
-        { field: 'seoTitle', value: pt.seoTitle },
-        { field: 'seoDescription', value: pt.seoDescription },
-        { field: 'seoKeywords', value: pt.seoKeywords },
+        { field: 'short_description', value: pt.shortDescription },
+        { field: 'long_description', value: pt.longDescription },
+        { field: 'seo_title', value: pt.seoTitle },
+        { field: 'seo_description', value: pt.seoDescription },
+        { field: 'seo_keywords', value: pt.seoKeywords },
       ]
       for (const { field, value } of fields) {
         await tx.translation.upsert({
@@ -340,14 +340,14 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
       // Use existing translation data if available, fallback to equipment Translation table, then generic defaults
       const resolvedName = existing?.get('name') || name
       const resolvedShortDesc =
-        existingPT?.shortDescription || existing?.get('shortDescription') || fallbackShortDesc
+        existingPT?.shortDescription || existing?.get('short_description') || fallbackShortDesc
       const resolvedLongDesc =
-        existingPT?.longDescription || existing?.get('longDescription') || fallbackLongDesc
-      const resolvedSeoTitle = existingPT?.seoTitle || existing?.get('seoTitle') || fallbackSeoTitle
+        existingPT?.longDescription || existing?.get('long_description') || fallbackLongDesc
+      const resolvedSeoTitle = existingPT?.seoTitle || existing?.get('seo_title') || fallbackSeoTitle
       const resolvedSeoDesc =
-        existingPT?.seoDescription || existing?.get('seoDescription') || fallbackSeoDesc
+        existingPT?.seoDescription || existing?.get('seo_description') || fallbackSeoDesc
       const resolvedSeoKeywords =
-        existingPT?.seoKeywords || existing?.get('seoKeywords') || fallbackSeoKeywords
+        existingPT?.seoKeywords || existing?.get('seo_keywords') || fallbackSeoKeywords
 
       // Preserve specs from existing ProductTranslation
       const resolvedSpecs =

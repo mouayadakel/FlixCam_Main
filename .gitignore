@@ -26,6 +26,8 @@ yarn-error.log*
 
 # Local env files — .env.example must NOT be ignored (keep for CI/docs)
 .env
+# Filled production env template (may contain API keys) — do not commit
+docs/PRODUCTION_ENV_TEMPLATE.md
 .env.local
 .env.development
 .env.development.local

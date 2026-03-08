@@ -550,6 +550,17 @@ export default function ImportPage() {
       if (shouldSendApprovedSuggestions(importMode, approvedSuggestions.length)) {
         formData.append('approvedSuggestions', JSON.stringify(approvedSuggestions))
       }
+      // Persist user-confirmed column mappings per selected sheet so the worker uses them (name, seo, descriptions, all locales)
+      const columnMappingsBySheet: Record<string, MappedColumn[]> = {}
+      selectedMappings.forEach((m) => {
+        const mappings = columnMappings[m.sheetName]
+        if (mappings && mappings.length > 0) {
+          columnMappingsBySheet[m.sheetName] = mappings
+        }
+      })
+      if (Object.keys(columnMappingsBySheet).length > 0) {
+        formData.append('columnMappingsBySheet', JSON.stringify(columnMappingsBySheet))
+      }
 
       const res = await fetch('/api/admin/imports', {
         method: 'POST',

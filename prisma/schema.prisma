@@ -149,6 +149,7 @@ model ImportJob {
   imageProcessingStatus String?
   selectedRows          Json?
   selectedSheets        Json?
+  columnMappingsBySheet Json?   // User-confirmed column mappings per sheet (sourceHeader -> mappedField); used by worker so import respects UI mapping
   aiProcessingJobs      AIProcessingJob[]
   rows                  ImportJobRow[]
 }

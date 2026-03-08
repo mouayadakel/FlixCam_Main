@@ -144,7 +144,9 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
           .map((m: any) => m.url) || []
       const video = equipmentData.media?.find((m: any) => m.type === 'video')?.url || ''
 
-      // Format translations from the translations object
+      // Format translations from the translations object. Always populate all 3 locales
+      // so the form has the correct structure; use empty strings when no data.
+      const locales = ['ar', 'en', 'zh'] as const
       const translations: Array<{
         locale: 'ar' | 'en' | 'zh'
         name?: string
@@ -153,35 +155,18 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
         seoTitle?: string
         seoDescription?: string
         seoKeywords?: string
-      }> = []
-
-      if (equipmentData.translations) {
-        const locales = ['ar', 'en', 'zh'] as const
-        locales.forEach((locale) => {
-          const trans = equipmentData.translations[locale]
-          if (trans && (trans.name || trans.description || trans.shortDescription)) {
-            translations.push({
-              locale,
-              name: trans.name || '',
-              description: trans.description || '',
-              shortDescription: trans.shortDescription || '',
-              seoTitle: trans.seoTitle || '',
-              seoDescription: trans.seoDescription || '',
-              seoKeywords: trans.seoKeywords || '',
-            })
-          }
-        })
-      }
-
-      // Ensure at least Arabic translation exists
-      if (translations.length === 0) {
-        translations.push({
-          locale: 'ar',
-          name: '',
-          description: '',
-          shortDescription: '',
-        })
-      }
+      }> = locales.map((locale) => {
+        const trans = equipmentData.translations?.[locale]
+        return {
+          locale,
+          name: trans?.name ?? '',
+          description: trans?.description ?? '',
+          shortDescription: trans?.shortDescription ?? '',
+          seoTitle: trans?.seoTitle ?? '',
+          seoDescription: trans?.seoDescription ?? '',
+          seoKeywords: trans?.seoKeywords ?? '',
+        }
+      })
 
       // Reset form with equipment data
       reset({

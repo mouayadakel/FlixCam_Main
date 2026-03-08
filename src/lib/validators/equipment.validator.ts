@@ -13,8 +13,9 @@ export const equipmentTranslationSchema = z.object({
   locale: z.enum(['ar', 'en', 'zh'], { required_error: 'Locale is required' }),
   name: z
     .string()
-    .min(1, { message: 'Name is required' })
-    .max(200, { message: 'Name is too long' }),
+    .max(200, { message: 'Name is too long' })
+    .optional()
+    .transform((v) => v ?? ''),
   description: z.string().max(5000, { message: 'Description is too long' }).optional(),
   shortDescription: z.string().max(500, { message: 'Short description is too long' }).optional(),
   longDescription: z.string().max(5000, { message: 'Long description is too long' }).optional(),

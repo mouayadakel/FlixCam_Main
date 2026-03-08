@@ -109,8 +109,6 @@ const nextConfig = {
   async rewrites() {
     return [
       { source: '/blog/feed.xml', destination: '/blog/rss.xml' },
-      // Passthrough so dynamic routes resolve correctly in CI/E2E (avoids routing issues)
-      { source: '/:path*', destination: '/:path*' },
     ]
   },
 }

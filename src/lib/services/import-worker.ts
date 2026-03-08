@@ -203,14 +203,30 @@ export async function processImportJob(
   console.info(`[Import] Job ${jobId}: processing ${job.rows.length} rows`)
   await ImportService.markProcessing(jobId)
 
-  // Build column mappings per sheet (so different sheets with different headers all resolve correctly)
+  // Build column mappings per sheet. Use user-confirmed mappings from the import UI when present (so name, seo, descriptions, all locales are linked correctly).
   const columnMappingsBySheet = new Map<string, ColumnMapping[]>()
+  const jobColumnMappings = job.columnMappingsBySheet as Record<
+    string,
+    Array<{ sourceHeader: string; mappedField: string | null; confidence: number; method: string }>
+  > | null
+  if (jobColumnMappings && typeof jobColumnMappings === 'object') {
+    for (const [sheetName, mappings] of Object.entries(jobColumnMappings)) {
+      if (Array.isArray(mappings) && mappings.length > 0) {
+        columnMappingsBySheet.set(sheetName, mappings as ColumnMapping[])
+      }
+    }
+    if (columnMappingsBySheet.size > 0) {
+      console.info(`[Import] Using ${columnMappingsBySheet.size} user-confirmed column mapping(s) from import UI`)
+    }
+  }
+
   const seenSheets = new Set<string>()
   for (const row of job.rows) {
     const payload = row.payload as unknown as RowPayload
     const sheetName = payload?.sheetName
     if (!sheetName || !payload?.row || seenSheets.has(sheetName)) continue
     seenSheets.add(sheetName)
+    if (columnMappingsBySheet.has(sheetName)) continue
     const headers = Object.keys(payload.row)
     try {
       const mappings = await mapColumns(headers, { useHistory: true })
@@ -268,15 +284,18 @@ export async function processImportJob(
         const categoryId = payload.categoryId
 
         // Resolve fields via column mapper (SYNONYM_MAP handles all aliases).
-        // Fallback to getRowNameValue so rows accepted by the API (same logic) never fail here with "Name is required".
+        // Fallback: getRowNameValue (checks name_en/name_ar/name_zh), then model.
+        const modelName = resolveField(r, 'model', columnMappings) ?? null
         const nameRaw =
-          resolveField(r, 'name', columnMappings) ?? r['*'] ?? getRowNameValue(r as Record<string, unknown>)
+          resolveField(r, 'name', columnMappings) ??
+          r['*'] ??
+          getRowNameValue(r as Record<string, unknown>) ??
+          modelName
         const name = typeof nameRaw === 'string' ? nameRaw : String(nameRaw ?? '').trim()
         if (!name) throw new Error('Name is required')
 
         const brandName = resolveField(r, 'brand', columnMappings) ?? 'Unknown'
         const brandId = await ensureBrand(brandName || null)
-        const modelName = resolveField(r, 'model', columnMappings) ?? null
 
         const daily = num(resolveField(r, 'daily_price', columnMappings))
         const quantityRaw = num(resolveField(r, 'quantity', columnMappings))
@@ -459,24 +478,29 @@ export async function processImportJob(
           arFromSuggestion?.longDescription ||
           resolveField(r, 'long_desc_ar', columnMappings) ||
           ''
-        if (nameAr) {
+        const seoTitleAr =
+          seoByLocale?.ar?.metaTitle ||
+          seoFromSuggestion?.metaTitle ||
+          (resolveField(r, 'seo_title_ar', columnMappings) ?? (nameAr || name))
+        const seoDescAr =
+          seoByLocale?.ar?.metaDescription ||
+          seoFromSuggestion?.metaDescription ||
+          (resolveField(r, 'seo_desc_ar', columnMappings) ?? (shortDescAr || nameAr || name))
+        const seoKeywordsAr =
+          seoByLocale?.ar?.metaKeywords ||
+          seoFromSuggestion?.metaKeywords ||
+          (resolveField(r, 'seo_keywords_ar', columnMappings) ?? '')
+        // Push AR when we have ANY data (name, description, or SEO) — use EN name as fallback when nameAr empty
+        const hasArData = nameAr || shortDescAr || longDescAr || seoTitleAr || seoDescAr || seoKeywordsAr
+        if (hasArData) {
           translations.push({
             locale: TranslationLocale.ar,
-            name: nameAr,
+            name: nameAr || name,
             shortDescription: shortDescAr || undefined,
             longDescription: longDescAr || undefined,
-            seoTitle:
-              seoByLocale?.ar?.metaTitle ||
-              seoFromSuggestion?.metaTitle ||
-              (resolveField(r, 'seo_title_ar', columnMappings) ?? nameAr),
-            seoDescription:
-              seoByLocale?.ar?.metaDescription ||
-              seoFromSuggestion?.metaDescription ||
-              (resolveField(r, 'seo_desc_ar', columnMappings) ?? (shortDescAr || nameAr)),
-            seoKeywords:
-              seoByLocale?.ar?.metaKeywords ||
-              seoFromSuggestion?.metaKeywords ||
-              (resolveField(r, 'seo_keywords_ar', columnMappings) ?? ''),
+            seoTitle: seoTitleAr || undefined,
+            seoDescription: seoDescAr || undefined,
+            seoKeywords: seoKeywordsAr || undefined,
           })
         }
 
@@ -491,24 +515,29 @@ export async function processImportJob(
           zhFromSuggestion?.longDescription ||
           resolveField(r, 'long_desc_zh', columnMappings) ||
           ''
-        if (nameZh) {
+        const seoTitleZh =
+          seoByLocale?.zh?.metaTitle ||
+          seoFromSuggestion?.metaTitle ||
+          (resolveField(r, 'seo_title_zh', columnMappings) ?? (nameZh || name))
+        const seoDescZh =
+          seoByLocale?.zh?.metaDescription ||
+          seoFromSuggestion?.metaDescription ||
+          (resolveField(r, 'seo_desc_zh', columnMappings) ?? (shortDescZh || nameZh || name))
+        const seoKeywordsZh =
+          seoByLocale?.zh?.metaKeywords ||
+          seoFromSuggestion?.metaKeywords ||
+          (resolveField(r, 'seo_keywords_zh', columnMappings) ?? '')
+        // Push ZH when we have ANY data — use EN name as fallback when nameZh empty
+        const hasZhData = nameZh || shortDescZh || longDescZh || seoTitleZh || seoDescZh || seoKeywordsZh
+        if (hasZhData) {
           translations.push({
             locale: TranslationLocale.zh,
-            name: nameZh,
+            name: nameZh || name,
             shortDescription: shortDescZh || undefined,
             longDescription: longDescZh || undefined,
-            seoTitle:
-              seoByLocale?.zh?.metaTitle ||
-              seoFromSuggestion?.metaTitle ||
-              (resolveField(r, 'seo_title_zh', columnMappings) ?? nameZh),
-            seoDescription:
-              seoByLocale?.zh?.metaDescription ||
-              seoFromSuggestion?.metaDescription ||
-              (resolveField(r, 'seo_desc_zh', columnMappings) ?? (shortDescZh || nameZh)),
-            seoKeywords:
-              seoByLocale?.zh?.metaKeywords ||
-              seoFromSuggestion?.metaKeywords ||
-              (resolveField(r, 'seo_keywords_zh', columnMappings) ?? ''),
+            seoTitle: seoTitleZh || undefined,
+            seoDescription: seoDescZh || undefined,
+            seoKeywords: seoKeywordsZh || undefined,
           })
         }
 

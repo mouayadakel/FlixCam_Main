@@ -111,6 +111,7 @@ export class TranslationService {
         name?: string
         description?: string
         shortDescription?: string
+        longDescription?: string
         seoTitle?: string
         seoDescription?: string
         seoKeywords?: string
@@ -118,15 +119,17 @@ export class TranslationService {
     > = {}
 
     locales.forEach((locale) => {
-      if (translations[locale]) {
-        result[locale] = {
-          name: translations[locale]['name'],
-          description: translations[locale]['description'],
-          shortDescription: translations[locale]['short_description'],
-          seoTitle: translations[locale]['seo_title'],
-          seoDescription: translations[locale]['seo_description'],
-          seoKeywords: translations[locale]['seo_keywords'],
-        }
+      const t = translations[locale]
+      // Always return all locales so edit form has correct structure; use empty strings when no data
+      // Translation table stores camelCase (shortDescription, seoTitle, etc.) from product-equipment-sync
+      result[locale] = {
+        name: t?.['name'] ?? '',
+        description: t?.['longDescription'] ?? t?.['description'] ?? '',
+        shortDescription: t?.['shortDescription'] ?? t?.['short_description'] ?? '',
+        longDescription: t?.['longDescription'] ?? '',
+        seoTitle: t?.['seoTitle'] ?? t?.['seo_title'] ?? '',
+        seoDescription: t?.['seoDescription'] ?? t?.['seo_description'] ?? '',
+        seoKeywords: t?.['seoKeywords'] ?? t?.['seo_keywords'] ?? '',
       }
     })
 

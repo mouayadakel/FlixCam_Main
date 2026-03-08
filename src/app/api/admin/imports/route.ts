@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     const selectedSheetsRaw = formData.get('selectedSheets') as string | null
     const selectedRowsRaw = formData.get('selectedRows') as string | null
     const approvedSuggestionsRaw = formData.get('approvedSuggestions') as string | null
+    const columnMappingsBySheetRaw = formData.get('columnMappingsBySheet') as string | null
 
     if (!file) return NextResponse.json({ error: 'Missing file' }, { status: 400 })
 
@@ -82,6 +83,8 @@ export async function POST(request: NextRequest) {
         confidence?: number
       }
     }> = approvedSuggestionsRaw ? JSON.parse(approvedSuggestionsRaw) : []
+    const columnMappingsBySheet: Record<string, Array<{ sourceHeader: string; mappedField: string | null; confidence: number; method: string }>> | null =
+      columnMappingsBySheetRaw ? JSON.parse(columnMappingsBySheetRaw) : null
 
     // Ensure every selected sheet has a category (otherwise every row fails with "Category mapping missing")
     const sheetsNeedingCategory = (
@@ -188,12 +191,16 @@ export async function POST(request: NextRequest) {
 
     await ImportService.appendRows(job.id, rowsToInsert)
 
-    // Update job with selected sheets/rows for reference
+    // Update job with selected sheets/rows and user-confirmed column mappings (so worker uses them)
     await prisma.importJob.update({
       where: { id: job.id },
       data: {
         selectedSheets: selectedSheets != null ? selectedSheets : Prisma.JsonNull,
         selectedRows: selectedRows != null ? selectedRows : Prisma.JsonNull,
+        columnMappingsBySheet:
+          columnMappingsBySheet != null && Object.keys(columnMappingsBySheet).length > 0
+            ? (columnMappingsBySheet as object)
+            : Prisma.JsonNull,
       },
     })
 
