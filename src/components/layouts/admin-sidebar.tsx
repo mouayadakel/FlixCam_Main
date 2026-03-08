@@ -8,6 +8,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -242,7 +243,22 @@ export function AdminSidebar() {
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-neutral-200 px-4">
-          {!collapsed && <h1 className="text-xl font-bold text-primary-600">نظام التأجير</h1>}
+          {!collapsed && (
+            <Link
+              href="/"
+              className="flex shrink-0 items-center transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2 rounded"
+              aria-label="FlixCam.rent"
+            >
+              <Image
+                src="/images/flixcam-logo.png"
+                alt="FlixCam.rent"
+                width={140}
+                height={44}
+                className="h-[63px] w-[229px] object-contain"
+                priority
+              />
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -288,12 +304,14 @@ export function AdminSidebar() {
                     onClick={() => toggleSection(section.title.ar)}
                     className={cn(
                       'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-                      hasActiveItem
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-neutral-600 hover:bg-neutral-50'
+                      section.title.ar === 'المخزون'
+                        ? 'text-brand-primary hover:bg-primary-50'
+                        : hasActiveItem
+                          ? 'bg-primary-50 text-primary-700'
+                          : 'text-neutral-600 hover:bg-neutral-50'
                     )}
                   >
-                    <section.icon className="h-4 w-4 flex-shrink-0" />
+                    <section.icon className={cn('h-4 w-4 flex-shrink-0', section.title.ar === 'المخزون' && 'text-brand-primary')} />
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-end">{section.title[language]}</span>
