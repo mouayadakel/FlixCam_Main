@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
         selectedRows: selectedRows != null ? selectedRows : Prisma.JsonNull,
         columnMappingsBySheet:
           columnMappingsBySheet != null && Object.keys(columnMappingsBySheet).length > 0
-            ? (columnMappingsBySheet as object)
+            ? JSON.parse(JSON.stringify(columnMappingsBySheet))
             : Prisma.JsonNull,
       },
     })

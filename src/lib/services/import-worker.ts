@@ -116,6 +116,93 @@ async function ensureBrand(brandName: string | null) {
 }
 
 /**
+ * Parses a flat text blob (e.g. from Excel notes) into a StructuredSpecifications object 
+ * if it contains recognizable section headers like "1. SHORT SPECS".
+ */
+function parseStructuredTextToSpecs(text: string): Record<string, unknown> | null {
+  if (!text || typeof text !== 'string') return null;
+
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  const hasShortSpecs = lines.some(l => l.toUpperCase().includes('1. SHORT SPECS') || l.toUpperCase().includes('SHORT SPECS'));
+  const hasFullSpecs = lines.some(l => l.toUpperCase().includes('2. FULL SPECS') || l.toUpperCase().includes('FULL SPECS'));
+
+  if (!hasShortSpecs && !hasFullSpecs) return null;
+
+  const groups: any[] = [];
+  let currentGroupName = '';
+  let currentGroupSpecs: any[] = [];
+  let priority = 1;
+
+  const pushGroup = () => {
+    if (currentGroupName && currentGroupSpecs.length > 0) {
+      let icon = 'star';
+      if (currentGroupName.toUpperCase().includes('FULL')) icon = 'info';
+      if (currentGroupName.toUpperCase().includes('TECHNICIAN')) icon = 'zap';
+
+      groups.push({
+        label: currentGroupName,
+        icon,
+        priority: priority++,
+        specs: currentGroupSpecs
+      });
+    }
+  };
+
+  for (const line of lines) {
+    if (/^\d+\.\s+[A-Z\s]+$/.test(line) || line.toUpperCase() === '1. SHORT SPECS' || line.toUpperCase() === '2. FULL SPECS' || line.toUpperCase() === '3. TECHNICIAN SPECS') {
+      pushGroup();
+      currentGroupName = line.replace(/^\d+\.\s+/, '').trim();
+      currentGroupName = currentGroupName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      currentGroupSpecs = [];
+      continue;
+    }
+
+    if (!currentGroupName) continue;
+
+    if (line.startsWith('-')) {
+      const itemText = line.substring(1).trim();
+      if (itemText) {
+        currentGroupSpecs.push({
+          key: `feature_${currentGroupSpecs.length + 1}`,
+          label: 'Feature',
+          value: itemText,
+          type: 'text',
+        });
+      }
+    } else if (line.includes(':')) {
+      const idx = line.indexOf(':');
+      const keyStr = line.substring(0, idx).trim();
+      const valStr = line.substring(idx + 1).trim();
+      if (keyStr && valStr) {
+        let labelStr = keyStr.replace(/_/g, ' ');
+        // capitalize
+        labelStr = labelStr.replace(/\b\w/g, l => l.toUpperCase());
+        currentGroupSpecs.push({
+          key: keyStr.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+          label: labelStr,
+          value: valStr,
+          type: 'text',
+        });
+      }
+    } else {
+      currentGroupSpecs.push({
+        key: `note_${currentGroupSpecs.length + 1}`,
+        label: 'Note',
+        value: line,
+        type: 'text',
+      });
+    }
+  }
+
+  pushGroup();
+
+  if (groups.length === 0) return null;
+
+  return { groups };
+}
+
+/**
  * Resolve a field value from a row using column mappings.
  * Falls back to direct key lookup for backward compatibility.
  */
@@ -412,7 +499,12 @@ export async function processImportJob(
             // Plain text (e.g. specifications_notes) — store as notes so row still imports
             const rawStr = typeof specsRaw === 'string' ? specsRaw : String(specsRaw)
             if (rawStr.trim()) {
-              specifications = { notes: rawStr.trim() }
+              const structured = parseStructuredTextToSpecs(rawStr)
+              if (structured) {
+                specifications = structured
+              } else {
+                specifications = { notes: rawStr.trim() }
+              }
             }
           }
         }
