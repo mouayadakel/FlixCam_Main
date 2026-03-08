@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
+import { Prisma } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,11 +60,52 @@ export async function POST(request: NextRequest) {
       })
       updated = result.count
     } else if (action === 'delete') {
-      const result = await prisma.equipment.updateMany({
-        where: { id: { in: ids }, deletedAt: null },
-        data: { deletedAt: new Date(), isActive: false },
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // Soft-delete equipment
+        const result = await tx.equipment.updateMany({
+          where: { id: { in: ids }, deletedAt: null },
+          data: { deletedAt: new Date(), isActive: false },
+        })
+        updated = result.count
+
+        // Soft-delete associated products
+        // We find products that are linked to these equipment IDs
+        const equipment = await tx.equipment.findMany({
+          where: { id: { in: ids } },
+          select: { productId: true },
+        })
+        const productIds = equipment
+          .map((e: { productId: string | null }) => e.productId)
+          .filter((id: string | null): id is string => id !== null)
+
+        if (productIds.length > 0) {
+          await tx.product.updateMany({
+            where: { id: { in: productIds }, deletedAt: null },
+            data: { deletedAt: new Date(), deletedBy: session.user.id },
+          })
+        }
+
+        // Also handle cases where equipment ID matches product ID
+        await tx.product.updateMany({
+          where: { id: { in: ids }, deletedAt: null },
+          data: { deletedAt: new Date(), deletedBy: session.user.id },
+        })
       })
-      updated = result.count
+    }
+
+    // Invalidate cache
+    try {
+      const { cacheDelete } = await import('@/lib/cache')
+      const { getRedisClient } = await import('@/lib/queue/redis.client')
+      const redis = getRedisClient()
+      if (redis.status === 'ready') {
+        const keys = await redis.keys('cache:equipmentList:*')
+        if (keys.length > 0) {
+          await redis.del(...keys)
+        }
+      }
+    } catch (cacheErr) {
+      console.warn('Failed to clear cache in bulk operation', cacheErr)
     }
 
     return NextResponse.json({ success: true, updated })

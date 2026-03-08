@@ -314,8 +314,8 @@ export async function processImportJob(
         const isActive =
           isActiveRaw != null
             ? String(isActiveRaw).toLowerCase() !== 'false' &&
-              isActiveRaw !== '0' &&
-              isActiveRaw !== false
+            isActiveRaw !== '0' &&
+            isActiveRaw !== false
             : true
         const subCategoryFromExcel = resolveField(r, 'sub_category', columnMappings) ?? null
         const categorySlugFromExcel = resolveField(r, 'category_slug', columnMappings) ?? null
@@ -600,11 +600,11 @@ export async function processImportJob(
           inventoryItems:
             barcodeTrimmed
               ? [
-                  {
-                    serialNumber: skuForCreate ?? `import-${row.rowNumber}`,
-                    barcode: barcodeTrimmed,
-                  },
-                ]
+                {
+                  serialNumber: skuForCreate ?? `import-${row.rowNumber}`,
+                  barcode: barcodeTrimmed,
+                },
+              ]
               : [],
           createdBy: job.createdBy || 'system',
         })
@@ -961,6 +961,21 @@ export async function processImportJob(
         err instanceof Error ? err.message : String(err)
       )
     }
+  }
+
+  // Invalidate cache after import job is complete
+  try {
+    const { getRedisClient } = await import('@/lib/queue/redis.client')
+    const redis = getRedisClient()
+    if (redis.status === 'ready') {
+      const keys = await redis.keys('cache:equipmentList:*')
+      if (keys.length > 0) {
+        await redis.del(...keys)
+        console.info(`[Import] Cleared ${keys.length} equipmentList cache keys`)
+      }
+    }
+  } catch (cacheErr) {
+    console.warn('[Import] Failed to clear cache after job', cacheErr)
   }
 
   await ImportService.markComplete(jobId)

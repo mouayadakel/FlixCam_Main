@@ -78,6 +78,9 @@ export default function EquipmentListTab() {
   const { toast } = useToast()
   const [equipment, setEquipment] = useState<EquipmentWithRelations[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const limit = 50
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [conditionFilter, setConditionFilter] = useState<string>('all')
@@ -90,9 +93,25 @@ export default function EquipmentListTab() {
   const LOW_STOCK_THRESHOLD = 1
 
   useEffect(() => {
-    loadEquipment()
     loadCategories()
-  }, [categoryFilter, conditionFilter, statusFilter])
+  }, [])
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, categoryFilter, conditionFilter, statusFilter])
+
+  useEffect(() => {
+    loadEquipment()
+  }, [page, categoryFilter, conditionFilter, statusFilter]) // search handled by debouncing or explicit trigger if needed, but here it's simple
+
+  // Re-run loadEquipment when search changes with a small delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (page !== 1) setPage(1)
+      else loadEquipment()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const loadEquipment = async () => {
     setLoading(true)
@@ -104,11 +123,15 @@ export default function EquipmentListTab() {
       if (statusFilter === 'active') params.set('isActive', 'true')
       if (statusFilter === 'inactive') params.set('isActive', 'false')
 
+      params.set('skip', ((page - 1) * limit).toString())
+      params.set('take', limit.toString())
+
       const response = await fetch(`/api/equipment?${params.toString()}`)
       if (!response.ok) throw new Error('Failed to load equipment')
 
       const data = await response.json()
       setEquipment(data.items || [])
+      setTotal(data.total || 0)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -433,137 +456,166 @@ export default function EquipmentListTab() {
               actionHref="/admin/inventory/equipment/new"
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={
-                        filteredEquipment.length > 0 &&
-                        selectedIds.length === filteredEquipment.length
-                      }
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="w-24">الصورة</TableHead>
-                  <TableHead className="min-w-[120px]">SKU</TableHead>
-                  <TableHead className="min-w-[180px]">الموديل</TableHead>
-                  <TableHead>الفئة</TableHead>
-                  <TableHead>العلامة التجارية</TableHead>
-                  <TableHead>حالة المعدة</TableHead>
-                  <TableHead>المتاح / الإجمالي</TableHead>
-                  <TableHead>آخر صيانة</TableHead>
-                  <TableHead>السعر اليومي</TableHead>
-                  <TableHead>النشاط</TableHead>
-                  <TableHead className="min-w-[140px]">الإجراءات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEquipment.map((item) => {
-                  const featuredImage = item.media?.[0]?.url
-                  return (
-                    <TableRow
-                      key={item.id}
-                      className={
-                        item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive
-                          ? 'bg-amber-50/50'
-                          : ''
-                      }
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedIds.includes(item.id)}
-                          onCheckedChange={() => toggleSelect(item.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="align-middle">
-                        {featuredImage ? (
-                          <div className="relative inline-block h-12 w-12 overflow-hidden rounded border border-neutral-200">
-                            <Image
-                              src={featuredImage}
-                              alt={item.sku}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded border border-neutral-200 bg-neutral-100">
-                            <Package className="h-5 w-5 text-neutral-400" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{item.sku}</TableCell>
-                      <TableCell>
-                        <span className="block max-w-[200px] truncate" title={item.model ?? undefined}>
-                          {item.model || '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{item.category.name}</TableCell>
-                      <TableCell>{item.brand?.name || '-'}</TableCell>
-                      <TableCell className="align-middle">
-                        <Badge
-                          className="inline-flex items-center"
-                          style={{
-                            backgroundColor: CONDITION_COLORS[item.condition],
-                            color: '#fff',
-                          }}
-                        >
-                          {CONDITION_LABELS[item.condition]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="inline-flex items-center gap-1">
-                        <span
-                          className={
-                            item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive
-                              ? 'font-bold text-amber-600'
-                              : ''
-                          }
-                        >
-                          {item.quantityAvailable}
-                        </span>
-                        {' / '}
-                        {item.quantityTotal}
-                        {item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive && (
-                          <AlertTriangle className="inline h-3.5 w-3.5 shrink-0 text-amber-500" />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.maintenance?.[0]?.completedDate
-                          ? formatDate(item.maintenance[0].completedDate)
-                          : '—'}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {Number(item.dailyPrice).toLocaleString('ar-SA')} ر.س
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={item.isActive ? 'default' : 'secondary'} className="inline-flex items-center">
-                          {item.isActive ? 'نشط' : 'غير نشط'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/admin/inventory/equipment/${item.id}`}>عرض</Link>
-                          </Button>
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/admin/inventory/equipment/${item.id}/edit`}>تعديل</Link>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(item.id)}
-                            className="text-error-600 hover:text-error-700"
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={
+                          filteredEquipment.length > 0 &&
+                          selectedIds.length === filteredEquipment.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-24">الصورة</TableHead>
+                    <TableHead className="min-w-[120px]">SKU</TableHead>
+                    <TableHead className="min-w-[180px]">الموديل</TableHead>
+                    <TableHead>الفئة</TableHead>
+                    <TableHead>العلامة التجارية</TableHead>
+                    <TableHead>حالة المعدة</TableHead>
+                    <TableHead>المتاح / الإجمالي</TableHead>
+                    <TableHead>آخر صيانة</TableHead>
+                    <TableHead>السعر اليومي</TableHead>
+                    <TableHead>النشاط</TableHead>
+                    <TableHead className="min-w-[140px]">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEquipment.map((item) => {
+                    const featuredImage = item.media?.[0]?.url
+                    return (
+                      <TableRow
+                        key={item.id}
+                        className={
+                          item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive
+                            ? 'bg-amber-50/50'
+                            : ''
+                        }
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(item.id)}
+                            onCheckedChange={() => toggleSelect(item.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          {featuredImage ? (
+                            <div className="relative inline-block h-12 w-12 overflow-hidden rounded border border-neutral-200">
+                              <Image
+                                src={featuredImage}
+                                alt={item.sku}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-12 w-12 items-center justify-center rounded border border-neutral-200 bg-neutral-100">
+                              <Package className="h-5 w-5 text-neutral-400" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{item.sku}</TableCell>
+                        <TableCell>
+                          <span className="block max-w-[200px] truncate" title={item.model ?? undefined}>
+                            {item.model || '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell>{item.category.name}</TableCell>
+                        <TableCell>{item.brand?.name || '-'}</TableCell>
+                        <TableCell className="align-middle">
+                          <Badge
+                            className="inline-flex items-center"
+                            style={{
+                              backgroundColor: CONDITION_COLORS[item.condition],
+                              color: '#fff',
+                            }}
                           >
-                            حذف
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                            {CONDITION_LABELS[item.condition]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="inline-flex items-center gap-1">
+                          <span
+                            className={
+                              item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive
+                                ? 'font-bold text-amber-600'
+                                : ''
+                            }
+                          >
+                            {item.quantityAvailable}
+                          </span>
+                          {' / '}
+                          {item.quantityTotal}
+                          {item.quantityAvailable <= LOW_STOCK_THRESHOLD && item.isActive && (
+                            <AlertTriangle className="inline h-3.5 w-3.5 shrink-0 text-amber-500" />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.maintenance?.[0]?.completedDate
+                            ? formatDate(item.maintenance[0].completedDate)
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {Number(item.dailyPrice).toLocaleString('ar-SA')} ر.س
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={item.isActive ? 'default' : 'secondary'} className="inline-flex items-center">
+                            {item.isActive ? 'نشط' : 'غير نشط'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={`/admin/inventory/equipment/${item.id}`}>عرض</Link>
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={`/admin/inventory/equipment/${item.id}/edit`}>تعديل</Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(item.id)}
+                              className="text-error-600 hover:text-error-700"
+                            >
+                              حذف
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+
+              <div className="mt-4 flex items-center justify-between border-t pt-4">
+                <div className="text-sm text-muted-foreground">
+                  عرض {Math.min(filteredEquipment.length, limit)} من أصل {total} معدة
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+                    disabled={page === 1 || loading}
+                  >
+                    السابق
+                  </Button>
+                  <div className="flex items-center gap-1 px-2 text-sm font-medium">
+                    الصفحة {page} من {Math.max(1, Math.ceil(total / limit))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p: number) => p + 1)}
+                    disabled={page >= Math.ceil(total / limit) || loading}
+                  >
+                    التالي
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
