@@ -28,7 +28,11 @@ export default async function VendorEquipmentPage() {
     include: {
       category: { select: { name: true, slug: true } },
       brand: { select: { name: true } },
-      media: { where: { deletedAt: null }, take: 1, orderBy: { createdAt: 'asc' } },
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        take: 1,
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
     },
     orderBy: { createdAt: 'desc' },
   })

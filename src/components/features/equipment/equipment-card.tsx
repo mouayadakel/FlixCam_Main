@@ -5,18 +5,17 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
 import { isExternalImageUrl } from '@/lib/utils/image.utils'
-import { cn } from '@/lib/utils'
 import { SaveEquipmentButton } from './save-equipment-button'
 import { CompareButton } from './compare-button'
-import { Eye } from 'lucide-react'
+import { Eye, ImageOff } from 'lucide-react'
 import { getLocalizedName } from '@/lib/i18n/content-helper'
 
-const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/placeholder.jpg'
+const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/equipment-placeholder.svg'
 
 export interface EquipmentCardItem {
   id: string
@@ -40,8 +39,23 @@ interface EquipmentCardProps {
 
 export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
   const { t, locale } = useLocale()
+  const [imageSrc, setImageSrc] = useState(item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE)
   const [imageFailed, setImageFailed] = useState(false)
-  const handleImageError = useCallback(() => setImageFailed(true), [])
+
+  useEffect(() => {
+    setImageSrc(item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE)
+    setImageFailed(false)
+  }, [item.id, item.media[0]?.url])
+
+  const handleImageError = useCallback(() => {
+    setImageSrc((current) => {
+      if (current === EQUIPMENT_PLACEHOLDER_IMAGE) {
+        setImageFailed(true)
+        return current
+      }
+      return EQUIPMENT_PLACEHOLDER_IMAGE
+    })
+  }, [])
 
   // Get localized name, fallback to model or SKU
   const displayName = getLocalizedName(item as any, locale) || item.model || item.sku || item.id
@@ -54,15 +68,18 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
       >
         <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-xl bg-surface-light">
           {imageFailed ? (
-            <div className="absolute inset-0 bg-surface-light" aria-hidden />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-surface-light text-text-muted" aria-hidden>
+              <ImageOff className="h-6 w-6 opacity-50" />
+              <span className="text-[10px]">No image</span>
+            </div>
           ) : (
             <Image
-              src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+              src={imageSrc}
               alt={item.model ?? item.sku ?? item.id}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="144px"
-              unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+              unoptimized={isExternalImageUrl(imageSrc)}
               onError={handleImageError}
             />
           )}
@@ -114,15 +131,18 @@ export function EquipmentCard({ item, layout = 'grid' }: EquipmentCardProps) {
           <SaveEquipmentButton equipmentId={item.id} />
         </div>
         {imageFailed ? (
-          <div className="absolute inset-0 bg-surface-light" aria-hidden />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface-light text-text-muted" aria-hidden>
+            <ImageOff className="h-10 w-10 opacity-50" />
+            <span className="text-xs">No image</span>
+          </div>
         ) : (
           <Image
-            src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
+            src={imageSrc}
             alt={item.model ?? item.sku ?? item.id}
             fill
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            unoptimized={!item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)}
+            unoptimized={isExternalImageUrl(imageSrc)}
             onError={handleImageError}
           />
         )}

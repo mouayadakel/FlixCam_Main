@@ -10,7 +10,7 @@ import { Heart, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLocale } from '@/hooks/use-locale'
 
-const EQUIPMENT_PLACEHOLDER = '/images/placeholder.jpg'
+const EQUIPMENT_PLACEHOLDER = '/images/equipment-placeholder.svg'
 
 interface SavedItem {
   id: string
@@ -69,6 +69,10 @@ export function SavedGearList({ items, onRemove, removingId }: SavedGearListProp
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                onError={(e) => {
+                  const t = e.target as HTMLImageElement
+                  if (t.src !== EQUIPMENT_PLACEHOLDER) t.src = EQUIPMENT_PLACEHOLDER
+                }}
               />
             </Link>
             <div className="p-4">

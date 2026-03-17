@@ -14,7 +14,11 @@ async function getEquipment(slugOrId: string) {
   const include = {
     category: { select: { id: true, name: true, slug: true } },
     brand: { select: { id: true, name: true, slug: true } },
-    media: { select: { id: true, url: true, type: true } },
+    media: {
+      where: { deletedAt: null, type: 'image' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, url: true, type: true },
+    },
     vendor: {
       select: { companyName: true, logo: true, isNameVisible: true },
     },
@@ -95,7 +99,12 @@ async function getRecommendations(equipmentId: string, categoryId: string) {
       quantityAvailable: true,
       category: { select: { id: true, name: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },
-      media: { take: 1, select: { id: true, url: true, type: true } },
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        take: 1,
+        select: { id: true, url: true, type: true },
+      },
     },
     orderBy: { createdAt: 'desc' },
   })

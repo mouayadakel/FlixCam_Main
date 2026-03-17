@@ -14,7 +14,7 @@ import { ShoppingCart, Package, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/lib/stores/cart.store'
 
-const PLACEHOLDER = '/images/placeholder.jpg'
+const PLACEHOLDER = '/images/equipment-placeholder.svg'
 
 interface BundleItem {
   id: string
@@ -97,7 +97,13 @@ export function FrequentlyRentedTogether({ equipmentId }: FrequentlyRentedTogeth
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-light">
                     {failedIds.has(item.id) ? (
-                      <div className="absolute inset-0 bg-surface-light" />
+                      <Image
+                        src={PLACEHOLDER}
+                        alt={item.model ?? item.sku ?? item.id}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
                     ) : (
                       <Image
                         src={imgUrl}

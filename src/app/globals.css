@@ -43,6 +43,11 @@
   .footer-social-hover-glow:hover {
     box-shadow: 0 0 20px var(--footer-social-hover, hsl(var(--primary)));
   }
+
+  /* Hide PhoneInput country selector for simplified Saudi-only flow */
+  .no-country-select .PhoneInputCountry {
+    display: none !important;
+  }
 }
 
 @layer base {

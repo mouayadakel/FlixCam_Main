@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Check, Minus, Plus } from 'lucide-react'
 
-const EQUIPMENT_PLACEHOLDER = '/images/placeholder.jpg'
+const EQUIPMENT_PLACEHOLDER = '/images/equipment-placeholder.svg'
 
 export interface KitEquipmentItem {
   id: string
@@ -121,6 +121,10 @@ export function KitEquipmentCard({
           className="object-cover transition-transform duration-300 hover:scale-105"
           sizes="(max-width: 640px) 100vw, 50vw"
           unoptimized={!item.media[0]?.url}
+          onError={(e) => {
+            const t = e.target as HTMLImageElement
+            if (t.src !== EQUIPMENT_PLACEHOLDER) t.src = EQUIPMENT_PLACEHOLDER
+          }}
         />
         {isSelected && (
           <div

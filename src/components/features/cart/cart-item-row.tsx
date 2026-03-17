@@ -23,7 +23,7 @@ import {
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import type { CartItem } from '@/lib/stores/cart.store'
 
-const PLACEHOLDER_IMAGE = '/images/placeholder.jpg'
+const PLACEHOLDER_IMAGE = '/images/equipment-placeholder.svg'
 
 interface CartItemRowProps {
   item: CartItem

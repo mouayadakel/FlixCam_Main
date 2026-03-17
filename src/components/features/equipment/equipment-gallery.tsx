@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { isExternalImageUrl } from '@/lib/utils/image.utils'
@@ -16,9 +16,17 @@ interface EquipmentGalleryProps {
   alt: string
 }
 
+const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/equipment-placeholder.svg'
+
 export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
   const [selected, setSelected] = useState(0)
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set())
   const items = media.length > 0 ? media : []
+
+  useEffect(() => {
+    setFailedImageIds(new Set())
+    setSelected(0)
+  }, [media])
 
   const goTo = useCallback(
     (index: number) => {
@@ -52,13 +60,21 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
             )}
           >
             <Image
-              src={m.url}
+              src={failedImageIds.has(m.id) ? EQUIPMENT_PLACEHOLDER_IMAGE : m.url}
               alt={`${alt} - ${i + 1}`}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={i === 0}
-              unoptimized={isExternalImageUrl(m.url)}
+              unoptimized={
+                failedImageIds.has(m.id) ? false : isExternalImageUrl(m.url)
+              }
+              onError={() =>
+                setFailedImageIds((prev) => {
+                  if (prev.has(m.id)) return prev
+                  return new Set(prev).add(m.id)
+                })
+              }
             />
           </div>
         ))}
@@ -109,12 +125,18 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
               )}
             >
               <Image
-                src={m.url}
+                src={failedImageIds.has(m.id) ? EQUIPMENT_PLACEHOLDER_IMAGE : m.url}
                 alt={`${alt} - thumbnail ${i + 1}`}
                 fill
                 className="object-cover"
                 sizes="92px"
-                unoptimized={isExternalImageUrl(m.url)}
+                unoptimized={failedImageIds.has(m.id) ? false : isExternalImageUrl(m.url)}
+                onError={() =>
+                  setFailedImageIds((prev) => {
+                    if (prev.has(m.id)) return prev
+                    return new Set(prev).add(m.id)
+                  })
+                }
               />
             </button>
           ))}

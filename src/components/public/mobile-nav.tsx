@@ -30,7 +30,7 @@ interface MobileNavProps {
 
 function getDashboardUrl(role: string | undefined): string {
   const r = role?.toUpperCase()
-  if (r === 'DATA_ENTRY') return '/portal/dashboard'
+  if (r === 'CUSTOMER' || r === 'DATA_ENTRY') return '/portal/dashboard'
   if (r === 'VENDOR') return '/vendor/dashboard'
   return '/admin/dashboard'
 }

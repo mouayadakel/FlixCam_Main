@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
@@ -14,7 +14,7 @@ import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Eye } from 'lucide-react'
 
-const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/placeholder.jpg'
+const EQUIPMENT_PLACEHOLDER_IMAGE = '/images/equipment-placeholder.svg'
 
 interface EquipmentItem {
   id: string
@@ -33,9 +33,22 @@ interface HomeFeaturedEquipmentProps {
 
 export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
   const { t } = useLocale()
-  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set())
+  const [imageSrcById, setImageSrcById] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    setImageSrcById(
+      Object.fromEntries(
+        items.map((item) => [item.id, item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE])
+      )
+    )
+  }, [items])
+
   const handleImageError = useCallback((itemId: string) => {
-    setFailedImageIds((prev) => new Set(prev).add(itemId))
+    setImageSrcById((prev) => {
+      const currentSrc = prev[itemId] || EQUIPMENT_PLACEHOLDER_IMAGE
+      if (currentSrc === EQUIPMENT_PLACEHOLDER_IMAGE) return prev
+      return { ...prev, [itemId]: EQUIPMENT_PLACEHOLDER_IMAGE }
+    })
   }, [])
 
   return (
@@ -102,21 +115,15 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                     style={{ animationDelay: `${0.1 * index}s` }}
                   >
                     <div className="relative aspect-[4/3] shrink-0 overflow-hidden bg-surface-light">
-                      {failedImageIds.has(item.id) ? (
-                        <div className="absolute inset-0 bg-surface-light" aria-hidden />
-                      ) : (
-                        <Image
-                          src={item.media[0]?.url || EQUIPMENT_PLACEHOLDER_IMAGE}
-                          alt={item.model ?? item.sku ?? item.id}
-                          fill
-                          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          unoptimized={
-                            !item.media[0]?.url || isExternalImageUrl(item.media[0]?.url)
-                          }
-                          onError={() => handleImageError(item.id)}
-                        />
-                      )}
+                      <Image
+                        src={imageSrcById[item.id] || EQUIPMENT_PLACEHOLDER_IMAGE}
+                        alt={item.model ?? item.sku ?? item.id}
+                        fill
+                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        unoptimized={isExternalImageUrl(imageSrcById[item.id])}
+                        onError={() => handleImageError(item.id)}
+                      />
                       {/* Hover overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/30">
                         <span className="flex translate-y-2 items-center gap-2 rounded-full bg-white/90 px-5 py-2.5 text-sm font-semibold text-text-heading opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">

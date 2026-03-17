@@ -42,7 +42,7 @@ import type {
 } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 
-const RESERVED_FLAT_KEYS = ['mode', 'html', 'highlights', 'quickSpecs', 'groups']
+const RESERVED_FLAT_KEYS = ['mode', 'html', 'highlights', 'quickSpecs', 'groups', 'notes']
 const FLAT_TABLE_COLLAPSE_AFTER = 6
 
 /** Safely coerce spec value to display string (avoids "[object Object]" for objects/arrays). */
@@ -460,6 +460,83 @@ function GroupedSpecsMobile({
 }
 
 // ============================================================================
+// Notes Block (plain-text specs from Excel import)
+// ============================================================================
+
+/**
+ * Renders raw notes text (e.g. from Excel specifications_notes) with preserved
+ * line breaks and basic section formatting. Used when specs are stored as
+ * { notes: "..." } instead of structured key/value pairs.
+ */
+function NotesBlock({ text }: { text: string }) {
+  if (!text || typeof text !== 'string') return null
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  // Split into sections by common patterns: "1. SHORT SPECS", "2. FULL SPECS", "3. TECHNICIAN SPECS"
+  // or numbered lines like "1. ", "2. "
+  const sectionPattern = /^(\d+\.\s+[A-Z\s]+$|^[A-Z][A-Z\s\-]+$)/m
+  const lines = trimmed.split(/\r?\n/)
+  const sections: { title?: string; content: string[] }[] = []
+  let current: { title?: string; content: string[] } = { content: [] }
+
+  for (const line of lines) {
+    const trimmedLine = line.trim()
+    if (!trimmedLine) continue
+    const isSectionHeader =
+      /^\d+\.\s+[A-Z\s]+$/.test(trimmedLine) ||
+      /^(SHORT SPECS|FULL SPECS|TECHNICIAN SPECS)$/i.test(trimmedLine)
+    if (isSectionHeader && trimmedLine.length < 60) {
+      if (current.content.length > 0) {
+        sections.push(current)
+      }
+      current = { title: trimmedLine, content: [] }
+    } else {
+      current.content.push(trimmedLine)
+    }
+  }
+  if (current.content.length > 0 || current.title) {
+    sections.push(current)
+  }
+
+  // If we didn't detect meaningful sections, treat whole text as one block
+  const hasSections = sections.length > 1 || (sections.length === 1 && sections[0].title)
+  if (!hasSections) {
+    return (
+      <div className="rounded-2xl border border-border-light/60 bg-white p-6 shadow-card">
+        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-text-body">
+          {trimmed}
+        </pre>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {sections.map((section, idx) => (
+        <div
+          key={idx}
+          className="overflow-hidden rounded-2xl border border-border-light/60 bg-white shadow-card"
+        >
+          {section.title && (
+            <div className="border-b border-border-light/40 bg-surface-light/50 px-5 py-3">
+              <h3 className="text-sm font-semibold tracking-wide text-text-heading">
+                {section.title}
+              </h3>
+            </div>
+          )}
+          <div className="px-5 py-4">
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-text-body">
+              {section.content.join('\n')}
+            </pre>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ============================================================================
 // Flat Specs Table with 6-row collapse
 // ============================================================================
 
@@ -601,12 +678,34 @@ export function SpecificationsDisplay({
     )
   }
 
+  const flatSpecs = specifications as Record<string, unknown>
+  const notesValue = flatSpecs.notes
+  const notesText =
+    typeof notesValue === 'string' && notesValue.trim().length > 0 ? notesValue.trim() : null
+
+  const otherKeys = Object.keys(flatSpecs).filter(
+    (k) => !RESERVED_FLAT_KEYS.includes(k) && flatSpecs[k] != null && String(flatSpecs[k]).trim() !== ''
+  )
+  const hasOtherSpecs = otherKeys.length > 0
+
   return (
-    <FlatSpecsTable
-      specifications={specifications as Record<string, unknown>}
-      showAllLabel={showAllLabel}
-      showLessLabel={showLessLabel}
-    />
+    <div className="space-y-6">
+      {notesText && <NotesBlock text={notesText} />}
+      {hasOtherSpecs ? (
+        <FlatSpecsTable
+          specifications={Object.fromEntries(
+            otherKeys.map((k) => [k, flatSpecs[k]])
+          ) as Record<string, unknown>}
+          showAllLabel={showAllLabel}
+          showLessLabel={showLessLabel}
+        />
+      ) : !notesText ? (
+        <div className="rounded-2xl border border-border-light/60 bg-white p-12 text-center">
+          <Info className="mx-auto mb-3 h-12 w-12 text-text-muted" />
+          <p className="text-lg text-text-muted">No specifications available</p>
+        </div>
+      ) : null}
+    </div>
   )
 }
 

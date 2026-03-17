@@ -35,7 +35,7 @@ import {
 } from '@/components/features/build-your-kit/kit-prebuilt-comparison'
 
 const VAT_RATE = 0.15
-const EQUIPMENT_PLACEHOLDER = '/images/placeholder.jpg'
+const EQUIPMENT_PLACEHOLDER = '/images/equipment-placeholder.svg'
 
 function formatSar(value: number): string {
   return new Intl.NumberFormat('en-SA', {
