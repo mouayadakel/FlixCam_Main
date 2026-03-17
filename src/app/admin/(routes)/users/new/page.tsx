@@ -23,21 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-
-const ROLES: { value: string; label: string }[] = [
-  { value: 'ADMIN', label: 'مدير' },
-  { value: 'SALES_MANAGER', label: 'مدير المبيعات' },
-  { value: 'ACCOUNTANT', label: 'محاسب' },
-  { value: 'WAREHOUSE_MANAGER', label: 'مدير المستودع' },
-  { value: 'TECHNICIAN', label: 'فني' },
-  { value: 'CUSTOMER_SERVICE', label: 'خدمة العملاء' },
-  { value: 'MARKETING_MANAGER', label: 'مدير التسويق' },
-  { value: 'RISK_MANAGER', label: 'مدير المخاطر' },
-  { value: 'APPROVAL_AGENT', label: 'موافق' },
-  { value: 'AUDITOR', label: 'مدقق' },
-  { value: 'AI_OPERATOR', label: 'مشغل الذكاء الاصطناعي' },
-  { value: 'DATA_ENTRY', label: 'إدخال البيانات' },
-]
+import { ROLES } from '@/lib/constants/user.constants'
 
 export default function NewUserPage() {
   const router = useRouter()

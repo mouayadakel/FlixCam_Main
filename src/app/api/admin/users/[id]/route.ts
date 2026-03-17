@@ -11,6 +11,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { AuditService } from '@/lib/services/audit.service'
 import { z } from 'zod'
+import { UserStatus } from '@prisma/client'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -31,10 +32,13 @@ const updateUserSchema = z.object({
       'AUDITOR',
       'AI_OPERATOR',
       'DATA_ENTRY',
+      'CUSTOMER',
+      'VENDOR',
     ])
     .optional(),
   phone: z.string().optional(),
   twoFactorEnabled: z.boolean().optional(),
+  status: z.enum(['PENDING', 'ACTIVE', 'LOCKED']).optional(),
 })
 
 /**
@@ -73,6 +77,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         name: true,
         role: true,
         phone: true,
+        status: true,
         twoFactorEnabled: true,
         createdAt: true,
         updatedAt: true,
@@ -82,7 +87,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
 
-    if (!user || user.deletedAt) {
+    if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
@@ -172,8 +177,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...validatedData,
-        role: validatedData.role as any,
+        ...(validatedData.name !== undefined && { name: validatedData.name }),
+        ...(validatedData.role !== undefined && { role: validatedData.role as UserStatus }),
+        ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
+        ...(validatedData.twoFactorEnabled !== undefined && {
+          twoFactorEnabled: validatedData.twoFactorEnabled,
+        }),
+        ...(validatedData.status !== undefined && { status: validatedData.status as UserStatus }),
         updatedBy: session.user.id,
       },
       select: {
@@ -182,6 +192,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         name: true,
         role: true,
         phone: true,
+        status: true,
         twoFactorEnabled: true,
         updatedAt: true,
       },

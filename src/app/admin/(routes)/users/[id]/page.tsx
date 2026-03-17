@@ -18,12 +18,27 @@ import {
   ChevronUp,
   Clock,
   Shield,
-  Bell,
+  Pencil,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
+import { USER_STATUS_LABELS } from '@/lib/constants/user.constants'
 import { RoleBadge } from '@/components/admin/roles/role-badge'
 import { AssignRoleModal } from '@/components/admin/users/assign-role-modal'
 import { formatDateTime } from '@/lib/utils/format.utils'
@@ -43,8 +58,11 @@ interface UserDetail {
   name: string | null
   role: string
   phone: string | null
+  status?: string
   twoFactorEnabled: boolean
   createdAt: string
+  updatedAt?: string
+  deletedAt?: string | null
   customPermissions?: Array<{ id: string; name: string; description?: string }>
 }
 
@@ -75,8 +93,27 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true)
   const [activityLogs, setActivityLogs] = useState<AuditLogEntry[]>([])
   const [showActivity, setShowActivity] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false)
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
+  const [hardDeleteConfirmPhrase, setHardDeleteConfirmPhrase] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [hardDeleting, setHardDeleting] = useState(false)
+  const [restoring, setRestoring] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  const HARD_DELETE_PHRASES = ['حذف', 'delete']
+  const isHardDeleteConfirmed =
+    HARD_DELETE_PHRASES.includes(hardDeleteConfirmPhrase.trim().toLowerCase())
 
   const id = params?.id as string
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((u) => u?.id && setCurrentUserId(u.id))
+      .catch(() => {})
+  }, [])
 
   const loadUser = async () => {
     if (!id) return
@@ -133,6 +170,74 @@ export default function UserDetailPage() {
     }
   }
 
+  const handleDeleteUser = async () => {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'فشل تعطيل المستخدم')
+      }
+      toast({ title: 'تم التعطيل', description: 'تم تعطيل الحساب بنجاح' })
+      setDeleteDialogOpen(false)
+      router.push('/admin/users')
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تعطيل المستخدم',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleRestoreUser = async () => {
+    setRestoring(true)
+    try {
+      const res = await fetch(`/api/admin/users/${id}/restore`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'فشل تفعيل الحساب')
+      }
+      toast({ title: 'تم التفعيل', description: 'تم تفعيل الحساب بنجاح' })
+      setRestoreDialogOpen(false)
+      loadUser()
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل تفعيل الحساب',
+        variant: 'destructive',
+      })
+    } finally {
+      setRestoring(false)
+    }
+  }
+
+  const handleHardDeleteUser = async () => {
+    if (!isHardDeleteConfirmed) return
+    setHardDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/users/${id}/permanent`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'فشل الحذف النهائي')
+      }
+      toast({ title: 'تم الحذف النهائي', description: 'تم حذف المستخدم نهائياً' })
+      setHardDeleteDialogOpen(false)
+      setHardDeleteConfirmPhrase('')
+      router.push('/admin/users')
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل الحذف النهائي',
+        variant: 'destructive',
+      })
+    } finally {
+      setHardDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
@@ -152,14 +257,57 @@ export default function UserDetailPage() {
     )
   }
 
+  const isDeactivated = !!user.deletedAt
+  const statusInfo = isDeactivated
+    ? USER_STATUS_LABELS.DEACTIVATED
+    : (USER_STATUS_LABELS[user.status ?? 'ACTIVE'] ?? USER_STATUS_LABELS.ACTIVE)
+  const isCurrentUser = user.id === currentUserId
+
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/admin/users" className="hover:text-foreground">
-          المستخدمون
-        </Link>
-        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-        <span>{user.name || user.email}</span>
+      {isDeactivated && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            هذا الحساب معطل. يمكنك تفعيله أو حذفه نهائياً.
+          </p>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/admin/users" className="hover:text-foreground">
+            المستخدمون
+          </Link>
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+          <span>{user.name || user.email}</span>
+        </div>
+        <div className="flex gap-2">
+          {!isDeactivated && (
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/users/${id}/edit`}>
+                  <Pencil className="ms-2 h-4 w-4" />
+                  تعديل
+                </Link>
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={isCurrentUser}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="ms-2 h-4 w-4" />
+                تعطيل الحساب
+              </Button>
+            </>
+          )}
+          {isDeactivated && (
+            <Button size="sm" onClick={() => setRestoreDialogOpen(true)}>
+              <RotateCcw className="ms-2 h-4 w-4" />
+              تفعيل الحساب
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -196,8 +344,18 @@ export default function UserDetailPage() {
               </Badge>
             </div>
             <div>
+              <p className="text-sm text-muted-foreground">الحالة</p>
+              <Badge variant={statusInfo.variant}>{statusInfo.ar}</Badge>
+            </div>
+            <div>
               <p className="text-sm text-muted-foreground">تاريخ الإنشاء</p>
               <p className="font-medium">{formatDateTime(user.createdAt)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">آخر تحديث</p>
+              <p className="font-medium">
+                {user.updatedAt ? formatDateTime(user.updatedAt) : '—'}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -342,6 +500,132 @@ export default function UserDetailPage() {
           </CardContent>
         )}
       </Card>
+
+      {/* Danger zone */}
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            منطقة الخطر
+          </CardTitle>
+          <CardDescription>
+            {isDeactivated
+              ? 'يمكنك تفعيل الحساب أو حذفه نهائياً.'
+              : 'تعطيل الحساب يحفظ البيانات ويمكن استعادتها. الحذف النهائي لا يمكن التراجع عنه.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          {!isDeactivated && (
+            <Button
+              variant="destructive"
+              disabled={isCurrentUser}
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="ms-2 h-4 w-4" />
+              تعطيل الحساب
+            </Button>
+          )}
+          {isDeactivated && (
+            <Button onClick={() => setRestoreDialogOpen(true)}>
+              <RotateCcw className="ms-2 h-4 w-4" />
+              تفعيل الحساب
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            className="border-destructive text-destructive hover:bg-destructive/10"
+            disabled={isCurrentUser}
+            onClick={() => {
+              setHardDeleteConfirmPhrase('')
+              setHardDeleteDialogOpen(true)
+            }}
+          >
+            <Trash2 className="ms-2 h-4 w-4" />
+            حذف نهائي
+          </Button>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تفعيل الحساب</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل تريد تفعيل هذا الحساب؟ سيتمكن المستخدم من تسجيل الدخول مرة أخرى.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestoreUser} disabled={restoring}>
+              {restoring ? <Loader2 className="ms-2 h-4 w-4 animate-spin" /> : null}
+              تفعيل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم تعطيل الحساب ولن يتمكن المستخدم من تسجيل الدخول. يمكن استعادة الحساب لاحقاً إذا
+              لزم الأمر.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="ms-2 h-4 w-4 animate-spin" /> : null}
+              تعطيل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={hardDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setHardDeleteDialogOpen(open)
+          if (!open) setHardDeleteConfirmPhrase('')
+        }}
+      >
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف نهائي - لا يمكن التراجع</AlertDialogTitle>
+            <AlertDialogDescription>
+              هذا الإجراء لا يمكن التراجع عنه. سيتم حذف المستخدم وبياناته نهائياً. اكتب "حذف" أو
+              "DELETE" للتأكيد.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-4">
+            <Label htmlFor="hard-delete-confirm">التأكيد</Label>
+            <Input
+              id="hard-delete-confirm"
+              value={hardDeleteConfirmPhrase}
+              onChange={(e) => setHardDeleteConfirmPhrase(e.target.value)}
+              placeholder="حذف أو DELETE"
+              className="max-w-xs"
+              dir="ltr"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleHardDeleteUser}
+              disabled={!isHardDeleteConfirmed || hardDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {hardDeleting ? <Loader2 className="ms-2 h-4 w-4 animate-spin" /> : null}
+              حذف نهائي
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Button variant="outline" asChild>
         <Link href="/admin/users">العودة</Link>

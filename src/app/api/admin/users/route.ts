@@ -33,6 +33,8 @@ const createUserSchema = z.object({
     'AUDITOR',
     'AI_OPERATOR',
     'DATA_ENTRY',
+    'CUSTOMER',
+    'VENDOR',
   ]),
   phone: z.string().optional(),
 })
@@ -65,14 +67,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const status = searchParams.get('status')
+    const deleted = searchParams.get('deleted') // 'true' = deactivated only, 'false' or omitted = active only
     const excludeRoleId = searchParams.get('excludeRoleId') // RBAC role ID - exclude users who have this role
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
 
     // Build where clause
-    const where: any = {
-      deletedAt: null,
+    const where: any = {}
+    if (deleted === 'true') {
+      where.deletedAt = { not: null }
+    } else {
+      where.deletedAt = null
     }
 
     if (role) {
@@ -102,21 +108,27 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    const selectFields: Record<string, boolean> = {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      phone: true,
+      status: true,
+      twoFactorEnabled: true,
+      createdAt: true,
+      updatedAt: true,
+    }
+    if (deleted === 'true') {
+      selectFields.deletedAt = true
+      selectFields.deletedBy = true
+    }
+
     // Get users
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          phone: true,
-          status: true,
-          twoFactorEnabled: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        select: selectFields,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
