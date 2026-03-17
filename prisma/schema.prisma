@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  LOCKED
+}
+
 model Product {
   id                  String               @id @default(cuid())
   status              ProductStatus        @default(DRAFT)
@@ -15,6 +21,7 @@ model Product {
   brandId             String
   categoryId          String
   subCategoryId       String?
+  quantity            Int?
   priceDaily          Decimal              @db.Decimal(10, 2)
   priceWeekly         Decimal?             @db.Decimal(10, 2)
   priceMonthly        Decimal?             @db.Decimal(10, 2)
@@ -32,24 +39,23 @@ model Product {
   updatedBy           String?
   deletedAt           DateTime?
   deletedBy           String?
-  quantity            Int?
-  contentQualityScore Int?
-  contentScore        Int? // 0-100 quality score, cached (plan v2.0)
-  contentScoreAt      DateTime? // when score was last calculated
-  lastAiRunAt         DateTime?
+  aiContentFlags      Json?
+  aiReviewReason      String?
   aiRunCount          Int                  @default(0)
-  needsAiReview       Boolean              @default(false) // flagged when AI fails
-  aiReviewReason      String? // why it needs review
-  aiContentFlags      Json? // { fields[], lastRun, provider, costs }
-  photoStatus         String?              @default("unknown") // unknown | sufficient | needs_sourcing | reviewing
+  contentQualityScore Int?
+  contentScore        Int?
+  contentScoreAt      DateTime?
+  lastAiRunAt         DateTime?
+  needsAiReview       Boolean              @default(false)
+  photoStatus         String?              @default("unknown")
+  aiContentDrafts     AiContentDraft[]
+  equipment           Equipment?
   inventoryItems      InventoryItem[]
   brand               Brand                @relation(fields: [brandId], references: [id])
   category            Category             @relation("ProductCategory", fields: [categoryId], references: [id])
   subCategory         Category?            @relation("ProductSubCategory", fields: [subCategoryId], references: [id])
+  productImages       ProductImage[]
   translations        ProductTranslation[]
-  productImages       ProductImage[] // per-image tracking for AI workflow
-  equipment           Equipment? // optional 1:1 sync to Equipment (import/AI flow)
-  aiContentDrafts     AiContentDraft[] // pending AI suggestions (preview workflow)
 
   @@index([status])
   @@index([brandId])
@@ -58,27 +64,27 @@ model Product {
   @@index([deletedAt])
 }
 
-enum ImageSource {
-  UPLOAD
-  BRAND_ASSET
-  AI_GENERATED
-  STOCK_PHOTO
-  WEB_SCRAPED
-}
-
 model ProductImage {
-  id            String      @id @default(cuid())
-  productId     String
-  url           String
-  imageSource   ImageSource @default(UPLOAD)
-  pendingReview Boolean     @default(false)
-  qualityScore  Float? // 0-1 from vision model check
-  reviewedAt    DateTime?
-  reviewedBy    String?
-  isDeleted     Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id                 String      @id @default(cuid())
+  productId          String
+  url                String
+  imageSource        ImageSource @default(UPLOAD)
+  pendingReview      Boolean     @default(false)
+  qualityScore       Float?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  isDeleted          Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  sortOrder          Int         @default(0)
+  isPrimary          Boolean     @default(false)
+  sourceQuery        String?
+  sourceDomain       String?
+  matchScore         Float?
+  scoreBreakdown     Json?
+  reviewReason       String?
+  rejectionReason    String?
+  cloudinaryPublicId String?
+  product            Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([pendingReview])
@@ -141,15 +147,15 @@ model ImportJob {
   successRows           Int               @default(0)
   errorRows             Int               @default(0)
   errorMessage          String?
+  aiProcessingStatus    String?
+  imageProcessingStatus String?
+  selectedSheets        Json?
+  selectedRows          Json?
   createdAt             DateTime          @default(now())
   createdBy             String?
   updatedAt             DateTime          @updatedAt
   updatedBy             String?
-  aiProcessingStatus    String?
-  imageProcessingStatus String?
-  selectedRows          Json?
-  selectedSheets        Json?
-  columnMappingsBySheet Json?   // User-confirmed column mappings per sheet (sourceHeader -> mappedField); used by worker so import respects UI mapping
+  columnMappingsBySheet Json?
   aiProcessingJobs      AIProcessingJob[]
   rows                  ImportJobRow[]
 }
@@ -198,55 +204,38 @@ model AISettings {
   timeout             Int       @default(30000)
   fallbackStrategy    String    @default("mark_for_review")
   enabled             Boolean   @default(true)
-  dailyBudgetUsd      Decimal?  @db.Decimal(10, 2)
-  monthlyBudgetUsd    Decimal?  @db.Decimal(10, 2)
-  currentDailySpend   Decimal?  @default(0) @db.Decimal(10, 4)
-  currentMonthlySpend Decimal?  @default(0) @db.Decimal(10, 4)
-  spendResetDate      DateTime?
-  monthlyResetDate    DateTime?
-  backfillEnabled     Boolean   @default(true)
-  nightlyCronEnabled  Boolean   @default(true)
-  nightlyCronTime     String?   @default("02:00")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  backfillEnabled     Boolean   @default(true)
+  currentDailySpend   Decimal?  @default(0) @db.Decimal(10, 4)
+  currentMonthlySpend Decimal?  @default(0) @db.Decimal(10, 4)
+  dailyBudgetUsd      Decimal?  @db.Decimal(10, 2)
+  monthlyBudgetUsd    Decimal?  @db.Decimal(10, 2)
+  monthlyResetDate    DateTime?
+  nightlyCronEnabled  Boolean   @default(true)
+  nightlyCronTime     String?   @default("02:00")
+  spendResetDate      DateTime?
 
   @@index([enabled])
 }
 
-enum AiJobType {
-  TEXT_BACKFILL
-  PHOTO_BACKFILL
-  SPEC_BACKFILL
-  FULL_BACKFILL
-  EMBEDDING_BACKFILL
-}
-
-enum JobStatus {
-  PENDING
-  RUNNING
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
 model AiJob {
-  id          String    @id @default(cuid())
+  id          String      @id @default(cuid())
   type        AiJobType
-  status      JobStatus @default(PENDING)
-  triggeredBy String // "manual" | "cron" | "event" | "import"
-  triggeredAt DateTime  @default(now())
+  status      JobStatus   @default(PENDING)
+  triggeredBy String
+  triggeredAt DateTime    @default(now())
   startedAt   DateTime?
   completedAt DateTime?
-  totalItems  Int       @default(0)
-  processed   Int       @default(0)
-  succeeded   Int       @default(0)
-  failed      Int       @default(0)
-  skipped     Int       @default(0)
-  costUsd     Float     @default(0)
-  errorLog    Json? // [{ productId, error, timestamp }]
+  totalItems  Int         @default(0)
+  processed   Int         @default(0)
+  succeeded   Int         @default(0)
+  failed      Int         @default(0)
+  skipped     Int         @default(0)
+  costUsd     Float       @default(0)
+  errorLog    Json?
   metadata    Json?
-
-  items AiJobItem[]
+  items       AiJobItem[]
 
   @@index([status])
   @@index([type])
@@ -257,17 +246,16 @@ model AiJobItem {
   id            String    @id @default(cuid())
   jobId         String
   productId     String
-  itemType      String // 'text' | 'photo' | 'spec' | 'seo' | 'translation'
+  itemType      String
   status        String    @default("pending")
   error         String?
   costIncurred  Float?
-  provider      String? // 'gemini' | 'openai' | 'dalle' | 'pexels'
+  provider      String?
   fieldsUpdated Json?
   startedAt     DateTime?
   completedAt   DateTime?
   createdAt     DateTime  @default(now())
-
-  job AiJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job           AiJob     @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([productId])
@@ -277,10 +265,10 @@ model AiJobItem {
 model AiAuditLog {
   id           String   @id @default(cuid())
   userId       String
-  action       String // e.g. "backfill.trigger", "image.approve", "image.reject", "settings.update"
-  resourceType String? // "AiJob" | "ProductImage" | "AiSettings"
+  action       String
+  resourceType String?
   resourceId   String?
-  metadata     Json? // { jobId?, productId?, imageId?, trigger?, options? }
+  metadata     Json?
   createdAt    DateTime @default(now())
 
   @@index([userId])
@@ -291,9 +279,9 @@ model AiAuditLog {
 model AiContentDraft {
   id            String    @id @default(cuid())
   productId     String
-  type          String // "text" | "spec" | "photo"
-  suggestedData Json // suggested content (translations, specs, image URLs, etc.)
-  status        String    @default("pending") // "pending" | "approved" | "rejected"
+  type          String
+  suggestedData Json
+  status        String    @default("pending")
   createdAt     DateTime  @default(now())
   reviewedAt    DateTime?
   reviewedBy    String?
@@ -307,10 +295,10 @@ model AiContentDraft {
 
 model CatalogQualitySnapshot {
   id            String   @id @default(cuid())
-  date          DateTime @unique // date only (midnight UTC)
-  avgScore      Float // 0-100
+  date          DateTime @unique
+  avgScore      Float
   totalProducts Int
-  gapCounts     Json // { translations: N, seo: N, photos: N, specs: N }
+  gapCounts     Json
 
   @@index([date])
 }
@@ -318,7 +306,7 @@ model CatalogQualitySnapshot {
 model AiDailyCost {
   id       String   @id @default(cuid())
   date     DateTime
-  feature  String // "text_backfill" | "photo_generation" | "spec_inference" | "chatbot" | "embeddings"
+  feature  String
   costUsd  Float    @default(0)
   jobCount Int      @default(0)
 
@@ -327,68 +315,56 @@ model AiDailyCost {
 }
 
 model User {
-  id                    String                 @id @default(cuid())
-  email                 String                 @unique
-  passwordHash          String
-  name                  String?
-  phone                 String?
-  taxId                 String?              // Tax ID / VAT number (optional, for invoices)
-  companyName           String?              // Company name (optional, for invoices)
-  billingAddress        String?              // Billing / natural location (optional, for invoices)
-  role                  UserRole               @default(DATA_ENTRY)
-  status                String                 @default("active")
-  twoFactorEnabled      Boolean                @default(false)
-  twoFactorSecret       String?
-  twoFactorVerifiedAt   DateTime?
-  twoFactorBackupCodes  Json?                  // Array of bcrypt-hashed backup codes (one-time use)
-  createdAt             DateTime               @default(now())
-  createdBy             String?
-  updatedAt             DateTime               @updatedAt
-  updatedBy             String?
-  deletedAt             DateTime?
-  deletedBy             String?
-  segmentId             String?
-  verificationStatus    VerificationStatus     @default(UNVERIFIED)
-  userRoles             AssignedUserRole[]
-  auditLogs             AuditLog[]
-  authTokens            AuthToken[]
-  createdBookings       Booking[]              @relation("CreatedBookings")
-  bookings              Booking[]              @relation("CustomerBookings")
-  bookingRequests       BookingRequest[]       @relation("BookingRequests")
-  campaigns             Campaign[]
-  cart                  Cart?
-  damageClaimsReported  DamageClaim[]
-  damageClaimsResolved  DamageClaim[]          @relation("ResolvedDamageClaims")
-  deliveries            Delivery[]
-  events                Event[]
-  invoices              Invoice[]
-  maintenance           Maintenance[]          @relation("MaintenanceTechnician")
-  createdPricingRules   PricingRule[]
-  quotes                Quote[]
-  recurringSeries       RecurringSeries[]
-  reviews               Review[]
-  savedEquipment        SavedEquipment[]
-  segment               CustomerSegment?       @relation(fields: [segmentId], references: [id])
-  permissions           UserPermission[]
-  vendor                Vendor?
-  verificationDocuments VerificationDocument[]
-  receivers             Receiver[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  passwordHash            String
+  name                    String?
+  phone                   String?                  @unique
+  phoneVerified           Boolean                  @default(false)
+  role                    UserRole                 @default(CUSTOMER)
+  status                  UserStatus               @default(PENDING)
+  twoFactorEnabled        Boolean                  @default(false)
+  twoFactorSecret         String?
+  segmentId               String?
+  verificationStatus      VerificationStatus       @default(UNVERIFIED)
+  createdAt               DateTime                 @default(now())
+  createdBy               String?
+  updatedAt               DateTime                 @updatedAt
+  updatedBy               String?
+  deletedAt               DateTime?
+  deletedBy               String?
+  taxId                   String?
+  companyName             String?
+  billingAddress          String?
+  twoFactorVerifiedAt     DateTime?
+  twoFactorBackupCodes    Json?
+  userRoles               AssignedUserRole[]
+  auditLogs               AuditLog[]
+  authTokens              AuthToken[]
+  phoneVerifications      PhoneVerification[]
+  createdBookings         Booking[]                @relation("CreatedBookings")
+  bookings                Booking[]                @relation("CustomerBookings")
+  bookingRequests         BookingRequest[]         @relation("BookingRequests")
+  campaigns               Campaign[]
+  cart                    Cart?
+  damageClaimsReported    DamageClaim[]
+  damageClaimsResolved    DamageClaim[]            @relation("ResolvedDamageClaims")
+  deliveries              Delivery[]
+  events                  Event[]
+  invoices                Invoice[]
+  maintenance             Maintenance[]            @relation("MaintenanceTechnician")
   notificationPreferences NotificationPreference[]
+  createdPricingRules     PricingRule[]
   promissoryNotesAsDebtor PromissoryNote[]
-  scanEventsPerformed     ScanEvent[]            @relation("ScanEventPerformer")
-  idDocumentUrl           String?                @db.Text
-  idDocumentType          IdDocumentType?
-  idDocumentNumber        String?
-  idVerifiedAt            DateTime?
-  idVerifiedBy            String?
-  idVerificationStatus    IdVerificationStatus   @default(NOT_SUBMITTED)
-  idRejectionReason       String?
-  skipIdVerification      Boolean                @default(false)
-  idVerifier              User?                  @relation("IdVerifier", fields: [idVerifiedBy], references: [id])
-  idVerifications         User[]                 @relation("IdVerifier")
-  waitlistEntries         WaitlistEntry[]
-  notifications           Notification[]         @relation("UserNotifications")
-  discountCodesCreated    DiscountCode[]         @relation("DiscountCodeCreator")
+  quotes                  Quote[]
+  receivers               Receiver[]
+  recurringSeries         RecurringSeries[]
+  reviews                 Review[]
+  savedEquipment          SavedEquipment[]
+  segment                 CustomerSegment?         @relation(fields: [segmentId], references: [id])
+  permissions             UserPermission[]
+  vendor                  Vendor?
+  verificationDocuments   VerificationDocument[]
 
   @@index([email])
   @@index([role])
@@ -409,6 +385,20 @@ model AuthToken {
 
   @@index([userId])
   @@index([token])
+  @@index([expiresAt])
+}
+
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  otpCode   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([expiresAt])
 }
 
@@ -442,16 +432,16 @@ model Permission {
   id                  String               @id @default(cuid())
   name                String               @unique
   description         String?
+  descriptionAr       String?
+  categoryId          String?
+  isSystem            Boolean              @default(false)
+  sortOrder           Int                  @default(0)
   createdAt           DateTime             @default(now())
   createdBy           String?
   updatedAt           DateTime             @updatedAt
   updatedBy           String?
   deletedAt           DateTime?
   deletedBy           String?
-  categoryId          String?
-  descriptionAr       String?
-  isSystem            Boolean              @default(false)
-  sortOrder           Int                  @default(0)
   menuItemPermissions MenuItemPermission[]
   category            PermissionCategory?  @relation(fields: [categoryId], references: [id])
   rolePermissions     RolePermission[]
@@ -746,13 +736,7 @@ model Brand {
 model Equipment {
   id                       String                    @id @default(cuid())
   sku                      String                    @unique
-  slug                     String?                   @unique // SEO-friendly URL slug (auto-generated from model/sku)
-  productId                String?                   @unique // link to Product for import/AI sync
   model                    String?
-  nameEn                   String? // English name
-  nameZh                   String? // Chinese name
-  descriptionEn            String?                   @db.Text // English description
-  descriptionZh            String?                   @db.Text // Chinese description
   categoryId               String
   brandId                  String?
   condition                EquipmentCondition        @default(GOOD)
@@ -761,33 +745,39 @@ model Equipment {
   dailyPrice               Decimal                   @db.Decimal(10, 2)
   weeklyPrice              Decimal?                  @db.Decimal(10, 2)
   monthlyPrice             Decimal?                  @db.Decimal(10, 2)
-  purchasePrice            Decimal?                  @db.Decimal(10, 2) // سعر الشراء — internal only, for tracking and سند الأمر
   featured                 Boolean                   @default(false)
   isActive                 Boolean                   @default(true)
-  requiresAssistant        Boolean                   @default(false) // Requires an assistant to operate
   warehouseLocation        String?
-  barcode                  String?                   @unique
-  qrCodeData               String?                   @db.Text
+  barcode                  String?
   specifications           Json?
   customFields             Json?
-  specSource               String? // "manual" | "ai" | "import" | "migrated"
-  specConfidence           Float? // 0-1 from last AI inference
-  specLastInferredAt       DateTime?
-  aiSuggestions            Json? // { fieldName: { value, unit, confidence, reasoning } }
-  specBlacklist            Json? // ["field1", "field2"] — don't suggest again
   createdAt                DateTime                  @default(now())
   createdBy                String?
   updatedAt                DateTime                  @updatedAt
   updatedBy                String?
   deletedAt                DateTime?
   deletedBy                String?
-  budgetTier               BudgetTier?
   vendorId                 String?
+  budgetTier               BudgetTier?
+  productId                String?                   @unique
+  slug                     String?                   @unique
+  aiSuggestions            Json?
+  specBlacklist            Json?
+  specConfidence           Float?
+  specLastInferredAt       DateTime?
+  specSource               String?
+  nameEn                   String?
+  nameZh                   String?
+  descriptionEn            String?
+  descriptionZh            String?
+  purchasePrice            Decimal?                  @db.Decimal(10, 2)
+  requiresAssistant        Boolean                   @default(false)
   bookings                 BookingEquipment[]
   cartItems                CartItem[]
   damageClaims             DamageClaim[]
   brand                    Brand?                    @relation(fields: [brandId], references: [id])
   category                 Category                  @relation(fields: [categoryId], references: [id])
+  product                  Product?                  @relation(fields: [productId], references: [id])
   vendor                   Vendor?                   @relation(fields: [vendorId], references: [id])
   inspections              Inspection[]
   kitEquipment             KitEquipment[]
@@ -796,10 +786,6 @@ model Equipment {
   quoteEquipment           QuoteEquipment[]
   savedByUsers             SavedEquipment[]
   shootTypeRecommendations ShootTypeRecommendation[]
-  product                  Product?                  @relation(fields: [productId], references: [id], onDelete: SetNull)
-  scanEvents               ScanEvent[]
-  waitlistEntries          WaitlistEntry[]
-  bundleItems              BundleItem[]
 
   @@index([sku])
   @@index([slug])
@@ -812,7 +798,6 @@ model Equipment {
   @@index([featured])
   @@index([deletedAt])
   @@index([budgetTier])
-  @@index([barcode])
 }
 
 model ShootType {
@@ -888,95 +873,76 @@ model ShootTypeRecommendation {
 }
 
 model Studio {
-  id             String  @id @default(cuid())
-  name           String
-  nameEn         String? // English name
-  nameZh         String? // Chinese name
-  slug           String  @unique
-  description    String?
-  descriptionEn  String? @db.Text // English description
-  descriptionZh  String? @db.Text // Chinese description
-  capacity       Int?
-  hourlyRate     Decimal @db.Decimal(10, 2)
-  setupBuffer    Int     @default(30)
-  cleaningBuffer Int     @default(30)
-  resetTime      Int     @default(15)
-  isActive       Boolean @default(true)
-
-  // CMS: Header
-  heroTagline            String?
-  heroTaglineEn          String? // English tagline
-  heroTaglineZh          String? // Chinese tagline
-  areaSqm                Int?
-  studioType             String?
-  bestUse                String?
-  availabilityConfidence String? // "available_now" | "requires_review"
-
-  // CMS: Gallery
-  videoUrl          String?
-  galleryDisclaimer String?
-
-  // CMS: Location
-  address               String?
-  googleMapsUrl         String?
-  arrivalTimeFromCenter String?
-  parkingNotes          String?
-
-  // CMS: Booking
-  slotDurationMinutes Int      @default(60)
-  dailyRate           Decimal? @db.Decimal(10, 2)
-  minHours            Int      @default(1)
-  durationOptions     String? // JSON: [1,2,3,"half_day","full_day"]
-  bookingDisclaimer   String?
-  vatIncluded         Boolean  @default(false)
-
-  // CMS: What's included
-  whatsIncluded    String? // JSON array of strings
-  notIncluded      String?
-  hasElectricity   Boolean @default(true)
-  hasAC            Boolean @default(true)
-  hasChangingRooms Boolean @default(false)
-  hasWifi          Boolean @default(true)
-
-  // CMS: Rules
+  id                      String               @id @default(cuid())
+  name                    String
+  slug                    String               @unique
+  description             String?
+  capacity                Int?
+  hourlyRate              Decimal              @db.Decimal(10, 2)
+  setupBuffer             Int                  @default(30)
+  cleaningBuffer          Int                  @default(30)
+  resetTime               Int                  @default(15)
+  isActive                Boolean              @default(true)
+  createdAt               DateTime             @default(now())
+  createdBy               String?
+  updatedAt               DateTime             @updatedAt
+  updatedBy               String?
+  deletedAt               DateTime?
+  deletedBy               String?
+  areaSqm                 Int?
+  studioType              String?
+  bestUse                 String?
+  availabilityConfidence  String?
+  videoUrl                String?
+  galleryDisclaimer       String?
+  address                 String?
+  googleMapsUrl           String?
+  arrivalTimeFromCenter   String?
+  parkingNotes            String?
+  slotDurationMinutes     Int                  @default(60)
+  dailyRate               Decimal?             @db.Decimal(10, 2)
+  minHours                Int                  @default(1)
+  durationOptions         String?
+  bookingDisclaimer       String?
+  vatIncluded             Boolean              @default(false)
+  whatsIncluded           String?
+  notIncluded             String?
+  hasElectricity          Boolean              @default(true)
+  hasAC                   Boolean              @default(true)
+  hasChangingRooms        Boolean              @default(false)
   rulesText               String?
   smokingPolicy           String?
   foodPolicy              String?
   equipmentCarePolicy     String?
   cancellationPolicyShort String?
   cancellationPolicyLink  String?
-
-  // CMS: Discount / Promotion
-  discountPercent Int? // e.g. 15 = 15% off
-  discountMessage String? // e.g. "خصم خاص لفترة محدودة"
-  discountActive  Boolean @default(false)
-
-  // CMS: Trust & Contact
-  reviewsText         String?
-  whatsappNumber      String?
-  bookingCountDisplay Int? // Social proof: "100+ حجز"
-
-  // CMS: SEO
-  metaTitle       String?
-  metaDescription String?
-
-  createdAt     DateTime             @default(now())
-  createdBy     String?
-  updatedAt     DateTime             @updatedAt
-  updatedBy     String?
-  deletedAt     DateTime?
-  deletedBy     String?
-  bookings      Booking[]
-  damageClaims  DamageClaim[]
-  media         Media[]
-  quotes        Quote[]
-  addOns        StudioAddOn[]
-  blackoutDates StudioBlackoutDate[]
-  packages      StudioPackage[]
-  faqs          StudioFaq[]
-  testimonials  StudioTestimonial[]
-  schedules     StudioSchedule[]
-  cartItems     CartItem[]
+  reviewsText             String?
+  whatsappNumber          String?
+  metaTitle               String?
+  metaDescription         String?
+  bookingCountDisplay     Int?
+  discountActive          Boolean              @default(false)
+  discountMessage         String?
+  discountPercent         Int?
+  hasWifi                 Boolean              @default(true)
+  heroTagline             String?
+  nameEn                  String?
+  nameZh                  String?
+  descriptionEn           String?
+  descriptionZh           String?
+  heroTaglineEn           String?
+  heroTaglineZh           String?
+  bookings                Booking[]
+  cartItems               CartItem[]
+  damageClaims            DamageClaim[]
+  media                   Media[]
+  quotes                  Quote[]
+  addOns                  StudioAddOn[]
+  blackoutDates           StudioBlackoutDate[]
+  faqs                    StudioFaq[]
+  packages                StudioPackage[]
+  schedules               StudioSchedule[]
+  testimonials            StudioTestimonial[]
 
   @@index([slug])
   @@index([isActive])
@@ -988,16 +954,12 @@ model StudioPackage {
   studioId        String
   name            String
   nameAr          String?
-  nameZh          String?
   description     String?
-  descriptionAr   String?
-  includes        String? // JSON: ["bullet1","bullet2","bullet3"]
+  includes        String?
   price           Decimal   @db.Decimal(10, 2)
   originalPrice   Decimal?  @db.Decimal(10, 2)
   discountPercent Int?
   hours           Int?
-  recommended     Boolean   @default(false)
-  badgeText       String?
   order           Int       @default(0)
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
@@ -1006,6 +968,10 @@ model StudioPackage {
   updatedBy       String?
   deletedAt       DateTime?
   deletedBy       String?
+  badgeText       String?
+  descriptionAr   String?
+  nameZh          String?
+  recommended     Boolean   @default(false)
   studio          Studio    @relation(fields: [studioId], references: [id])
 
   @@index([studioId])
@@ -1082,9 +1048,9 @@ model StudioBlackoutDate {
 model StudioSchedule {
   id        String   @id @default(cuid())
   studioId  String
-  dayOfWeek Int // 0=Sunday, 1=Monday, ..., 6=Saturday
-  openTime  String // "09:00" (HH:mm)
-  closeTime String // "22:00" (HH:mm)
+  dayOfWeek Int
+  openTime  String
+  closeTime String
   isClosed  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1100,10 +1066,6 @@ model StudioAddOn {
   name          String
   description   String?
   price         Decimal   @db.Decimal(10, 2)
-  originalPrice Decimal?  @db.Decimal(10, 2)
-  category      String? // e.g. "equipment", "lighting", "props", "crew", "catering"
-  iconName      String? // lucide icon name e.g. "Camera", "Lightbulb"
-  sortOrder     Int       @default(0)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   createdBy     String?
@@ -1111,6 +1073,10 @@ model StudioAddOn {
   updatedBy     String?
   deletedAt     DateTime?
   deletedBy     String?
+  category      String?
+  iconName      String?
+  originalPrice Decimal?  @db.Decimal(10, 2)
+  sortOrder     Int       @default(0)
   studio        Studio    @relation(fields: [studioId], references: [id])
 
   @@index([studioId])
@@ -1120,95 +1086,65 @@ model StudioAddOn {
 }
 
 model Booking {
-  id                String             @id @default(cuid())
-  bookingNumber     String             @unique
-  customerId        String
-  status            BookingStatus      @default(DRAFT)
-  startDate         DateTime
-  endDate           DateTime
-  studioId          String?
-  studioStartTime   DateTime?
-  studioEndTime     DateTime?
-  totalAmount       Decimal            @db.Decimal(10, 2)
-  depositAmount     Decimal?           @db.Decimal(10, 2)
-  vatAmount         Decimal            @db.Decimal(10, 2)
-  notes             String?
-  softLockExpiresAt DateTime?
-  createdAt         DateTime           @default(now())
-  createdBy         String
-  updatedAt         DateTime           @updatedAt
-  updatedBy         String?
-  deletedAt         DateTime?
-  deletedBy         String?
-  actualReturnDate  DateTime?
-  lateFeeAmount     Decimal?           @db.Decimal(10, 2)
-  recurringSeriesId String?
-  // Guest checkout
-  guestEmail               String?
-  guestName                String?
-  guestPhone               String?
-  guestToken               String?            @unique
-  // Deposit lifecycle (Model A — held separately)
-  depositStatus            DepositStatus      @default(PENDING)
-  depositReturnedAt        DateTime?
-  depositReturnedBy        String?
-  depositDeductionAmount   Decimal?           @db.Decimal(10, 2)
-  depositDeductionReason   String?
-  depositRefundReference   String?
-  // Cancellation
-  cancelledAt              DateTime?
-  cancellationReason       String?
-  refundAmount             Decimal?           @db.Decimal(10, 2)
-  refundStatus             RefundStatus?
-  // Receiver & fulfillment (checkout flow)
-  receiverId                 String?
-  receiverName               String?
-  receiverPhone              String?
-  receiverIdNumber           String?
-  receiverIdPhotoUrl         String?
-  fulfillmentMethod         String?   // PICKUP | DELIVERY
-  deliveryAddress            String?
-  deliveryLat                Float?
-  deliveryLng                Float?
-  preferredTimeSlot          String?   // morning | afternoon | evening
-  emergencyContactName       String?
-  emergencyContactPhone      String?
-  emergencyContactRelation   String?
-  checkoutFormData           Json?     // dynamic CMS field values
-  cartId            String?            @unique
-  createdByUser     User               @relation("CreatedBookings", fields: [createdBy], references: [id])
-  customer          User               @relation("CustomerBookings", fields: [customerId], references: [id])
-  cart              Cart?              @relation("CartToBooking", fields: [cartId], references: [id], onDelete: SetNull)
-  recurringSeries   RecurringSeries?   @relation(fields: [recurringSeriesId], references: [id])
-  studio            Studio?            @relation(fields: [studioId], references: [id])
-  equipment         BookingEquipment[]
-  bookingRequests   BookingRequest[]
-  contracts         Contract[]
-  damageClaims      DamageClaim[]
-  deliveries        Delivery[]
-  inspections       Inspection[]
-  invoices          Invoice[]
-  payments          Payment[]
-  quotes            Quote?             @relation("ConvertedFromQuote")
-  reviews           Review?
-  promissoryNotes   PromissoryNote[]
-  scanEvents        ScanEvent[]
-  contractHtml         String?            @db.Text
-  contractSignedAt     DateTime?
-  contractSignedIp     String?
-  contractPdfUrl       String?
-  reminderSent         Boolean            @default(false)
-  returnReminderSent   Boolean            @default(false)
-  overdueAlerted       Boolean            @default(false)
-  discountCodeId       String?
-  discountCode         DiscountCode?      @relation(fields: [discountCodeId], references: [id])
-  discountCodeUsages   DiscountCodeUsage[]
+  id                       String             @id @default(cuid())
+  bookingNumber            String             @unique
+  customerId               String
+  status                   BookingStatus      @default(DRAFT)
+  startDate                DateTime
+  endDate                  DateTime
+  studioId                 String?
+  studioStartTime          DateTime?
+  studioEndTime            DateTime?
+  totalAmount              Decimal            @db.Decimal(10, 2)
+  depositAmount            Decimal?           @db.Decimal(10, 2)
+  vatAmount                Decimal            @db.Decimal(10, 2)
+  notes                    String?
+  softLockExpiresAt        DateTime?
+  actualReturnDate         DateTime?
+  lateFeeAmount            Decimal?           @db.Decimal(10, 2)
+  recurringSeriesId        String?
+  createdAt                DateTime           @default(now())
+  createdBy                String
+  updatedAt                DateTime           @updatedAt
+  updatedBy                String?
+  deletedAt                DateTime?
+  deletedBy                String?
+  receiverId               String?
+  receiverName             String?
+  receiverPhone            String?
+  receiverIdNumber         String?
+  receiverIdPhotoUrl       String?
+  fulfillmentMethod        String?
+  deliveryAddress          String?
+  deliveryLat              Float?
+  deliveryLng              Float?
+  preferredTimeSlot        String?
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+  checkoutFormData         Json?
+  cartId                   String?            @unique
+  cart                     Cart?              @relation("CartToBooking", fields: [cartId], references: [id])
+  createdByUser            User               @relation("CreatedBookings", fields: [createdBy], references: [id])
+  customer                 User               @relation("CustomerBookings", fields: [customerId], references: [id])
+  recurringSeries          RecurringSeries?   @relation(fields: [recurringSeriesId], references: [id])
+  studio                   Studio?            @relation(fields: [studioId], references: [id])
+  equipment                BookingEquipment[]
+  bookingRequests          BookingRequest[]
+  contracts                Contract[]
+  damageClaims             DamageClaim[]
+  deliveries               Delivery[]
+  inspections              Inspection[]
+  invoices                 Invoice[]
+  payments                 Payment[]
+  promissoryNotes          PromissoryNote[]
+  quotes                   Quote?             @relation("ConvertedFromQuote")
+  reviews                  Review?
 
   @@index([bookingNumber])
   @@index([customerId])
   @@index([status])
   @@index([startDate, endDate])
-  @@index([guestToken])
   @@index([studioId])
   @@index([softLockExpiresAt])
   @@index([recurringSeriesId])
@@ -1217,52 +1153,23 @@ model Booking {
 }
 
 model BookingEquipment {
-  id                   String                @id @default(cuid())
-  bookingId            String
-  equipmentId          String
-  quantity             Int                   @default(1)
-  itemStatus           BookingItemStatus     @default(PENDING)
-  dispatchedAt         DateTime?
-  dispatchedBy         String?
-  conditionOnDispatch  String?
-  returnedAt           DateTime?
-  returnedBy           String?
-  conditionOnReturn    String?
-  createdAt            DateTime              @default(now())
-  createdBy            String?
-  updatedAt            DateTime              @updatedAt
-  updatedBy            String?
-  deletedAt            DateTime?
-  deletedBy            String?
-  booking              Booking               @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  equipment            Equipment             @relation(fields: [equipmentId], references: [id])
+  id          String    @id @default(cuid())
+  bookingId   String
+  equipmentId String
+  quantity    Int       @default(1)
+  createdAt   DateTime  @default(now())
+  createdBy   String?
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  deletedAt   DateTime?
+  deletedBy   String?
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
 
   @@unique([bookingId, equipmentId])
   @@index([bookingId])
   @@index([equipmentId])
   @@index([deletedAt])
-  @@index([itemStatus])
-}
-
-model ScanEvent {
-  id              String        @id @default(cuid())
-  equipmentId     String
-  bookingId       String
-  action          ScanAction
-  performedBy     String
-  conditionNotes  String?       @db.Text
-  conditionPhotos Json?
-  scannedAt       DateTime      @default(now())
-  createdAt       DateTime      @default(now())
-  equipment       Equipment     @relation(fields: [equipmentId], references: [id])
-  booking         Booking       @relation(fields: [bookingId], references: [id])
-  performer       User          @relation("ScanEventPerformer", fields: [performedBy], references: [id])
-
-  @@index([equipmentId])
-  @@index([bookingId])
-  @@index([performedBy])
-  @@index([scannedAt])
-  @@index([action])
 }
 
 model BookingRequest {
@@ -1318,12 +1225,8 @@ model RecurringSeries {
 model Kit {
   id              String         @id @default(cuid())
   name            String
-  nameEn          String? // English name
-  nameZh          String? // Chinese name
   slug            String         @unique
   description     String?
-  descriptionEn   String?        @db.Text // English description
-  descriptionZh   String?        @db.Text // Chinese description
   discountPercent Decimal?       @db.Decimal(5, 2)
   isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now())
@@ -1332,8 +1235,12 @@ model Kit {
   updatedBy       String?
   deletedAt       DateTime?
   deletedBy       String?
-  items           KitEquipment[]
+  nameEn          String?
+  nameZh          String?
+  descriptionEn   String?
+  descriptionZh   String?
   cartItems       CartItem[]
+  items           KitEquipment[]
 
   @@index([slug])
   @@index([isActive])
@@ -1417,11 +1324,11 @@ model PricingRule {
   isActive        Boolean             @default(true)
   validFrom       DateTime?
   validUntil      DateTime?
-  appliedCount    Int                 @default(0)
-  totalImpact     Decimal?            @db.Decimal(12, 2)
   createdBy       String
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  appliedCount    Int                 @default(0)
+  totalImpact     Decimal?            @db.Decimal(12, 2)
   creator         User                @relation(fields: [createdBy], references: [id])
 
   @@index([priority])
@@ -1506,7 +1413,6 @@ model Notification {
   title     String
   message   String
   data      Json?
-  link      String?
   read      Boolean             @default(false)
   readAt    DateTime?
   createdAt DateTime            @default(now())
@@ -1515,7 +1421,6 @@ model Notification {
   updatedBy String?
   deletedAt DateTime?
   deletedBy String?
-  user      User?               @relation("UserNotifications", fields: [userId], references: [id])
 
   @@index([userId])
   @@index([channel])
@@ -1548,20 +1453,19 @@ model NotificationTemplate {
 }
 
 model MessagingChannelConfig {
-  id             String   @id @default(cuid())
-  channel        NotificationChannel
-  isEnabled      Boolean  @default(false)
-  config         Json?    // API keys, sender name, etc.
-  businessPhone  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String              @id @default(cuid())
+  channel       NotificationChannel @unique
+  isEnabled     Boolean             @default(false)
+  config        Json?
+  businessPhone String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
-  @@unique([channel])
   @@index([channel])
 }
 
 model MessageLog {
-  id              String          @id @default(cuid())
+  id              String              @id @default(cuid())
   channel         NotificationChannel
   templateId      String?
   recipientUserId String?
@@ -1569,14 +1473,14 @@ model MessageLog {
   recipientEmail  String?
   subject         String?
   body            String
-  status          MessageLogStatus @default(QUEUED)
-  externalId      String?         // Twilio SID, Meta message ID
+  status          MessageLogStatus    @default(QUEUED)
+  externalId      String?
   errorMessage    String?
   metadata        Json?
   sentAt          DateTime?
   deliveredAt     DateTime?
   readAt          DateTime?
-  createdAt       DateTime        @default(now())
+  createdAt       DateTime            @default(now())
 
   @@index([channel])
   @@index([status])
@@ -1585,33 +1489,33 @@ model MessageLog {
 }
 
 model AutomationRule {
-  id                String             @id @default(cuid())
-  name              String             @db.VarChar(120)
-  description       String?            @db.Text
-  isActive          Boolean            @default(true)
-  priority          Int                @default(0)
-  trigger           NotificationTrigger
-  triggerDelay      Int                @default(0) // minutes before send
-  channels          Json               // NotificationChannel[]
-  templateId        String?
-  conditions        Json?              @default("{}")
-  sendWindow        Json?              // { start: "09:00", end: "21:00" }
-  timezone          String             @default("Asia/Riyadh")
-  respectDND        Boolean            @default(true)
-  recipientType     RecipientType      @default(CUSTOMER)
-  specificRecipients Json?             // BusinessRecipient IDs when recipientType is BUSINESS/WAREHOUSE/ALL
-  maxRetries        Int                @default(3)
-  retryDelay        Int                @default(5) // minutes between retries
-  allowDuplicates   Boolean            @default(false)
-  frequencyCap      Json?              // { maxPerDay, maxPerWeek, cooldownHours }
-  sentCount         Int                @default(0)
-  failedCount       Int                @default(0)
-  lastTriggered     DateTime?
-  delayMinutes      Int                @default(0) // deprecated, use triggerDelay
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  createdBy         String?
-  updatedBy         String?
+  id                 String              @id @default(cuid())
+  name               String              @db.VarChar(120)
+  trigger            NotificationTrigger
+  channels           Json
+  templateId         String?
+  isActive           Boolean             @default(true)
+  conditions         Json?               @default("{}")
+  delayMinutes       Int                 @default(0)
+  sendWindow         Json?
+  recipientType      RecipientType       @default(CUSTOMER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  allowDuplicates    Boolean             @default(false)
+  createdBy          String?
+  description        String?
+  failedCount        Int                 @default(0)
+  frequencyCap       Json?
+  lastTriggered      DateTime?
+  maxRetries         Int                 @default(3)
+  priority           Int                 @default(0)
+  respectDND         Boolean             @default(true)
+  retryDelay         Int                 @default(5)
+  sentCount          Int                 @default(0)
+  specificRecipients Json?
+  timezone           String              @default("Asia/Riyadh")
+  triggerDelay       Int                 @default(0)
+  updatedBy          String?
 
   @@index([trigger])
   @@index([isActive])
@@ -1619,14 +1523,13 @@ model AutomationRule {
 }
 
 model NotificationPreference {
-  id         String               @id @default(cuid())
-  userId     String
-  channel    NotificationChannel
-  category   NotificationCategory @default(TRANSACTIONAL)
-  isOptedIn  Boolean              @default(true)
-  updatedAt  DateTime             @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String               @id @default(cuid())
+  userId    String
+  channel   NotificationChannel
+  category  NotificationCategory @default(TRANSACTIONAL)
+  isOptedIn Boolean              @default(true)
+  updatedAt DateTime             @updatedAt
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, channel, category])
   @@index([userId])
@@ -1634,48 +1537,48 @@ model NotificationPreference {
 }
 
 model BusinessRecipient {
-  id                String                 @id @default(cuid())
-  name              String                 @db.VarChar(120)
-  arabicName        String?                @db.VarChar(120)
-  englishName       String?                @db.VarChar(120)
+  id                String                @id @default(cuid())
+  name              String                @db.VarChar(120)
   role              BusinessRecipientRole
-  department        String?                @db.VarChar(100)
-  jobTitle          String?                @db.VarChar(100)
-  phone             String?                @db.VarChar(20)
-  phoneVerified     Boolean                @default(false)
-  alternatePhone    String?                @db.VarChar(20)
-  email             String?                @db.VarChar(255)
-  emailVerified     Boolean                @default(false)
-  alternateEmail    String?                @db.VarChar(255)
-  whatsappNumber    String?                @db.VarChar(20)
-  whatsappVerified  Boolean                @default(false)
-  whatsappBusiness  Boolean                @default(false)
-  preferredChannel  NotificationChannel?
-  preferredLanguage String                @default("ar")
-  timezone          String                @default("Asia/Riyadh")
-  receiveTriggers   Json?                 // null = all events
-  excludeTriggers   Json?                 @default("[]")
-  dndEnabled        Boolean                @default(false)
-  dndStart          String?
-  dndEnd            String?
-  dndDays           Json?                 @default("[]")
-  priority          Int                   @default(5)
-  receiveUrgent     Boolean               @default(true)
-  receiveLate       Boolean               @default(true)
-  receiveDamage     Boolean               @default(true)
+  phone             String?               @db.VarChar(20)
+  email             String?               @db.VarChar(255)
+  whatsappNumber    String?               @db.VarChar(20)
+  isActive          Boolean               @default(true)
+  receiveTriggers   Json?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  alternateEmail    String?               @db.VarChar(255)
+  alternatePhone    String?               @db.VarChar(20)
+  arabicName        String?               @db.VarChar(120)
+  backupFor         String?
+  createdBy         String?
+  department        String?               @db.VarChar(100)
   digestEnabled     Boolean               @default(false)
   digestFrequency   DigestFrequency?
   digestTime        String?
-  isActive          Boolean               @default(true)
-  isPrimary         Boolean               @default(false)
+  dndDays           Json?                 @default("[]")
+  dndEnabled        Boolean               @default(false)
+  dndEnd            String?
+  dndStart          String?
+  emailVerified     Boolean               @default(false)
+  englishName       String?               @db.VarChar(120)
+  excludeTriggers   Json?                 @default("[]")
   isBackup          Boolean               @default(false)
-  backupFor         String?
-  messagesReceived  Int                   @default(0)
+  isPrimary         Boolean               @default(false)
+  jobTitle          String?               @db.VarChar(100)
   lastReceived      DateTime?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  createdBy         String?
+  messagesReceived  Int                   @default(0)
+  phoneVerified     Boolean               @default(false)
+  preferredChannel  NotificationChannel?
+  preferredLanguage String                @default("ar")
+  priority          Int                   @default(5)
+  receiveDamage     Boolean               @default(true)
+  receiveLate       Boolean               @default(true)
+  receiveUrgent     Boolean               @default(true)
+  timezone          String                @default("Asia/Riyadh")
   updatedBy         String?
+  whatsappBusiness  Boolean               @default(false)
+  whatsappVerified  Boolean               @default(false)
 
   @@index([role])
   @@index([isActive])
@@ -1757,17 +1660,17 @@ model Media {
   size          Int?
   equipmentId   String?
   studioId      String?
-  sortOrder     Int?       @default(0)
-  altText       String?
-  pendingReview Boolean    @default(false)
-  imageSource   String? // "upload" | "ai" | "stock" | "brand"
-  qualityScore  Float?
   createdAt     DateTime   @default(now())
   createdBy     String?
   updatedAt     DateTime   @updatedAt
   updatedBy     String?
   deletedAt     DateTime?
   deletedBy     String?
+  pendingReview Boolean    @default(false)
+  imageSource   String?
+  qualityScore  Float?
+  sortOrder     Int?       @default(0)
+  altText       String?
   equipment     Equipment? @relation(fields: [equipmentId], references: [id])
   studio        Studio?    @relation(fields: [studioId], references: [id])
 
@@ -1814,20 +1717,20 @@ model IntegrationConfig {
 }
 
 model PaymentGatewayConfig {
-  id              String    @id @default(cuid())
-  slug            String    @unique
-  enabled         Boolean   @default(false)
-  credentialsEnc  String?
-  displayName     String?
-  sortOrder       Int       @default(0)
-  lastCheckedAt   DateTime?
-  lastCheckOk     Boolean?
-  createdAt       DateTime  @default(now())
-  createdBy       String?
-  updatedAt       DateTime  @updatedAt
-  updatedBy       String?
-  deletedAt       DateTime?
-  deletedBy       String?
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  enabled        Boolean   @default(false)
+  credentialsEnc String?
+  displayName    String?
+  sortOrder      Int       @default(0)
+  lastCheckedAt  DateTime?
+  lastCheckOk    Boolean?
+  createdAt      DateTime  @default(now())
+  createdBy      String?
+  updatedAt      DateTime  @updatedAt
+  updatedBy      String?
+  deletedAt      DateTime?
+  deletedBy      String?
 
   @@index([slug])
   @@index([deletedAt])
@@ -1887,7 +1790,6 @@ model Quote {
   equipment       Json
   notes           String?
   bookingId       String?          @unique
-  cartId          String?          @unique
   convertedAt     DateTime?
   createdAt       DateTime         @default(now())
   createdBy       String
@@ -1895,8 +1797,9 @@ model Quote {
   updatedBy       String?
   deletedAt       DateTime?
   deletedBy       String?
+  cartId          String?          @unique
   booking         Booking?         @relation("ConvertedFromQuote", fields: [bookingId], references: [id])
-  cart            Cart?            @relation("CartToQuote", fields: [cartId], references: [id], onDelete: SetNull)
+  cart            Cart?            @relation("CartToQuote", fields: [cartId], references: [id])
   customer        User             @relation(fields: [customerId], references: [id])
   studio          Studio?          @relation(fields: [studioId], references: [id])
   equipmentItems  QuoteEquipment[]
@@ -2039,7 +1942,6 @@ model Coupon {
   usedCount              Int          @default(0)
   status                 CouponStatus @default(ACTIVE)
   applicableEquipmentIds Json?
-  applicableStudioIds    Json?
   description            String?
   createdAt              DateTime     @default(now())
   createdBy              String
@@ -2047,6 +1949,7 @@ model Coupon {
   updatedBy              String?
   deletedAt              DateTime?
   deletedBy              String?
+  applicableStudioIds    Json?
 
   @@index([code])
   @@index([status])
@@ -2316,9 +2219,9 @@ model Cart {
   expiresAt      DateTime
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+  booking        Booking?   @relation("CartToBooking")
   user           User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items          CartItem[]
-  booking        Booking?   @relation("CartToBooking")
   quote          Quote?     @relation("CartToQuote")
 
   @@index([userId])
@@ -2344,9 +2247,9 @@ model CartItem {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   cart          Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  equipment     Equipment?   @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  equipment     Equipment?   @relation(fields: [equipmentId], references: [id])
+  kit           Kit?         @relation(fields: [kitId], references: [id])
   studio        Studio?      @relation(fields: [studioId], references: [id])
-  kit           Kit?         @relation(fields: [kitId], references: [id], onDelete: SetNull)
 
   @@index([cartId])
   @@index([equipmentId])
@@ -2354,118 +2257,104 @@ model CartItem {
   @@index([kitId])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// CMS Checkout Form Builder (admin-configurable checkout fields)
-// ──────────────────────────────────────────────────────────────────
-
 model CheckoutFormSection {
-  id          String              @id @default(cuid())
-  nameEn      String
-  nameAr      String
-  step        Int                 // 1, 2, or 3
-  sortOrder   Int                 @default(0)
-  isSystem    Boolean             @default(false)
-  isActive    Boolean             @default(true)
-  fields      CheckoutFormField[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  deletedAt   DateTime?
+  id        String              @id @default(cuid())
+  nameEn    String
+  nameAr    String
+  step      Int
+  sortOrder Int                 @default(0)
+  isSystem  Boolean             @default(false)
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  deletedAt DateTime?
+  fields    CheckoutFormField[]
 
   @@index([step, sortOrder])
   @@index([deletedAt])
 }
 
 model CheckoutFormField {
-  id                 String              @id @default(cuid())
-  sectionId          String
-  section            CheckoutFormSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  fieldKey           String              @unique
-  labelEn            String
-  labelAr            String
-  placeholderEn      String?
-  placeholderAr      String?
-  fieldType          String              // text, number, phone, email, checkbox, file, dropdown, date, map, multi_select, radio, textarea, signature
-  isRequired         Boolean             @default(false)
-  isSystem           Boolean             @default(false)
-  isActive           Boolean             @default(true)
-  sortOrder          Int                 @default(0)
-  options            Json?               // for dropdown/radio/multi_select: [{ valueEn, valueAr }]
-  conditionFieldKey  String?
+  id                String              @id @default(cuid())
+  sectionId         String
+  fieldKey          String              @unique
+  labelEn           String
+  labelAr           String
+  placeholderEn     String?
+  placeholderAr     String?
+  fieldType         String
+  isRequired        Boolean             @default(false)
+  isSystem          Boolean             @default(false)
+  isActive          Boolean             @default(true)
+  sortOrder         Int                 @default(0)
+  options           Json?
+  conditionFieldKey String?
   conditionValue    String?
-  defaultValue       String?
-  metadata           Json?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  defaultValue      String?
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  section           CheckoutFormSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@index([sectionId, sortOrder])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// Saved receivers (for "someone else will receive" checkout flow)
-// ──────────────────────────────────────────────────────────────────
-
 model Receiver {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  idNumber    String
-  phone       String
-  idPhotoUrl  String
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  idNumber   String
+  phone      String
+  idPhotoUrl String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  isDefault  Boolean   @default(false)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([deletedAt])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// Footer CMS (admin-configurable footer content)
-// ──────────────────────────────────────────────────────────────────
-
 model FooterSettings {
-  id                 String   @id @default(cuid())
-  enabled            Boolean  @default(true)
-  layout             String   @default("default") // default | minimal | extended
-  backgroundColor    String   @default("#1a1a1a")
-  textColor          String   @default("#ffffff")
-  linkColor          String   @default("#10b981")
-  linkHoverColor     String   @default("#34d399")
-  socialHoverEffect  String   @default("lift")   // lift | scale | glow | background
-  socialHoverColor   String?  // hex; used for glow/background
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  brand     FooterBrand?
-  contacts  FooterContact[]
-  socialLinks FooterSocialLink[]
-  columns   FooterColumn[]
-  legal     FooterLegal?
-  newsletter FooterNewsletter?
+  id                String             @id @default(cuid())
+  enabled           Boolean            @default(true)
+  layout            String             @default("default")
+  backgroundColor   String             @default("#1a1a1a")
+  textColor         String             @default("#ffffff")
+  linkColor         String             @default("#10b981")
+  linkHoverColor    String             @default("#34d399")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  socialHoverColor  String?
+  socialHoverEffect String             @default("lift")
+  brand             FooterBrand?
+  columns           FooterColumn[]
+  contacts          FooterContact[]
+  legal             FooterLegal?
+  newsletter        FooterNewsletter?
+  socialLinks       FooterSocialLink[]
 }
 
 model FooterBrand {
-  id             String         @id @default(cuid())
-  footerId       String         @unique
-  footer         FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
-  logoLight      String
-  logoDark       String
-  companyNameAr  String
-  companyNameEn  String
-  descriptionAr String         @db.Text
-  descriptionEn String         @db.Text
-  showBrand      Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id            String         @id @default(cuid())
+  footerId      String         @unique
+  logoLight     String
+  logoDark      String
+  companyNameAr String
+  companyNameEn String
+  descriptionAr String
+  descriptionEn String
+  showBrand     Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  footer        FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
 }
 
 model FooterContact {
   id              String         @id @default(cuid())
   footerId        String
-  footer          FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
-  type            String         // phone | email | address
+  type            String
   labelAr         String
   labelEn         String
   value           String
@@ -2476,23 +2365,24 @@ model FooterContact {
   enabled         Boolean        @default(true)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  footer          FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
 
   @@index([footerId, order])
 }
 
 model FooterSocialLink {
-  id           String         @id @default(cuid())
-  footerId     String
-  footer       FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
-  platform     String         // instagram | whatsapp | twitter | facebook | linkedin | tiktok | youtube | snapchat | telegram | custom
-  url          String
+  id            String         @id @default(cuid())
+  footerId      String
+  platform      String
+  url           String
   displayNameAr String?
   displayNameEn String?
-  customIcon   String?
-  order        Int            @default(0)
-  enabled      Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  customIcon    String?
+  order         Int            @default(0)
+  enabled       Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  footer        FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
 
   @@index([footerId, order])
 }
@@ -2500,7 +2390,6 @@ model FooterSocialLink {
 model FooterColumn {
   id        String         @id @default(cuid())
   footerId  String
-  footer    FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
   titleAr   String
   titleEn   String
   showTitle Boolean        @default(true)
@@ -2508,6 +2397,7 @@ model FooterColumn {
   enabled   Boolean        @default(true)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+  footer    FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
   links     FooterLink[]
 
   @@index([footerId, order])
@@ -2516,10 +2406,9 @@ model FooterColumn {
 model FooterLink {
   id         String       @id @default(cuid())
   columnId   String
-  column     FooterColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
   textAr     String
   textEn     String
-  linkType   String       // internal | external | phone | email | file | category | page
+  linkType   String
   url        String
   icon       String?
   openNewTab Boolean      @default(false)
@@ -2529,105 +2418,88 @@ model FooterLink {
   pageSlug   String?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  column     FooterColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
 
   @@index([columnId, order])
 }
 
 model FooterLegal {
-  id         String         @id @default(cuid())
-  footerId   String         @unique
-  footer     FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
-  copyrightAr String        @db.Text
-  copyrightEn String        @db.Text
-  autoYear   Boolean        @default(true)
-  layout     String         @default("center") // center | left | right
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-  links      FooterLegalLink[]
+  id          String            @id @default(cuid())
+  footerId    String            @unique
+  copyrightAr String
+  copyrightEn String
+  autoYear    Boolean           @default(true)
+  layout      String            @default("center")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  footer      FooterSettings    @relation(fields: [footerId], references: [id], onDelete: Cascade)
+  links       FooterLegalLink[]
 }
 
 model FooterLegalLink {
-  id       String     @id @default(cuid())
-  legalId  String
-  legal    FooterLegal @relation(fields: [legalId], references: [id], onDelete: Cascade)
-  textAr   String
-  textEn   String
-  url      String
-  order    Int        @default(0)
-  enabled  Boolean    @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String      @id @default(cuid())
+  legalId   String
+  textAr    String
+  textEn    String
+  url       String
+  order     Int         @default(0)
+  enabled   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  legal     FooterLegal @relation(fields: [legalId], references: [id], onDelete: Cascade)
 
   @@index([legalId, order])
 }
 
 model FooterNewsletter {
-  id                String         @id @default(cuid())
-  footerId          String         @unique
-  footer            FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
-  enabled           Boolean        @default(false)
-  titleAr           String
-  titleEn           String
-  descriptionAr     String         @db.Text
-  descriptionEn     String         @db.Text
-  placeholderAr     String
-  placeholderEn     String
-  buttonTextAr      String
-  buttonTextEn      String
-  successMessageAr  String         @db.Text
-  successMessageEn  String         @db.Text
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  footerId         String         @unique
+  enabled          Boolean        @default(false)
+  titleAr          String
+  titleEn          String
+  descriptionAr    String
+  descriptionEn    String
+  placeholderAr    String
+  placeholderEn    String
+  buttonTextAr     String
+  buttonTextEn     String
+  successMessageAr String
+  successMessageEn String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  footer           FooterSettings @relation(fields: [footerId], references: [id], onDelete: Cascade)
 }
 
 model NewsletterSubscription {
   id        String   @id @default(cuid())
-  email     String
-  source    String?  // 'blog' | 'footer' | null (legacy)
+  email     String   @unique
   createdAt DateTime @default(now())
+  source    String?
 
-  @@unique([email])
   @@index([email])
   @@index([source])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// Blog System
-// ──────────────────────────────────────────────────────────────────
-
-enum BlogPostStatus {
-  DRAFT
-  REVIEW
-  PUBLISHED
-  SCHEDULED
-  ARCHIVED
-}
-
-enum BlogReactionType {
-  HELPFUL_YES
-  HELPFUL_NO
-}
-
 model BlogCategory {
-  id               String        @id @default(cuid())
+  id               String         @id @default(cuid())
   nameAr           String
   nameEn           String
   slug             String         @unique
-  descriptionAr    String?        @db.Text
-  descriptionEn    String?        @db.Text
+  descriptionAr    String?
+  descriptionEn    String?
   icon             String?
-  coverImage      String?
-  metaTitle        String?
-  metaDescription  String?        @db.Text
-  parentCategoryId String?
   sortOrder        Int            @default(0)
   isActive         Boolean        @default(true)
-  createdAt        DateTime      @default(now())
+  createdAt        DateTime       @default(now())
   createdBy        String?
-  updatedAt        DateTime      @updatedAt
+  updatedAt        DateTime       @updatedAt
   updatedBy        String?
   deletedAt        DateTime?
   deletedBy        String?
+  coverImage       String?
+  metaTitle        String?
+  metaDescription  String?
+  parentCategoryId String?
   parent           BlogCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
   children         BlogCategory[] @relation("CategoryHierarchy")
   posts            BlogPost[]
@@ -2639,13 +2511,13 @@ model BlogCategory {
 }
 
 model BlogTag {
-  id        String      @id @default(cuid())
+  id        String        @id @default(cuid())
   nameAr    String
   nameEn    String
-  slug      String      @unique
-  createdAt DateTime    @default(now())
+  slug      String        @unique
+  createdAt DateTime      @default(now())
   createdBy String?
-  updatedAt DateTime    @updatedAt
+  updatedAt DateTime      @updatedAt
   updatedBy String?
   deletedAt DateTime?
   deletedBy String?
@@ -2656,30 +2528,30 @@ model BlogTag {
 }
 
 model BlogAuthor {
-  id             String      @id @default(cuid())
-  name           String
-  slug           String?     @unique
-  email          String?     @unique
-  bioAr          String?     @db.Text
-  bioEn          String?     @db.Text
-  avatar         String?
-  role           String?
-  userId         String?
-  twitterUrl     String?
-  linkedinUrl    String?
-  instagramUrl   String?
-  githubUrl      String?
-  websiteUrl     String?
-  metaTitle      String?
-  metaDescription String?    @db.Text
-  isActive       Boolean     @default(true)
-  createdAt      DateTime    @default(now())
-  createdBy      String?
-  updatedAt      DateTime    @updatedAt
-  updatedBy      String?
-  deletedAt      DateTime?
-  deletedBy      String?
-  posts          BlogPost[]
+  id              String     @id @default(cuid())
+  name            String
+  bioAr           String?
+  bioEn           String?
+  avatar          String?
+  role            String?
+  userId          String?
+  twitterUrl      String?
+  linkedinUrl     String?
+  instagramUrl    String?
+  createdAt       DateTime   @default(now())
+  createdBy       String?
+  updatedAt       DateTime   @updatedAt
+  updatedBy       String?
+  deletedAt       DateTime?
+  deletedBy       String?
+  slug            String?    @unique
+  email           String?    @unique
+  githubUrl       String?
+  websiteUrl      String?
+  metaTitle       String?
+  metaDescription String?
+  isActive        Boolean    @default(true)
+  posts           BlogPost[]
 
   @@index([userId])
   @@index([deletedAt])
@@ -2689,53 +2561,51 @@ model BlogAuthor {
 }
 
 model BlogPost {
-  id               String         @id @default(cuid())
-  titleAr          String
-  titleEn          String
-  slug             String         @unique
-  excerptAr        String         @db.Text
-  excerptEn        String         @db.Text
-  content          Json           // Tiptap JSON
-  coverImage       String
-  coverImageAltAr  String?
-  coverImageAltEn  String?
-  categoryId       String
-  authorId         String
-  status           BlogPostStatus @default(DRAFT)
-  publishedAt      DateTime?
-  readingTime      Int?           // minutes
-  featured         Boolean       @default(false)
-  trending         Boolean       @default(false)
-  views            Int           @default(0)
-  // SEO
-  metaTitleAr      String?
-  metaTitleEn      String?
-  metaDescriptionAr String?      @db.Text
-  metaDescriptionEn String?      @db.Text
-  metaKeywordsAr   String?
-  metaKeywordsEn   String?
-  ogImage          String?
-  // Conversion
-  relatedEquipmentIds String[]   // Equipment IDs
-  primaryCtaTextAr String?
-  primaryCtaTextEn String?
-  primaryCtaUrl    String?
-  primaryCtaType   String?
-  secondaryCtaTextAr String?
-  secondaryCtaTextEn String?
-  secondaryCtaUrl  String?
-  createdAt        DateTime      @default(now())
-  createdBy        String?
-  updatedAt        DateTime      @updatedAt
-  updatedBy        String?
-  deletedAt        DateTime?
-  deletedBy        String?
-  category         BlogCategory   @relation(fields: [categoryId], references: [id])
-  author           BlogAuthor     @relation(fields: [authorId], references: [id])
-  tags             BlogPostTag[]
-  reactions        BlogReaction[]
-  blogViews        BlogView[]
-  revisions        BlogRevision[]
+  id                  String         @id @default(cuid())
+  titleAr             String
+  titleEn             String
+  slug                String         @unique
+  excerptAr           String
+  excerptEn           String
+  content             Json
+  coverImage          String
+  coverImageAltAr     String?
+  coverImageAltEn     String?
+  categoryId          String
+  authorId            String
+  status              BlogPostStatus @default(DRAFT)
+  publishedAt         DateTime?
+  readingTime         Int?
+  featured            Boolean        @default(false)
+  trending            Boolean        @default(false)
+  views               Int            @default(0)
+  metaTitleAr         String?
+  metaTitleEn         String?
+  metaDescriptionAr   String?
+  metaDescriptionEn   String?
+  metaKeywordsAr      String?
+  metaKeywordsEn      String?
+  ogImage             String?
+  relatedEquipmentIds String[]
+  primaryCtaTextAr    String?
+  primaryCtaTextEn    String?
+  primaryCtaUrl       String?
+  primaryCtaType      String?
+  secondaryCtaTextAr  String?
+  secondaryCtaTextEn  String?
+  secondaryCtaUrl     String?
+  createdAt           DateTime       @default(now())
+  createdBy           String?
+  updatedAt           DateTime       @updatedAt
+  updatedBy           String?
+  deletedAt           DateTime?
+  deletedBy           String?
+  author              BlogAuthor     @relation(fields: [authorId], references: [id])
+  category            BlogCategory   @relation(fields: [categoryId], references: [id])
+  tags                BlogPostTag[]
+  reactions           BlogReaction[]
+  revisions           BlogRevision[]
+  blogViews           BlogView[]
 
   @@index([slug])
   @@index([categoryId])
@@ -2748,12 +2618,12 @@ model BlogPost {
 }
 
 model BlogPostTag {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   postId    String
   tagId     String
-  createdAt DateTime  @default(now())
-  post      BlogPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag       BlogTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([postId, tagId])
   @@index([postId])
@@ -2761,12 +2631,12 @@ model BlogPostTag {
 }
 
 model BlogReaction {
-  id        String          @id @default(cuid())
+  id        String           @id @default(cuid())
   postId    String
   type      BlogReactionType
   ipHash    String
-  createdAt DateTime        @default(now())
-  post      BlogPost        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  post      BlogPost         @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, ipHash])
   @@index([postId])
@@ -2809,7 +2679,7 @@ model BlogAiUsageLog {
   estimatedCostUsd Float    @default(0)
   durationMs       Int      @default(0)
   success          Boolean  @default(true)
-  errorMessage     String?  @db.Text
+  errorMessage     String?
   createdAt        DateTime @default(now())
 
   @@index([userId])
@@ -2817,62 +2687,58 @@ model BlogAiUsageLog {
   @@index([createdAt])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// Promissory Note (سند الأمر) - linked to invoice/booking
-// ──────────────────────────────────────────────────────────────────
-
 model PromissoryNote {
-  id                      String    @id @default(cuid())
-  noteNumber              String    @unique
-  noteType                String    // FRAMEWORK | BOOKING_SPECIFIC
-  debtorId                String
-  debtorName              String
-  debtorNationalId        String?
-  debtorNationality       String?
-  debtorDob               DateTime?
-  debtorAddress           String?   @db.Text
-  debtorPhone             String
-  debtorEmail             String
-  creditorName            String
-  creditorCommercialReg   String?
-  creditorTaxNumber       String?
-  creditorAddress         String?   @db.Text
-  creditorBankAccount     String?
-  creditorIban            String?
-  amountSar               Decimal   @db.Decimal(12, 2)
-  amountInWords           String    @db.Text
-  equipmentPurchaseValue  Decimal?  @db.Decimal(12, 2)
-  equipmentItems          Json?     // [{ name, purchaseValue, quantity }]
-  bookingId               String?
-  invoiceNumber           String?
-  issueDate               DateTime  @default(now())
-  expectedReturnDate      DateTime?
-  dueDate                 DateTime?
-  status                  String    // PENDING_SIGNATURE | SIGNED | ACTIVE | FULFILLED | ENFORCED | CANCELLED
-  termsAccepted           Boolean   @default(false)
-  damagePolicyAccepted    Boolean   @default(false)
-  lateFeesAccepted        Boolean   @default(false)
-  signatureData           String?   @db.Text
-  signatureTimestamp      DateTime?
-  signatureIp             String?
-  signatureDevice         String?
-  pdfGenerated            Boolean   @default(false)
-  pdfUrl                  String?
-  pdfGeneratedAt          DateTime?
-  managerLetterTemplate   String?   @db.Text
-  managerName             String?
-  managerTitle            String?
-  letterContent           String?   @db.Text
-  letterPdfUrl            String?
-  letterType              String?   // generated | pdf
-  enforcedAt              DateTime?
-  enforcedReason          String?   @db.Text
-  fulfilledAt             DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  signedAt                DateTime?
-  debtor                  User      @relation(fields: [debtorId], references: [id])
-  booking                 Booking?  @relation(fields: [bookingId], references: [id])
+  id                     String    @id @default(cuid())
+  noteNumber             String    @unique
+  noteType               String
+  debtorId               String
+  debtorName             String
+  debtorNationalId       String?
+  debtorNationality      String?
+  debtorDob              DateTime?
+  debtorAddress          String?
+  debtorPhone            String
+  debtorEmail            String
+  creditorName           String
+  creditorCommercialReg  String?
+  creditorTaxNumber      String?
+  creditorAddress        String?
+  creditorBankAccount    String?
+  creditorIban           String?
+  amountSar              Decimal   @db.Decimal(12, 2)
+  amountInWords          String
+  equipmentPurchaseValue Decimal?  @db.Decimal(12, 2)
+  equipmentItems         Json?
+  bookingId              String?
+  invoiceNumber          String?
+  issueDate              DateTime  @default(now())
+  expectedReturnDate     DateTime?
+  dueDate                DateTime?
+  status                 String
+  termsAccepted          Boolean   @default(false)
+  damagePolicyAccepted   Boolean   @default(false)
+  lateFeesAccepted       Boolean   @default(false)
+  signatureData          String?
+  signatureTimestamp     DateTime?
+  signatureIp            String?
+  signatureDevice        String?
+  pdfGenerated           Boolean   @default(false)
+  pdfUrl                 String?
+  pdfGeneratedAt         DateTime?
+  managerLetterTemplate  String?
+  managerName            String?
+  managerTitle           String?
+  enforcedAt             DateTime?
+  enforcedReason         String?
+  fulfilledAt            DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  signedAt               DateTime?
+  letterContent          String?
+  letterPdfUrl           String?
+  letterType             String?
+  booking                Booking?  @relation(fields: [bookingId], references: [id])
+  debtor                 User      @relation(fields: [debtorId], references: [id])
 
   @@index([noteNumber])
   @@index([debtorId])
@@ -2881,23 +2747,89 @@ model PromissoryNote {
   @@index([noteType])
 }
 
-// ──────────────────────────────────────────────────────────────────
-// Site Settings (company, PN toggles) - key-value store
-// ──────────────────────────────────────────────────────────────────
-
 model SiteSetting {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   @db.Text
+  value     String
   updatedAt DateTime @updatedAt
   updatedBy String?
 
   @@index([key])
 }
 
+model AiFeedback {
+  id              String   @id @default(cuid())
+  draftId         String?
+  contentType     String
+  fieldName       String
+  action          String
+  rejectionReason String?
+  originalValue   String?
+  finalValue      String?
+  provider        String?
+  promptHash      String?
+  categoryId      String?
+  createdAt       DateTime @default(now())
+
+  @@index([contentType])
+  @@index([action])
+  @@index([categoryId])
+  @@index([provider])
+  @@index([createdAt])
+}
+
+model ColumnMappingHistory {
+  id           String   @id @default(cuid())
+  sourceHeader String
+  mappedField  String
+  frequency    Int      @default(1)
+  lastUsedAt   DateTime @default(now())
+  createdBy    String?
+
+  @@unique([sourceHeader, mappedField])
+  @@index([sourceHeader])
+  @@index([frequency])
+}
+
+enum ImageSource {
+  UPLOAD
+  BRAND_ASSET
+  AI_GENERATED
+  STOCK_PHOTO
+  WEB_SCRAPED
+}
+
+enum AiJobType {
+  TEXT_BACKFILL
+  PHOTO_BACKFILL
+  SPEC_BACKFILL
+  FULL_BACKFILL
+  EMBEDDING_BACKFILL
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum BlogPostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum BlogReactionType {
+  HELPFUL_YES
+  HELPFUL_NO
+}
+
 enum UserRole {
   ADMIN
-  VENDOR
   WAREHOUSE_MANAGER
   TECHNICIAN
   SALES_MANAGER
@@ -2909,6 +2841,8 @@ enum UserRole {
   APPROVAL_AGENT
   AUDITOR
   AI_OPERATOR
+  VENDOR
+  CUSTOMER
 }
 
 enum BookingStatus {
@@ -2964,6 +2898,15 @@ enum NotificationChannel {
 enum NotificationTrigger {
   BOOKING_CONFIRMED
   BOOKING_REMINDER
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  EQUIPMENT_READY
+  DELIVERY_SCHEDULED
+  RETURN_REMINDER
+  RETURN_OVERDUE
+  DAMAGE_CLAIM_FILED
+  INVOICE_SENT
+  REVIEW_REQUEST
   BOOKING_CREATED
   BOOKING_CANCELLED
   BOOKING_UPDATED
@@ -2972,19 +2915,10 @@ enum NotificationTrigger {
   PICKUP_REMINDER_3H
   RETURN_REMINDER_24H
   RETURN_REMINDER_6H
-  RETURN_REMINDER
   LATE_RETURN_WARNING
-  RETURN_OVERDUE
-  PAYMENT_RECEIVED
-  PAYMENT_FAILED
   PAYMENT_PENDING
   DEPOSIT_RELEASED
   REFUND_PROCESSED
-  EQUIPMENT_READY
-  DELIVERY_SCHEDULED
-  DAMAGE_CLAIM_FILED
-  INVOICE_SENT
-  REVIEW_REQUEST
   WELCOME_CUSTOMER
   OTP_LOGIN
   PASSWORD_RESET
@@ -3022,10 +2956,11 @@ enum NotificationCategory {
 
 enum BusinessRecipientRole {
   OWNER
+  WAREHOUSE_MANAGER
+  SUPPORT
   CO_OWNER
   GENERAL_MANAGER
   OPERATIONS_MANAGER
-  WAREHOUSE_MANAGER
   INVENTORY_MANAGER
   CUSTOMER_SUPPORT
   TECHNICAL_SUPPORT
@@ -3035,7 +2970,6 @@ enum BusinessRecipientRole {
   LEGAL
   IT_ADMIN
   CUSTOM
-  SUPPORT
 }
 
 enum DigestFrequency {
@@ -3289,223 +3223,4 @@ enum CartItemType {
   STUDIO
   PACKAGE
   KIT
-}
-
-// ──────────────────────────────────────────────────────────────────
-// AI Smart Import: Feedback Loop & Column Mapping Memory
-// ──────────────────────────────────────────────────────────────────
-
-model AiFeedback {
-  id              String   @id @default(cuid())
-  draftId         String?
-  contentType     String
-  fieldName       String
-  action          String
-  rejectionReason String?
-  originalValue   String?  @db.Text
-  finalValue      String?  @db.Text
-  provider        String?
-  promptHash      String?
-  categoryId      String?
-  createdAt       DateTime @default(now())
-
-  @@index([contentType])
-  @@index([action])
-  @@index([categoryId])
-  @@index([provider])
-  @@index([createdAt])
-}
-
-model ColumnMappingHistory {
-  id           String   @id @default(cuid())
-  sourceHeader String
-  mappedField  String
-  frequency    Int      @default(1)
-  lastUsedAt   DateTime @default(now())
-  createdBy    String?
-
-  @@unique([sourceHeader, mappedField])
-  @@index([sourceHeader])
-  @@index([frequency])
-}
-
-// ──────────────────────────────────────────────────────────────────
-// Waitlist (notify customers when equipment becomes available)
-// ──────────────────────────────────────────────────────────────────
-
-model WaitlistEntry {
-  id               String         @id @default(cuid())
-  equipmentId      String
-  userId           String?
-  guestEmail       String?
-  desiredStartDate DateTime
-  desiredEndDate   DateTime
-  desiredQty       Int            @default(1)
-  status           WaitlistStatus @default(WAITING)
-  notifiedAt       DateTime?
-  expiresAt        DateTime
-  notes            String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  equipment        Equipment      @relation(fields: [equipmentId], references: [id])
-  user             User?          @relation(fields: [userId], references: [id])
-
-  @@index([equipmentId])
-  @@index([userId])
-  @@index([status])
-  @@index([desiredStartDate, desiredEndDate])
-}
-
-// ──────────────────────────────────────────────────────────────────
-// Equipment Bundles (pre-configured equipment packages)
-// ──────────────────────────────────────────────────────────────────
-
-model EquipmentBundle {
-  id             String       @id @default(cuid())
-  name           String
-  nameAr         String?
-  nameZh         String?
-  description    String?      @db.Text
-  descriptionAr  String?      @db.Text
-  descriptionZh  String?      @db.Text
-  images         Json?
-  dailyRate      Decimal      @db.Decimal(10, 2)
-  weeklyRate     Decimal?     @db.Decimal(10, 2)
-  monthlyRate    Decimal?     @db.Decimal(10, 2)
-  depositAmount  Decimal?     @db.Decimal(10, 2)
-  isActive       Boolean      @default(true)
-  sortOrder      Int          @default(0)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deletedAt      DateTime?
-  items          BundleItem[]
-
-  @@index([isActive])
-  @@index([deletedAt])
-}
-
-model BundleItem {
-  id          String          @id @default(cuid())
-  bundleId    String
-  equipmentId String
-  quantity    Int             @default(1)
-  bundle      EquipmentBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
-  equipment   Equipment       @relation(fields: [equipmentId], references: [id])
-
-  @@unique([bundleId, equipmentId])
-  @@index([bundleId])
-  @@index([equipmentId])
-}
-
-// ──────────────────────────────────────────────────────────────────
-// Discount Codes (promo codes with usage tracking)
-// ──────────────────────────────────────────────────────────────────
-
-model DiscountCode {
-  id                String            @id @default(cuid())
-  code              String            @unique
-  description       String?
-  type              DiscountType
-  value             Int
-  minOrderAmount    Int?
-  maxDiscountAmount Int?
-  usageLimit        Int?
-  usageLimitPerUser Int?
-  timesUsed         Int               @default(0)
-  validFrom         DateTime
-  validUntil        DateTime?
-  appliesTo         DiscountAppliesTo @default(ALL)
-  isActive          Boolean           @default(true)
-  createdBy         String
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  deletedAt         DateTime?
-  creator           User              @relation("DiscountCodeCreator", fields: [createdBy], references: [id])
-  usages            DiscountCodeUsage[]
-  bookings          Booking[]
-
-  @@index([code])
-  @@index([isActive])
-  @@index([validFrom, validUntil])
-}
-
-model DiscountCodeUsage {
-  id              String       @id @default(cuid())
-  discountCodeId  String
-  bookingId       String
-  userId          String?
-  guestEmail      String?
-  discountApplied Int
-  appliedAt       DateTime     @default(now())
-  discountCode    DiscountCode @relation(fields: [discountCodeId], references: [id])
-  booking         Booking      @relation(fields: [bookingId], references: [id])
-
-  @@index([discountCodeId])
-  @@index([bookingId])
-}
-
-// FIX-004: Warehouse scan actions
-enum ScanAction {
-  DISPATCH
-  RETURN
-  CHECK
-}
-
-// FIX-004: Booking item status in warehouse workflow
-enum BookingItemStatus {
-  PENDING
-  DISPATCHED
-  RETURNED
-  DAMAGED
-}
-
-// FIX-006: Deposit lifecycle status
-enum DepositStatus {
-  PENDING
-  HELD
-  RETURNED
-  PARTIALLY_RETURNED
-  FORFEITED
-}
-
-// FIX-007: Refund status
-enum RefundStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum IdDocumentType {
-  NATIONAL_ID
-  PASSPORT
-  DRIVING_LICENSE
-  IQAMA
-}
-
-enum IdVerificationStatus {
-  NOT_SUBMITTED
-  PENDING_REVIEW
-  VERIFIED
-  REJECTED
-}
-
-enum WaitlistStatus {
-  WAITING
-  NOTIFIED
-  BOOKED
-  EXPIRED
-  CANCELLED
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-}
-
-enum DiscountAppliesTo {
-  ALL
-  EQUIPMENT
-  STUDIO
-  BUNDLES
 }

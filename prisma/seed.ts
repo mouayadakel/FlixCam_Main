@@ -160,37 +160,37 @@ async function main() {
   console.log('🌱 Starting comprehensive database seed...')
   console.log('📦 Equipment seeding disabled (no equipment items).')
 
-  // Default password "admin123" for dev
+  // Admin credentials: admin@flixcam.rent / admin123 (bcrypt 10 rounds; login compares with bcrypt.compare)
   const adminPasswordHash = await bcrypt.hash('admin123', 10)
 
-  // 1. Create Admin User
+  // 1. Create Admin User (ensure ACTIVE so login works)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@flixcam.rent' },
-    update: { passwordHash: adminPasswordHash },
+    update: { passwordHash: adminPasswordHash, status: 'ACTIVE' },
     create: {
       email: 'admin@flixcam.rent',
       passwordHash: adminPasswordHash,
       name: 'Admin User',
       phone: '+966501234567',
       role: 'ADMIN',
-      status: 'active',
+      status: 'ACTIVE',
       createdBy: 'system',
     },
   })
   console.log('✅ Created admin user:', admin.email, '(password: admin123)')
 
-  // 1b. Create Test Account
+  // 1b. Create Test Account (ensure ACTIVE and known password after seed)
   const testPasswordHash = await bcrypt.hash('test123', 10)
   const testUser = await prisma.user.upsert({
     where: { email: 'test@flixcam.rent' },
-    update: {},
+    update: { passwordHash: testPasswordHash, status: 'ACTIVE' },
     create: {
       email: 'test@flixcam.rent',
       passwordHash: testPasswordHash,
       name: 'Test User',
       phone: '+966500000001',
       role: 'ADMIN',
-      status: 'active',
+      status: 'ACTIVE',
       createdBy: 'system',
     },
   })
