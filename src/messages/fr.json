@@ -58,6 +58,7 @@
     "productsCount": "Produits",
     "recommendations": "Vous aimerez aussi",
     "addToCart": "Ajouter au panier",
+    "addToBooking": "Ajouter à la réservation",
     "addAllToCart": "Tout ajouter au panier",
     "typeEquipment": "Équipement",
     "typeStudio": "Studio",
@@ -961,7 +962,18 @@
     "createAccount": "Créer un compte",
     "welcomeBack": "Bon retour",
     "newUser": "Nouvel utilisateur",
-    "resetPassword": "Réinitialiser le mot de passe"
+    "resetPassword": "Réinitialiser le mot de passe",
+    "signInWithPhone": "Se connecter avec le téléphone",
+    "signInWithEmail": "Se connecter avec l'email",
+    "sendOtp": "Envoyer le code",
+    "sendingOtp": "Envoi...",
+    "useEmailInstead": "Utiliser l'email à la place",
+    "usePhoneInstead": "Utiliser le numéro de téléphone à la place",
+    "forgotPasswordTitle": "Mot de passe oublié ?",
+    "forgotPasswordPhoneDesc": "Entrez votre numéro de téléphone pour recevoir un lien de réinitialisation.",
+    "forgotPasswordEmailDesc": "Entrez votre email pour recevoir un lien de réinitialisation.",
+    "resetSentToPhone": "Nous avons envoyé un code sur votre WhatsApp. Vérifiez vos messages.",
+    "resetSentToEmail": "Si un compte existe, nous avons envoyé un lien de réinitialisation. Vérifiez votre boîte de réception et les spams."
   },
   "vendor": {
     "dashboard": "Tableau de bord vendeur",
