@@ -47,6 +47,10 @@ export interface SendSmsResult {
   ok: boolean
   messageId?: string
   error?: string
+  /** Twilio error code when available (e.g. 21608 = trial restriction) */
+  twilioCode?: number
+  /** True when TWILIO_PHONE_NUMBER is not a valid Twilio-owned number (21606/21659) */
+  fromNumberInvalid?: boolean
 }
 
 /**
@@ -93,7 +97,35 @@ export async function sendSmsText(
       error: message.errorMessage ?? undefined,
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const err = error as { message?: string; code?: number | string; status?: number; moreInfo?: string }
+    const errorMessage = err?.message ?? (error instanceof Error ? error.message : 'Unknown error')
+    const rawCode = err?.code ?? (err as { twilioCode?: number })?.twilioCode
+    const code = typeof rawCode === 'number' ? rawCode : typeof rawCode === 'string' ? parseInt(rawCode, 10) : undefined
+    const twilioDetails =
+      typeof code === 'number' || typeof err?.status === 'number'
+        ? { code, status: err.status, moreInfo: err.moreInfo }
+        : {}
+    const isFromNumberInvalid =
+      /'From'.*is not a Twilio phone number|country mismatch/i.test(errorMessage) ||
+      code === 21606 ||
+      code === 21659
+    if (isFromNumberInvalid) {
+      console.error('[SMS] Twilio FROM number invalid – use a number from Twilio Console', {
+        fromNumber: fromNumber,
+        to: toNormalized,
+        hint: 'Set TWILIO_PHONE_NUMBER to a number you own in Twilio Console (Phone Numbers). Trial accounts typically get US numbers.',
+        ...twilioDetails,
+        timestamp: new Date().toISOString(),
+      })
+    } else {
+      console.error('[SMS] Twilio send failed', {
+        to: toNormalized,
+        toRaw: to,
+        error: errorMessage,
+        ...twilioDetails,
+        timestamp: new Date().toISOString(),
+      })
+    }
     if (options?.logToMessageLog !== false) {
       await prisma.messageLog.create({
         data: {
@@ -108,7 +140,12 @@ export async function sendSmsText(
         },
       })
     }
-    return { ok: false, error: errorMessage }
+    return {
+      ok: false,
+      error: errorMessage,
+      twilioCode: typeof code === 'number' ? code : undefined,
+      fromNumberInvalid: isFromNumberInvalid,
+    }
   }
 }
 

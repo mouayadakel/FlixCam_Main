@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { sendOtpSchema } from '@/lib/validators/auth.validator'
-import { cacheSet, cacheGet } from '@/lib/cache'
+import { cacheSet } from '@/lib/cache'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
-import { logger } from '@/lib/logger'
+import { deliverOtpCode } from '@/lib/services/otp-delivery.service'
 
 const OTP_LENGTH = 6
 
@@ -17,7 +17,7 @@ function generateOtp(): string {
 }
 
 export async function POST(request: NextRequest) {
-  const rate = await checkRateLimitUpstash(request, 'checkout')
+  const rate = await checkRateLimitUpstash(request, 'auth')
   if (!rate.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
@@ -42,9 +42,20 @@ export async function POST(request: NextRequest) {
 
   await cacheSet('otp', phone, { code, at: new Date().toISOString() })
 
-  // TODO: Phase 5.3 – integrate SMS/WhatsApp provider; for now log in dev
-  if (process.env.NODE_ENV !== 'production') {
-    logger.info('OTP (dev only)', { phone, code })
+  const delivery = await deliverOtpCode({
+    phone,
+    code,
+    logContext: '[AUTH][otp/send]',
+  })
+
+  if (!delivery.ok) {
+    return NextResponse.json(
+      {
+        error: delivery.userMessage ?? 'Failed to send OTP. Please try again.',
+        ...(process.env.NODE_ENV === 'development' && delivery.error && { debug: delivery.error }),
+      },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ success: true })

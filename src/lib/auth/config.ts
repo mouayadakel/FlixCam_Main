@@ -30,19 +30,90 @@ export const authConfig: NextAuthConfig = {
           return null
         }
 
-        const email = credentials.email as string
-        const password = credentials.password as string
+        const email = String(credentials.email).trim().toLowerCase()
+
+        const { loginSchema } = await import('@/lib/validators/auth.validator')
+        const parsed = loginSchema.safeParse(credentials)
+
+        let ip = '127.0.0.1'
+        let userAgent = 'Unknown'
+        try {
+          const { headers } = await import('next/headers')
+          const headersList = await headers()
+          ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '127.0.0.1'
+          userAgent = headersList.get('user-agent') || 'Unknown'
+        } catch (e) {}
 
         const { prisma } = await import('@/lib/db/prisma')
-        const user = await prisma.user.findUnique({
-          where: { email },
-        })
 
-        if (!user || user.deletedAt) {
+        const safeLogAttempt = async (data: {
+          email: string
+          ipAddress: string
+          userAgent: string
+          status: string
+          userId?: string
+        }) => {
+          try {
+            if ('loginAttempt' in prisma && typeof (prisma as { loginAttempt?: { create: (arg: { data: unknown }) => Promise<unknown> } }).loginAttempt?.create === 'function') {
+              await (prisma as { loginAttempt: { create: (arg: { data: unknown }) => Promise<unknown> } }).loginAttempt.create({ data })
+            }
+          } catch {
+            // LoginAttempt model may not exist; do not block login
+          }
+        }
+
+        if (!parsed.success) {
+          await safeLogAttempt({
+            email: email.slice(0, 255),
+            ipAddress: ip,
+            userAgent,
+            status: 'failed_validation',
+          })
           return null
         }
 
-        if (user.status !== 'active') {
+        // Normalize password (trim) so accidental spaces do not cause login failure
+        const password = String(parsed.data.password).trim()
+
+        const { checkRateLimitUpstash } = await import('@/lib/utils/rate-limit-upstash')
+        const dummyReq = new Request('http://localhost')
+        const rateLimit = await checkRateLimitUpstash(dummyReq, 'auth', ip)
+        if (!rateLimit.allowed) {
+          throw new Error('Too many requests. Please try again later.')
+        }
+
+        const user = await prisma.user.findFirst({
+          where: { email: { equals: email, mode: 'insensitive' }, deletedAt: null },
+        })
+
+        if (!user || user.deletedAt) {
+          console.warn('[AUTH][credentials] User not found', { email })
+          await safeLogAttempt({ email, ipAddress: ip, userAgent, status: 'failed_user_not_found' })
+          return null
+        }
+
+        if (user.status !== 'ACTIVE') {
+          console.warn('[AUTH][credentials] Account not active', { email, status: user.status })
+          throw new Error('AccountNotVerified')
+        }
+
+        const lockedUntil = (user as { lockedUntil?: Date | null }).lockedUntil
+        if (lockedUntil && new Date(lockedUntil) > new Date()) {
+          throw new Error('Account is temporarily locked. Please try again later.')
+        }
+
+        // If stored hash does not look like bcrypt, re-seed or run reset-admin-password
+        const looksLikeBcrypt =
+          typeof user.passwordHash === 'string' &&
+          user.passwordHash.length >= 29 &&
+          (user.passwordHash.startsWith('$2a$') ||
+            user.passwordHash.startsWith('$2b$') ||
+            user.passwordHash.startsWith('$2y$'))
+        if (!looksLikeBcrypt) {
+          console.warn('[AUTH][credentials] User passwordHash is not a bcrypt hash – run db:seed or scripts/reset-admin-password.ts', {
+            email,
+          })
+          await safeLogAttempt({ userId: user.id, email, ipAddress: ip, userAgent, status: 'failed' })
           return null
         }
 
@@ -50,8 +121,63 @@ export const authConfig: NextAuthConfig = {
         const isValid = await bcrypt.compare(password, user.passwordHash)
 
         if (!isValid) {
+          console.warn('[AUTH][credentials] Wrong password', { email })
+          await safeLogAttempt({ userId: user.id, email, ipAddress: ip, userAgent, status: 'failed' })
+
+          let failedCount = 0
+          try {
+            if ('loginAttempt' in prisma && typeof (prisma as { loginAttempt?: { count: (arg: { where: unknown }) => Promise<number> } }).loginAttempt?.count === 'function') {
+              const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000)
+              failedCount = await (prisma as { loginAttempt: { count: (arg: { where: unknown }) => Promise<number> } }).loginAttempt.count({
+                where: {
+                  userId: user.id,
+                  status: 'failed',
+                  createdAt: { gte: fifteenMinsAgo },
+                },
+              })
+            }
+          } catch {
+            // ignore
+          }
+
+          if (failedCount >= 5) {
+            try {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { lockedUntil: new Date(Date.now() + 15 * 60 * 1000) } as Record<string, unknown>,
+              })
+            } catch {
+              // lockedUntil column may not exist
+            }
+            try {
+              const { EmailService } = await import('@/lib/services/email.service')
+              EmailService.send({
+                to: user.email,
+                subject: 'Security Alert: Account Locked - FlixCam.rent',
+                html: '<p>Your account was temporarily locked due to multiple failed login attempts. It will automatically unlock in 15 minutes. If this was not you, please contact support immediately.</p>',
+                logToMessageLog: false,
+              }).catch(() => {})
+            } catch {
+              // ignore
+            }
+            throw new Error('Account is temporarily locked. Please try again later.')
+          }
           return null
         }
+
+        await safeLogAttempt({ userId: user.id, email, ipAddress: ip, userAgent, status: 'success' })
+
+        if (lockedUntil) {
+          try {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { lockedUntil: null } as Record<string, unknown>,
+            })
+          } catch {
+            // lockedUntil column may not exist
+          }
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -79,7 +205,7 @@ export const authConfig: NextAuthConfig = {
         const user = await prisma.user.findUnique({
           where: { id: userId },
         })
-        if (!user || user.deletedAt || user.status !== 'active') return null
+        if (!user || user.deletedAt || user.status !== 'ACTIVE') return null
 
         await cacheDelete('authToken', token)
         return {
@@ -98,7 +224,7 @@ export const authConfig: NextAuthConfig = {
         const dbUser = await prisma.user.findUnique({
           where: { email: profile.email as string },
         })
-        if (!dbUser || dbUser.deletedAt || dbUser.status !== 'active') {
+        if (!dbUser || dbUser.deletedAt || dbUser.status !== 'ACTIVE') {
           return false
         }
       }

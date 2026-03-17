@@ -97,7 +97,26 @@ export async function POST(request: NextRequest) {
             }
           : null,
       })
-    } catch {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      const msg = err.message ?? ''
+      const isAccountNotVerified = msg === 'AccountNotVerified'
+      const isLocked = msg.includes('locked')
+      const isRateLimited = msg.includes('Too many')
+      if (isAccountNotVerified) {
+        return NextResponse.json({ error: 'Please verify your phone number first.' }, { status: 403 })
+      }
+      if (isLocked) {
+        return NextResponse.json({ error: err.message }, { status: 403 })
+      }
+      if (isRateLimited) {
+        return NextResponse.json({ error: err.message }, { status: 429 })
+      }
+      console.error('[AUTH][signin] Unexpected error', {
+        message: err.message,
+        stack: err.stack,
+        email: email?.slice(0, 3) + '***',
+      })
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
   }

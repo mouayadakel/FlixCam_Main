@@ -13,7 +13,7 @@ import { randomBytes } from 'crypto'
 const GUEST_EMAIL_DOMAIN = 'guest.flixcam.rent'
 
 export async function POST(request: NextRequest) {
-  const rate = await checkRateLimitUpstash(request, 'checkout')
+  const rate = await checkRateLimitUpstash(request, 'auth')
   if (!rate.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
         passwordHash,
         phone,
         name: null,
-        role: 'DATA_ENTRY',
-        status: 'active',
+        role: 'CUSTOMER',
+        status: 'ACTIVE',
       },
     })
   }

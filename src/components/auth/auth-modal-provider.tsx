@@ -8,7 +8,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
-export type AuthModalTab = 'register' | 'login'
+export type AuthModalTab = 'register' | 'login' | 'otp' | 'forgot-password'
 
 interface AuthModalContextValue {
   isOpen: boolean
