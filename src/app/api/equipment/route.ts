@@ -113,9 +113,8 @@ export async function POST(request: NextRequest) {
 
     const bodyRaw = (await request.json()) as Record<string, unknown>
     const body = coerceEquipmentBody(bodyRaw)
-    const { featured: _featured, ...rest } = body
 
-    const parsed = createEquipmentSchema.safeParse(rest)
+    const parsed = createEquipmentSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }

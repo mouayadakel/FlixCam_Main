@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
   const brandIdsRaw = searchParams.get('brandIds')
   const brandIds = brandIdsRaw
     ? brandIdsRaw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
     : undefined
   const q = searchParams.get('q')?.trim() ?? undefined
   const sort = searchParams.get('sort') ?? 'recommended'
@@ -48,11 +48,21 @@ export async function GET(request: NextRequest) {
   if (priceMinNum != null && !Number.isNaN(priceMinNum)) dailyPriceRange.gte = priceMinNum
   if (priceMaxNum != null && !Number.isNaN(priceMaxNum)) dailyPriceRange.lte = priceMaxNum
 
+  // Resolve subcategories so filtering by a parent also returns children's equipment
+  let categoryIds: string[] | undefined
+  if (categoryId) {
+    const children = await prisma.category.findMany({
+      where: { parentId: categoryId, deletedAt: null },
+      select: { id: true },
+    })
+    categoryIds = [categoryId, ...children.map((c) => c.id)]
+  }
+
   const where = {
     deletedAt: null,
     isActive: true,
     ...(featured && { featured: true }),
-    ...(categoryId && { categoryId }),
+    ...(categoryIds ? { categoryId: { in: categoryIds } } : {}),
     ...(budgetTier &&
       BUDGET_TIERS.includes(budgetTier as BudgetTier) && { budgetTier: budgetTier as BudgetTier }),
     ...(brandIds?.length ? { brandId: { in: brandIds } } : brandId ? { brandId } : {}),
@@ -94,7 +104,12 @@ export async function GET(request: NextRequest) {
         quantityAvailable: true,
         category: { select: { id: true, name: true, slug: true } },
         brand: { select: { id: true, name: true, slug: true } },
-        media: { take: 1, select: { id: true, url: true, type: true } },
+        media: {
+          where: { deletedAt: null, type: 'image' },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          take: 1,
+          select: { id: true, url: true, type: true },
+        },
         vendor: { select: { companyName: true, isNameVisible: true } },
       },
       orderBy,

@@ -10,6 +10,8 @@ import { hasAIPermission } from '@/lib/auth/permissions'
 import { aiRateLimitResponse } from '@/lib/utils/rate-limit-upstash'
 import { prisma } from '@/lib/db/prisma'
 import { logAiAudit, AI_AUDIT_ACTIONS } from '@/lib/services/ai-audit.service'
+import { promoteApprovedPhotosToProduct } from '@/lib/services/product-photo.service'
+import { syncProductToEquipment } from '@/lib/services/product-equipment-sync.service'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -64,6 +66,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           reviewedBy: userId,
         },
       })
+      await promoteApprovedPhotosToProduct(image.productId)
+      await syncProductToEquipment(image.productId)
       await logAiAudit({
         userId,
         action: AI_AUDIT_ACTIONS.IMAGE_APPROVE,
@@ -80,16 +84,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         data: {
           pendingReview: false,
           isDeleted: true,
+          rejectionReason: 'rejected_by_admin',
           reviewedAt: new Date(),
           reviewedBy: userId,
         },
       })
-      const gallery = (image.product.galleryImages as string[] | null) ?? []
-      const updatedGallery = gallery.filter((u) => u !== image.url)
-      await prisma.product.update({
-        where: { id: image.productId },
-        data: { galleryImages: updatedGallery },
-      })
+      await promoteApprovedPhotosToProduct(image.productId)
+      await syncProductToEquipment(image.productId)
       await logAiAudit({
         userId,
         action: AI_AUDIT_ACTIONS.IMAGE_REJECT,

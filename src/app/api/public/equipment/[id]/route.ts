@@ -22,7 +22,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     include: {
       category: { select: { id: true, name: true, slug: true } },
       brand: { select: { id: true, name: true, slug: true } },
-      media: { select: { id: true, url: true, type: true } },
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        select: { id: true, url: true, type: true },
+      },
       vendor: {
         select: { id: true, companyName: true, logo: true, isNameVisible: true },
       },

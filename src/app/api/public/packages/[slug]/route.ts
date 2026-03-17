@@ -28,7 +28,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               sku: true,
               model: true,
               dailyPrice: true,
-              media: { take: 1, select: { id: true, url: true, type: true } },
+              media: {
+                where: { deletedAt: null, type: 'image' },
+                orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+                take: 1,
+                select: { id: true, url: true, type: true },
+              },
             },
           },
         },

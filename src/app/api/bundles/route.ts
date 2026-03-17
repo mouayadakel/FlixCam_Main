@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
                   sku: true,
                   dailyPrice: true,
                   media: {
-                    where: { deletedAt: null },
-                    orderBy: { sortOrder: 'asc' },
+                    where: { deletedAt: null, type: 'image' },
+                    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
                     take: 1,
                     select: { url: true, altText: true },
                   },

@@ -101,8 +101,12 @@ export async function GET(request: NextRequest) {
         url: img.url,
         imageSource: img.imageSource,
         qualityScore: img.qualityScore,
+        matchScore: img.matchScore,
         productId: img.productId,
         productName,
+        sourceQuery: img.sourceQuery,
+        sourceDomain: img.sourceDomain,
+        reviewReason: img.reviewReason,
         createdAt: img.createdAt,
       }
     })

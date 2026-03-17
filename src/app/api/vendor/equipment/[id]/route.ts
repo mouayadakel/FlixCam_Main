@@ -52,7 +52,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     include: {
       category: true,
       brand: true,
-      media: { where: { deletedAt: null } },
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
     },
   })
 

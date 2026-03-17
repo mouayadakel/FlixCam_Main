@@ -65,7 +65,12 @@ export async function GET(req: NextRequest) {
         monthlyPrice: true,
         category: { select: { name: true } },
         brand: { select: { name: true } },
-        media: { take: 1, select: { url: true } },
+        media: {
+          where: { deletedAt: null, type: 'image' },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          take: 1,
+          select: { url: true },
+        },
       },
     })
 

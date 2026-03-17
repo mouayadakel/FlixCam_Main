@@ -88,9 +88,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
     const bodyRaw = (await request.json()) as Record<string, unknown>
     const body = coerceEquipmentBody(bodyRaw)
-    const { featured: _featured, ...rest } = body
 
-    const parsed = updateEquipmentSchema.safeParse({ id, ...rest })
+    const parsed = updateEquipmentSchema.safeParse({ id, ...body })
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 })
     }
