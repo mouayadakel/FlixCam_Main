@@ -20,7 +20,7 @@ describe('photo-sourcing.service', () => {
     const result = await sourceImages(product, 4)
     expect(Array.isArray(result)).toBe(true)
     const { sourceImages: mockSource } = require('../image-sourcing.service')
-    expect(mockSource).toHaveBeenCalledWith(product, 4)
+    expect(mockSource).toHaveBeenCalledWith(product, 4, undefined)
   })
 
   it('validateImageRelevance delegates and returns score', async () => {

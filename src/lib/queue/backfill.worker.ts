@@ -15,6 +15,12 @@ import { rebuildRelatedProducts } from '@/lib/services/product-similarity.servic
 import { getProductIdsWithGaps } from '@/lib/services/content-health.service'
 import { inferMissingSpecs } from '@/lib/services/ai-spec-parser.service'
 import { sourceImages } from '@/lib/services/photo-sourcing.service'
+import {
+  promoteApprovedPhotosToProduct,
+  mapSourceToProductImageSource,
+  getPhotoCompleteness,
+} from '@/lib/services/product-photo.service'
+import { buildEquipmentSearchQueries } from '@/lib/services/equipment-search-queries'
 import { recordCost, canSpend } from '@/lib/utils/cost-tracker'
 import { captureQualitySnapshot } from '@/lib/services/quality-scorer.service'
 import { sendToDeadLetter } from './dead-letter.queue'
@@ -301,24 +307,51 @@ function createBackfillWorker() {
 
           if (runPhoto) {
             try {
+              const productName =
+                enTranslation?.name ?? product.translations[0]?.name ?? product.sku ?? product.id
               const productForSourcing = {
                 ...product,
-                name:
-                  enTranslation?.name ?? product.translations[0]?.name ?? product.sku ?? product.id,
+                name: productName,
               }
-              const sourced = await sourceImages(productForSourcing, 4)
-              if (sourced.length > 0) {
-                const existingGallery = (product.galleryImages as string[] | null) ?? []
-                const newUrls = sourced
-                  .filter((s) => s.cloudinaryUrl)
-                  .map((s) => s.cloudinaryUrl as string)
-                const combined = [...existingGallery, ...newUrls].slice(0, 10)
-                await prisma.aiContentDraft.create({
+              const searchQueries = buildEquipmentSearchQueries({
+                name: productName,
+                sku: product.sku,
+                category: product.category ? { name: product.category.name } : null,
+                brand: product.brand ? { name: product.brand.name } : null,
+              })
+              const sourced = await sourceImages(productForSourcing, 5, searchQueries)
+              for (let i = 0; i < sourced.length; i++) {
+                const s = sourced[i]
+                const url = s.cloudinaryUrl || s.url
+                if (!url) continue
+                await prisma.productImage.create({
                   data: {
                     productId,
-                    type: 'photo',
-                    suggestedData: JSON.parse(JSON.stringify({ galleryImages: combined, sourced })),
-                    status: 'pending',
+                    url,
+                    imageSource: mapSourceToProductImageSource(s.source),
+                    pendingReview: !s.approved,
+                    qualityScore: s.qualityScore ?? null,
+                    matchScore: s.matchScore ?? s.qualityScore ?? null,
+                    sourceQuery: s.sourceQuery ?? null,
+                    sourceDomain: s.sourceDomain ?? null,
+                    scoreBreakdown: s.scoreBreakdown
+                      ? JSON.parse(JSON.stringify(s.scoreBreakdown))
+                      : undefined,
+                    reviewReason: s.reviewReason ?? null,
+                    sortOrder: i,
+                    isPrimary: i === 0 && s.approved,
+                    cloudinaryPublicId: s.cloudinaryPublicId ?? null,
+                  },
+                })
+              }
+              await promoteApprovedPhotosToProduct(productId)
+              const completeness = await getPhotoCompleteness(productId)
+              if (!completeness.canPublish) {
+                await prisma.product.update({
+                  where: { id: productId },
+                  data: {
+                    needsAiReview: true,
+                    aiReviewReason: `Photo gap: ${completeness.approvedRealCount}/3 approved real images`,
                   },
                 })
               }

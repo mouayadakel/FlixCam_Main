@@ -618,7 +618,7 @@ export class BookingService {
       where: { id: userId },
       select: { role: true },
     })
-    const clientRoles = ['DATA_ENTRY'] as const
+    const clientRoles = ['DATA_ENTRY', 'CUSTOMER'] as const
     const isClientRole =
       !user ||
       ![

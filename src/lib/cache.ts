@@ -51,6 +51,8 @@ const TTL = {
   authToken: 120,
   /** RBAC: user effective permissions (1 hour). */
   userPermissions: 3600,
+  /** Pending registration data (email, passwordHash, OTP) until OTP verified. 10 min. */
+  registration: 600,
 } as const
 
 export type CacheNamespace = keyof typeof TTL

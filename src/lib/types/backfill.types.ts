@@ -89,6 +89,7 @@ export type ImageSourceType =
   | 'bhphoto'
   | 'manufacturer'
   | 'pexels'
+  | 'unsplash'
   | 'dalle'
   | 'manual'
   | 'UPLOAD'
@@ -102,6 +103,7 @@ export interface SourcedImage {
   source: ImageSourceType
   relevanceScore?: number
   qualityScore?: number
+  matchScore?: number
   width?: number
   height?: number
   approved: boolean
@@ -110,6 +112,16 @@ export interface SourcedImage {
   cloudinaryPublicId?: string
   hash?: string
   attribution?: string
+  /** Search query used to find this image */
+  sourceQuery?: string
+  /** Domain/host of the source URL (e.g. bhphotovideo.com) */
+  sourceDomain?: string
+  /** AI-generated sources never count toward required real-photo minimum */
+  isAiGenerated?: boolean
+  /** Why this image needs manual review or why it was accepted */
+  reviewReason?: string
+  /** Structured scoring/debug metadata for image review */
+  scoreBreakdown?: Record<string, unknown>
 }
 
 export interface PhotoResult {

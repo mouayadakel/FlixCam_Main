@@ -21,6 +21,11 @@ import {
   sourceImages,
   type ProductForSourcing,
 } from '@/lib/services/image-sourcing.service'
+import {
+  promoteApprovedPhotosToProduct,
+  mapSourceToProductImageSource,
+} from '@/lib/services/product-photo.service'
+import { buildEquipmentSearchQueries } from '@/lib/services/equipment-search-queries'
 
 export const AI_PROCESSING_QUEUE_NAME = 'ai-processing'
 
@@ -348,8 +353,11 @@ export function createAIProcessingWorker() {
             // ═══════════════════════════════════════════════
             // PHASE 3: Photo sourcing with AI-generated search queries
             // ═══════════════════════════════════════════════
-            const needsPhotos =
-              !product.featuredImage || product.featuredImage === '/images/placeholder.jpg'
+            const isPlaceholderImage =
+              !product.featuredImage ||
+              product.featuredImage === '/images/placeholder.jpg' ||
+              /placehold\.co|placeholder\.(jpg|png|webp)|placeholder/i.test(product.featuredImage)
+            const needsPhotos = isPlaceholderImage
 
             if (needsPhotos) {
               try {
@@ -367,29 +375,45 @@ export function createAIProcessingWorker() {
                   })),
                 }
 
-                const defaultQueries = [
-                  `${productName} product photo`,
-                  `${productName} professional equipment`,
-                ]
-                const queries = photoSearchQueries.length > 0
-                  ? photoSearchQueries
-                  : defaultQueries
+                const queries =
+                  photoSearchQueries.length > 0
+                    ? photoSearchQueries
+                    : buildEquipmentSearchQueries({
+                        name: productName,
+                        sku: product.sku,
+                        category: product.category ? { name: product.category.name } : null,
+                        brand: product.brand ? { name: product.brand.name } : null,
+                      })
 
                 const photos = await sourceImages(sourcingProduct, 5, queries)
 
-                if (photos.length > 0) {
-                  const featuredUrl = photos[0].cloudinaryUrl || photos[0].url
-                  const galleryUrls = photos.slice(1).map((p) => p.cloudinaryUrl || p.url)
-
-                  await prisma.product.update({
-                    where: { id: productId },
+                for (let i = 0; i < photos.length; i++) {
+                  const p = photos[i]
+                  const url = p.cloudinaryUrl || p.url
+                  if (!url) continue
+                  await prisma.productImage.create({
                     data: {
-                      featuredImage: featuredUrl,
-                      galleryImages: galleryUrls.length > 0 ? galleryUrls : undefined,
-                      photoStatus: 'sourced',
+                      productId,
+                      url,
+                      imageSource: mapSourceToProductImageSource(p.source),
+                      pendingReview: !p.approved,
+                      qualityScore: p.qualityScore ?? null,
+                      matchScore: p.matchScore ?? p.qualityScore ?? null,
+                      sourceQuery: p.sourceQuery ?? null,
+                      sourceDomain: p.sourceDomain ?? null,
+                      scoreBreakdown: p.scoreBreakdown
+                        ? JSON.parse(JSON.stringify(p.scoreBreakdown))
+                        : undefined,
+                      reviewReason: p.reviewReason ?? null,
+                      sortOrder: i,
+                      isPrimary: i === 0 && p.approved,
+                      cloudinaryPublicId: p.cloudinaryPublicId ?? null,
                     },
                   })
+                }
+                await promoteApprovedPhotosToProduct(productId)
 
+                if (photos.length > 0) {
                   console.info(
                     `[AI Worker] Product ${productId}: sourced ${photos.length} photos`
                   )

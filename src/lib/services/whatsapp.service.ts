@@ -4,39 +4,57 @@
  * @module lib/services/whatsapp
  */
 
+import Twilio from 'twilio'
 import { prisma } from '@/lib/db/prisma'
 import { MessageLogStatus, NotificationChannel } from '@prisma/client'
 
-const META_GRAPH_VERSION = 'v18.0'
+const accountSid = process.env.TWILIO_ACCOUNT_SID
+const authToken = process.env.TWILIO_AUTH_TOKEN
+// The sender number should be in the format 'whatsapp:+966...'
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER
+
+const twilioClient = accountSid && authToken ? Twilio(accountSid, authToken) : null
 const DEFAULT_COUNTRY_CODE = '966'
 
-function getConfig() {
-  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
-  return { accessToken, phoneNumberId }
-}
-
 /**
- * Normalize phone number for WhatsApp (E.164, no + in "to" for API).
+ * Format phone number for Twilio WhatsApp API.
+ * Ensures it starts with "whatsapp:+"
  */
 export function normalizePhoneForWhatsApp(phone: string): string {
   let normalized = phone.replace(/[\s\-()]/g, '')
+  
+  // Remove 'whatsapp:' prefix if it was randomly passed in
+  if (normalized.startsWith('whatsapp:')) {
+    normalized = normalized.slice(9)
+  }
+
+  // Handle local numbers starting with 0
   if (normalized.startsWith('0')) {
     normalized = DEFAULT_COUNTRY_CODE + normalized.slice(1)
   }
+  
+  // Ensure country code is present
   if (!normalized.startsWith('+') && !normalized.startsWith(DEFAULT_COUNTRY_CODE)) {
     normalized = DEFAULT_COUNTRY_CODE + normalized
   }
-  if (normalized.startsWith('+')) {
-    normalized = normalized.slice(1)
+  
+  // Ensure + is present
+  if (!normalized.startsWith('+')) {
+    normalized = '+' + normalized
   }
-  return normalized
+
+  // Twilio requires the 'whatsapp:' prefix for the 'to' number
+  return `whatsapp:${normalized}`
+}
+
+function getSenderNumber(): string {
+  if (!twilioPhoneNumber) return ''
+  return twilioPhoneNumber.startsWith('whatsapp:') ? twilioPhoneNumber : `whatsapp:${twilioPhoneNumber}`
 }
 
 export function isWhatsAppConfigured(): boolean {
   if (process.env.ENABLE_WHATSAPP === 'false') return false
-  const { accessToken, phoneNumberId } = getConfig()
-  return !!(accessToken && phoneNumberId)
+  return !!(twilioClient && twilioPhoneNumber)
 }
 
 export interface SendWhatsAppResult {
@@ -45,54 +63,47 @@ export interface SendWhatsAppResult {
   error?: string
 }
 
-async function callMessagesApi(phoneNumberId: string, accessToken: string, body: object): Promise<{ ok: boolean; messageId?: string; error?: string }> {
-  const res = await fetch(`https://graph.facebook.com/${META_GRAPH_VERSION}/${phoneNumberId}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      ...body,
-    }),
-  })
-
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const error = (data as { error?: { message?: string } }).error?.message ?? res.statusText
-    return { ok: false, error }
-  }
-  const messageId = (data as { messages?: Array<{ id: string }> }).messages?.[0]?.id
-  return { ok: true, messageId }
-}
-
 /**
- * Send plain text message.
+ * Send plain text message via Twilio.
  */
 export async function sendWhatsAppText(
   to: string,
   text: string,
   options?: { logToMessageLog?: boolean; recipientUserId?: string; templateId?: string }
 ): Promise<SendWhatsAppResult> {
-  const { accessToken, phoneNumberId } = getConfig()
-  if (!accessToken || !phoneNumberId) {
-    return { ok: false, error: 'WhatsApp not configured' }
+  if (!twilioClient || !twilioPhoneNumber) {
+    return { ok: false, error: 'WhatsApp (Twilio) not configured' }
   }
 
   const toNormalized = normalizePhoneForWhatsApp(to)
+  let result: SendWhatsAppResult
 
-  const result = await callMessagesApi(phoneNumberId, accessToken, {
-    to: toNormalized,
-    type: 'text',
-    text: { body: text },
-  })
+  try {
+    const message = await twilioClient.messages.create({
+      body: text,
+      from: getSenderNumber(),
+      to: toNormalized,
+    })
+
+    result = { ok: true, messageId: message.sid }
+  } catch (err) {
+    const e = err as { message?: string; code?: number; status?: number; moreInfo?: string }
+    const errorMsg = e?.message ?? (err instanceof Error ? err.message : 'Unknown Twilio Error')
+    result = { ok: false, error: errorMsg }
+    console.error('[WhatsApp] sendWhatsAppText failed', {
+      to: toNormalized,
+      error: errorMsg,
+      code: e?.code,
+      status: e?.status,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   if (options?.logToMessageLog !== false) {
     await prisma.messageLog.create({
       data: {
         channel: NotificationChannel.WHATSAPP,
-        recipientPhone: '+' + toNormalized,
+        recipientPhone: toNormalized,
         body: text,
         status: result.ok ? MessageLogStatus.SENT : MessageLogStatus.FAILED,
         externalId: result.messageId ?? null,
@@ -108,7 +119,9 @@ export async function sendWhatsAppText(
 }
 
 /**
- * Send pre-approved template message (Meta template name + optional components).
+ * Send pre-approved template message.
+ * Twilio handles Content Templates using Content SID (Content API).
+ * Alternatively, passing the exact approved text body triggers standard WhatsApp templates.
  */
 interface TemplateParameter {
   type: 'text' | 'image' | 'document' | 'video'
@@ -125,36 +138,54 @@ export async function sendWhatsAppTemplate(
   components?: Array<{ type: 'body' | 'header' | 'button'; parameters: TemplateParameter[] }>,
   options?: { logToMessageLog?: boolean; recipientUserId?: string; templateId?: string }
 ): Promise<SendWhatsAppResult> {
-  const { accessToken, phoneNumberId } = getConfig()
-  if (!accessToken || !phoneNumberId) {
-    return { ok: false, error: 'WhatsApp not configured' }
+  if (!twilioClient || !twilioPhoneNumber) {
+    return { ok: false, error: 'WhatsApp (Twilio) not configured' }
   }
 
   const toNormalized = normalizePhoneForWhatsApp(to)
+  let result: SendWhatsAppResult
 
-  const payload: {
-    to: string
-    type: 'template'
-    template: { name: string; language: { code: string }; components?: object[] }
-  } = {
-    to: toNormalized,
-    type: 'template',
-    template: {
-      name: templateName,
-      language: { code: languageCode },
-    },
-  }
-  if (components?.length) {
-    payload.template.components = components
-  }
+  try {
+    // Note: To use strict Meta templates with Twilio without the Content API,
+    // you typically just send the EXACT approved text body.
+    // If you use Twilio Content API, you would pass contentSid: 'HX...' and contentVariables.
+    // We will fallback to a best-effort text extraction from components for standard API usage,
+    // assuming the exact template body needs to be constructed by the caller or passed as text.
+    let fallbackText = `[Template: ${templateName}]`
+    
+    // Attempt basic extraction if parameters are provided
+    if (components) {
+       const bodyComponent = components.find(c => c.type === 'body')
+       if (bodyComponent && bodyComponent.parameters.length > 0) {
+          fallbackText = bodyComponent.parameters.map(p => p.text || '').join(' ')
+       }
+    }
 
-  const result = await callMessagesApi(phoneNumberId, accessToken, payload)
+    const message = await twilioClient.messages.create({
+      body: fallbackText,
+      from: getSenderNumber(),
+      to: toNormalized,
+    })
+
+    result = { ok: true, messageId: message.sid }
+  } catch (err) {
+    const e = err as { message?: string; code?: number; status?: number }
+    const errorMsg = e?.message ?? (err instanceof Error ? err.message : 'Unknown Twilio Error')
+    result = { ok: false, error: errorMsg }
+    console.error('[WhatsApp] sendWhatsAppTemplate failed', {
+      to: toNormalized,
+      template: templateName,
+      error: errorMsg,
+      code: e?.code,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   if (options?.logToMessageLog !== false) {
     await prisma.messageLog.create({
       data: {
         channel: NotificationChannel.WHATSAPP,
-        recipientPhone: '+' + toNormalized,
+        recipientPhone: toNormalized,
         body: `[Template: ${templateName}]`,
         status: result.ok ? MessageLogStatus.SENT : MessageLogStatus.FAILED,
         externalId: result.messageId ?? null,
@@ -170,7 +201,71 @@ export async function sendWhatsAppTemplate(
 }
 
 /**
- * Send interactive button message (up to 3 reply buttons).
+ * Send an OTP code via an approved Twilio Content Template.
+ */
+export async function sendWhatsAppOtp(
+  to: string,
+  code: string,
+  contentSid: string = 'HXc4caa42c7314184caa8f84bf81dc091a',
+  options?: { logToMessageLog?: boolean; recipientUserId?: string }
+): Promise<SendWhatsAppResult> {
+  if (!twilioClient || !twilioPhoneNumber) {
+    return { ok: false, error: 'WhatsApp (Twilio) not configured' }
+  }
+
+  const toNormalized = normalizePhoneForWhatsApp(to)
+  let result: SendWhatsAppResult
+
+  try {
+    const message = await twilioClient.messages.create({
+      contentSid,
+      contentVariables: JSON.stringify({
+        '1': code 
+      }),
+      from: getSenderNumber(),
+      to: toNormalized,
+    })
+
+    result = { ok: true, messageId: message.sid }
+  } catch (err) {
+    const e = err as { message?: string; code?: number; status?: number; moreInfo?: string }
+    const errorMsg = e?.message ?? (err instanceof Error ? err.message : 'Unknown Twilio Error')
+    result = { ok: false, error: errorMsg }
+    console.error('[WhatsApp] sendWhatsAppOtp failed', {
+      to: toNormalized,
+      contentSid,
+      error: errorMsg,
+      code: e?.code,
+      status: e?.status,
+      moreInfo: e?.moreInfo,
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  if (options?.logToMessageLog !== false) {
+    await prisma.messageLog.create({
+      data: {
+        channel: NotificationChannel.WHATSAPP,
+        recipientPhone: toNormalized,
+        body: `[OTP Sent via Template ${contentSid}]`,
+        status: result.ok ? MessageLogStatus.SENT : MessageLogStatus.FAILED,
+        externalId: result.messageId ?? null,
+        errorMessage: result.error ?? null,
+        sentAt: result.ok ? new Date() : null,
+        templateId: contentSid,
+        recipientUserId: options?.recipientUserId ?? null,
+      },
+    })
+  }
+
+  return result
+}
+
+/**
+ * Send interactive button message.
+ * Note: Twilio requires the Content API to send WhatsApp interactive buttons natively.
+ * If not using Content API, buttons will not render natively. 
+ * We fallback to rendering text instructions + choices here.
  */
 export async function sendWhatsAppInteractiveButtons(
   to: string,
@@ -178,36 +273,38 @@ export async function sendWhatsAppInteractiveButtons(
   buttons: Array<{ id: string; title: string }>,
   options?: { logToMessageLog?: boolean; recipientUserId?: string; templateId?: string }
 ): Promise<SendWhatsAppResult> {
-  const { accessToken, phoneNumberId } = getConfig()
-  if (!accessToken || !phoneNumberId) {
-    return { ok: false, error: 'WhatsApp not configured' }
+  if (!twilioClient || !twilioPhoneNumber) {
+    return { ok: false, error: 'WhatsApp (Twilio) not configured' }
   }
   if (buttons.length > 3) {
     return { ok: false, error: 'Maximum 3 buttons allowed' }
   }
 
   const toNormalized = normalizePhoneForWhatsApp(to)
+  let result: SendWhatsAppResult
 
-  const result = await callMessagesApi(phoneNumberId, accessToken, {
-    to: toNormalized,
-    type: 'interactive',
-    interactive: {
-      type: 'button',
-      body: { text: bodyText },
-      action: {
-        buttons: buttons.slice(0, 3).map((b) => ({
-          type: 'reply',
-          reply: { id: b.id, title: b.title.slice(0, 20) },
-        })),
-      },
-    },
-  })
+  try {
+    // Fallback: format buttons as text list since standard Twilio create message doesn't support 
+    // interactive buttons arrays directly without the Content API
+    const buttonText = buttons.map((b, i) => `${i + 1}. ${b.title}`).join('\n')
+    const fullBody = `${bodyText}\n\nReply with number:\n${buttonText}`
+
+    const message = await twilioClient.messages.create({
+      body: fullBody,
+      from: getSenderNumber(),
+      to: toNormalized,
+    })
+
+    result = { ok: true, messageId: message.sid }
+  } catch (err) {
+    result = { ok: false, error: err instanceof Error ? err.message : 'Unknown Twilio Error' }
+  }
 
   if (options?.logToMessageLog !== false) {
     await prisma.messageLog.create({
       data: {
         channel: NotificationChannel.WHATSAPP,
-        recipientPhone: '+' + toNormalized,
+        recipientPhone: toNormalized,
         body: bodyText,
         status: result.ok ? MessageLogStatus.SENT : MessageLogStatus.FAILED,
         externalId: result.messageId ?? null,
@@ -230,28 +327,31 @@ export async function sendWhatsAppDocument(
   documentUrl: string,
   options?: { caption?: string; filename?: string; logToMessageLog?: boolean; recipientUserId?: string; templateId?: string }
 ): Promise<SendWhatsAppResult> {
-  const { accessToken, phoneNumberId } = getConfig()
-  if (!accessToken || !phoneNumberId) {
-    return { ok: false, error: 'WhatsApp not configured' }
+  if (!twilioClient || !twilioPhoneNumber) {
+    return { ok: false, error: 'WhatsApp (Twilio) not configured' }
   }
 
   const toNormalized = normalizePhoneForWhatsApp(to)
+  let result: SendWhatsAppResult
 
-  const result = await callMessagesApi(phoneNumberId, accessToken, {
-    to: toNormalized,
-    type: 'document',
-    document: {
-      link: documentUrl,
-      caption: options?.caption ?? undefined,
-      filename: options?.filename ?? undefined,
-    },
-  })
+  try {
+    const message = await twilioClient.messages.create({
+      mediaUrl: [documentUrl],
+      body: options?.caption || '',
+      from: getSenderNumber(),
+      to: toNormalized,
+    })
+
+    result = { ok: true, messageId: message.sid }
+  } catch (err) {
+    result = { ok: false, error: err instanceof Error ? err.message : 'Unknown Twilio Error' }
+  }
 
   if (options?.logToMessageLog !== false) {
     await prisma.messageLog.create({
       data: {
         channel: NotificationChannel.WHATSAPP,
-        recipientPhone: '+' + toNormalized,
+        recipientPhone: toNormalized,
         body: options?.caption ?? documentUrl,
         status: result.ok ? MessageLogStatus.SENT : MessageLogStatus.FAILED,
         externalId: result.messageId ?? null,
@@ -292,4 +392,5 @@ export const WhatsAppService = {
   sendWhatsAppInteractiveButtons,
   sendWhatsAppDocument,
   updateMessageLogStatus,
+  sendWhatsAppOtp,
 }

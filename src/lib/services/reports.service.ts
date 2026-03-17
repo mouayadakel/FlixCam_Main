@@ -496,7 +496,7 @@ export class ReportsService {
 
     const customers = await prisma.user.findMany({
       where: {
-        role: 'DATA_ENTRY', // Placeholder - adjust based on actual client role
+        role: { in: ['CUSTOMER', 'DATA_ENTRY'] },
         deletedAt: null,
       },
     })
@@ -901,16 +901,16 @@ export class ReportsService {
     const utilization =
       totalEquipment > 0 ? ((totalEquipment - availableEquipment) / totalEquipment) * 100 : 0
 
-    // Customer stats
-    // Get customer stats (using DATA_ENTRY as placeholder for client role)
+    // Customer stats (CUSTOMER = new sign-ups, DATA_ENTRY = legacy customer placeholder)
+    const customerRoleFilter = { role: { in: ['CUSTOMER', 'DATA_ENTRY'] as const } }
     const [totalCustomers, newCustomersThisMonth, newCustomersLastMonth] = await Promise.all([
-      prisma.user.count({ where: { role: 'DATA_ENTRY', deletedAt: null } }),
+      prisma.user.count({ where: { ...customerRoleFilter, deletedAt: null } }),
       prisma.user.count({
-        where: { role: 'DATA_ENTRY', deletedAt: null, createdAt: { gte: thisMonth } },
+        where: { ...customerRoleFilter, deletedAt: null, createdAt: { gte: thisMonth } },
       }),
       prisma.user.count({
         where: {
-          role: 'DATA_ENTRY',
+          ...customerRoleFilter,
           deletedAt: null,
           createdAt: { gte: lastMonth, lt: thisMonth },
         },

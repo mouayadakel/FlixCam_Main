@@ -10,6 +10,11 @@ import { prisma } from '@/lib/db/prisma'
 import { generateMasterFill, type ContentProvider } from './ai-content-generation.service'
 import { sourceImages, type ProductForSourcing } from './image-sourcing.service'
 import { syncProductToEquipment } from './product-equipment-sync.service'
+import {
+  promoteApprovedPhotosToProduct,
+  mapSourceToProductImageSource,
+} from './product-photo.service'
+import { buildEquipmentSearchQueries } from './equipment-search-queries'
 import { slugify } from '@/lib/utils'
 import type { MasterFillOutput } from '@/lib/prompts/master-fill'
 
@@ -146,11 +151,16 @@ export async function runMasterFill(productId: string): Promise<AiFillResult> {
     price_daily: product.priceDaily ? Number(product.priceDaily) : null,
   })
 
-  const searchQueries = aiContent.photo_search_queries ?? [
-    `${productName} product photo`,
-    `${productName} professional equipment`,
-    `${aiContent.brand ?? ''} ${productName} front view`,
-  ]
+  const exactQueries = buildEquipmentSearchQueries({
+    name: productName,
+    sku: product.sku,
+    category: product.category ? { name: product.category.name } : null,
+    brand: product.brand ? { name: product.brand.name } : null,
+  })
+  const aiPhotoQueries = Array.isArray(aiContent.photo_search_queries)
+    ? aiContent.photo_search_queries.filter((query): query is string => typeof query === 'string')
+    : []
+  const searchQueries = [...new Set([...exactQueries, ...aiPhotoQueries])].slice(0, 12)
 
   console.info(`[AI MasterFill] Searching photos for: ${productName}`)
 
@@ -224,18 +234,31 @@ export async function runMasterFill(productId: string): Promise<AiFillResult> {
       productUpdates.tags = tagStr
     }
 
-    if (
-      photos.length > 0 &&
-      (!product.featuredImage || product.featuredImage === '/images/placeholder.jpg')
-    ) {
-      productUpdates.featuredImage = photos[0].cloudinaryUrl || photos[0].url
+    // Photo block: persist candidates to ProductImage
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i]
+      const url = p.cloudinaryUrl || p.url
+      if (!url) continue
+      await tx.productImage.create({
+        data: {
+          productId,
+          url,
+          imageSource: mapSourceToProductImageSource(p.source),
+          pendingReview: !p.approved,
+          qualityScore: p.qualityScore ?? null,
+          matchScore: p.matchScore ?? p.qualityScore ?? null,
+          sourceQuery: p.sourceQuery ?? null,
+          sourceDomain: p.sourceDomain ?? null,
+          scoreBreakdown: p.scoreBreakdown
+            ? JSON.parse(JSON.stringify(p.scoreBreakdown))
+            : undefined,
+          reviewReason: p.reviewReason ?? null,
+          sortOrder: i,
+          isPrimary: i === 0 && p.approved,
+          cloudinaryPublicId: p.cloudinaryPublicId ?? null,
+        },
+      })
     }
-
-    if (photos.length > 1) {
-      const gallery = photos.slice(1).map((p) => p.cloudinaryUrl || p.url)
-      productUpdates.galleryImages = gallery
-    }
-
     productUpdates.photoStatus = photos.length > 0 ? 'sourced' : 'pending'
 
     await tx.product.update({
@@ -361,6 +384,7 @@ export async function runMasterFill(productId: string): Promise<AiFillResult> {
   })
 
   try {
+    await promoteApprovedPhotosToProduct(productId)
     await syncProductToEquipment(productId)
   } catch (err) {
     console.warn(

@@ -50,7 +50,12 @@ export const bundleRecommendationsService = {
                 quantityAvailable: true,
                 category: { select: { id: true, name: true, slug: true } },
                 brand: { select: { id: true, name: true, slug: true } },
-                media: { take: 1, select: { id: true, url: true, type: true } },
+                media: {
+                  where: { deletedAt: null, type: 'image' },
+                  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+                  take: 1,
+                  select: { id: true, url: true, type: true },
+                },
               },
             },
           },
@@ -132,7 +137,12 @@ export const bundleRecommendationsService = {
         quantityAvailable: true,
         category: { select: { id: true, name: true, slug: true } },
         brand: { select: { id: true, name: true, slug: true } },
-        media: { take: 1, select: { id: true, url: true, type: true } },
+        media: {
+          where: { deletedAt: null, type: 'image' },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          take: 1,
+          select: { id: true, url: true, type: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     })

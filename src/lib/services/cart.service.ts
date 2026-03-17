@@ -60,7 +60,12 @@ const CART_INCLUDE = {
         select: {
           name: true,
           slug: true,
-          media: { take: 1, orderBy: { sortOrder: 'asc' }, select: { url: true } },
+          media: {
+            where: { deletedAt: null, type: 'image' },
+            take: 1,
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+            select: { url: true },
+          },
         },
       },
       equipment: {
@@ -70,7 +75,12 @@ const CART_INCLUDE = {
           model: true,
           slug: true,
           category: { select: { name: true } },
-          media: { take: 1, orderBy: { sortOrder: 'asc' }, select: { url: true } },
+          media: {
+            where: { deletedAt: null, type: 'image' },
+            take: 1,
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+            select: { url: true },
+          },
         },
       },
       kit: { select: { id: true, name: true, nameEn: true } },

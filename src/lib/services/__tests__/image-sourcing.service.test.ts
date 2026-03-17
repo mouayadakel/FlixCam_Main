@@ -12,21 +12,33 @@ import {
   sourceImages,
   type ProductForSourcing,
 } from '../image-sourcing.service'
+import { buildEquipmentSearchQueries } from '../equipment-search-queries'
 
-const mockExistsSync = jest.fn()
-const mockReaddirSync = jest.fn()
-const mockReadFileSync = jest.fn()
-jest.mock('fs', () => ({
-  existsSync: (...args: unknown[]) => mockExistsSync(...args),
-  readdirSync: (...args: unknown[]) => mockReaddirSync(...args),
-  readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
-}))
+var mockExistsSync: jest.Mock
+var mockReaddirSync: jest.Mock
+var mockReadFileSync: jest.Mock
+jest.mock('fs', () => {
+  mockExistsSync = jest.fn()
+  mockReaddirSync = jest.fn()
+  mockReadFileSync = jest.fn()
+  return {
+    existsSync: (...args: unknown[]) => mockExistsSync(...args),
+    readdirSync: (...args: unknown[]) => mockReaddirSync(...args),
+    readFileSync: (...args: unknown[]) => mockReadFileSync(...args),
+  }
+})
 
 const mockUploadBufferToCloudinary = jest.fn()
 const mockProcessImageFromUrl = jest.fn()
 jest.mock('../image-processing.service', () => ({
   uploadBufferToCloudinary: (...args: unknown[]) => mockUploadBufferToCloudinary(...args),
   processImageFromUrl: (...args: unknown[]) => mockProcessImageFromUrl(...args),
+}))
+
+jest.mock('../product-photo.service', () => ({
+  isPlaceholderUrl: jest.fn((url?: string | null) =>
+    typeof url === 'string' ? /placeholder/i.test(url) : !url
+  ),
 }))
 
 const mockFetch = jest.fn()
@@ -65,14 +77,37 @@ const baseProduct: ProductForSourcing = {
   translations: [{ locale: 'en', name: 'Sony FX3', longDescription: null }],
 }
 
+const accessoryProduct: ProductForSourcing = {
+  id: 'p2',
+  name: 'Aputure Lantern 90 Soft Light Modifier',
+  sku: 'APUTU-APTURE-LANTERN-90-018',
+  category: { name: 'Light Accessories' },
+  brand: { name: 'Aputure' },
+  translations: [
+    { locale: 'en', name: 'Aputure Lantern 90 Soft Light Modifier', longDescription: null },
+  ],
+}
+
 describe('image-sourcing.service', () => {
   const originalEnv = process.env
 
   beforeEach(() => {
     jest.clearAllMocks()
     process.env = { ...originalEnv }
-    mockUploadBufferToCloudinary.mockResolvedValue({ success: true, url: 'https://cloudinary.com/1.jpg', publicId: 'pid', width: 1920, height: 1080 })
-    mockProcessImageFromUrl.mockResolvedValue({ success: true, url: 'https://cloudinary.com/1.jpg', publicId: 'pid', width: 1920, height: 1080 })
+    mockUploadBufferToCloudinary.mockResolvedValue({
+      success: true,
+      url: 'https://cloudinary.com/1.jpg',
+      publicId: 'pid',
+      width: 1920,
+      height: 1080,
+    })
+    mockProcessImageFromUrl.mockResolvedValue({
+      success: true,
+      url: 'https://cloudinary.com/1.jpg',
+      publicId: 'pid',
+      width: 1920,
+      height: 1080,
+    })
   })
 
   afterEach(() => {
@@ -124,7 +159,13 @@ describe('image-sourcing.service', () => {
       mockReadFileSync.mockReturnValue(Buffer.from('image'))
       mockUploadBufferToCloudinary
         .mockRejectedValueOnce(new Error('Upload failed'))
-        .mockResolvedValueOnce({ success: true, url: 'https://cloudinary.com/2.jpg', publicId: 'pid2', width: 1920, height: 1080 })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const product = { ...baseProduct, sku: 'NOMATCH' }
       const result = await tryBrandAssets(product, 5)
       expect(result.length).toBeGreaterThanOrEqual(1)
@@ -139,7 +180,13 @@ describe('image-sourcing.service', () => {
       mockReadFileSync.mockReturnValue(Buffer.from('image'))
       mockUploadBufferToCloudinary
         .mockResolvedValueOnce({ success: false })
-        .mockResolvedValueOnce({ success: true, url: 'https://cloudinary.com/2.jpg', publicId: 'pid2', width: 1920, height: 1080 })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const product = { ...baseProduct, sku: 'NOMATCH' }
       const result = await tryBrandAssets(product, 5)
       expect(result.length).toBeGreaterThanOrEqual(1)
@@ -256,10 +303,7 @@ describe('image-sourcing.service', () => {
       const product = { ...baseProduct, category: null }
       const result = await tryUnsplash(product, 5)
       expect(result).toHaveLength(1)
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(/Sony.*FX3/),
-        expect.any(Object)
-      )
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/Sony.*FX3/), expect.any(Object))
     })
 
     it('handles undefined data.results', async () => {
@@ -309,7 +353,10 @@ describe('image-sourcing.service', () => {
       })
       const result = await tryUnsplash(baseProduct, 5)
       expect(result).toHaveLength(1)
-      expect(mockProcessImageFromUrl).toHaveBeenCalledWith('https://unsplash.com/full.jpg', expect.any(String))
+      expect(mockProcessImageFromUrl).toHaveBeenCalledWith(
+        'https://unsplash.com/full.jpg',
+        expect.any(String)
+      )
     })
 
     it('skips photo when width < 800', async () => {
@@ -318,9 +365,7 @@ describe('image-sourcing.service', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            results: [
-              { urls: { regular: 'https://unsplash.com/1.jpg' }, width: 600, height: 400 },
-            ],
+            results: [{ urls: { regular: 'https://unsplash.com/1.jpg' }, width: 600, height: 400 }],
           }),
       })
       const result = await tryUnsplash(baseProduct, 5)
@@ -333,9 +378,7 @@ describe('image-sourcing.service', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            results: [
-              { urls: { regular: 'https://unsplash.com/1.jpg' } },
-            ],
+            results: [{ urls: { regular: 'https://unsplash.com/1.jpg' } }],
           }),
       })
       const result = await tryUnsplash(baseProduct, 5)
@@ -348,9 +391,7 @@ describe('image-sourcing.service', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            results: [
-              { urls: {}, width: 1000, height: 800 },
-            ],
+            results: [{ urls: {}, width: 1000, height: 800 }],
           }),
       })
       const result = await tryUnsplash(baseProduct, 5)
@@ -364,13 +405,20 @@ describe('image-sourcing.service', () => {
         json: () =>
           Promise.resolve({
             results: [
-              { urls: { regular: '', full: 'https://unsplash.com/full-only.jpg' }, width: 1000, height: 800 },
+              {
+                urls: { regular: '', full: 'https://unsplash.com/full-only.jpg' },
+                width: 1000,
+                height: 800,
+              },
             ],
           }),
       })
       const result = await tryUnsplash(baseProduct, 5)
       expect(result).toHaveLength(1)
-      expect(mockProcessImageFromUrl).toHaveBeenCalledWith('https://unsplash.com/full-only.jpg', expect.any(String))
+      expect(mockProcessImageFromUrl).toHaveBeenCalledWith(
+        'https://unsplash.com/full-only.jpg',
+        expect.any(String)
+      )
     })
 
     it('skips photo when processImageFromUrl fails', async () => {
@@ -391,17 +439,15 @@ describe('image-sourcing.service', () => {
 
     it('continues to next query when fetch throws', async () => {
       process.env.UNSPLASH_ACCESS_KEY = 'key'
-      mockFetch
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              results: [
-                { urls: { regular: 'https://unsplash.com/2.jpg' }, width: 1000, height: 800 },
-              ],
-            }),
-        })
+      mockFetch.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            results: [
+              { urls: { regular: 'https://unsplash.com/2.jpg' }, width: 1000, height: 800 },
+            ],
+          }),
+      })
       const result = await tryUnsplash(baseProduct, 5, ['q1', 'q2'])
       expect(result).toHaveLength(1)
     })
@@ -454,9 +500,7 @@ describe('image-sourcing.service', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            photos: [
-              { src: { original: 'https://pexels.com/1.jpg' } },
-            ],
+            photos: [{ src: { original: 'https://pexels.com/1.jpg' } }],
           }),
       })
       const result = await tryPexels(baseProduct, 5)
@@ -740,6 +784,26 @@ describe('image-sourcing.service', () => {
       )
     })
 
+    it('prioritizes B&H retailer queries for accessory-like products', async () => {
+      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY = 'key'
+      process.env.GOOGLE_SEARCH_ENGINE_ID = 'engine'
+      mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ items: [] }) })
+
+      const generatedQueries = buildEquipmentSearchQueries({
+        name: accessoryProduct.name,
+        sku: accessoryProduct.sku,
+        category: accessoryProduct.category,
+        brand: accessoryProduct.brand,
+      })
+
+      expect(generatedQueries[0]).toContain('site:bhphotovideo.com')
+
+      await tryGoogleCSE(accessoryProduct, 5)
+
+      const firstQuery = decodeURIComponent(String(mockFetch.mock.calls[0]?.[0] ?? ''))
+      expect(firstQuery).toContain('site:bhphotovideo.com')
+    })
+
     it('uses default query when no searchQueries', async () => {
       process.env.GOOGLE_CUSTOM_SEARCH_API_KEY = 'key'
       process.env.GOOGLE_SEARCH_ENGINE_ID = 'engine'
@@ -797,7 +861,11 @@ describe('image-sourcing.service', () => {
         json: () =>
           Promise.resolve({
             items: [
-              { link: 'https://google.com/doc.pdf', mime: 'application/pdf', image: { width: 1000 } },
+              {
+                link: 'https://google.com/doc.pdf',
+                mime: 'application/pdf',
+                image: { width: 1000 },
+              },
               { link: 'https://google.com/x.jpg', mime: '', image: { width: 1000 } },
             ],
           }),
@@ -847,8 +915,32 @@ describe('image-sourcing.service', () => {
     it('continues to next query when fetch throws', async () => {
       process.env.GOOGLE_CUSTOM_SEARCH_API_KEY = 'key'
       process.env.GOOGLE_SEARCH_ENGINE_ID = 'engine'
+      mockFetch.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                link: 'https://google.com/img.jpg',
+                mime: 'image/jpeg',
+                image: { width: 1000, height: 800 },
+              },
+            ],
+          }),
+      })
+      const result = await tryGoogleCSE(baseProduct, 5, ['q1', 'q2'])
+      expect(result).toHaveLength(1)
+    })
+
+    it('checks up to 6 Google CSE queries before giving up', async () => {
+      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY = 'key'
+      process.env.GOOGLE_SEARCH_ENGINE_ID = 'engine'
       mockFetch
-        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
@@ -862,8 +954,12 @@ describe('image-sourcing.service', () => {
               ],
             }),
         })
-      const result = await tryGoogleCSE(baseProduct, 5, ['q1', 'q2'])
+
+      const result = await tryGoogleCSE(baseProduct, 5, ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'])
+
       expect(result).toHaveLength(1)
+      expect(mockFetch).toHaveBeenCalledTimes(6)
+      expect(String(mockFetch.mock.calls[5]?.[0] ?? '')).toContain('q6')
     })
 
     it('breaks outer loop when results fill needed', async () => {
@@ -987,11 +1083,9 @@ describe('image-sourcing.service', () => {
 
     it('continues when one generation fails', async () => {
       process.env.OPENAI_API_KEY = 'key'
-      mockImagesGenerate
-        .mockRejectedValueOnce(new Error('Rate limit'))
-        .mockResolvedValueOnce({
-          data: [{ url: 'https://openai.com/gen.jpg' }],
-        })
+      mockImagesGenerate.mockRejectedValueOnce(new Error('Rate limit')).mockResolvedValueOnce({
+        data: [{ url: 'https://openai.com/gen.jpg' }],
+      })
       mockProcessImageFromUrl.mockResolvedValue({
         success: true,
         url: 'https://cloudinary.com/dalle.jpg',
@@ -1134,7 +1228,9 @@ describe('image-sourcing.service', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-        headers: { get: (h: string) => (h === 'content-type' ? 'image/png; charset=utf-8' : undefined) },
+        headers: {
+          get: (h: string) => (h === 'content-type' ? 'image/png; charset=utf-8' : undefined),
+        },
       })
       mockGenerateContent.mockResolvedValue({
         response: { text: () => '{"score": 0.8, "description": "OK"}' },
@@ -1181,7 +1277,10 @@ describe('image-sourcing.service', () => {
       mockGenerateContent.mockResolvedValue({
         response: { text: () => '{"score": 0.8, "description": "OK"}' },
       })
-      const product = { ...baseProduct, translations: [{ locale: 'ar', name: 'Arabic', longDescription: null }] }
+      const product = {
+        ...baseProduct,
+        translations: [{ locale: 'ar', name: 'Arabic', longDescription: null }],
+      }
       const result = await validateImageRelevance('https://example.com/img.jpg', product)
       expect(result.score).toBe(0.8)
     })
@@ -1295,7 +1394,11 @@ describe('image-sourcing.service', () => {
               ],
             }),
         })
-        .mockResolvedValueOnce({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)), headers: { get: () => 'image/jpeg' } })
+        .mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+          headers: { get: () => 'image/jpeg' },
+        })
       mockGenerateContent.mockResolvedValue({
         response: { text: () => '{"score": 0.5, "description": "Low relevance"}' },
       })
@@ -1436,8 +1539,11 @@ describe('image-sourcing.service', () => {
       mockImagesGenerate.mockResolvedValue({
         data: [{ url: 'https://openai.com/gen.jpg' }],
       })
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)), headers: { get: () => 'image/jpeg' } })
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+        headers: { get: () => 'image/jpeg' },
+      })
       mockGenerateContent.mockResolvedValue({
         response: { text: () => '{"score": 0.8, "description": "OK"}' },
       })

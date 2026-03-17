@@ -444,9 +444,9 @@ export class VendorService {
           category: { select: { id: true, name: true, slug: true } },
           brand: { select: { id: true, name: true, slug: true } },
           media: {
-            where: { deletedAt: null },
+            where: { deletedAt: null, type: 'image' },
             take: 1,
-            orderBy: { createdAt: 'asc' },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           },
         },
         orderBy: { createdAt: 'desc' },

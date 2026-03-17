@@ -55,8 +55,8 @@ export class ClientService {
     // Hash password
     const passwordHash = await hashPassword(input.password)
 
-    // Create user with client role (default: DATA_ENTRY)
-    const role = input.role || UserRole.DATA_ENTRY
+    // Create user with client role (default: CUSTOMER)
+    const role = input.role || UserRole.CUSTOMER
     const status = input.status || 'active'
 
     const user = await prisma.user.create({

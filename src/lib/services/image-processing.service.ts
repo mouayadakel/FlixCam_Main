@@ -50,9 +50,12 @@ const PRIVATE_IPV4_RANGES = [
 
 /**
  * Validate URL for SSRF protection.
- * Blocks private IPs, IPv6 loopback, HTTP in production, and any domain not in ALLOWED_DOMAINS.
+ * Blocks private IPs, IPv6 loopback, HTTP in production.
+ * When allowExternalDomains is false (default), also requires domain to be in ALLOWED_DOMAINS.
+ * When allowExternalDomains is true (image-sourcing pipeline), skips domain allowlist so Google CSE
+ * and DALL-E URLs can be fetched — still enforces all SSRF checks.
  */
-function isValidImageUrl(url: string): boolean {
+function isValidImageUrl(url: string, allowExternalDomains = false): boolean {
   try {
     const parsed = new URL(url)
     const hostname = parsed.hostname
@@ -83,7 +86,10 @@ function isValidImageUrl(url: string): boolean {
       return false
     }
 
-    // Strict allowlist: never allow domains not in ALLOWED_DOMAINS (no fallback)
+    if (allowExternalDomains) {
+      return true
+    }
+
     if (!ALLOWED_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
       console.warn('[SSRF] Rejected non-allowlisted domain:', hostname)
       return false
@@ -166,15 +172,21 @@ export async function uploadBufferToCloudinary(
   })
 }
 
+export type ProcessImageFromUrlOptions = {
+  /** When true, allows URLs from any domain (Google CSE, DALL-E). Use only for trusted API responses. */
+  allowExternalDomains?: boolean
+}
+
 /**
  * Process image from URL: download and upload to Cloudinary
  */
 export async function processImageFromUrl(
   imageUrl: string,
-  folder: string = 'products'
+  folder: string = 'products',
+  options?: ProcessImageFromUrlOptions
 ): Promise<ImageProcessingResult> {
-  // Validate URL
-  if (!isValidImageUrl(imageUrl)) {
+  const allowExternalDomains = options?.allowExternalDomains ?? false
+  if (!isValidImageUrl(imageUrl, allowExternalDomains)) {
     return {
       url: PLACEHOLDER_IMAGE,
       publicId: '',

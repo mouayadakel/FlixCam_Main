@@ -124,23 +124,61 @@ const baseEquipmentSchema = z.object({
   specSource: z.enum(['import', 'ai-infer', 'url-extract', 'manual', 'migration']).optional(),
 })
 
-// Create schema with validation refine
-export const createEquipmentSchema = baseEquipmentSchema.refine(
-  (data) => {
-    // At least one translation with Arabic preferred
-    if (!data.translations || data.translations.length === 0) return false
-    return true
-  },
-  {
-    message: 'At least one translation is required (Arabic preferred)',
-    path: ['translations'],
-  }
-)
+// Create schema with validation refines
+export const createEquipmentSchema = baseEquipmentSchema
+  .refine(
+    (data) => {
+      // At least one translation with Arabic preferred
+      if (!data.translations || data.translations.length === 0) return false
+      return true
+    },
+    {
+      message: 'At least one translation is required (Arabic preferred)',
+      path: ['translations'],
+    }
+  )
+  .refine(
+    (data) => {
+      // Active or featured equipment must have at least one image for public display
+      // Treat isActive undefined as true (service defaults to active)
+      const willBeActive = data.isActive !== false
+      const willBeFeatured = data.featured === true
+      if (!willBeActive && !willBeFeatured) return true
+      const hasImage =
+        (data.featuredImageUrl && data.featuredImageUrl.trim() !== '') ||
+        (data.galleryImageUrls && data.galleryImageUrls.length > 0)
+      return !!hasImage
+    },
+    {
+      message:
+        'Active or featured equipment must have at least one image. Add a featured image or gallery images.',
+      path: ['featuredImageUrl'],
+    }
+  )
 
-// Update schema - make all fields optional and add id
-export const updateEquipmentSchema = baseEquipmentSchema.partial().extend({
-  id: z.string().min(1, { message: 'Equipment ID is required' }),
-})
+// Update schema - make all fields optional and enforce image requirement when
+// an edit explicitly activates or features equipment.
+export const updateEquipmentSchema = baseEquipmentSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, { message: 'Equipment ID is required' }),
+  })
+  .refine(
+    (data) => {
+      const willBeActive = data.isActive === true
+      const willBeFeatured = data.featured === true
+      if (!willBeActive && !willBeFeatured) return true
+      const hasImage =
+        (data.featuredImageUrl && data.featuredImageUrl.trim() !== '') ||
+        (data.galleryImageUrls && data.galleryImageUrls.length > 0)
+      return !!hasImage
+    },
+    {
+      message:
+        'Active or featured equipment must have at least one image. Add a featured image or gallery images.',
+      path: ['featuredImageUrl'],
+    }
+  )
 
 export type CreateEquipmentFormData = z.infer<typeof createEquipmentSchema>
 export type UpdateEquipmentFormData = z.infer<typeof updateEquipmentSchema>

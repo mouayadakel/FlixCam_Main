@@ -9,8 +9,11 @@
  */
 
 import { prisma } from '@/lib/db/prisma'
+import { cacheDelete } from '@/lib/cache'
 import { ProductStatus, ProductType, TranslationLocale } from '@prisma/client'
 import { NotFoundError } from '@/lib/errors'
+import { getRedisClient } from '@/lib/queue/redis.client'
+import { isPlaceholderUrl } from './product-photo.service'
 
 const EQUIPMENT_ENTITY_TYPE = 'equipment'
 const LOCALE_TO_LANG: Record<TranslationLocale, string> = {
@@ -30,6 +33,30 @@ function generateSlug(name: string): string {
 }
 
 const MAX_SLUG_ATTEMPTS = 100
+const SYNC_TRANSACTION_TIMEOUT_MS = 30000
+const SYNC_TRANSACTION_MAX_WAIT_MS = 10000
+
+async function invalidateEquipmentCaches(equipmentId: string): Promise<void> {
+  try {
+    await cacheDelete('equipmentDetail', equipmentId)
+    await cacheDelete('equipmentList', 'featured')
+  } catch (error) {
+    console.warn('[ProductSync] Failed to clear direct equipment cache keys', error)
+  }
+
+  if (!process.env.REDIS_URL) return
+
+  try {
+    const redis = getRedisClient()
+    if (redis.status !== 'ready') return
+    const keys = await redis.keys('cache:equipmentList:*')
+    if (keys.length > 0) {
+      await redis.del(...keys)
+    }
+  } catch (error) {
+    console.warn('[ProductSync] Failed to clear equipment list caches', error)
+  }
+}
 
 async function ensureUniqueSlug(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
@@ -81,161 +108,202 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
   const galleryUrls = Array.isArray(product.galleryImages)
     ? (product.galleryImages as string[])
     : []
-  const imageUrls = [product.featuredImage, ...galleryUrls].filter(Boolean)
+  const rawImageUrls = [product.featuredImage, ...galleryUrls].filter(Boolean)
+  const imageUrls = rawImageUrls.filter((url) => !isPlaceholderUrl(url))
 
-  await prisma.$transaction(async (tx) => {
-    let existing = await tx.equipment.findFirst({
-      where: { productId: product.id, deletedAt: null },
-    })
-    if (!existing) {
-      existing = await tx.equipment.findFirst({
-        where: { id: product.id, deletedAt: null },
+  await prisma.$transaction(
+    async (tx) => {
+      let existing = await tx.equipment.findFirst({
+        where: { productId: product.id, deletedAt: null },
       })
-    }
-    // If Product has barcode and no Equipment found yet, check for soft-deleted Equipment with same barcode (restore it)
-    if (!existing && barcode) {
-      const byBarcode = await tx.equipment.findFirst({
-        where: { barcode },
-      })
-      if (byBarcode) {
-        existing = byBarcode
-      }
-    }
-
-    const baseSlug = generateSlug(model)
-    const slug = await ensureUniqueSlug(tx, baseSlug, existing?.id)
-
-    const specsValue =
-      specifications != null ? (JSON.parse(JSON.stringify(specifications)) as object) : undefined
-
-    // Build customFields with boxContents, relatedProducts, bufferTime, tags
-    const existingCustomFields = (existing?.customFields as Record<string, unknown> | null) ?? {}
-    const customFieldsMerged: Record<string, unknown> = { ...existingCustomFields }
-    if (product.boxContents) customFieldsMerged.boxContents = product.boxContents
-    if (product.tags) customFieldsMerged.tags = product.tags
-    if (product.bufferTime != null) customFieldsMerged.bufferTime = product.bufferTime
-    if (product.relatedProducts) customFieldsMerged.relatedEquipmentIds = product.relatedProducts
-    const customFieldsValue =
-      Object.keys(customFieldsMerged).length > 0
-        ? (JSON.parse(JSON.stringify(customFieldsMerged)) as object)
-        : undefined
-
-    const zhTranslation = product.translations.find((t) => t.locale === 'zh')
-    const arTranslation = product.translations.find((t) => t.locale === 'ar')
-
-    const equipmentUpdateData: Record<string, unknown> = {
-      sku,
-      ...(barcode != null && { barcode }),
-      slug,
-      productId: product.id,
-      model,
-      nameEn: enTranslation?.name ?? model,
-      nameZh: zhTranslation?.name ?? null,
-      descriptionEn: enTranslation?.longDescription ?? enTranslation?.shortDescription ?? null,
-      descriptionZh: zhTranslation?.longDescription ?? zhTranslation?.shortDescription ?? null,
-      categoryId: product.categoryId,
-      brandId: product.brandId,
-      dailyPrice: product.priceDaily,
-      weeklyPrice: product.priceWeekly,
-      monthlyPrice: product.priceMonthly,
-      quantityTotal: product.quantity ?? 1,
-      quantityAvailable: product.quantity ?? 1,
-      specifications: specsValue,
-      specSource: specsValue ? 'import' : undefined,
-      customFields: customFieldsValue,
-      isActive: true,
-      updatedAt: new Date(),
-      ...(existing?.deletedAt && { deletedAt: null, deletedBy: null }),
-    }
-
-    let equipmentId: string
-    if (existing) {
-      await tx.equipment.update({
-        where: { id: existing.id },
-        data: equipmentUpdateData as Parameters<typeof tx.equipment.update>[0]['data'],
-      })
-      equipmentId = existing.id
-    } else {
-      const created = await tx.equipment.create({
-        data: {
-          id: product.id,
-          sku,
-          ...(barcode != null && { barcode }),
-          slug,
-          productId: product.id,
-          model,
-          nameEn: enTranslation?.name ?? model,
-          nameZh: zhTranslation?.name ?? undefined,
-          descriptionEn: enTranslation?.longDescription ?? enTranslation?.shortDescription ?? undefined,
-          descriptionZh: zhTranslation?.longDescription ?? zhTranslation?.shortDescription ?? undefined,
-          categoryId: product.categoryId,
-          brandId: product.brandId,
-          dailyPrice: product.priceDaily,
-          weeklyPrice: product.priceWeekly ?? undefined,
-          monthlyPrice: product.priceMonthly ?? undefined,
-          quantityTotal: product.quantity ?? 1,
-          quantityAvailable: product.quantity ?? 1,
-          isActive: true,
-          specifications: specsValue,
-          specSource: specsValue ? 'import' : undefined,
-          customFields: customFieldsValue,
-        },
-      })
-      equipmentId = created.id
-    }
-
-    // Media: ensure we have one Media per image URL; avoid duplicates by url+equipmentId
-    for (let i = 0; i < imageUrls.length; i++) {
-      const url = imageUrls[i]
-      const existingMedia = await tx.media.findFirst({
-        where: { equipmentId, url, deletedAt: null },
-      })
-      if (!existingMedia) {
-        await tx.media.create({
-          data: {
-            url,
-            type: 'image',
-            filename: url.split('/').pop() ?? `image-${i}.jpg`,
-            mimeType: 'image/jpeg',
-            equipmentId,
-            imageSource: 'import',
-          },
+      if (!existing) {
+        existing = await tx.equipment.findFirst({
+          where: { id: product.id, deletedAt: null },
         })
       }
-    }
+      // If Product has barcode and no Equipment found yet, check for soft-deleted Equipment with same barcode (restore it)
+      if (!existing && barcode) {
+        const byBarcode = await tx.equipment.findFirst({
+          where: { barcode },
+        })
+        if (byBarcode) {
+          existing = byBarcode
+        }
+      }
 
-    for (const pt of product.translations) {
-      const lang = LOCALE_TO_LANG[pt.locale]
-      const fields = [
-        { field: 'name', value: pt.name },
-        { field: 'short_description', value: pt.shortDescription },
-        { field: 'long_description', value: pt.longDescription },
-        { field: 'seo_title', value: pt.seoTitle },
-        { field: 'seo_description', value: pt.seoDescription },
-        { field: 'seo_keywords', value: pt.seoKeywords },
-      ]
-      for (const { field, value } of fields) {
-        await tx.translation.upsert({
-          where: {
-            entityType_entityId_field_language: {
+      const baseSlug = generateSlug(model)
+      const slug = await ensureUniqueSlug(tx, baseSlug, existing?.id)
+
+      const specsValue =
+        specifications != null ? (JSON.parse(JSON.stringify(specifications)) as object) : undefined
+
+      // Build customFields with boxContents, relatedProducts, bufferTime, tags
+      const existingCustomFields = (existing?.customFields as Record<string, unknown> | null) ?? {}
+      const customFieldsMerged: Record<string, unknown> = { ...existingCustomFields }
+      if (product.boxContents) customFieldsMerged.boxContents = product.boxContents
+      if (product.tags) customFieldsMerged.tags = product.tags
+      if (product.bufferTime != null) customFieldsMerged.bufferTime = product.bufferTime
+      if (product.relatedProducts) customFieldsMerged.relatedEquipmentIds = product.relatedProducts
+      const customFieldsValue =
+        Object.keys(customFieldsMerged).length > 0
+          ? (JSON.parse(JSON.stringify(customFieldsMerged)) as object)
+          : undefined
+
+      const zhTranslation = product.translations.find((t) => t.locale === 'zh')
+      const arTranslation = product.translations.find((t) => t.locale === 'ar')
+
+      // Active equipment must have at least one valid image for public display
+      const hasValidImage = imageUrls.length > 0
+      const equipmentUpdateData: Record<string, unknown> = {
+        sku,
+        ...(barcode != null && { barcode }),
+        slug,
+        productId: product.id,
+        model,
+        nameEn: enTranslation?.name ?? model,
+        nameZh: zhTranslation?.name ?? null,
+        descriptionEn: enTranslation?.longDescription ?? enTranslation?.shortDescription ?? null,
+        descriptionZh: zhTranslation?.longDescription ?? zhTranslation?.shortDescription ?? null,
+        categoryId: product.categoryId,
+        brandId: product.brandId,
+        dailyPrice: product.priceDaily,
+        weeklyPrice: product.priceWeekly,
+        monthlyPrice: product.priceMonthly,
+        quantityTotal: product.quantity ?? 1,
+        quantityAvailable: product.quantity ?? 1,
+        specifications: specsValue,
+        specSource: specsValue ? 'import' : undefined,
+        customFields: customFieldsValue,
+        isActive: hasValidImage,
+        updatedAt: new Date(),
+        ...(existing?.deletedAt && { deletedAt: null, deletedBy: null }),
+      }
+
+      // We use an upsert to guarantee we don't hit a unique constraint on ID if somehow missed by findFirst
+      // (e.g., deleted items or disconnected items with the same ID).
+      const equipmentIdToUse = existing ? existing.id : product.id
+
+      // Remove any undefined properties and map to equipment model fields
+      const equipmentDataToInsert = {
+        id: equipmentIdToUse,
+        sku,
+        ...(barcode != null && { barcode }),
+        slug,
+        productId: product.id,
+        model,
+        nameEn: enTranslation?.name ?? model,
+        nameZh: zhTranslation?.name ?? null,
+        descriptionEn: enTranslation?.longDescription ?? enTranslation?.shortDescription ?? null,
+        descriptionZh: zhTranslation?.longDescription ?? zhTranslation?.shortDescription ?? null,
+        categoryId: product.categoryId,
+        brandId: product.brandId,
+        dailyPrice: product.priceDaily,
+        weeklyPrice: product.priceWeekly ?? null,
+        monthlyPrice: product.priceMonthly ?? null,
+        quantityTotal: product.quantity ?? 1,
+        quantityAvailable: product.quantity ?? 1,
+        isActive: hasValidImage,
+        specifications: specsValue ?? null,
+        specSource: specsValue ? 'import' : null,
+        customFields: customFieldsValue ?? null,
+        deletedAt: null,
+        deletedBy: null,
+      }
+
+      const equipmentDataToUpdate = {
+        ...equipmentDataToInsert,
+        updatedAt: new Date(),
+      }
+
+      // We can't update ID so we remove it from update
+      delete (equipmentDataToUpdate as any).id
+
+      const upsertedEquipment = await tx.equipment.upsert({
+        where: { id: equipmentIdToUse },
+        update: equipmentDataToUpdate as any,
+        create: equipmentDataToInsert as any,
+      })
+
+      const equipmentId = upsertedEquipment.id
+
+      // Media: ensure we have one Media per image URL; avoid duplicates by url+equipmentId
+      // First, delete any existing media that is NOT in our new imageUrls list
+      await tx.media.deleteMany({
+        where:
+          imageUrls.length > 0
+            ? {
+                equipmentId,
+                url: { notIn: imageUrls },
+              }
+            : { equipmentId },
+      })
+
+      // Now insert the new ones
+      for (let i = 0; i < imageUrls.length; i++) {
+        const url = imageUrls[i]
+        const existingMedia = await tx.media.findFirst({
+          where: { equipmentId, url },
+        })
+        if (!existingMedia) {
+          await tx.media.create({
+            data: {
+              url,
+              type: 'image',
+              filename: url.split('/').pop() ?? `image-${i}.jpg`,
+              mimeType: 'image/jpeg',
+              equipmentId,
+              imageSource: 'import',
+              sortOrder: i,
+            },
+          })
+        }
+      }
+
+      for (const pt of product.translations) {
+        const lang = LOCALE_TO_LANG[pt.locale]
+        const fields = [
+          { field: 'name', value: pt.name },
+          { field: 'short_description', value: pt.shortDescription },
+          { field: 'long_description', value: pt.longDescription },
+          { field: 'seo_title', value: pt.seoTitle },
+          { field: 'seo_description', value: pt.seoDescription },
+          { field: 'seo_keywords', value: pt.seoKeywords },
+        ]
+        for (const { field, value } of fields) {
+          await tx.translation.upsert({
+            where: {
+              entityType_entityId_field_language: {
+                entityType: EQUIPMENT_ENTITY_TYPE,
+                entityId: equipmentId,
+                field,
+                language: lang,
+              },
+            },
+            update: { value, updatedAt: new Date() },
+            create: {
               entityType: EQUIPMENT_ENTITY_TYPE,
               entityId: equipmentId,
               field,
               language: lang,
+              value,
             },
-          },
-          update: { value, updatedAt: new Date() },
-          create: {
-            entityType: EQUIPMENT_ENTITY_TYPE,
-            entityId: equipmentId,
-            field,
-            language: lang,
-            value,
-          },
-        })
+          })
+        }
       }
+    },
+    {
+      maxWait: SYNC_TRANSACTION_MAX_WAIT_MS,
+      timeout: SYNC_TRANSACTION_TIMEOUT_MS,
     }
+  )
+
+  const syncedEquipment = await prisma.equipment.findFirst({
+    where: { productId, deletedAt: null },
+    select: { id: true },
   })
+  if (syncedEquipment?.id) {
+    await invalidateEquipmentCaches(syncedEquipment.id)
+  }
 }
 
 /**
@@ -246,7 +314,11 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
   const equipment = await prisma.equipment.findFirst({
     where: { id: equipmentId, deletedAt: null },
     include: {
-      media: { where: { deletedAt: null }, orderBy: { createdAt: 'asc' }, take: 4 },
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        take: 4,
+      },
       brand: true,
       category: true,
     },
@@ -345,7 +417,8 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
         existingPT?.shortDescription || existing?.get('short_description') || fallbackShortDesc
       const resolvedLongDesc =
         existingPT?.longDescription || existing?.get('long_description') || fallbackLongDesc
-      const resolvedSeoTitle = existingPT?.seoTitle || existing?.get('seo_title') || fallbackSeoTitle
+      const resolvedSeoTitle =
+        existingPT?.seoTitle || existing?.get('seo_title') || fallbackSeoTitle
       const resolvedSeoDesc =
         existingPT?.seoDescription || existing?.get('seo_description') || fallbackSeoDesc
       const resolvedSeoKeywords =

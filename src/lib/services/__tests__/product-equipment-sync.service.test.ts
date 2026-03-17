@@ -4,22 +4,31 @@
  * - syncEquipmentToProduct: gallery padding and behavior
  */
 
-import {
-  syncProductToEquipment,
-  syncEquipmentToProduct,
-} from '../product-equipment-sync.service'
+import { syncProductToEquipment, syncEquipmentToProduct } from '../product-equipment-sync.service'
 import { prisma } from '@/lib/db/prisma'
 import { NotFoundError } from '@/lib/errors'
 
 // Use var so mockTx is available when jest.mock factory runs (avoids TDZ)
- 
+
 var mockTx: {
   product: { upsert: jest.Mock }
   productTranslation: { upsert: jest.Mock; findUnique: jest.Mock }
-  equipment: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock }
-  media: { findFirst: jest.Mock; create: jest.Mock }
+  equipment: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock; upsert: jest.Mock }
+  media: { findFirst: jest.Mock; create: jest.Mock; deleteMany: jest.Mock; updateMany: jest.Mock }
   translation: { upsert: jest.Mock }
 }
+
+jest.mock('@/lib/cache', () => ({
+  cacheDelete: jest.fn().mockResolvedValue(undefined),
+}))
+
+jest.mock('@/lib/queue/redis.client', () => ({
+  getRedisClient: jest.fn(() => ({
+    status: 'end',
+    keys: jest.fn().mockResolvedValue([]),
+    del: jest.fn().mockResolvedValue(0),
+  })),
+}))
 
 jest.mock('@/lib/db/prisma', () => {
   mockTx = {
@@ -28,8 +37,22 @@ jest.mock('@/lib/db/prisma', () => {
       upsert: jest.fn().mockResolvedValue({}),
       findUnique: jest.fn().mockResolvedValue(null),
     },
-    equipment: { findFirst: jest.fn(), create: jest.fn(), update: jest.fn() },
-    media: { findFirst: jest.fn(), create: jest.fn() },
+    equipment: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      upsert: jest.fn().mockImplementation(({ where, create, update }) => ({
+        id: where.id,
+        ...create,
+        ...update,
+      })),
+    },
+    media: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
     translation: { upsert: jest.fn().mockResolvedValue({}) },
   }
   return {
@@ -84,6 +107,14 @@ function createMockProduct(overrides: Record<string, unknown> = {}) {
   }
 }
 
+function getEquipmentUpsertArg() {
+  return mockTx.equipment.upsert.mock.calls[0][0] as {
+    where: { id: string }
+    create: Record<string, unknown>
+    update: Record<string, unknown>
+  }
+}
+
 describe('product-equipment-sync.service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -92,10 +123,18 @@ describe('product-equipment-sync.service', () => {
     mockTx.equipment.findFirst.mockResolvedValue(null)
     mockTx.equipment.create.mockResolvedValue({ id: 'prod-1' })
     mockTx.equipment.update.mockResolvedValue({})
+    mockTx.equipment.upsert.mockImplementation(({ where, create, update }) => ({
+      id: where.id,
+      ...create,
+      ...update,
+    }))
     mockTx.media.findFirst.mockResolvedValue(null)
     mockTx.media.create.mockResolvedValue({})
+    mockTx.media.deleteMany.mockResolvedValue({ count: 0 })
+    mockTx.media.updateMany.mockResolvedValue({ count: 0 })
     mockTx.translation.upsert.mockResolvedValue({})
     mockTranslationFindMany.mockResolvedValue([])
+    mockFindFirst.mockResolvedValue(null)
   })
 
   describe('syncProductToEquipment', () => {
@@ -109,12 +148,11 @@ describe('product-equipment-sync.service', () => {
     it('creates new Equipment when no existing equipment found', async () => {
       mockProductFindFirst.mockResolvedValue(createMockProduct())
       mockTx.equipment.findFirst.mockResolvedValue(null)
-      mockTx.equipment.create.mockResolvedValue({ id: 'prod-1' })
 
       await syncProductToEquipment('prod-1')
 
-      expect(mockTx.equipment.create).toHaveBeenCalledTimes(1)
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      expect(mockTx.equipment.upsert).toHaveBeenCalledTimes(1)
+      const createData = getEquipmentUpsertArg().create
       expect(createData.id).toBe('prod-1')
       expect(createData.sku).toBe('SKU-001')
       expect(createData.barcode).toBe('BAR-123')
@@ -130,16 +168,17 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      expect(mockTx.equipment.update).toHaveBeenCalledTimes(1)
-      expect(mockTx.equipment.create).not.toHaveBeenCalled()
-      expect(mockTx.equipment.update).toHaveBeenCalledWith({
-        where: { id: 'eq-1' },
-        data: expect.objectContaining({
-          sku: 'SKU-001',
-          productId: 'prod-1',
-          model: 'English Name',
-        }),
-      })
+      expect(mockTx.equipment.upsert).toHaveBeenCalledTimes(1)
+      expect(getEquipmentUpsertArg()).toEqual(
+        expect.objectContaining({
+          where: { id: 'eq-1' },
+          update: expect.objectContaining({
+            sku: 'SKU-001',
+            productId: 'prod-1',
+            model: 'English Name',
+          }),
+        })
+      )
     })
 
     it('updates existing Equipment when found by id (fallback)', async () => {
@@ -151,11 +190,13 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      expect(mockTx.equipment.update).toHaveBeenCalledTimes(1)
-      expect(mockTx.equipment.update).toHaveBeenCalledWith({
-        where: { id: 'prod-1' },
-        data: expect.any(Object),
-      })
+      expect(mockTx.equipment.upsert).toHaveBeenCalledTimes(1)
+      expect(getEquipmentUpsertArg()).toEqual(
+        expect.objectContaining({
+          where: { id: 'prod-1' },
+          update: expect.any(Object),
+        })
+      )
     })
 
     it('restores soft-deleted Equipment when found by barcode', async () => {
@@ -170,14 +211,16 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      expect(mockTx.equipment.update).toHaveBeenCalledTimes(1)
-      expect(mockTx.equipment.update).toHaveBeenCalledWith({
-        where: { id: 'eq-old' },
-        data: expect.objectContaining({
-          deletedAt: null,
-          deletedBy: null,
-        }),
-      })
+      expect(mockTx.equipment.upsert).toHaveBeenCalledTimes(1)
+      expect(getEquipmentUpsertArg()).toEqual(
+        expect.objectContaining({
+          where: { id: 'eq-old' },
+          update: expect.objectContaining({
+            deletedAt: null,
+            deletedBy: null,
+          }),
+        })
+      )
     })
 
     it('handles enTranslation fallback to sku when no en translation', async () => {
@@ -191,20 +234,18 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.model).toBe('FALLBACK-SKU')
       expect(createData.nameEn).toBe('FALLBACK-SKU')
     })
 
     it('handles sku fallback to prod-{id} when product has no sku', async () => {
-      mockProductFindFirst.mockResolvedValue(
-        createMockProduct({ sku: null })
-      )
+      mockProductFindFirst.mockResolvedValue(createMockProduct({ sku: null }))
       mockTx.equipment.findFirst.mockResolvedValue(null)
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.sku).toBe('prod-prod-1')
     })
 
@@ -218,19 +259,17 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.barcode).toBe('SCAN-ME')
     })
 
     it('handles empty inventoryItems (no barcode)', async () => {
-      mockProductFindFirst.mockResolvedValue(
-        createMockProduct({ inventoryItems: [] })
-      )
+      mockProductFindFirst.mockResolvedValue(createMockProduct({ inventoryItems: [] }))
       mockTx.equipment.findFirst.mockResolvedValue(null)
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.barcode).toBeUndefined()
     })
 
@@ -280,7 +319,7 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.specifications).toEqual({ weight: '1kg' })
       expect(createData.customFields).toMatchObject({
         boxContents: 'Cable, Case',
@@ -303,7 +342,9 @@ describe('product-equipment-sync.service', () => {
       await syncProductToEquipment('prod-1')
 
       expect(mockTx.media.create).toHaveBeenCalledTimes(3)
-      const urls = mockTx.media.create.mock.calls.map((c: unknown[]) => (c[0] as { data: { url: string } }).data.url)
+      const urls = mockTx.media.create.mock.calls.map(
+        (c: unknown[]) => (c[0] as { data: { url: string } }).data.url
+      )
       expect(urls).toContain('https://example.com/f.jpg')
       expect(urls).toContain('https://example.com/g1.jpg')
       expect(urls).toContain('https://example.com/g2.jpg')
@@ -348,14 +389,17 @@ describe('product-equipment-sync.service', () => {
 
       expect(mockTx.translation.upsert).toHaveBeenCalled()
       const upsertCalls = mockTx.translation.upsert.mock.calls
-      interface UpsertArg { where?: { entityType_entityId_field_language?: { field?: string; language?: string } }; create?: { value?: string } }
-      const nameUpsert = upsertCalls.find(
-        (c: unknown[]) => {
-          const arg = (c as [UpsertArg])[0]
-          return arg?.where?.entityType_entityId_field_language?.field === 'name' &&
-            arg?.where?.entityType_entityId_field_language?.language === 'en'
-        }
-      )
+      interface UpsertArg {
+        where?: { entityType_entityId_field_language?: { field?: string; language?: string } }
+        create?: { value?: string }
+      }
+      const nameUpsert = upsertCalls.find((c: unknown[]) => {
+        const arg = (c as [UpsertArg])[0]
+        return (
+          arg?.where?.entityType_entityId_field_language?.field === 'name' &&
+          arg?.where?.entityType_entityId_field_language?.language === 'en'
+        )
+      })
       expect(nameUpsert).toBeDefined()
       expect(((nameUpsert as [UpsertArg])[0] as UpsertArg).create?.value).toBe('EN Name')
     })
@@ -371,7 +415,7 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.model).toBe('prod-1')
     })
 
@@ -386,7 +430,7 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.slug).toBe('english-name-1')
     })
 
@@ -401,7 +445,7 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.slug).toBe('english-name')
     })
 
@@ -418,7 +462,7 @@ describe('product-equipment-sync.service', () => {
 
       await syncProductToEquipment('prod-1')
 
-      const createData = mockTx.equipment.create.mock.calls[0][0].data
+      const createData = getEquipmentUpsertArg().create
       expect(createData.slug).toMatch(/^english-name-\d+$/)
     })
   })

@@ -40,16 +40,15 @@ export class TranslationService {
     userId: string
   ) {
     return await prisma.$transaction(async (tx) => {
-      // Delete existing translations for this entity
-      await tx.translation.updateMany({
+      // Hard-delete existing translations for this entity.
+      // We use deleteMany (not soft-delete) because the unique constraint
+      // (entityType, entityId, field, language) applies to ALL rows including
+      // soft-deleted ones. Soft-delete would leave rows that block creating
+      // new records with the same key.
+      await tx.translation.deleteMany({
         where: {
           entityType,
           entityId,
-          deletedAt: null,
-        },
-        data: {
-          deletedAt: new Date(),
-          deletedBy: userId,
         },
       })
 

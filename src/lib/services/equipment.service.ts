@@ -159,11 +159,10 @@ export class EquipmentService {
           media: {
             where: {
               deletedAt: null,
+              type: 'image',
             },
             take: 1,
-            orderBy: {
-              createdAt: 'asc',
-            },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           },
           maintenance: {
             where: { completedDate: { not: null } },
@@ -208,10 +207,9 @@ export class EquipmentService {
           media: {
             where: {
               deletedAt: null,
+              type: 'image',
             },
-            orderBy: {
-              createdAt: 'asc',
-            },
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           },
           bookings: {
             where: {
@@ -396,35 +394,27 @@ export class EquipmentService {
         )
       }
 
-      // Create media records using transaction client
+      // Create media records with explicit sortOrder (primary=0, gallery=1,2,3...)
+      const imageUrls: string[] = []
       if (input.featuredImageUrl) {
+        imageUrls.push(input.featuredImageUrl)
+      }
+      if (input.galleryImageUrls?.length) {
+        imageUrls.push(...input.galleryImageUrls)
+      }
+      for (let i = 0; i < imageUrls.length; i++) {
+        const url = imageUrls[i]
         await tx.media.create({
           data: {
-            url: input.featuredImageUrl,
+            url,
             type: 'image',
-            filename: input.featuredImageUrl.split('/').pop() || 'featured.jpg',
+            filename: url.split('/').pop() || 'image.jpg',
             mimeType: 'image/jpeg',
             equipmentId: newEquipment.id,
             createdBy: input.createdBy,
+            sortOrder: i,
           },
         })
-      }
-
-      if (input.galleryImageUrls && input.galleryImageUrls.length > 0) {
-        await Promise.all(
-          input.galleryImageUrls.map((url) =>
-            tx.media.create({
-              data: {
-                url,
-                type: 'image',
-                filename: url.split('/').pop() || 'gallery.jpg',
-                mimeType: 'image/jpeg',
-                equipmentId: newEquipment.id,
-                createdBy: input.createdBy,
-              },
-            })
-          )
-        )
       }
 
       if (input.videoUrl) {
@@ -490,6 +480,29 @@ export class EquipmentService {
 
     if (!existing) {
       throw new Error('Equipment not found')
+    }
+
+    // Active or featured equipment must have at least one valid image for public display
+    const targetIsActive = data.isActive ?? existing.isActive
+    const targetFeatured = data.featured ?? existing.featured
+    if (targetIsActive || targetFeatured) {
+      const willHaveNewImages =
+        (featuredImageUrl != null && featuredImageUrl.trim() !== '') ||
+        (galleryImageUrls != null && galleryImageUrls.length > 0)
+      if (!willHaveNewImages) {
+        const existingImageCount = await prisma.media.count({
+          where: {
+            equipmentId: id,
+            type: 'image',
+            deletedAt: null,
+          },
+        })
+        if (existingImageCount === 0) {
+          throw new Error(
+            'Active or featured equipment must have at least one image. Add a featured image or gallery images before publishing.'
+          )
+        }
+      }
     }
 
     // If SKU is being updated, check for duplicates
@@ -575,23 +588,20 @@ export class EquipmentService {
         }
       }
 
-      // Handle media updates using transaction client
+      // Handle media updates using transaction client (sortOrder: 0 = primary, 1+ = gallery)
       if (featuredImageUrl !== undefined) {
-        // Delete existing featured images (first image by creation date)
-        const existingFeatured = await tx.media.findFirst({
+        const existingPrimary = await tx.media.findFirst({
           where: {
             equipmentId: id,
             type: 'image',
             deletedAt: null,
           },
-          orderBy: {
-            createdAt: 'asc',
-          },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
         })
 
-        if (existingFeatured) {
+        if (existingPrimary) {
           await tx.media.update({
-            where: { id: existingFeatured.id },
+            where: { id: existingPrimary.id },
             data: {
               deletedAt: new Date(),
               deletedBy: updatedBy,
@@ -599,7 +609,6 @@ export class EquipmentService {
           })
         }
 
-        // Create new featured image if URL provided
         if (featuredImageUrl) {
           await tx.media.create({
             data: {
@@ -609,29 +618,39 @@ export class EquipmentService {
               mimeType: 'image/jpeg',
               equipmentId: id,
               createdBy: updatedBy,
+              sortOrder: 0,
             },
           })
         }
       }
 
-      if (galleryImageUrls !== undefined) {
-        // For gallery, we'll add new images (full replacement can be implemented later)
-        if (galleryImageUrls.length > 0) {
-          await Promise.all(
-            galleryImageUrls.map((url) =>
-              tx.media.create({
-                data: {
-                  url,
-                  type: 'image',
-                  filename: url.split('/').pop() || 'gallery.jpg',
-                  mimeType: 'image/jpeg',
-                  equipmentId: id,
-                  createdBy: updatedBy,
-                },
-              })
-            )
+      if (galleryImageUrls !== undefined && galleryImageUrls.length > 0) {
+        const maxSortOrder = await tx.media
+          .aggregate({
+            where: {
+              equipmentId: id,
+              type: 'image',
+              deletedAt: null,
+            },
+            _max: { sortOrder: true },
+          })
+          .then((r) => r._max.sortOrder ?? -1)
+
+        await Promise.all(
+          galleryImageUrls.map((url, i) =>
+            tx.media.create({
+              data: {
+                url,
+                type: 'image',
+                filename: url.split('/').pop() || 'gallery.jpg',
+                mimeType: 'image/jpeg',
+                equipmentId: id,
+                createdBy: updatedBy,
+                sortOrder: maxSortOrder + 1 + i,
+              },
+            })
           )
-        }
+        )
       }
 
       if (videoUrl !== undefined) {

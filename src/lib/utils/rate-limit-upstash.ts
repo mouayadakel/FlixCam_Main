@@ -100,24 +100,34 @@ export interface UpstashRateLimitResult {
 
 /**
  * Check rate limit via Upstash Redis. Falls back to allowed: true when Redis is not configured.
+ * Fails open (allowed: true) if Upstash is unreachable to avoid blocking auth.
  */
 export async function checkRateLimitUpstash(
   request: Request,
   tier: RateLimitTierName,
   identifier?: string
 ): Promise<UpstashRateLimitResult> {
-  const limiters = getLimiters()
-  const limiter = limiters[tier]
-  if (!limiter) {
-    return { allowed: true, remaining: 999, reset: Date.now() + 60000 }
-  }
+  try {
+    const limiters = getLimiters()
+    const limiter = limiters[tier]
+    if (!limiter) {
+      return { allowed: true, remaining: 999, reset: Date.now() + 60000 }
+    }
 
-  const id = identifier ?? getClientIP(request)
-  const { success, remaining, reset } = await limiter.limit(id)
-  return {
-    allowed: success,
-    remaining: remaining ?? 0,
-    reset: reset ?? Date.now() + 60000,
+    const id = identifier ?? getClientIP(request)
+    const { success, remaining, reset } = await limiter.limit(id)
+    return {
+      allowed: success,
+      remaining: remaining ?? 0,
+      reset: reset ?? Date.now() + 60000,
+    }
+  } catch (error) {
+    console.error('[rate-limit-upstash] Failed, failing open', {
+      tier,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    return { allowed: true, remaining: 999, reset: Date.now() + 60000 }
   }
 }
 

@@ -84,7 +84,14 @@ export class MediaService {
     // Create relative URL
     const url = `/uploads/equipment/${equipmentId}/${filename}`
 
-    // Create Media record
+    // Get next sortOrder (0 for first image, max+1 for gallery)
+    const maxSortOrder = await prisma.media
+      .aggregate({
+        where: { equipmentId, type: 'image', deletedAt: null },
+        _max: { sortOrder: true },
+      })
+      .then((r) => r._max.sortOrder ?? -1)
+
     const media = await prisma.media.create({
       data: {
         url,
@@ -94,6 +101,7 @@ export class MediaService {
         size: fileSize,
         equipmentId,
         createdBy: userId,
+        sortOrder: maxSortOrder + 1,
       },
     })
 
