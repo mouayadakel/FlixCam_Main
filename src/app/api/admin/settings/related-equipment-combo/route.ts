@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const canWrite = await hasPermission(session.user.id, 'settings.write' as never)
+    const canWrite = await hasPermission(session.user.id, 'settings.update' as never)
     if (!canWrite) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = (await request.json()) as { message?: string; discountPercent?: number }
