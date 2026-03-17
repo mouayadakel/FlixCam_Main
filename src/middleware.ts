@@ -171,19 +171,27 @@ export default async function middleware(req: NextRequest) {
       }
     }
 
-    // Admin routes - require admin, staff, or super_admin
+    // Admin routes - require admin, staff roles, or super_admin
     if (
       !hasRoleAccess(userRole, [
         'super_admin',
         'admin',
-        'staff',
+        'sales_manager',
+        'accountant',
+        'customer_service',
+        'marketing_manager',
+        'risk_manager',
+        'approval_agent',
+        'auditor',
+        'ai_operator',
         'warehouse',
         'driver',
         'technician',
       ])
     ) {
-      // Client users should be redirected to portal
-      if (userRole === 'client') {
+      // Customer/client users should be redirected to portal (UserRole CUSTOMER/DATA_ENTRY)
+      const clientRoles = ['data_entry', 'customer']
+      if (clientRoles.includes(userRole || '')) {
         return NextResponse.redirect(new URL('/portal/dashboard', req.url))
       }
       // Unauthorized - redirect to 403
