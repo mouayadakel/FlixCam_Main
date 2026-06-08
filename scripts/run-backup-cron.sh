@@ -12,4 +12,6 @@ if [[ -f "$ENV_FILE" ]]; then
   set +a
 fi
 
-exec "$ROOT/scripts/backup-database.sh"
+"$ROOT/scripts/backup-database.sh"
+"$ROOT/scripts/backup-retention.sh"
+"$ROOT/scripts/backup-sync-remote.sh"

@@ -31,6 +31,7 @@ INVOKE=/home/flixcam.rent/scripts/cron-invoke.sh
 0 2 * * * root $INVOKE /api/cron/cleanup-pending-users
 0 2 * * * root $INVOKE /api/cron/backfill
 0 3 * * * root /home/flixcam.rent/scripts/run-backup-cron.sh >> /var/log/flixcam-backup.log 2>&1
+30 3 * * * root /home/flixcam.rent/scripts/backup-retention.sh >> /var/log/flixcam-backup.log 2>&1
 0 4 * * * root $INVOKE /api/cron/run/daily-revenue-report
 0 4 * * * root $INVOKE /api/cron/run/equipment-utilization
 0 4 * * * root $INVOKE /api/cron/run/user-activity-summary
