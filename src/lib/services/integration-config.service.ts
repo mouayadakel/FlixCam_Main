@@ -122,6 +122,15 @@ export class IntegrationConfigService {
             metaPixelId: process.env.META_PIXEL_ID || undefined,
           },
         }
+      case 'daftra':
+        return {
+          type: 'daftra',
+          enabled: !!(process.env.DAFTRA_API_KEY && process.env.DAFTRA_SUBDOMAIN),
+          config: {
+            apiKey: process.env.DAFTRA_API_KEY ? '***configured***' : undefined,
+            subdomain: process.env.DAFTRA_SUBDOMAIN || undefined,
+          },
+        }
       default:
         return null
     }

@@ -6,9 +6,9 @@
 
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { Plus, Eye, Download } from 'lucide-react'
+import { Plus, Eye, Download, Upload } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -78,6 +78,8 @@ export default function ClientsListTab() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(50)
+  const [importing, setImporting] = useState(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   const statuses: Array<ClientStatus | 'all'> = ['all', 'active', 'suspended', 'inactive']
 
@@ -117,6 +119,34 @@ export default function ClientsListTab() {
 
   const getStatusLabel = (status: ClientStatus) => STATUS_LABELS[status]?.ar || status
   const getStatusVariant = (status: ClientStatus) => STATUS_LABELS[status]?.variant || 'default'
+
+  const handleImportFile = async (file: File) => {
+    setImporting(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/clients/import', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Import failed')
+      toast({
+        title: 'تم الاستيراد',
+        description: `أُنشئ ${data.created} · تخطي ${data.skipped} · أخطاء ${data.errors?.length ?? 0}`,
+      })
+      loadClients()
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'فشل الاستيراد',
+        variant: 'destructive',
+      })
+    } finally {
+      setImporting(false)
+      if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
 
   const handleExportCSV = () => {
     const rows = filteredClients.map((c) => ({
@@ -176,6 +206,25 @@ export default function ClientsListTab() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={importing}
+          onClick={() => importInputRef.current?.click()}
+        >
+          <Upload className="ms-2 h-4 w-4" />
+          {importing ? 'جاري الاستيراد...' : 'استيراد Excel'}
+        </Button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) void handleImportFile(file)
+          }}
+        />
         <Button
           variant="outline"
           size="sm"

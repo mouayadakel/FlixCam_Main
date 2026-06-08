@@ -9,21 +9,8 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
-  // Validate required env vars in production
-  if (process.env.NODE_ENV === 'production') {
-    const required: Record<string, string | undefined> = {
-      DATABASE_URL: process.env.DATABASE_URL,
-      NEXTAUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-    }
-    const missing = Object.entries(required)
-      .filter(([, v]) => !v)
-      .map(([k]) => k)
-    if (missing.length > 0) {
-      const msg = `[Instrumentation] FATAL: Missing required environment variables: ${missing.join(', ')}. The application cannot start safely.`
-      console.error(msg)
-      throw new Error(msg)
-    }
-  }
+  const { assertProductionEnvReady } = await import('@/lib/env/validate-production-env')
+  assertProductionEnvReady()
 
   try {
     const { getImportWorker } = await import('@/lib/queue/import.worker')

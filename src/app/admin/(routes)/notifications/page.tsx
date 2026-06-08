@@ -52,6 +52,8 @@ const TYPE_ICONS: Record<string, typeof Bell> = {
   'booking.cancelled': Calendar,
   'payment.success': DollarSign,
   'payment.failed': DollarSign,
+  'admin.payment.received': DollarSign,
+  'admin.payment.failed': DollarSign,
   'contract.signed': FileText,
 }
 

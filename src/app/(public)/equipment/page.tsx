@@ -6,35 +6,33 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
+import { getMarketingSettingsMap } from '@/lib/services/marketing-settings.service'
+import { buildPublicMetadata } from '@/lib/seo/build-metadata'
 
-export const metadata: Metadata = {
-  title: t('ar', 'seo.equipmentTitle'),
-  description: t('ar', 'seo.equipmentDescription'),
-  alternates: generateAlternatesMetadata('/equipment'),
-  keywords: [
-    'تأجير معدات تصوير',
-    'cinematic equipment rental',
-    'كاميرات سينمائية',
-    'film equipment Riyadh',
-    'استوديوهات الرياض',
-  ],
-  openGraph: {
-    title: 'معدات التصوير السينمائي | FlixCam.rent',
-    description: 'تصفح واحجز معدات تصوير سينمائي احترافية في الرياض.',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'معدات التصوير السينمائي | FlixCam.rent',
-    description: 'تصفح واحجز معدات تصوير سينمائي احترافية في الرياض.',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getRequestLocale()
+  const db = await getMarketingSettingsMap()
+  
+  const titleAr = db.get('equipment_seo_title_ar') || t(locale, 'seo.equipmentTitle')
+  const titleEn = db.get('equipment_seo_title_en') || t('en', 'seo.equipmentTitle')
+  const descAr = db.get('equipment_seo_description_ar') || t(locale, 'seo.equipmentDescription')
+  const descEn = db.get('equipment_seo_description_en') || t('en', 'seo.equipmentDescription')
+
+  return buildPublicMetadata({
+    title: titleAr,
+    description: descAr,
+    path: '/equipment',
+    alternates: generateAlternatesMetadata('/equipment'),
+  })
 }
 import { Suspense } from 'react'
 import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { EquipmentCatalogClient } from './equipment-catalog-client'
 
 export default async function EquipmentCatalogPage() {
+  const { locale } = await getRequestLocale()
   const enabled = await FeatureFlagService.isEnabled('enable_equipment_catalog')
   if (!enabled) redirect('/')
   return (

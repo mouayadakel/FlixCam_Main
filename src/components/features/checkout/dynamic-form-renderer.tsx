@@ -87,7 +87,13 @@ export function DynamicFormRenderer({
 
   const shouldShowField = useCallback(
     (field: CheckoutFormFieldConfig): boolean => {
-      if (field.fieldKey === 'receiver_id_photo') return true
+      const alwaysVisibleReceiverFields = new Set([
+        'receiver_name',
+        'receiver_phone',
+        'receiver_id_number',
+        'receiver_id_photo',
+      ])
+      if (alwaysVisibleReceiverFields.has(field.fieldKey)) return true
       if (!field.conditionFieldKey || field.conditionValue == null) return true
       const depValue = values[field.conditionFieldKey]
       const strDep = depValue != null ? String(depValue) : ''

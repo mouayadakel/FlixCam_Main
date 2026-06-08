@@ -20,7 +20,10 @@ jest.mock('@/lib/services/booking.service', () => ({
   BookingService: { getById: jest.fn(), transitionState: jest.fn().mockResolvedValue(undefined) },
 }))
 jest.mock('@/lib/events/event-bus', () => ({ EventBus: { emit: jest.fn().mockResolvedValue(undefined) } }))
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: jest.fn().mockResolvedValue(true) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: jest.fn().mockResolvedValue(true),
+}))
 
 const mockDeliveryFindFirst = prisma.delivery.findFirst as jest.Mock
 const mockDeliveryFindMany = prisma.delivery.findMany as jest.Mock

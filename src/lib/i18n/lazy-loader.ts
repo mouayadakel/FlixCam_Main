@@ -4,6 +4,7 @@
  */
 
 import type { Locale } from './locales'
+import { applyRuntimeMessageValues } from './runtime-message-values'
 
 type Messages = Record<string, string | Record<string, unknown>>
 
@@ -40,9 +41,9 @@ export async function loadLocaleMessages(locale: Locale): Promise<Messages> {
         messages = (await import('@/messages/ar.json')).default
     }
 
-    // Cache the loaded messages
-    loadedLocales.set(locale, messages)
-    return messages
+    const runtimeMessages = applyRuntimeMessageValues(messages)
+    loadedLocales.set(locale, runtimeMessages)
+    return runtimeMessages
   } catch (error) {
     console.error(`Failed to load locale ${locale}:`, error)
     // Fallback to Arabic

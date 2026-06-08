@@ -27,6 +27,7 @@ export const updateClientSchema = z.object({
   phone: z.string().optional(),
   status: clientStatusSchema.optional(),
   role: z.nativeEnum(UserRole).optional(),
+  creditLimit: z.number().min(0).nullable().optional(),
 })
 
 export const clientFilterSchema = z.object({

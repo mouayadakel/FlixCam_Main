@@ -9,6 +9,7 @@ import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 import { prisma } from '@/lib/db/prisma'
 import * as bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
+import { EventBus } from '@/lib/events/event-bus'
 
 const GUEST_EMAIL_DOMAIN = 'guest.flixcam.rent'
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { phone, code } = parsed.data
+  const { phone, code, referralCode } = parsed.data
   const stored = await cacheGet<{ code: string }>('otp', phone)
   if (!stored || stored.code !== code) {
     return NextResponse.json({ error: 'رمز غير صحيح أو منتهي' }, { status: 400 })
@@ -62,6 +63,23 @@ export async function POST(request: NextRequest) {
         status: 'ACTIVE',
       },
     })
+    
+    // Emit signup event
+    await EventBus.emit('user.referral_signup', { 
+      userId: user.id, 
+      referralCode,
+      timestamp: new Date() 
+    } as any)
+  } else {
+    // Existing user: check for Whale status
+    const totalSpent = await prisma.booking.aggregate({
+      where: { customerId: user.id, status: 'CLOSED' },
+      _sum: { totalAmount: true }
+    })
+    const spent = Number(totalSpent._sum.totalAmount || 0)
+    if (spent > 5000) {
+      await EventBus.emit('user.whale_sign_in', { userId: user.id, timestamp: new Date() } as any)
+    }
   }
 
   const oneTimeToken = randomBytes(32).toString('hex')

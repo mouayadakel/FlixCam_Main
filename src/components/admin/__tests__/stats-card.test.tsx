@@ -3,12 +3,11 @@
  */
 
 import { render, screen } from '@testing-library/react'
-import { StatsCard } from '../stats-card'
-import type { MockStat } from '@/lib/utils/mock-data'
+import { StatsCard, type StatCardData } from '../stats-card'
 
 describe('StatsCard', () => {
   it('renders without crashing', () => {
-    const stat: MockStat = {
+    const stat: StatCardData = {
       label: 'Total Revenue',
       value: '$12,500',
     }
@@ -17,7 +16,7 @@ describe('StatsCard', () => {
   })
 
   it('displays label and value', () => {
-    const stat: MockStat = {
+    const stat: StatCardData = {
       label: 'Bookings',
       value: 42,
     }
@@ -27,7 +26,7 @@ describe('StatsCard', () => {
   })
 
   it('displays change with up trend', () => {
-    const stat: MockStat = {
+    const stat: StatCardData = {
       label: 'Revenue',
       value: '$10k',
       change: '+12%',
@@ -38,7 +37,7 @@ describe('StatsCard', () => {
   })
 
   it('displays change with down trend', () => {
-    const stat: MockStat = {
+    const stat: StatCardData = {
       label: 'Returns',
       value: 5,
       change: '-3%',

@@ -8,8 +8,8 @@ import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import type { CartItem } from '@/lib/stores/cart.store'
-
-const VAT_RATE = 0.15
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 interface CartSummaryProps {
   items: CartItem[]
@@ -18,15 +18,7 @@ interface CartSummaryProps {
   total: number
   itemCount: number
   onStartCheckout?: () => void
-}
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
+  isCheckoutBusy?: boolean
 }
 
 export function CartSummary({
@@ -36,9 +28,11 @@ export function CartSummary({
   total,
   itemCount,
   onStartCheckout,
+  isCheckoutBusy = false,
 }: CartSummaryProps) {
-  const { t } = useLocale()
-  const vatAmount = Math.round((subtotal - discountAmount) * VAT_RATE * 100) / 100
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
+  const vatAmount = Math.round((subtotal - discountAmount) * vatRate * 100) / 100
   const totalWithVat = subtotal - discountAmount + vatAmount
 
   return (
@@ -51,28 +45,28 @@ export function CartSummary({
               {item.equipmentName ?? item.kitName ?? item.studioName ?? item.itemType}
               {item.quantity > 1 && ` × ${item.quantity}`}
             </span>
-            <span className="shrink-0 font-medium">{formatSar(item.subtotal)}</span>
+            <span className="shrink-0 font-medium">{formatSar(item.subtotal, locale)}</span>
           </li>
         ))}
       </ul>
       <dl className="space-y-1.5 text-xs">
         <div className="flex justify-between text-text-muted">
           <dt>{t('cart.subtotal')}</dt>
-          <dd>{formatSar(subtotal)}</dd>
+          <dd>{formatSar(subtotal, locale)}</dd>
         </div>
         {discountAmount > 0 && (
           <div className="flex justify-between text-green-600 dark:text-green-400">
             <dt>{t('cart.discount')}</dt>
-            <dd>-{formatSar(discountAmount)}</dd>
+            <dd>-{formatSar(discountAmount, locale)}</dd>
           </div>
         )}
         <div className="flex justify-between text-text-muted">
           <dt>{t('checkout.vat')}</dt>
-          <dd>{formatSar(vatAmount)}</dd>
+          <dd>{formatSar(vatAmount, locale)}</dd>
         </div>
         <div className="flex justify-between border-t border-border-light pt-1.5 text-sm font-semibold text-text-heading">
           <dt>{t('cart.total')}</dt>
-          <dd>{formatSar(totalWithVat)}</dd>
+          <dd>{formatSar(totalWithVat, locale)}</dd>
         </div>
       </dl>
       {onStartCheckout ? (
@@ -80,10 +74,10 @@ export function CartSummary({
           type="button"
           className="mt-3 w-full rounded-lg"
           size="sm"
-          disabled={itemCount === 0}
+          disabled={itemCount === 0 || isCheckoutBusy}
           onClick={onStartCheckout}
         >
-          {t('cart.checkout')}
+          {isCheckoutBusy ? t('common.loading') : t('cart.checkout')}
         </Button>
       ) : (
         <Button asChild className="mt-3 w-full rounded-lg" size="sm" disabled={itemCount === 0}>

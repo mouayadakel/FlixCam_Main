@@ -29,6 +29,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/utils/format.utils'
+import { BarcodeScanner } from '@/components/warehouse/barcode-scanner'
+import { BarcodeWedgeInput } from '@/components/warehouse/barcode-wedge-input'
+import { matchBookingEquipmentLine } from '@/lib/warehouse/match-booking-equipment'
 
 interface Booking {
   id: string
@@ -66,6 +69,57 @@ export default function CheckOutPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
+
+  const handleScan = async (decodedText: string) => {
+    if (!selectedBooking) return
+
+    const scan = decodedText.trim()
+    let item = matchBookingEquipmentLine(selectedBooking.equipment, scan, 'checkout')
+
+    if (!item) {
+      try {
+        const res = await fetch('/api/warehouse/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            barcode: scan,
+            bookingId: selectedBooking.id,
+            mode: 'LOOKUP',
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.equipment?.equipmentId) {
+          item = matchBookingEquipmentLine(
+            selectedBooking.equipment,
+            scan,
+            'checkout',
+            data.equipment.equipmentId
+          )
+        }
+      } catch {
+        // fall through to not-found toast
+      }
+    }
+
+    if (item) {
+      if (!checkedItems.has(item.id)) {
+        handleToggleItem(item.id)
+        toast({
+          title: 'تم العثور على المعدة',
+          description: `تم تحديد ${item.equipment.sku} بنجاح`,
+        })
+      } else {
+        toast({ title: 'هذه المعدة محددة بالفعل' })
+      }
+    } else {
+      toast({
+        title: 'لم يتم العثور على المعدة',
+        description: `الرمز ${scan} غير موجود في هذا الحجز أو تم إخراجه مسبقاً`,
+        variant: 'destructive',
+      })
+    }
+  }
 
   const bookingIdFromUrl = searchParams?.get('booking')
 
@@ -301,15 +355,27 @@ export default function CheckOutPage() {
               {/* Equipment List */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle>المعدات</CardTitle>
-                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                      {checkedItems.size ===
-                      selectedBooking.equipment.filter((e) => !e.checkedOut).length
-                        ? 'إلغاء تحديد الكل'
-                        : 'تحديد الكل'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setScannerOpen(true)}
+                        disabled={!selectedBooking}
+                      >
+                        <Camera className="ms-1 h-4 w-4" />
+                        مسح
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                        {checkedItems.size ===
+                        selectedBooking.equipment.filter((e) => !e.checkedOut).length
+                          ? 'إلغاء تحديد الكل'
+                          : 'تحديد الكل'}
+                      </Button>
+                    </div>
                   </div>
+                  <BarcodeWedgeInput enabled={!!selectedBooking} onScan={handleScan} />
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -383,6 +449,13 @@ export default function CheckOutPage() {
           )}
         </div>
       </div>
+
+      <BarcodeScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScan}
+        mode="CHECKOUT"
+      />
     </div>
   )
 }

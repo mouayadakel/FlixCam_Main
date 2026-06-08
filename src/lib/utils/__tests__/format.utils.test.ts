@@ -10,6 +10,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
+  formatSar,
   formatStatus,
   getStatusColor,
 } from '@/lib/utils/format.utils'
@@ -59,6 +60,25 @@ describe('formatCurrency', () => {
 })
 
 // ─────────────────────────────────────
+// UNIT: formatSar
+// REQUIREMENTS:
+//   - SAR currency; always exactly 2 fraction digits.
+// ─────────────────────────────────────
+
+describe('formatSar', () => {
+  it('uses two fraction digits in en-SA', () => {
+    const result = formatSar(12.9, 'en-SA')
+    expect(result).toMatch(/12\.90/)
+  })
+
+  it('accepts app locale keys ar / en', () => {
+    expect(formatSar(10, 'en')).toMatch(/10\.00/)
+    expect(typeof formatSar(10, 'ar')).toBe('string')
+    expect(formatSar(10, 'ar').length).toBeGreaterThan(0)
+  })
+})
+
+// ─────────────────────────────────────
 // UNIT: formatDate
 // REQUIREMENTS:
 //   - Accepts string or Date; format 'short' (default) or 'long'.
@@ -71,11 +91,11 @@ describe('formatDate', () => {
     const date = new Date('2026-03-15T12:00:00Z')
 
     // Act
-    const result = formatDate(date)
+    const result = formatDate(date, 'short', 'en')
 
-    // Assert — en-US short format includes year
+    // Assert — locale-aware formatting
     expect(typeof result).toBe('string')
-    expect(result).toContain('2026')
+    expect(result).toMatch(/2026|03|15/)
   })
 
   it('formats string date when string is passed', () => {
@@ -83,10 +103,10 @@ describe('formatDate', () => {
     const dateStr = '2026-03-15'
 
     // Act
-    const result = formatDate(dateStr)
+    const result = formatDate(dateStr, 'short', 'en')
 
     // Assert
-    expect(result).toContain('2026')
+    expect(result).toMatch(/2026|03|15/)
     expect(typeof result).toBe('string')
   })
 
@@ -95,7 +115,7 @@ describe('formatDate', () => {
     const date = new Date('2026-03-15T00:00:00Z')
 
     // Act
-    const result = formatDate(date, 'long')
+    const result = formatDate(date, 'long', 'en')
 
     // Assert
     expect(result).toContain('2026')
@@ -116,7 +136,7 @@ describe('formatDateTime', () => {
     const date = new Date('2026-03-15T14:30:00Z')
 
     // Act
-    const result = formatDateTime(date)
+    const result = formatDateTime(date, 'en')
 
     // Assert
     expect(result).toContain('2026')

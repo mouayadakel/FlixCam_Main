@@ -9,7 +9,11 @@ import { AuditService } from './audit.service'
 import { EquipmentService } from './equipment.service'
 import { StudioService } from './studio.service'
 import { InvoiceService } from './invoice.service'
+import { OrderNotificationService } from './order-notification.service'
 import { EventBus } from '@/lib/events/event-bus'
+import { DepositService } from './deposit.service'
+import { BlacklistService } from './blacklist.service'
+import { CreditLimitService } from './credit-limit.service'
 import { PayoutService } from './payout.service'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
@@ -50,6 +54,7 @@ export interface BookingCreateInput {
   emergencyContactPhone?: string
   emergencyContactRelation?: string
   checkoutFormData?: Record<string, unknown>
+  sessionId?: string
 }
 
 export interface BookingUpdateInput {
@@ -78,6 +83,33 @@ export interface RiskCheckResult {
 }
 
 export class BookingService {
+  private static readonly BUSINESS_TIMEZONE = 'Asia/Riyadh'
+
+  /**
+   * Returns true when Date contains only a calendar day (00:00:00.000 time).
+   */
+  private static isDateOnlyValue(value: Date): boolean {
+    return (
+      value.getHours() === 0 &&
+      value.getMinutes() === 0 &&
+      value.getSeconds() === 0 &&
+      value.getMilliseconds() === 0
+    )
+  }
+
+  private static toBusinessDateKey(value: Date): string {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: this.BUSINESS_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(value)
+    const year = parts.find((p) => p.type === 'year')?.value ?? '0000'
+    const month = parts.find((p) => p.type === 'month')?.value ?? '00'
+    const day = parts.find((p) => p.type === 'day')?.value ?? '00'
+    return `${year}-${month}-${day}`
+  }
+
   // State machine transitions (DRAFT→PAYMENT_PENDING for low-risk auto-approve)
   private static readonly VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
     DRAFT: ['RISK_CHECK', 'PAYMENT_PENDING', 'CANCELLED'],
@@ -131,7 +163,7 @@ export class BookingService {
       where: {
         id: input.customerId,
         deletedAt: null,
-        status: 'active',
+        status: 'ACTIVE',
       },
     })
 
@@ -139,12 +171,28 @@ export class BookingService {
       throw new NotFoundError('Customer', input.customerId)
     }
 
+    await BlacklistService.assertNotBlacklisted(input.customerId)
+
+    await CreditLimitService.assertWithinCreditLimit(
+      input.customerId,
+      Number(input.totalAmount ?? 0)
+    )
+
     // Validate dates
     if (input.endDate <= input.startDate) {
       throw new ValidationError('End date must be after start date')
     }
 
-    if (input.startDate < new Date()) {
+    const now = new Date()
+    const hasStudioInput = !!(input.studioId && input.studioStartTime && input.studioEndTime)
+    const bookingStartDateKey = this.toBusinessDateKey(input.startDate)
+    const todayDateKey = this.toBusinessDateKey(now)
+
+    // Studio slots are time-sensitive; equipment-only flow is day-based (allow same-day checkout).
+    const startIsPast = hasStudioInput
+      ? input.startDate < now
+      : bookingStartDateKey < todayDateKey
+    if (startIsPast) {
       throw new ValidationError('Start date cannot be in the past')
     }
 
@@ -199,7 +247,7 @@ export class BookingService {
     const softLockExpiresAt = new Date()
     softLockExpiresAt.setMinutes(softLockExpiresAt.getMinutes() + 15)
 
-    const booking = await prisma.booking.create({
+    const booking = await (prisma as any).booking.create({
       data: {
         bookingNumber,
         customerId: input.customerId,
@@ -211,6 +259,7 @@ export class BookingService {
         studioStartTime: input.studioStartTime,
         studioEndTime: input.studioEndTime,
         totalAmount: input.totalAmount ? new Decimal(input.totalAmount) : new Decimal(0),
+        sessionId: input.sessionId,
         depositAmount: input.depositAmount ? new Decimal(input.depositAmount) : null,
         vatAmount: input.vatAmount ? new Decimal(input.vatAmount) : new Decimal(0),
         notes: input.notes,
@@ -262,10 +311,21 @@ export class BookingService {
       metadata: { bookingNumber: booking.bookingNumber },
     })
 
+    if (input.depositAmount && input.depositAmount > 0) {
+      await DepositService.ensureForBooking(booking.id, input.depositAmount)
+    }
+
     // Emit event
     await EventBus.emit('booking.created', {
       booking: await this.getById(booking.id, userId),
       userId,
+    })
+
+    await OrderNotificationService.notifyAdminNewOrder(booking.id).catch((error) => {
+      logger.warn('BookingService.create: admin WhatsApp notification failed', {
+        bookingId: booking.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
     })
 
     return this.getById(booking.id, userId)
@@ -598,6 +658,27 @@ export class BookingService {
         booking: updated,
         userId,
       })
+      await OrderNotificationService.notifyCancelled(bookingId, reason).catch((error) => {
+        logger.warn('BookingService.transitionState: cancellation WhatsApp notification failed', {
+          bookingId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    } else if (newStatus === BookingStatus.CLOSED) {
+      await EventBus.emit('review.request', {
+        booking: updated,
+        userId,
+      })
+    }
+
+    if (newStatus === BookingStatus.ACTIVE || newStatus === BookingStatus.RETURNED) {
+      await OrderNotificationService.notifyStatusChanged(bookingId, newStatus).catch((error) => {
+        logger.warn('BookingService.transitionState: status WhatsApp notification failed', {
+          bookingId,
+          status: newStatus,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
     }
 
     return updated
@@ -649,13 +730,13 @@ export class BookingService {
       where: whereClause,
       include: {
         customer: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-          },
-        },
+          include: {
+            referrals: {
+              where: { deletedAt: null },
+              take: 1
+            }
+          }
+        } as any,
         studio: true,
         equipment: {
           include: {
@@ -677,6 +758,7 @@ export class BookingService {
             deletedAt: null,
           },
         },
+        deposit: true,
       },
     })
 
@@ -1025,6 +1107,13 @@ export class BookingService {
         actualReturnDate: returnDate.toISOString(),
         lateFeeAmount: lateFeeAmount > 0 ? lateFeeAmount : undefined,
       },
+    })
+
+    await DepositService.tryAutoReleaseOnReturn(bookingId, userId).catch((error) => {
+      logger.warn('BookingService.markReturned: deposit auto-release failed', {
+        bookingId,
+        error: error instanceof Error ? error.message : String(error),
+      })
     })
 
     return updated

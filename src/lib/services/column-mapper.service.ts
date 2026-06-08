@@ -47,6 +47,7 @@ export type SystemField =
   | 'gallery'
   | 'video'
   | 'specifications'
+  | 'specifications_raw_notes'
   | 'box_contents'
   | 'tags'
   | 'related_products'
@@ -79,8 +80,6 @@ const SYNONYM_MAP: Record<string, SystemField> = {
   '*': 'name',
   'item name': 'name',
   title: 'name',
-  'arabic name': 'name',
-  'chinese name': 'name',
 
   // ── Brand ──
   brand: 'brand',
@@ -321,7 +320,7 @@ const SYNONYM_MAP: Record<string, SystemField> = {
   // ── Specifications ──
   specifications: 'specifications',
   specs: 'specifications',
-  specifications_notes: 'specifications',
+  specifications_notes: 'specifications_raw_notes',
   المواصفات: 'specifications',
   'technical specs': 'specifications',
 

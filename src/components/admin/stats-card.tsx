@@ -7,10 +7,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { MockStat } from '@/lib/utils/mock-data'
+
+/** Presentational view-model for a dashboard stat card (not a persisted entity). */
+export interface StatCardData {
+  label: string
+  value: string | number
+  change?: string
+  trend?: 'up' | 'down' | 'neutral'
+}
 
 interface StatsCardProps {
-  stat: MockStat
+  stat: StatCardData
 }
 
 export function StatsCard({ stat }: StatsCardProps) {

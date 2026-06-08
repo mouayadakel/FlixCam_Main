@@ -33,6 +33,7 @@ import {
   ImageIcon,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { SlideFormDialog, type HeroSlideForEdit } from '../_components/slide-form-dialog'
 
 interface HeroBannerWithSlides {
@@ -211,7 +212,7 @@ export default function HeroBannerDetailPage() {
               <Input
                 value={form.pageSlug}
                 onChange={(e) => setForm((f) => ({ ...f, pageSlug: e.target.value }))}
-                dir="ltr"
+                dir={EMBED_LTR}
               />
             </div>
           </div>

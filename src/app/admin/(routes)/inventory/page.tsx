@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Package, Camera, FolderTree, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { GenerateFullInventoryButton } from '@/components/admin/generate-full-inventory-button'
 
 export default function InventoryPage() {
   return (
@@ -59,6 +60,7 @@ export default function InventoryPage() {
             <Button asChild variant="outline" className="w-full">
               <Link href="/admin/inventory/equipment/new">Add Equipment</Link>
             </Button>
+            <GenerateFullInventoryButton />
           </CardContent>
         </Card>
       </div>

@@ -5,7 +5,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Share2, Check, MessageCircle, Send, Linkedin } from 'lucide-react'
+import { Share2, Check, MessageCircle, Send, Linkedin, Facebook, Mail } from 'lucide-react'
 import { trackBlogEvent } from '@/lib/analytics'
 import { Button } from '@/components/ui/button'
 
@@ -28,6 +28,12 @@ function shareUrl(platform: string, url: string, title: string): string {
       return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`
     case 'linkedin':
       return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
+    case 'facebook':
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+    case 'pinterest':
+      return `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedTitle}`
+    case 'email':
+      return `mailto:?subject=${encodedTitle}&body=${encodedUrl}`
     default:
       return url
   }
@@ -135,6 +141,31 @@ export function ShareBar({ url, title, locale, postId }: ShareBarProps) {
                 onClick={() => handlePlatformShare('linkedin')}
               >
                 <Linkedin className="h-4 w-4" />
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0" aria-label="Facebook">
+              <a
+                href={shareUrl('facebook', url, title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => handlePlatformShare('facebook')}
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0" aria-label="Pinterest">
+              <a
+                href={shareUrl('pinterest', url, title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => handlePlatformShare('pinterest')}
+              >
+                <span className="text-xs font-bold">P</span>
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0" aria-label="Email">
+              <a href={shareUrl('email', url, title)} onClick={() => handlePlatformShare('email')}>
+                <Mail className="h-4 w-4" />
               </a>
             </Button>
           </>

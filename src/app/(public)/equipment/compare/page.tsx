@@ -151,7 +151,7 @@ export default function EquipmentComparePage() {
                               src={imgUrl}
                               alt={item.model ?? item.sku}
                               fill
-                              className="object-cover"
+                              className="object-contain bg-white"
                               sizes="112px"
                               unoptimized={isExternalImageUrl(imgUrl)}
                               onError={() => handleImgErr(item.id)}

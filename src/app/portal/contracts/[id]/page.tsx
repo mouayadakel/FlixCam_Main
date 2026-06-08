@@ -17,6 +17,7 @@ import { formatDate } from '@/lib/utils/format.utils'
 import { ArrowRight, FileText, Download } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { sanitizeContractHtml } from '@/lib/utils/sanitize'
 
 export default async function PortalContractDetailPage({
@@ -25,6 +26,7 @@ export default async function PortalContractDetailPage({
   params: Promise<{ id: string }>
 }) {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/contracts')
@@ -76,14 +78,14 @@ export default async function PortalContractDetailPage({
             className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowRight className="h-4 w-4" />
-            {t('ar', 'portal.backToContracts')}
+            {t(locale, 'portal.backToContracts')}
           </Link>
           <h1 className="text-3xl font-bold">
-            {t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
+            {t(locale, 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
           </h1>
         </div>
         <Badge variant={contract.signedAt ? 'default' : 'secondary'}>
-          {contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}
+          {contract.signedAt ? t(locale, 'portal.signed') : t(locale, 'portal.awaitingSignature')}
         </Badge>
       </div>
 
@@ -92,28 +94,28 @@ export default async function PortalContractDetailPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {t('ar', 'portal.contractInfo')}
+            {t(locale, 'portal.contractInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <div className="text-sm text-muted-foreground">{t('ar', 'portal.bookingNumber')}</div>
+            <div className="text-sm text-muted-foreground">{t(locale, 'portal.bookingNumber')}</div>
             <div className="font-medium">#{contract.booking.bookingNumber}</div>
           </div>
           <div>
-            <div className="text-sm text-muted-foreground">{t('ar', 'portal.createdDate')}</div>
+            <div className="text-sm text-muted-foreground">{t(locale, 'portal.createdDate')}</div>
             <div className="font-medium">{formatDate(contract.createdAt)}</div>
           </div>
           {contract.signedAt && (
             <div>
-              <div className="text-sm text-muted-foreground">{t('ar', 'portal.signedDate')}</div>
+              <div className="text-sm text-muted-foreground">{t(locale, 'portal.signedDate')}</div>
               <div className="font-medium">{formatDate(contract.signedAt)}</div>
             </div>
           )}
           <div>
-            <div className="text-sm text-muted-foreground">{t('ar', 'portal.status')}</div>
+            <div className="text-sm text-muted-foreground">{t(locale, 'portal.status')}</div>
             <div className="font-medium">
-              {contract.signedAt ? t('ar', 'portal.signed') : t('ar', 'portal.awaitingSignature')}
+              {contract.signedAt ? t(locale, 'portal.signed') : t(locale, 'portal.awaitingSignature')}
             </div>
           </div>
         </CardContent>
@@ -122,7 +124,7 @@ export default async function PortalContractDetailPage({
       {/* Contract Content */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.contractContent')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.contractContent')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="prose max-w-none">
@@ -139,7 +141,7 @@ export default async function PortalContractDetailPage({
                 }}
               />
             ) : (
-              <p className="text-muted-foreground">{t('ar', 'portal.noContractContent')}</p>
+              <p className="text-muted-foreground">{t(locale, 'portal.noContractContent')}</p>
             )}
           </div>
         </CardContent>
@@ -148,21 +150,21 @@ export default async function PortalContractDetailPage({
       {/* Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.actions')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.actions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
             {!contract.signedAt && (
               <Link href={`/portal/contracts/${contract.id}/sign`}>
-                <Button>{t('ar', 'portal.signContract')}</Button>
+                <Button>{t(locale, 'portal.signContract')}</Button>
               </Link>
             )}
             <Button variant="outline">
               <Download className="ms-2 h-4 w-4" />
-              {t('ar', 'portal.downloadPDF')}
+              {t(locale, 'portal.downloadPDF')}
             </Button>
             <Link href={`/portal/bookings/${contract.bookingId}`}>
-              <Button variant="outline">{t('ar', 'portal.viewBooking')}</Button>
+              <Button variant="outline">{t(locale, 'portal.viewBooking')}</Button>
             </Link>
           </div>
         </CardContent>

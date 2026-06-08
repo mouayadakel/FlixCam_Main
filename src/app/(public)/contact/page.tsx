@@ -12,13 +12,32 @@ import { Button } from '@/components/ui/button'
 import { MapPin, Phone, Mail, MessageCircle } from 'lucide-react'
 import { getWhatsAppUrl } from '@/lib/utils/whatsapp-context'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
+import { buildLocalBusinessSchema } from '@/lib/seo/schemas'
 
-export const metadata: Metadata = {
-  title: t('ar', 'seo.contactTitle'),
-  description: t('ar', 'seo.contactDescription'),
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getRequestLocale()
+  return {
+  title: t(locale, 'seo.contactTitle'),
+  description: t(locale, 'seo.contactDescription'),
   alternates: generateAlternatesMetadata('/contact'),
-  keywords: ['تواصل', 'اتصل بنا', 'دعم', 'استفسار', 'FlixCam contact'],
+  keywords: ['تواصل', 'اتصل بنا', 'دعم', 'استفسار', 'FlixCam contact', 'Riyadh equipment rental contact'],
+  openGraph: {
+    title: 'تواصل معنا | FlixCam.rent',
+    description: 'تواصل مع FlixCam لحجز معدات التصوير السينمائي أو الاستفسار عن خدماتنا في الرياض.',
+    type: 'website',
+    url: 'https://flixcam.rent/contact',
+    siteName: 'FlixCam',
+    locale: 'ar_SA',
+    alternateLocale: ['en_US'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'تواصل معنا | FlixCam.rent',
+    description: 'تواصل مع FlixCam لحجز معدات التصوير السينمائي أو الاستفسار عن خدماتنا في الرياض.',
+  },
+  }
 }
 
 async function getPrimaryBranch() {
@@ -42,8 +61,10 @@ async function getPrimaryBranch() {
 }
 
 export default async function ContactPage() {
+  const { locale } = await getRequestLocale()
   const branch = await getPrimaryBranch()
-  const address = branch?.address || branch?.city || 'الرياض، المملكة العربية السعودية'
+  const address =
+    branch?.address || branch?.city || t(locale, 'about.defaultAddress')
   const phone = branch?.phone || siteConfig.contact.phone
   const email = branch?.email || siteConfig.contact.email
   const whatsappUrl = getWhatsAppUrl({
@@ -51,8 +72,22 @@ export default async function ContactPage() {
     message: 'مرحباً، أود الاستفسار عن الخدمات',
   })
 
+  const mapKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY
+  const lat = process.env.NEXT_PUBLIC_BUSINESS_LAT || '24.7586131'
+  const lng = process.env.NEXT_PUBLIC_BUSINESS_LNG || '46.716979'
+  const mapsUrlRaw = t(locale, 'about.mapsUrl')
+  const mapsPlaceUrl =
+    mapsUrlRaw.startsWith('http://') || mapsUrlRaw.startsWith('https://')
+      ? mapsUrlRaw
+      : `https://maps.google.com/?q=${encodeURIComponent(address)}`
+  const contactLd = buildLocalBusinessSchema()
+
   return (
     <main className="min-h-screen" id="main-content">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero-gradient py-16 md:py-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.1)_0%,_transparent_60%)]" />
@@ -91,13 +126,27 @@ export default async function ContactPage() {
                       </p>
                       <p className="text-sm text-text-muted">{address}</p>
                       <a
-                        href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                        href={mapsPlaceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-2 inline-block text-sm font-medium text-brand-primary transition-colors hover:underline"
                       >
                         فتح في خرائط Google
                       </a>
+                      {mapKey ? (
+                        <div className="mt-4 h-64 w-full overflow-hidden rounded-xl border border-border-light/60">
+                          <iframe
+                            title="FlixCam Location"
+                            src={`https://www.google.com/maps/embed/v1/place?key=${mapKey}&q=${lat},${lng}&zoom=15`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

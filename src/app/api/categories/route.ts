@@ -9,7 +9,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { createCategorySchema } from '@/lib/validators/category.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError } from '@/lib/errors'
+import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { cacheDelete } from '@/lib/cache'
 
 /**
@@ -30,28 +31,40 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
+        nameAr: true,
+        nameEn: true,
+        nameZh: true,
+        nameFr: true,
         slug: true,
         description: true,
         parentId: true,
+        isActive: true,
+        sortOrder: true,
         createdAt: true,
         _count: { select: { equipment: true, children: true } },
       },
-      orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
+      orderBy: [{ parentId: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
     })
 
-    const shape = categories.map((c) => ({
+    const shape = categories.map((c: any) => ({
       id: c.id,
       name: c.name,
+      nameAr: c.nameAr ?? null,
+      nameEn: c.nameEn ?? null,
+      nameZh: c.nameZh ?? null,
+      nameFr: c.nameFr ?? null,
       slug: c.slug,
       description: c.description ?? null,
       parentId: c.parentId ?? null,
+      isActive: c.isActive,
+      sortOrder: c.sortOrder,
       equipmentCount: c._count.equipment,
       childrenCount: c._count.children,
       createdAt: c.createdAt.toISOString(),
     }))
 
     if (hierarchical) {
-      const byId = new Map(shape.map((c) => [c.id, { ...c, children: [] as typeof shape }]))
+      const byId = new Map(shape.map((c: any) => [c.id, { ...c, children: [] as typeof shape }]))
       const roots: typeof shape = []
       for (const c of shape) {
         const node = byId.get(c.id)!
@@ -78,8 +91,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+    if (!(await hasPermission(session.user.id, PERMISSIONS.CATEGORY_CREATE))) {
+      throw new ForbiddenError('You do not have permission to create categories')
     }
 
     const body = await request.json()
@@ -94,7 +110,10 @@ export async function POST(request: NextRequest) {
 
     if (!slug) {
       return NextResponse.json(
-        { error: 'Could not generate a valid slug from name' },
+        {
+          error:
+            'Could not generate a valid slug from name. Please provide a slug (latin letters/numbers) when the name contains non-latin characters.',
+        },
         { status: 400 }
       )
     }
@@ -126,17 +145,29 @@ export async function POST(request: NextRequest) {
     const category = await prisma.category.create({
       data: {
         name: parsed.name.trim(),
+        nameAr: parsed.nameAr?.trim() || null,
+        nameEn: parsed.nameEn?.trim() || null,
+        nameZh: parsed.nameZh?.trim() || null,
+        nameFr: parsed.nameFr?.trim() || null,
         slug,
         description: parsed.description?.trim() ?? null,
         parentId: parsed.parentId ?? null,
+        isActive: parsed.isActive ?? true,
+        sortOrder: parsed.sortOrder ?? 0,
         createdBy: session.user.id,
       },
       select: {
         id: true,
         name: true,
+        nameAr: true,
+        nameEn: true,
+        nameZh: true,
+        nameFr: true,
         slug: true,
         description: true,
         parentId: true,
+        isActive: true,
+        sortOrder: true,
         createdAt: true,
         _count: { select: { equipment: true, children: true } },
       },
@@ -148,9 +179,15 @@ export async function POST(request: NextRequest) {
       category: {
         id: category.id,
         name: category.name,
+        nameAr: category.nameAr ?? null,
+        nameEn: category.nameEn ?? null,
+        nameZh: category.nameZh ?? null,
+        nameFr: category.nameFr ?? null,
         slug: category.slug,
         description: category.description ?? null,
         parentId: category.parentId ?? null,
+        isActive: category.isActive,
+        sortOrder: category.sortOrder,
         equipmentCount: category._count.equipment,
         childrenCount: category._count.children,
         createdAt: category.createdAt.toISOString(),

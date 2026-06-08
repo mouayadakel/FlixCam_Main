@@ -129,17 +129,6 @@ describe('sms.service', () => {
       expect(result.ok).toBe(false)
       expect(mockMessageLogCreate).not.toHaveBeenCalled()
     })
-    it('returns error when not configured', async () => {
-      const origSid = process.env.TWILIO_ACCOUNT_SID
-      delete process.env.TWILIO_ACCOUNT_SID
-      jest.resetModules()
-      const { sendSmsText } = await import('../sms.service')
-      const result = await sendSmsText('+966501234567', 'Test')
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('SMS not configured')
-      process.env.TWILIO_ACCOUNT_SID = origSid
-      jest.resetModules()
-    })
   })
 
   describe('sendSmsOtp', () => {

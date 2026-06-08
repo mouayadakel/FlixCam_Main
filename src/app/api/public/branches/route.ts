@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (cached) return NextResponse.json(cached)
 
   const branches = await prisma.branch.findMany({
-    where: { isActive: true },
+    where: { isActive: true, deletedAt: null },
     select: {
       id: true,
       name: true,

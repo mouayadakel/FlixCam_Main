@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { logger } from '@/lib/logger'
+import { getEarningsSummary } from '@/lib/services/earnings.service'
 import {
   startOfDay,
   startOfWeek,
@@ -45,9 +46,9 @@ export async function GET() {
       bookingsToday,
       bookingsThisWeek,
       bookingsThisMonth,
-      revenueToday,
-      revenueThisWeek,
-      revenueThisMonth,
+      earningsToday,
+      earningsThisWeek,
+      earningsThisMonth,
       equipmentOut,
       overdueReturns,
       upcomingBookings,
@@ -74,33 +75,12 @@ export async function GET() {
           deletedAt: null,
         },
       }),
-      prisma.invoice.aggregate({
-        where: {
-          status: 'PAID',
-          paidDate: { gte: todayStart, lte: todayEnd },
-          deletedAt: null,
-        },
-        _sum: { totalAmount: true },
-      }),
-      prisma.invoice.aggregate({
-        where: {
-          status: 'PAID',
-          paidDate: { gte: weekStart },
-          deletedAt: null,
-        },
-        _sum: { totalAmount: true },
-      }),
-      prisma.invoice.aggregate({
-        where: {
-          status: 'PAID',
-          paidDate: { gte: monthStart },
-          deletedAt: null,
-        },
-        _sum: { totalAmount: true },
-      }),
+      getEarningsSummary({ from: todayStart, to: todayEnd }),
+      getEarningsSummary({ from: weekStart }),
+      getEarningsSummary({ from: monthStart }),
       prisma.bookingEquipment.count({
         where: {
-          itemStatus: 'DISPATCHED',
+          booking: { status: 'ACTIVE' },
           deletedAt: null,
         },
       }),
@@ -137,14 +117,19 @@ export async function GET() {
       }),
       prisma.user.count({
         where: {
-          idVerificationStatus: 'PENDING_REVIEW',
+          verificationStatus: 'PENDING',
           deletedAt: null,
         },
       }),
       prisma.booking.count({
         where: {
           status: 'CONFIRMED',
-          contractSignedAt: null,
+          contracts: {
+            none: {
+              signedAt: { not: null },
+              deletedAt: null,
+            },
+          },
           deletedAt: null,
         },
       }),
@@ -158,7 +143,7 @@ export async function GET() {
       }),
       prisma.booking.count({
         where: {
-          depositStatus: 'HELD',
+          depositAmount: { gt: 0 },
           deletedAt: null,
         },
       }),
@@ -168,9 +153,12 @@ export async function GET() {
       bookingsToday,
       bookingsThisWeek,
       bookingsThisMonth,
-      revenueToday: Number(revenueToday._sum.totalAmount ?? 0),
-      revenueThisWeek: Number(revenueThisWeek._sum.totalAmount ?? 0),
-      revenueThisMonth: Number(revenueThisMonth._sum.totalAmount ?? 0),
+      revenueToday: earningsToday.amount,
+      revenueThisWeek: earningsThisWeek.amount,
+      revenueThisMonth: earningsThisMonth.amount,
+      paidOrdersToday: earningsToday.orderCount,
+      paidOrdersThisWeek: earningsThisWeek.orderCount,
+      paidOrdersThisMonth: earningsThisMonth.orderCount,
       equipmentOut,
       overdueReturns: {
         count: overdueReturns.length,

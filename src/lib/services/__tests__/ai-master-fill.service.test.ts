@@ -9,6 +9,7 @@ import { prisma } from '@/lib/db/prisma'
 const mockTx = {
   product: { update: jest.fn().mockResolvedValue({}) },
   productTranslation: { upsert: jest.fn().mockResolvedValue({}) },
+  productImage: { create: jest.fn().mockResolvedValue({}) },
 }
 
 jest.mock('@/lib/db/prisma', () => ({
@@ -30,6 +31,11 @@ jest.mock('../ai-content-generation.service', () => ({
 const mockSourceImages = jest.fn()
 jest.mock('../image-sourcing.service', () => ({
   sourceImages: (...args: unknown[]) => mockSourceImages(...args),
+}))
+
+const mockBuildEquipmentSearchQueries = jest.fn()
+jest.mock('../equipment-search-queries', () => ({
+  buildEquipmentSearchQueries: (...args: unknown[]) => mockBuildEquipmentSearchQueries(...args),
 }))
 
 const mockSyncProductToEquipment = jest.fn()
@@ -92,6 +98,12 @@ describe('ai-master-fill.service', () => {
     mockSyncProductToEquipment.mockResolvedValue(undefined)
     mockCategoryFindFirst.mockResolvedValue({ id: 'cat-1', name: 'Cameras' })
     mockBrandUpsert.mockResolvedValue({ id: 'brand-1', name: 'Sony' })
+    mockBuildEquipmentSearchQueries.mockImplementation((input) => {
+      const { buildEquipmentSearchQueries } = jest.requireActual(
+        '../equipment-search-queries'
+      ) as typeof import('../equipment-search-queries')
+      return buildEquipmentSearchQueries(input)
+    })
   })
 
   describe('runMasterFill', () => {
@@ -172,20 +184,19 @@ describe('ai-master-fill.service', () => {
       warnSpy.mockRestore()
     })
 
-    it('sets featuredImage and gallery when photos returned', async () => {
+    it('persists product images when photos returned', async () => {
       mockFindUnique.mockResolvedValue({ ...baseProduct, featuredImage: '/images/placeholder.jpg' })
       mockSourceImages.mockResolvedValue([
-        { cloudinaryUrl: 'https://url1.jpg', url: 'https://url1.jpg' },
-        { cloudinaryUrl: 'https://url2.jpg', url: 'https://url2.jpg' },
+        { cloudinaryUrl: 'https://url1.jpg', url: 'https://url1.jpg', approved: true, source: 'pexels' },
+        { cloudinaryUrl: 'https://url2.jpg', url: 'https://url2.jpg', approved: false, source: 'pexels' },
       ])
       const result = await runMasterFill('prod-1')
       expect(result.photosFound).toBe(2)
+      expect(mockTx.productImage.create).toHaveBeenCalledTimes(2)
       expect(mockTx.product.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'prod-1' },
           data: expect.objectContaining({
-            featuredImage: 'https://url1.jpg',
-            galleryImages: ['https://url2.jpg'],
             photoStatus: 'sourced',
           }),
         })
@@ -204,6 +215,7 @@ describe('ai-master-fill.service', () => {
 
     it('uses photo_search_queries from aiContent when provided', async () => {
       mockFindUnique.mockResolvedValue(baseProduct)
+      mockBuildEquipmentSearchQueries.mockReturnValue(['exact-query'])
       mockGenerateMasterFill.mockResolvedValue({
         ...baseAiContent,
         photo_search_queries: ['custom query 1', 'custom query 2'],
@@ -212,7 +224,7 @@ describe('ai-master-fill.service', () => {
       expect(mockSourceImages).toHaveBeenCalledWith(
         expect.anything(),
         5,
-        ['custom query 1', 'custom query 2']
+        expect.arrayContaining(['exact-query', 'custom query 1', 'custom query 2'])
       )
     })
 
@@ -346,13 +358,13 @@ describe('ai-master-fill.service', () => {
     it('uses photo url when cloudinaryUrl is missing', async () => {
       mockFindUnique.mockResolvedValue({ ...baseProduct, featuredImage: '/images/placeholder.jpg' })
       mockSourceImages.mockResolvedValue([
-        { cloudinaryUrl: undefined, url: 'https://fallback-url.jpg' },
+        { cloudinaryUrl: undefined, url: 'https://fallback-url.jpg', approved: true, source: 'pexels' },
       ])
       await runMasterFill('prod-1')
-      expect(mockTx.product.update).toHaveBeenCalledWith(
+      expect(mockTx.productImage.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            featuredImage: 'https://fallback-url.jpg',
+            url: 'https://fallback-url.jpg',
           }),
         })
       )
@@ -371,12 +383,13 @@ describe('ai-master-fill.service', () => {
       )
     })
 
-    it('skips featuredImage when product already has non-placeholder image', async () => {
+    it('still persists sourced photos when product already has an image', async () => {
       mockFindUnique.mockResolvedValue({ ...baseProduct, featuredImage: '/images/real.jpg' })
       mockSourceImages.mockResolvedValue([
-        { cloudinaryUrl: 'https://new.jpg', url: 'https://new.jpg' },
+        { cloudinaryUrl: 'https://new.jpg', url: 'https://new.jpg', approved: true, source: 'pexels' },
       ])
       await runMasterFill('prod-1')
+      expect(mockTx.productImage.create).toHaveBeenCalled()
       const updateCall = mockTx.product.update.mock.calls[0]
       const data = updateCall[0]?.data as Record<string, unknown>
       expect(data.featuredImage).toBeUndefined()
@@ -483,22 +496,15 @@ describe('ai-master-fill.service', () => {
       expect(data.categoryId).toBeUndefined()
     })
 
-    it('sets gallery when multiple photos', async () => {
+    it('creates a product image row per sourced photo', async () => {
       mockFindUnique.mockResolvedValue({ ...baseProduct, featuredImage: null })
       mockSourceImages.mockResolvedValue([
-        { cloudinaryUrl: 'https://1.jpg', url: 'https://1.jpg' },
-        { cloudinaryUrl: 'https://2.jpg', url: 'https://2.jpg' },
-        { cloudinaryUrl: 'https://3.jpg', url: 'https://3.jpg' },
+        { cloudinaryUrl: 'https://1.jpg', url: 'https://1.jpg', approved: true, source: 'pexels' },
+        { cloudinaryUrl: 'https://2.jpg', url: 'https://2.jpg', approved: false, source: 'pexels' },
+        { cloudinaryUrl: 'https://3.jpg', url: 'https://3.jpg', approved: false, source: 'pexels' },
       ])
       await runMasterFill('prod-1')
-      expect(mockTx.product.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            featuredImage: 'https://1.jpg',
-            galleryImages: ['https://2.jpg', 'https://3.jpg'],
-          }),
-        })
-      )
+      expect(mockTx.productImage.create).toHaveBeenCalledTimes(3)
     })
 
     it('uses default searchQueries when photo_search_queries is null', async () => {
@@ -760,13 +766,13 @@ describe('ai-master-fill.service', () => {
     it('uses url when cloudinaryUrl is empty string', async () => {
       mockFindUnique.mockResolvedValue({ ...baseProduct, featuredImage: '/images/placeholder.jpg' })
       mockSourceImages.mockResolvedValue([
-        { cloudinaryUrl: '', url: 'https://url-fallback.jpg' },
+        { cloudinaryUrl: '', url: 'https://url-fallback.jpg', approved: true, source: 'pexels' },
       ])
       await runMasterFill('prod-1')
-      expect(mockTx.product.update).toHaveBeenCalledWith(
+      expect(mockTx.productImage.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            featuredImage: 'https://url-fallback.jpg',
+            url: 'https://url-fallback.jpg',
           }),
         })
       )

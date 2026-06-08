@@ -44,6 +44,8 @@ interface Payment {
   bookingId: string
   amount: number
   status: string
+  gateway?: string | null
+  externalId?: string | null
   tapTransactionId?: string | null
   createdAt: string
   booking?: { bookingNumber: string; customer?: { name: string | null; email: string } }
@@ -118,11 +120,12 @@ export default function FinancePage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [invoicesRes, paymentsRes, depositsRes, refundsRes] = await Promise.all([
+      const [invoicesRes, paymentsRes, depositsRes, refundsRes, financeSummaryRes] = await Promise.all([
         fetch('/api/invoices?pageSize=20'),
         fetch('/api/payments?pageSize=20'),
         fetch('/api/finance/deposits'),
         fetch('/api/finance/refunds'),
+        fetch('/api/admin/finance/summary'),
       ])
 
       let invoicesData: Invoice[] = []
@@ -150,22 +153,39 @@ export default function FinancePage() {
         setRefunds(json.data ?? [])
       }
 
-      // Calculate stats from fetched data
-      const successPayments = paymentsData.filter((p) => p.status === 'SUCCESS')
-      const totalRevenue = successPayments.reduce((sum, p) => sum + Number(p.amount), 0)
-      const pendingPayments = paymentsData
-        .filter((p) => p.status === 'PENDING')
-        .reduce((sum, p) => sum + Number(p.amount), 0)
-      const overdueInvoices = invoicesData.filter(
-        (i) => i.status === 'overdue' || (new Date(i.dueDate) < new Date() && i.status !== 'paid')
-      ).length
+      if (financeSummaryRes.ok) {
+        const s = await financeSummaryRes.json()
+        setStats({
+          totalRevenue: Number(s.allTime?.revenue ?? 0),
+          pendingPayments: Number(s.pendingInvoiceOutstanding ?? 0),
+          overdueInvoices: Number(s.overdueInvoiceCount ?? 0),
+          thisMonthRevenue: Number(s.thisMonth?.revenue ?? 0),
+        })
+      } else {
+        const successPayments = paymentsData.filter((p) => p.status === 'SUCCESS')
+        const totalRevenue = successPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+        const pendingPayments = invoicesData
+          .filter((i) => ['sent', 'partial', 'partially_paid'].includes(String(i.status).toLowerCase()))
+          .reduce((sum, i) => sum + Math.max(0, Number(i.totalAmount) - Number(i.paidAmount)), 0)
+        const overdueInvoices = invoicesData.filter(
+          (i) =>
+            String(i.status).toLowerCase() === 'overdue' ||
+            (new Date(i.dueDate) < new Date() && String(i.status).toLowerCase() !== 'paid')
+        ).length
+        const startOfMonth = new Date()
+        startOfMonth.setDate(1)
+        startOfMonth.setHours(0, 0, 0, 0)
+        const thisMonthRevenue = successPayments
+          .filter((p) => new Date(p.createdAt) >= startOfMonth)
+          .reduce((sum, p) => sum + Number(p.amount), 0)
 
-      setStats({
-        totalRevenue,
-        pendingPayments,
-        overdueInvoices,
-        thisMonthRevenue: totalRevenue, // Simplified
-      })
+        setStats({
+          totalRevenue,
+          pendingPayments,
+          overdueInvoices,
+          thisMonthRevenue,
+        })
+      }
     } catch {
       toast({
         title: 'خطأ',
@@ -202,6 +222,34 @@ export default function FinancePage() {
       </div>
 
       {/* Stats Cards */}
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="text-base">إدارة مالية سريعة</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/settings/company">بيانات الشركة</Link>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/settings/tax">الضريبة والفوترة</Link>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/invoices">كل الفواتير</Link>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/invoices/new">فاتورة جديدة</Link>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/quotes">عروض الأسعار</Link>
+            </Button>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href="/admin/quotes/new">عرض سعر جديد</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -218,7 +266,7 @@ export default function FinancePage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">مدفوعات معلقة</CardTitle>
+            <CardTitle className="text-sm font-medium">رصيد فواتير غير مسدد</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -393,8 +441,8 @@ export default function FinancePage() {
                     return (
                       <TableRow key={payment.id}>
                         <TableCell className="font-mono text-sm">
-                          {payment.tapTransactionId
-                            ? payment.tapTransactionId.substring(0, 15) + '...'
+                          {payment.externalId || payment.tapTransactionId
+                            ? (payment.externalId || payment.tapTransactionId || '').substring(0, 15) + '...'
                             : '-'}
                         </TableCell>
                         <TableCell>{payment.booking?.bookingNumber || '-'}</TableCell>

@@ -7,6 +7,9 @@ import type { BudgetTier } from '@prisma/client'
 import { prisma } from '@/lib/db/prisma'
 import { rateLimitByTier } from '@/lib/utils/rate-limit'
 import { cacheGet, cacheSet, cacheKeys } from '@/lib/cache'
+import { LOCALE_COOKIE_NAME } from '@/lib/i18n/cookie'
+import { parseLocale } from '@/lib/i18n/locales'
+import { expandSearchQuery } from '@/lib/utils/semantic-search.utils'
 
 const BUDGET_TIERS: BudgetTier[] = ['ESSENTIAL', 'PROFESSIONAL', 'PREMIUM']
 
@@ -16,15 +19,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
+  const locale = parseLocale(request.cookies.get(LOCALE_COOKIE_NAME)?.value)
+
   const searchParams = request.nextUrl.searchParams
   const categoryId = searchParams.get('categoryId') ?? undefined
   const brandId = searchParams.get('brandId') ?? undefined
   const brandIdsRaw = searchParams.get('brandIds')
   const brandIds = brandIdsRaw
     ? brandIdsRaw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean)
     : undefined
   const q = searchParams.get('q')?.trim() ?? undefined
   const sort = searchParams.get('sort') ?? 'recommended'
@@ -37,7 +42,33 @@ export async function GET(request: NextRequest) {
   const shootTypeSlug = searchParams.get('shootTypeSlug') ?? undefined
   const skip = Math.min(parseInt(searchParams.get('skip') ?? '0', 10), 500)
   const take = Math.min(parseInt(searchParams.get('take') ?? '24', 10), 100)
-  const cacheKey = `cat=${categoryId ?? ''}&brand=${brandId ?? ''}&bids=${brandIds?.join(',') ?? ''}&q=${q ?? ''}&sort=${sort}&pmin=${priceMinNum ?? ''}&pmax=${priceMaxNum ?? ''}&feat=${featured}&bt=${budgetTier ?? ''}&st=${shootTypeSlug ?? ''}&s=${skip}&t=${take}`
+
+  /** Listing API filters by DB category id; accept slug (e.g. cameras) for backwards compatibility. */
+  let resolvedCategoryId: string | undefined
+  if (categoryId) {
+    const byId = await prisma.category.findFirst({
+      where: { id: categoryId, deletedAt: null },
+      select: { id: true },
+    })
+    if (byId) {
+      resolvedCategoryId = byId.id
+    } else {
+      const bySlug = await prisma.category.findFirst({
+        where: { slug: categoryId, deletedAt: null },
+        select: { id: true },
+      })
+      if (bySlug) resolvedCategoryId = bySlug.id
+    }
+  }
+
+  const catCacheKey =
+    resolvedCategoryId != null
+      ? resolvedCategoryId
+      : categoryId
+        ? categoryId
+        : ''
+
+  const cacheKey = `cat=${catCacheKey}&brand=${brandId ?? ''}&bids=${brandIds?.join(',') ?? ''}&q=${q ?? ''}&sort=${sort}&pmin=${priceMinNum ?? ''}&pmax=${priceMaxNum ?? ''}&feat=${featured}&bt=${budgetTier ?? ''}&st=${shootTypeSlug ?? ''}&s=${skip}&t=${take}`
 
   const cached = await cacheGet<{ data: unknown[]; total: number }>('equipmentList', cacheKey)
   if (cached) {
@@ -48,14 +79,44 @@ export async function GET(request: NextRequest) {
   if (priceMinNum != null && !Number.isNaN(priceMinNum)) dailyPriceRange.gte = priceMinNum
   if (priceMaxNum != null && !Number.isNaN(priceMaxNum)) dailyPriceRange.lte = priceMaxNum
 
+  if (categoryId && resolvedCategoryId == null) {
+    const empty = { data: [], total: 0 }
+    await cacheSet('equipmentList', cacheKey, empty)
+    return NextResponse.json(empty)
+  }
+
   // Resolve subcategories so filtering by a parent also returns children's equipment
   let categoryIds: string[] | undefined
-  if (categoryId) {
+  if (resolvedCategoryId) {
     const children = await prisma.category.findMany({
-      where: { parentId: categoryId, deletedAt: null },
+      where: { parentId: resolvedCategoryId, deletedAt: null },
       select: { id: true },
     })
-    categoryIds = [categoryId, ...children.map((c) => c.id)]
+    categoryIds = [resolvedCategoryId, ...children.map((c: { id: string }) => c.id)]
+  }
+
+
+  let searchConditions: any[] = []
+  if (q) {
+    const expandedTerms = expandSearchQuery(q)
+    searchConditions = expandedTerms.map((term) => ({
+      OR: [
+        { model: { contains: term, mode: 'insensitive' as const } },
+        { sku: { contains: term, mode: 'insensitive' as const } },
+        {
+          category: {
+            OR: [
+              { name: { contains: term, mode: 'insensitive' as const } },
+              { nameAr: { contains: term, mode: 'insensitive' as const } },
+              { nameEn: { contains: term, mode: 'insensitive' as const } },
+              { nameZh: { contains: term, mode: 'insensitive' as const } },
+              { nameFr: { contains: term, mode: 'insensitive' as const } },
+            ],
+          },
+        },
+        { brand: { name: { contains: term, mode: 'insensitive' as const } } },
+      ],
+    }))
   }
 
   const where = {
@@ -67,13 +128,8 @@ export async function GET(request: NextRequest) {
       BUDGET_TIERS.includes(budgetTier as BudgetTier) && { budgetTier: budgetTier as BudgetTier }),
     ...(brandIds?.length ? { brandId: { in: brandIds } } : brandId ? { brandId } : {}),
     ...(Object.keys(dailyPriceRange).length > 0 && { dailyPrice: dailyPriceRange }),
-    ...(q && {
-      OR: [
-        { model: { contains: q, mode: 'insensitive' as const } },
-        { sku: { contains: q, mode: 'insensitive' as const } },
-        { category: { name: { contains: q, mode: 'insensitive' as const } } },
-        { brand: { name: { contains: q, mode: 'insensitive' as const } } },
-      ],
+    ...(searchConditions.length > 0 && {
+      OR: searchConditions,
     }),
   }
 
@@ -102,7 +158,17 @@ export async function GET(request: NextRequest) {
         monthlyPrice: true,
         featured: true,
         quantityAvailable: true,
-        category: { select: { id: true, name: true, slug: true } },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            nameAr: true,
+            nameEn: true,
+            nameZh: true,
+            nameFr: true,
+            slug: true,
+          },
+        },
         brand: { select: { id: true, name: true, slug: true } },
         media: {
           where: { deletedAt: null, type: 'image' },
@@ -118,12 +184,23 @@ export async function GET(request: NextRequest) {
   ])
 
   const result = {
-    data: data.map((e) => {
+    data: data.map((e: any) => {
       const v = e.vendor as { companyName: string; isNameVisible: boolean } | null
       const vendor = v?.isNameVisible ? { companyName: v.companyName } : null
       const { vendor: _v, ...rest } = e
+      const localizedCategoryName =
+        locale === 'ar'
+          ? e.category.nameAr ?? e.category.name
+          : locale === 'en'
+          ? e.category.nameEn ?? e.category.name
+          : locale === 'zh'
+            ? e.category.nameZh ?? e.category.name
+            : locale === 'fr'
+              ? e.category.nameFr ?? e.category.name
+              : e.category.name
       return {
         ...rest,
+        category: { ...e.category, name: localizedCategoryName },
         vendor,
         dailyPrice: e.dailyPrice ? Number(e.dailyPrice) : 0,
         weeklyPrice: e.weeklyPrice ? Number(e.weeklyPrice) : null,

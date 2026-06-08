@@ -60,6 +60,7 @@ export interface TranslationLocaleData {
 
 export type AISuggestPayload = {
   specs: Record<string, unknown>
+  structuredSpecs?: import('@/lib/types/specifications.types').StructuredSpecifications
   shortDescription: string
   longDescription: string
   seo: { metaTitle: string; metaDescription: string; metaKeywords: string }
@@ -67,7 +68,7 @@ export type AISuggestPayload = {
   tags?: string
   relatedEquipmentIds?: string[]
   confidence?: Record<string, number>
-  translations?: Record<'ar' | 'en' | 'zh', TranslationLocaleData>
+  translations?: Record<'ar' | 'en' | 'zh' | 'fr', TranslationLocaleData>
 }
 
 function ConfidenceBadge({

@@ -66,7 +66,7 @@ describe('DropZone', () => {
     render(
       <DropZone file={null} onFileSelect={onFileSelect} onClear={onClear} disabled />
     )
-    const input = screen.getByTitle('اختر ملف Excel أو CSV')
+    const input = screen.getByTitle('اختر ملف Excel أو CSV') as HTMLInputElement
     expect(input.disabled).toBe(true)
   })
 })

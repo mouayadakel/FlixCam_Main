@@ -11,12 +11,10 @@ import { prisma } from '@/lib/db/prisma'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const customerId = session?.user?.id ?? null
 
   const sessionId = getCartSessionId(request.headers.get('cookie') ?? null)
-  const cart = await CartService.getOrCreateCart(session.user.id, sessionId)
+  const cart = await CartService.getOrCreateCart(customerId, sessionId)
   if (!cart.items.length) {
     return NextResponse.json({ depositAmount: 0 })
   }

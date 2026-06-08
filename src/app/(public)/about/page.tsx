@@ -12,13 +12,31 @@ import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 import { Camera, Zap, Shield, HeadphonesIcon, MapPin, Phone, Mail } from 'lucide-react'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
 
-export const metadata: Metadata = {
-  title: t('ar', 'seo.aboutTitle'),
-  description: t('ar', 'seo.aboutDescription'),
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getRequestLocale()
+  return {
+  title: t(locale, 'seo.aboutTitle'),
+  description: t(locale, 'seo.aboutDescription'),
   alternates: generateAlternatesMetadata('/about'),
-  keywords: ['من نحن', 'FlixCam', 'تأجير معدات', 'الرياض', 'استوديوهات'],
+  keywords: ['من نحن', 'FlixCam', 'تأجير معدات', 'الرياض', 'استوديوهات', 'about FlixCam', 'cinematic equipment rental company'],
+  openGraph: {
+    title: 'من نحن | FlixCam.rent',
+    description: 'تعرف على FlixCam – الشركة الرائدة في تأجير معدات التصوير السينمائي في الرياض.',
+    type: 'website',
+    url: 'https://flixcam.rent/about',
+    siteName: 'FlixCam',
+    locale: 'ar_SA',
+    alternateLocale: ['en_US'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'من نحن | FlixCam.rent',
+    description: 'تعرف على FlixCam – الشركة الرائدة في تأجير معدات التصوير السينمائي في الرياض.',
+  },
+  }
 }
 
 async function getAboutStats() {
@@ -78,17 +96,23 @@ async function getAboutConfig() {
 }
 
 export default async function AboutPage() {
+  const { locale } = await getRequestLocale()
   const [stats, branch, aboutCfg] = await Promise.all([
     getAboutStats(),
     getPrimaryBranch(),
     getAboutConfig(),
   ])
-  const address = branch?.address || branch?.city || t('ar', 'about.defaultAddress')
+  const address = branch?.address || branch?.city || t(locale, 'about.defaultAddress')
   const workingHours =
     branch?.workingHours && typeof branch.workingHours === 'object'
       ? (branch.workingHours as Record<string, string>)
       : null
-  const hoursText = workingHours?.ar || workingHours?.en || t('ar', 'about.defaultHours')
+  const hoursText = workingHours?.ar || workingHours?.en || t(locale, 'about.defaultHours')
+  const mapsUrlRaw = t(locale, 'about.mapsUrl')
+  const mapsUrl =
+    mapsUrlRaw.startsWith('http://') || mapsUrlRaw.startsWith('https://')
+      ? mapsUrlRaw
+      : `https://maps.google.com/?q=${encodeURIComponent(address)}`
 
   return (
     <main className="min-h-screen" id="main-content">
@@ -97,10 +121,10 @@ export default async function AboutPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.1)_0%,_transparent_60%)]" />
         <PublicContainer className="relative">
           <h1 className="text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-            {t('ar', 'about.heroTitle')}
+            {t(locale, 'about.heroTitle')}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-white/85">
-            {t('ar', 'about.heroSubtitle')}
+            {t(locale, 'about.heroSubtitle')}
           </p>
         </PublicContainer>
       </section>
@@ -111,7 +135,7 @@ export default async function AboutPage() {
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div>
               <h2 className="text-2xl font-bold text-text-heading md:text-3xl">
-                {t('ar', 'about.ourStory')}
+                {t(locale, 'about.ourStory')}
               </h2>
               <div className="mt-6 space-y-4 text-body-main text-text-body">
                 {aboutCfg.about_story_body ? (
@@ -121,9 +145,12 @@ export default async function AboutPage() {
                     .map((p, i) => <p key={i}>{p}</p>)
                 ) : (
                   <>
-                    <p>{t('ar', 'about.storyP1')}</p>
-                    <p>{t('ar', 'about.storyP2')}</p>
-                    <p>{t('ar', 'about.storyP3')}</p>
+                    <p>{t(locale, 'about.storyP1')}</p>
+                    <p>{t(locale, 'about.storyP2')}</p>
+                    <p>{t(locale, 'about.storyP3')}</p>
+                    <p>{t(locale, 'about.storyP4')}</p>
+                    <p className="font-semibold text-text-heading">{t(locale, 'about.storyBrand')}</p>
+                    <p className="text-text-muted">{t(locale, 'about.storyTagline')}</p>
                   </>
                 )}
               </div>
@@ -152,36 +179,36 @@ export default async function AboutPage() {
       <section className="border-t border-border-light/50 bg-surface-light/30 py-12 md:py-16">
         <PublicContainer>
           <h2 className="mb-10 text-center text-2xl font-bold text-text-heading md:text-3xl">
-            {t('ar', 'about.whyFlixCam')}
+            {t(locale, 'about.whyFlixCam')}
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Camera className="h-7 w-7" />
               </div>
-              <h3 className="font-semibold text-text-heading">{t('ar', 'about.val1Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val1Desc')}</p>
+              <h3 className="font-semibold text-text-heading">{t(locale, 'about.val1Title')}</h3>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.val1Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Zap className="h-7 w-7" />
               </div>
-              <h3 className="font-semibold text-text-heading">{t('ar', 'about.val2Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val2Desc')}</p>
+              <h3 className="font-semibold text-text-heading">{t(locale, 'about.val2Title')}</h3>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.val2Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Shield className="h-7 w-7" />
               </div>
-              <h3 className="font-semibold text-text-heading">{t('ar', 'about.val3Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val3Desc')}</p>
+              <h3 className="font-semibold text-text-heading">{t(locale, 'about.val3Title')}</h3>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.val3Desc')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-white p-6 text-center shadow-card transition-all hover:shadow-card-hover">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
                 <HeadphonesIcon className="h-7 w-7" />
               </div>
-              <h3 className="font-semibold text-text-heading">{t('ar', 'about.val4Title')}</h3>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.val4Desc')}</p>
+              <h3 className="font-semibold text-text-heading">{t(locale, 'about.val4Title')}</h3>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.val4Desc')}</p>
             </div>
           </div>
         </PublicContainer>
@@ -195,19 +222,19 @@ export default async function AboutPage() {
               <p className="text-4xl font-extrabold text-brand-primary md:text-5xl">
                 {stats.equipmentCount}+
               </p>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.statsEquipment')}</p>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.statsEquipment')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-surface-light/50 p-8 text-center">
               <p className="text-4xl font-extrabold text-brand-primary md:text-5xl">
                 {stats.rentalsCount}+
               </p>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.statsRentals')}</p>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.statsRentals')}</p>
             </div>
             <div className="flex flex-col items-center rounded-2xl border border-border-light/60 bg-surface-light/50 p-8 text-center">
               <p className="text-4xl font-extrabold text-brand-primary md:text-5xl">
                 {stats.yearFounded}
               </p>
-              <p className="mt-2 text-sm text-text-muted">{t('ar', 'about.statsYears')}</p>
+              <p className="mt-2 text-sm text-text-muted">{t(locale, 'about.statsYears')}</p>
             </div>
           </div>
         </PublicContainer>
@@ -217,7 +244,7 @@ export default async function AboutPage() {
       <section className="border-t border-border-light/50 bg-surface-light/30 py-12 md:py-16">
         <PublicContainer>
           <h2 className="mb-8 text-center text-2xl font-bold text-text-heading">
-            {t('ar', 'about.locationTitle')}
+            {t(locale, 'about.locationTitle')}
           </h2>
           <div className="mx-auto max-w-2xl rounded-2xl border border-border-light/60 bg-white p-8 shadow-card">
             <div className="space-y-4">
@@ -229,12 +256,12 @@ export default async function AboutPage() {
                   </p>
                   <p className="text-sm text-text-muted">{address}</p>
                   <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                    href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-block text-sm font-medium text-brand-primary transition-colors hover:underline"
                   >
-                    {t('ar', 'about.openInMaps')}
+                    {t(locale, 'about.openInMaps')}
                   </a>
                 </div>
               </div>
@@ -265,10 +292,10 @@ export default async function AboutPage() {
       {/* Section 6 — CTA */}
       <section className="border-t border-border-light/50 bg-white py-12 md:py-16">
         <PublicContainer className="text-center">
-          <h2 className="text-2xl font-bold text-text-heading">{t('ar', 'about.ctaTitle')}</h2>
-          <p className="mx-auto mt-2 max-w-md text-text-muted">{t('ar', 'about.ctaSubtitle')}</p>
+          <h2 className="text-2xl font-bold text-text-heading">{t(locale, 'about.ctaTitle')}</h2>
+          <p className="mx-auto mt-2 max-w-md text-text-muted">{t(locale, 'about.ctaSubtitle')}</p>
           <Button asChild size="lg" className="mt-6">
-            <Link href="/equipment">{t('ar', 'about.ctaButton')}</Link>
+            <Link href="/equipment">{t(locale, 'about.ctaButton')}</Link>
           </Button>
         </PublicContainer>
       </section>

@@ -11,7 +11,7 @@ import { prisma } from '@/lib/db/prisma'
 import { AuditService } from './audit.service'
 import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
-import { hasPermission } from '@/lib/auth/permissions'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import type {
   Coupon,
   CouponType,
@@ -58,7 +58,7 @@ export class CouponService {
     userId: string,
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Coupon> {
-    const canCreate = await hasPermission(userId, 'coupon.create' as any)
+    const canCreate = await hasPermission(userId, PERMISSIONS.COUPON_CREATE)
     if (!canCreate) {
       throw new ForbiddenError('You do not have permission to create coupons')
     }
@@ -91,6 +91,7 @@ export class CouponService {
         status,
         applicableEquipmentIds: (input.applicableTo ?? null) as any,
         description: input.description ?? null,
+        canCombineWithOtherOffers: input.canCombineWithOtherOffers ?? true,
         createdBy: userId,
       },
     })
@@ -118,7 +119,7 @@ export class CouponService {
   }
 
   static async getById(idOrCode: string, userId: string): Promise<Coupon> {
-    const canView = await hasPermission(userId, 'coupon.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.COUPON_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view coupons')
     }
@@ -151,7 +152,7 @@ export class CouponService {
       pageSize?: number
     } = {}
   ): Promise<{ coupons: Coupon[]; total: number; page: number; pageSize: number }> {
-    const canView = await hasPermission(userId, 'coupon.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.COUPON_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view coupons')
     }
@@ -211,7 +212,7 @@ export class CouponService {
     userId: string,
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Coupon> {
-    const canUpdate = await hasPermission(userId, 'coupon.update' as any)
+    const canUpdate = await hasPermission(userId, PERMISSIONS.COUPON_UPDATE)
     if (!canUpdate) {
       throw new ForbiddenError('You do not have permission to update coupons')
     }
@@ -284,6 +285,7 @@ export class CouponService {
         applicableEquipmentIds:
           input.applicableTo !== undefined ? (input.applicableTo as any) : undefined,
         description: input.description !== undefined ? input.description : undefined,
+        canCombineWithOtherOffers: input.canCombineWithOtherOffers !== undefined ? input.canCombineWithOtherOffers : undefined,
         status,
         updatedBy: userId,
       },
@@ -314,43 +316,55 @@ export class CouponService {
     const validUntil = new Date(coupon.validUntil)
 
     if (validUntil < now) {
-      return { valid: false, discountAmount: 0, error: 'الكوبون منتهي الصلاحية' }
+      return { valid: false, discountAmount: 0, error: 'الكوبون منتهي الصلاحية | Coupon is expired' }
     }
     if (validFrom > now) {
-      return { valid: false, discountAmount: 0, error: 'الكوبون غير فعال بعد' }
+      return { valid: false, discountAmount: 0, error: 'الكوبون غير فعال بعد | Coupon is not active yet' }
     }
     if (coupon.status !== 'active') {
-      return { valid: false, discountAmount: 0, error: 'الكوبون غير فعال' }
+      return { valid: false, discountAmount: 0, error: 'الكوبون غير فعال | Coupon is inactive' }
     }
     if (coupon.usageLimit != null && coupon.usageCount >= coupon.usageLimit) {
-      return { valid: false, discountAmount: 0, error: 'تم استخدام الكوبون بالكامل' }
+      return { valid: false, discountAmount: 0, error: 'تم استخدام الكوبون بالكامل | Coupon usage limit reached' }
     }
     if (coupon.minPurchaseAmount != null && amount < coupon.minPurchaseAmount) {
       return {
         valid: false,
         discountAmount: 0,
-        error: `الحد الأدنى للشراء: ${coupon.minPurchaseAmount} ريال`,
+        error: `الحد الأدنى للشراء: ${coupon.minPurchaseAmount} ريال | Min purchase: ${coupon.minPurchaseAmount} SAR`,
       }
     }
-    if (coupon.applicableTo && equipmentIds && equipmentIds.length > 0) {
+    
+    // Whitelist/Blacklist Equipment Verification
+    if (coupon.applicableTo && coupon.applicableTo.length > 0 && equipmentIds && equipmentIds.length > 0) {
       const applicable = equipmentIds.some((id) => coupon.applicableTo?.includes(id))
       if (!applicable) {
         return {
           valid: false,
           discountAmount: 0,
-          error: 'الكوبون غير قابل للتطبيق على هذه المعدات',
+          error: 'الكوبون غير قابل للتطبيق على هذه المعدات | Coupon not applicable to these items',
         }
       }
     }
 
     const value = coupon.value
-    let discountAmount = coupon.type === 'percent' ? (amount * value) / 100 : value
-    if (coupon.maxDiscountAmount != null && discountAmount > coupon.maxDiscountAmount) {
-      discountAmount = coupon.maxDiscountAmount
+    let rawDiscount = coupon.type === 'percent' ? (amount * value) / 100 : value
+    if (coupon.maxDiscountAmount != null && rawDiscount > coupon.maxDiscountAmount) {
+      rawDiscount = coupon.maxDiscountAmount
     }
-    if (discountAmount > amount) discountAmount = amount
+    if (rawDiscount > amount) rawDiscount = amount
 
-    return { valid: true, discountAmount }
+    // Enforce 2-decimal math precision rounding
+    const discountAmount = Math.round(rawDiscount * 100) / 100
+
+    return { 
+      valid: true, 
+      discountAmount,
+      // Pass stackability parameters for checkout engine integration
+      metadata: {
+        canCombineWithOtherOffers: coupon.canCombineWithOtherOffers
+      } as any
+    }
   }
 
   static async apply(
@@ -366,13 +380,25 @@ export class CouponService {
       throw new NotFoundError('Coupon', code)
     }
 
-    await prisma.coupon.update({
-      where: { id: existing.id },
+    if (existing.usageLimit != null && existing.usedCount >= existing.usageLimit) {
+      throw new ValidationError('Coupon usage limit reached')
+    }
+
+    const updated = await prisma.coupon.updateMany({
+      where: {
+        id: existing.id,
+        deletedAt: null,
+        usedCount: existing.usedCount,
+      },
       data: {
-        usedCount: existing.usedCount + 1,
+        usedCount: { increment: 1 },
         updatedBy: userId,
       },
     })
+
+    if (updated.count !== 1) {
+      throw new ValidationError('Coupon usage limit reached')
+    }
 
     await AuditService.log({
       action: 'coupon.applied',
@@ -390,7 +416,7 @@ export class CouponService {
     userId: string,
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<void> {
-    const canDelete = await hasPermission(userId, 'coupon.delete' as any)
+    const canDelete = await hasPermission(userId, PERMISSIONS.COUPON_DELETE)
     if (!canDelete) {
       throw new ForbiddenError('You do not have permission to delete coupons')
     }
@@ -443,10 +469,37 @@ export class CouponService {
       validUntil: row.validUntil,
       applicableTo: row.applicableEquipmentIds as string[] | null,
       description: row.description,
+      canCombineWithOtherOffers: row.canCombineWithOtherOffers,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       createdBy: row.createdBy,
       updatedBy: row.updatedBy,
     }
+  }
+
+  /**
+   * Generate a one-time referral reward coupon.
+   */
+  static async generateReferralCoupon(userId: string, suffix: string): Promise<string> {
+    const code = `REF-${suffix}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+
+    // Create coupon without permission check for system automation
+    const coupon = await prisma.coupon.create({
+      data: {
+        code,
+        name: `Referral Reward - ${suffix}`,
+        type: 'FIXED',
+        discountValue: new Decimal(50), // 50 SAR flat discount
+        minimumAmount: new Decimal(200), // Min spend 200
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        usageLimit: 1,
+        status: 'ACTIVE',
+        description: 'هدية دعوة صديق - صديقك سجل بنجاح!',
+        createdBy: userId // The person receiving the coupon
+      }
+    })
+
+    return coupon.code
   }
 }

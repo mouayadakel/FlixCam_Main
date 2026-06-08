@@ -39,12 +39,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 interface Payment {
   id: string
   bookingId: string
   amount: number
   status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED'
+  gateway?: string | null
+  externalId?: string | null
   tapTransactionId?: string | null
   tapChargeId?: string | null
   refundAmount?: number | null
@@ -303,6 +306,20 @@ export default function PaymentDetailPage() {
                 <p className="text-sm text-muted-foreground">تاريخ الإنشاء</p>
                 <p className="font-medium">{formatDate(payment.createdAt)}</p>
               </div>
+              {payment.gateway && (
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">بوابة الدفع</p>
+                  <p className="mt-1 rounded bg-muted p-2 font-medium uppercase">{payment.gateway}</p>
+                </div>
+              )}
+              {payment.externalId && (
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">المعرف الخارجي</p>
+                  <p className="mt-1 break-all rounded bg-muted p-2 font-mono text-sm">
+                    {payment.externalId}
+                  </p>
+                </div>
+              )}
               {payment.tapTransactionId && (
                 <div className="col-span-2">
                   <p className="text-sm text-muted-foreground">معرف المعاملة (Tap)</p>
@@ -356,7 +373,7 @@ export default function PaymentDetailPage() {
                 {payment.booking.customer.phone && (
                   <div>
                     <p className="text-sm text-muted-foreground">الهاتف</p>
-                    <p className="font-medium" dir="ltr">
+                    <p className="font-medium" dir={EMBED_LTR}>
                       {payment.booking.customer.phone}
                     </p>
                   </div>

@@ -136,7 +136,7 @@ export default function DeliveryPage() {
 
   const updateStatus = async (bookingId: string, status: Delivery['status']) => {
     try {
-      const response = await fetch(`/api/delivery/${bookingId}/status`, {
+      const response = await fetch(`/api/delivery/booking/${bookingId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

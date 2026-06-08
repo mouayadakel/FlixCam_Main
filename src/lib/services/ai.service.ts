@@ -6,6 +6,11 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { ShootTypeService } from './shoot-type.service'
+import {
+  getCrewEquipmentBySkus,
+  LARGE_CREW_KIT_SKUS,
+} from './crew-recommendations.service'
+import { ChatbotSettingsService } from './chatbot-settings.service'
 import { getSpecValue, getSpecArray } from '@/lib/utils/specifications.utils'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import type {
@@ -825,12 +830,32 @@ export class AIService {
         }
       }
 
+      if (isLargeCrew) {
+        const crewCards = await getCrewEquipmentBySkus(LARGE_CREW_KIT_SKUS, excludeSet)
+        const existingIds = new Set(equipment.map((e) => e.equipmentId))
+        for (const crew of crewCards) {
+          if (existingIds.has(crew.id)) continue
+          equipment.push({
+            equipmentId: crew.id,
+            equipmentName: crew.model ?? crew.sku,
+            sku: crew.sku,
+            quantity: 1,
+            dailyPrice: crew.dailyPrice,
+            role: 'optional' as const,
+            reason: 'Suggested for larger crew productions — focus puller and sound mixer.',
+          })
+          existingIds.add(crew.id)
+        }
+      }
+
       const totalPrice = equipment.reduce(
         (sum, e) => sum + e.dailyPrice * e.quantity * input.duration,
         0
       )
       const reasoning = input.questionnaireAnswers
-        ? 'Personalized suggestions based on your shoot type and answers.'
+        ? isLargeCrew
+          ? 'Personalized suggestions based on your shoot type, answers, and crew size.'
+          : 'Personalized suggestions based on your shoot type and answers.'
         : `Based on ${shootTypeConfig.name} recommendations.`
 
       return [
@@ -1300,6 +1325,18 @@ Write exactly 3 short sentences in English: (1) why this utilization/demand supp
     conversationId?: string
     context?: Record<string, unknown>
   }): Promise<ChatbotResponse> {
+    const settings = await ChatbotSettingsService.get()
+    const faqAnswer = ChatbotSettingsService.matchFaq(input.message, settings.faqEntries)
+    if (faqAnswer) {
+      return {
+        message: faqAnswer,
+        suggestions: [],
+        actions: [],
+        requiresHuman: false,
+        confidence: 95,
+      }
+    }
+
     const client = this.getOpenAIClient()
     const message = input.message.toLowerCase()
 

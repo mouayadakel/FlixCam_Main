@@ -6,16 +6,20 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
 import { createPricingRuleSchema } from '@/lib/validators/pricing-rule.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError } from '@/lib/errors'
+import { ForbiddenError, UnauthorizedError } from '@/lib/errors'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, 'pricing.read' as never))) {
+      throw new ForbiddenError()
+    }
 
     const rules = await prisma.pricingRule.findMany({
       orderBy: [{ priority: 'desc' }, { name: 'asc' }],
@@ -73,6 +77,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, 'pricing.create' as never))) {
+      throw new ForbiddenError()
+    }
 
     const body = await request.json()
     const parsed = createPricingRuleSchema.parse(body)

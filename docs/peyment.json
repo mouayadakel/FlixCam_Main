@@ -1,0 +1,114 @@
+{
+    "project_context": {
+      "type": "Personal Website - Checkout Page",
+      "target_device": "Responsive (Mobile & Desktop)",
+      "direction": "RTL or LTR based on project setup",
+      "data_source": "Use existing project state/context for 'Latest Bookings' (اخر الحجوزات) instead of static dummy data."
+    },
+    "design_system": {
+      "colors": {
+        "primary_brand": "#5A31F4",
+        "primary_hover": "#4826c7",
+        "background_main": "#F9FAFB",
+        "surface_white": "#FFFFFF",
+        "text_primary": "#111827",
+        "text_secondary": "#6B7280",
+        "border_color": "#E5E7EB",
+        "success_green": "#10B981"
+      },
+      "typography": {
+        "font_family": "system-ui, -apple-system, sans-serif",
+        "headings": "Bold, clean, dark gray",
+        "body": "Regular, readable, slightly muted"
+      },
+      "styling_rules": {
+        "border_radius": "Rounded-xl (12px) for cards, Rounded-lg (8px) for inputs/buttons",
+        "shadows": "Soft drop shadow for the right-side summary card (shadow-lg or shadow-md)",
+        "spacing": "Generous padding inside cards (p-6), standard gaps between elements (gap-4)"
+      }
+    },
+    "layout_structure": {
+      "desktop": "Two-column CSS Grid or Flexbox. Left: 60% (Payment Options), Right: 40% (Booking Summary).",
+      "mobile": "Single column, flex-col. Booking Summary should stack below or above Payment Options naturally."
+    },
+    "components": {
+      "TopHeader": {
+        "elements": ["Logo Placeholder", "Cancel Booking Button (Text link, distinct color like red/pink)"]
+      },
+      "Stepper": {
+        "style": "Horizontal progress steps with lines connecting them.",
+        "steps": [
+          { "id": 1, "label": "Personal details", "status": "completed" },
+          { "id": 2, "label": "Payment", "status": "active", "style": "Purple circle, bold text" },
+          { "id": 3, "label": "Complete", "status": "pending" }
+        ]
+      },
+      "LeftColumn_PaymentSection": {
+        "title": "Select Payment Option",
+        "subtitle": "All transactions are secure and encrypted",
+        "container_style": "White background, bordered card",
+        "payment_methods_radio_group": [
+          {
+            "id": "moyasar_card",
+            "label": "Credit Card (Moyasar)",
+            "icons": ["Visa", "Mastercard"],
+            "is_expandable": true,
+            "expanded_ui": {
+              "inputs": ["Card Number", "Name on card", "Expiry date (MM/YY)", "CVV"],
+              "style": "Standard checkout inputs, inline on desktop, stacked on mobile"
+            }
+          },
+          {
+            "id": "moyasar_mada",
+            "label": "Mada (ميسر)",
+            "icons": ["Mada Logo"],
+            "is_expandable": true,
+            "expanded_ui": "Same as credit card"
+          },
+          {
+            "id": "tabby",
+            "label": "Tabby (Split in 4)",
+            "icons": ["Tabby Logo"]
+          },
+          {
+            "id": "tamara",
+            "label": "Tamara (Split in 3/4)",
+            "icons": ["Tamara Logo"]
+          }
+        ],
+        "actions": {
+          "primary_button": {
+            "text": "Pay | {dynamic_total_amount}",
+            "style": "w-full bg-primary_brand text-white py-3 rounded-lg font-bold"
+          },
+          "terms_checkbox": {
+            "text": "By clicking this, I agree to Terms & Conditions and Privacy Policy",
+            "style": "text-sm text-text_secondary mt-4"
+          }
+        }
+      },
+      "RightColumn_BookingSummary": {
+        "title": "اخر الحجوزات (Latest Bookings / Your Cart)",
+        "style": "Gradient or very light colored background card with soft shadow.",
+        "dynamic_data_instructions": "Fetch the booking items from the existing project context/database.",
+        "elements": [
+          {
+            "type": "ItemList",
+            "item_structure": ["Thumbnail Image", "Booking Title/Service", "Quantity/Details", "Price"]
+          },
+          {
+            "type": "CouponCode",
+            "style": "Collapsible accordion or input row with a 'Apply' button."
+          },
+          {
+            "type": "TotalsCalculation",
+            "rows": [
+              { "label": "Subtotal", "value": "{dynamic_subtotal}" },
+              { "label": "Tax", "value": "{dynamic_tax}" },
+              { "label": "Total", "value": "{dynamic_total}", "style": "font-bold text-lg" }
+            ]
+          }
+        ]
+      }
+    }
+  }

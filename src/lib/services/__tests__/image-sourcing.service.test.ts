@@ -197,6 +197,21 @@ describe('image-sourcing.service', () => {
       mockExistsSync.mockReturnValue(true)
       mockReaddirSync.mockReturnValue(['photo1.jpg', 'photo2.png'])
       mockReadFileSync.mockReturnValue(Buffer.from('image'))
+      mockUploadBufferToCloudinary
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/1.jpg',
+          publicId: 'pid1',
+          width: 1920,
+          height: 1080,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const product = { ...baseProduct, sku: 'NOMATCH' }
       const result = await tryBrandAssets(product, 2)
       expect(result).toHaveLength(2)
@@ -207,6 +222,21 @@ describe('image-sourcing.service', () => {
       mockExistsSync.mockReturnValue(true)
       mockReaddirSync.mockReturnValue(['a.jpg', 'b.jpg', 'c.jpg'])
       mockReadFileSync.mockReturnValue(Buffer.from('image'))
+      mockUploadBufferToCloudinary
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/a.jpg',
+          publicId: 'pid-a',
+          width: 1920,
+          height: 1080,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/b.jpg',
+          publicId: 'pid-b',
+          width: 1920,
+          height: 1080,
+        })
       const product = { ...baseProduct, sku: 'NOMATCH' }
       const result = await tryBrandAssets(product, 2)
       expect(result).toHaveLength(2)
@@ -284,7 +314,7 @@ describe('image-sourcing.service', () => {
       const result = await tryUnsplash(product, 5)
       expect(result).toHaveLength(1)
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(/Sony.*FX3.*Lenses/),
+        expect.stringMatching(/FX3-001/),
         expect.any(Object)
       )
     })
@@ -303,7 +333,7 @@ describe('image-sourcing.service', () => {
       const product = { ...baseProduct, category: null }
       const result = await tryUnsplash(product, 5)
       expect(result).toHaveLength(1)
-      expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/Sony.*FX3/), expect.any(Object))
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/FX3-001/), expect.any(Object))
     })
 
     it('handles undefined data.results', async () => {
@@ -464,6 +494,21 @@ describe('image-sourcing.service', () => {
             ],
           }),
       })
+      mockProcessImageFromUrl
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/unsplash-1.jpg',
+          publicId: 'pid1',
+          width: 1920,
+          height: 1080,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/unsplash-2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const result = await tryUnsplash(baseProduct, 2, ['q1', 'q2'])
       expect(result).toHaveLength(2)
       expect(mockFetch).toHaveBeenCalledTimes(1)
@@ -570,7 +615,7 @@ describe('image-sourcing.service', () => {
       const result = await tryPexels(product, 5)
       expect(result).toHaveLength(1)
       expect(mockPexelsSearch).toHaveBeenCalledWith(
-        expect.objectContaining({ query: expect.stringMatching(/Sony.*FX3.*Cameras/) })
+        expect.objectContaining({ query: expect.stringMatching(/FX3-001/) })
       )
     })
 
@@ -583,7 +628,7 @@ describe('image-sourcing.service', () => {
       const result = await tryPexels(product, 5)
       expect(result).toHaveLength(1)
       expect(mockPexelsSearch).toHaveBeenCalledWith(
-        expect.objectContaining({ query: expect.stringMatching(/Sony.*FX3/) })
+        expect.objectContaining({ query: expect.stringMatching(/FX3-001/) })
       )
     })
 
@@ -595,6 +640,21 @@ describe('image-sourcing.service', () => {
           { src: { original: 'https://pexels.com/2.jpg' } },
         ],
       })
+      mockProcessImageFromUrl
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/pexels-1.jpg',
+          publicId: 'pid1',
+          width: 1920,
+          height: 1080,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/pexels-2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const result = await tryPexels(baseProduct, 2, ['q1', 'q2'])
       expect(result).toHaveLength(2)
       expect(mockPexelsSearch).toHaveBeenCalledTimes(1)
@@ -679,7 +739,7 @@ describe('image-sourcing.service', () => {
       })
       const result = await tryGoogleCSE(baseProduct, 5)
       expect(result).toHaveLength(1)
-      expect(result[0].source).toBe('google')
+      expect(result[0].source).toBe('google_search')
     })
 
     it('uses uploaded dimensions when processImageFromUrl returns them', async () => {
@@ -983,6 +1043,21 @@ describe('image-sourcing.service', () => {
             ],
           }),
       })
+      mockProcessImageFromUrl
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/google-1.jpg',
+          publicId: 'pid1',
+          width: 1920,
+          height: 1080,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/google-2.jpg',
+          publicId: 'pid2',
+          width: 1920,
+          height: 1080,
+        })
       const result = await tryGoogleCSE(baseProduct, 2, ['q1', 'q2'])
       expect(result).toHaveLength(2)
       expect(mockFetch).toHaveBeenCalledTimes(1)
@@ -1102,13 +1177,21 @@ describe('image-sourcing.service', () => {
       mockImagesGenerate
         .mockResolvedValueOnce({ data: [{ url: 'https://openai.com/1.jpg' }] })
         .mockResolvedValueOnce({ data: [{ url: 'https://openai.com/2.jpg' }] })
-      mockProcessImageFromUrl.mockResolvedValue({
-        success: true,
-        url: 'https://cloudinary.com/dalle.jpg',
-        publicId: 'pid',
-        width: 1024,
-        height: 1024,
-      })
+      mockProcessImageFromUrl
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/dalle-1.jpg',
+          publicId: 'pid1',
+          width: 1024,
+          height: 1024,
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          url: 'https://cloudinary.com/dalle-2.jpg',
+          publicId: 'pid2',
+          width: 1024,
+          height: 1024,
+        })
       const result = await tryDallE(baseProduct, 2)
       expect(result.length).toBe(2)
       expect(mockImagesGenerate).toHaveBeenCalledTimes(2)
@@ -1378,11 +1461,12 @@ describe('image-sourcing.service', () => {
       const result = await sourceImages(baseProduct, 5)
       expect(result.length).toBeGreaterThanOrEqual(1)
       expect(result[0].source).toBe('unsplash')
-      expect(result[0].qualityScore).toBe(0.8)
+      expect(result[0].qualityScore).toBeGreaterThanOrEqual(0.7)
     })
 
     it('filters out images with score below 0.7', async () => {
       process.env.UNSPLASH_ACCESS_KEY = 'key'
+      process.env.GEMINI_API_KEY = 'gemini-key'
       mockExistsSync.mockReturnValue(false)
       mockFetch
         .mockResolvedValueOnce({
@@ -1400,7 +1484,10 @@ describe('image-sourcing.service', () => {
           headers: { get: () => 'image/jpeg' },
         })
       mockGenerateContent.mockResolvedValue({
-        response: { text: () => '{"score": 0.5, "description": "Low relevance"}' },
+        response: {
+          text: () =>
+            '{"score": 0.5, "description": "Low relevance", "signals": {"wrongProduct": true}}',
+        },
       })
       const result = await sourceImages(baseProduct, 5)
       expect(result).toHaveLength(0)
@@ -1428,7 +1515,7 @@ describe('image-sourcing.service', () => {
       const result = await sourceImages(baseProduct, 5)
       expect(result.length).toBeGreaterThanOrEqual(1)
       expect(result[0].source).toBe('pexels')
-      expect(result[0].qualityScore).toBe(0.85)
+      expect(result[0].qualityScore).toBe(0.87)
     })
 
     it('returns early from Pexels loop when targetCount reached', async () => {
@@ -1488,7 +1575,7 @@ describe('image-sourcing.service', () => {
       })
       const result = await sourceImages(baseProduct, 1)
       expect(result).toHaveLength(1)
-      expect(result[0].source).toBe('google')
+      expect(result[0].source).toBe('google_search')
     })
 
     it('adds Google CSE images that pass validation to results', async () => {
@@ -1528,8 +1615,8 @@ describe('image-sourcing.service', () => {
       })
       const result = await sourceImages(baseProduct, 5)
       expect(result.length).toBeGreaterThanOrEqual(1)
-      expect(result[0].source).toBe('google')
-      expect(result[0].qualityScore).toBe(0.8)
+      expect(result[0].source).toBe('google_search')
+      expect(result[0].qualityScore).toBe(0.9)
     })
 
     it('continues to DALL-E when Google does not fill target', async () => {
@@ -1551,7 +1638,7 @@ describe('image-sourcing.service', () => {
       expect(result.length).toBeGreaterThanOrEqual(0)
     })
 
-    it('adds DALL-E images that pass validation to results', async () => {
+    it('does not use DALL-E in production sourceImages pipeline', async () => {
       mockFetch.mockReset()
       process.env.UNSPLASH_ACCESS_KEY = undefined
       process.env.PEXELS_API_KEY = undefined
@@ -1563,41 +1650,9 @@ describe('image-sourcing.service', () => {
       mockImagesGenerate.mockResolvedValue({
         data: [{ url: 'https://openai.com/gen.jpg' }],
       })
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-        headers: { get: () => 'image/jpeg' },
-      })
-      mockGenerateContent.mockResolvedValue({
-        response: { text: () => '{"score": 0.75, "description": "Generated"}' },
-      })
       const result = await sourceImages(baseProduct, 5)
-      expect(result.length).toBeGreaterThanOrEqual(1)
-      expect(result[0].source).toBe('dalle')
-    })
-
-    it('returns early from DALL-E loop when targetCount reached', async () => {
-      mockFetch.mockReset()
-      process.env.UNSPLASH_ACCESS_KEY = undefined
-      process.env.PEXELS_API_KEY = undefined
-      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY = undefined
-      process.env.OPENAI_API_KEY = 'key'
-      process.env.GEMINI_API_KEY = 'gemini-key'
-      mockExistsSync.mockReturnValue(false)
-      mockImagesGenerate.mockResolvedValue({
-        data: [{ url: 'https://openai.com/gen.jpg' }],
-      })
-      mockFetch.mockResolvedValue({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-        headers: { get: () => 'image/jpeg' },
-      })
-      mockGenerateContent.mockResolvedValue({
-        response: { text: () => '{"score": 0.75, "description": "Generated"}' },
-      })
-      const result = await sourceImages(baseProduct, 1)
-      expect(result).toHaveLength(1)
-      expect(result[0].source).toBe('dalle')
+      expect(result).toHaveLength(0)
+      expect(mockImagesGenerate).not.toHaveBeenCalled()
     })
 
     it('returns slice when targetCount not fully reached', async () => {

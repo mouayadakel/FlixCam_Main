@@ -5,13 +5,19 @@
 import { EquipmentService } from '../equipment.service'
 import { prisma } from '@/lib/db/prisma'
 
+jest.mock('@/lib/services/product-equipment-sync.service', () => ({
+  syncEquipmentToProduct: jest.fn().mockResolvedValue(undefined),
+}))
+
 const mockTx = {
   equipment: { create: jest.fn(), update: jest.fn(), findFirst: jest.fn() },
+  product: { findFirst: jest.fn(), update: jest.fn() },
   media: {
     create: jest.fn(),
     findFirst: jest.fn(),
     update: jest.fn(),
     updateMany: jest.fn(),
+    aggregate: jest.fn(),
   },
 }
 jest.mock('@/lib/db/prisma', () => ({
@@ -24,6 +30,7 @@ jest.mock('@/lib/db/prisma', () => ({
       update: jest.fn(),
       count: jest.fn(),
     },
+    product: { findFirst: jest.fn(), update: jest.fn() },
     category: { findFirst: jest.fn() },
     brand: { findFirst: jest.fn() },
     bookingEquipment: { findFirst: jest.fn(), findMany: jest.fn() },
@@ -45,9 +52,18 @@ jest.mock('../media.service', () => ({ MediaService: { create: jest.fn() } }))
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>
 
+const syncEquipmentToProductMock = (
+  jest.requireMock('@/lib/services/product-equipment-sync.service') as {
+    syncEquipmentToProduct: jest.Mock
+  }
+).syncEquipmentToProduct
+
 describe('EquipmentService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockTx.media.aggregate.mockResolvedValue({ _max: { sortOrder: 0 } })
+    syncEquipmentToProductMock.mockReset()
+    syncEquipmentToProductMock.mockResolvedValue(undefined)
   })
 
   describe('getEquipmentList', () => {
@@ -708,6 +724,168 @@ describe('EquipmentService', () => {
       const updateData = mockTx.equipment.update.mock.calls[0][0]?.data
       expect(updateData?.customFields?.depositAmount).toBeUndefined()
     })
+
+    describe('product spec sync (Option A)', () => {
+      const structuredA = {
+        groups: [
+          {
+            label: 'General',
+            icon: 'camera',
+            priority: 1,
+            specs: [{ key: 'w', label: 'Weight', value: '1kg' }],
+          },
+        ],
+      }
+
+      it('does not call syncEquipmentToProduct when structured specifications are unchanged', async () => {
+        const existing = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredA,
+        }
+        const updated = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredA,
+          category: { name: 'Cameras' },
+          brand: { name: 'Sony' },
+          vendor: null,
+          media: [],
+          bookings: [],
+        }
+        ;(mockPrisma.equipment.findFirst as jest.Mock)
+          .mockResolvedValueOnce(existing)
+          .mockResolvedValueOnce(updated)
+        mockTx.equipment.update.mockResolvedValue(updated)
+        ;(mockPrisma.equipment.findMany as jest.Mock).mockResolvedValue([])
+        const TranslationService = require('../translation.service').TranslationService
+        TranslationService.getTranslationsByLocale.mockResolvedValue(null)
+
+        await EquipmentService.updateEquipment({
+          id: 'eq1',
+          updatedBy: 'u1',
+          specifications: structuredA,
+        })
+
+        expect(syncEquipmentToProductMock).not.toHaveBeenCalled()
+      })
+
+      it('calls syncEquipmentToProduct when specifications change', async () => {
+        const existing = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredA,
+        }
+        const structuredB = {
+          groups: [
+            {
+              label: 'General',
+              icon: 'camera',
+              priority: 1,
+              specs: [{ key: 'w', label: 'Weight', value: '2kg' }],
+            },
+          ],
+        }
+        const updated = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredB,
+          category: { name: 'Cameras' },
+          brand: { name: 'Sony' },
+          vendor: null,
+          media: [],
+          bookings: [],
+        }
+        ;(mockPrisma.equipment.findFirst as jest.Mock)
+          .mockResolvedValueOnce(existing)
+          .mockResolvedValueOnce(updated)
+        mockTx.equipment.update.mockResolvedValue(updated)
+        ;(mockPrisma.equipment.findMany as jest.Mock).mockResolvedValue([])
+        const TranslationService = require('../translation.service').TranslationService
+        TranslationService.getTranslationsByLocale.mockResolvedValue(null)
+
+        await EquipmentService.updateEquipment({
+          id: 'eq1',
+          updatedBy: 'u1',
+          specifications: structuredB,
+        })
+
+        expect(syncEquipmentToProductMock).toHaveBeenCalledWith('eq1', { forceSpecOverride: true })
+      })
+
+      it('returns warnings.syncToProduct when sync fails', async () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+        try {
+        syncEquipmentToProductMock.mockRejectedValueOnce(new Error('missing product link'))
+        const existing = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredA,
+        }
+        const structuredB = {
+          groups: [
+            {
+              label: 'General',
+              icon: 'camera',
+              priority: 1,
+              specs: [{ key: 'w', label: 'Weight', value: '3kg' }],
+            },
+          ],
+        }
+        const updated = {
+          id: 'eq1',
+          sku: 'CAM-1',
+          model: 'Old Model',
+          categoryId: 'cat1',
+          customFields: null,
+          specifications: structuredB,
+          category: { name: 'Cameras' },
+          brand: { name: 'Sony' },
+          vendor: null,
+          media: [],
+          bookings: [],
+        }
+        ;(mockPrisma.equipment.findFirst as jest.Mock)
+          .mockResolvedValueOnce(existing)
+          .mockResolvedValueOnce(updated)
+        mockTx.equipment.update.mockResolvedValue(updated)
+        ;(mockPrisma.equipment.findMany as jest.Mock).mockResolvedValue([])
+        const TranslationService = require('../translation.service').TranslationService
+        TranslationService.getTranslationsByLocale.mockResolvedValue(null)
+
+        const result = await EquipmentService.updateEquipment({
+          id: 'eq1',
+          updatedBy: 'u1',
+          specifications: structuredB,
+        })
+
+        expect(
+          (result as { warnings?: { syncToProduct?: { ok: boolean; message?: string } } }).warnings
+            ?.syncToProduct
+        ).toEqual({
+          ok: false,
+          message: 'missing product link',
+        })
+        } finally {
+          warnSpy.mockRestore()
+        }
+      })
+    })
   })
 
   describe('deleteEquipment', () => {
@@ -737,12 +915,12 @@ describe('EquipmentService', () => {
         deletedAt: null,
       })
       ;((mockPrisma as any).bookingEquipment?.findFirst as jest.Mock)?.mockResolvedValue(null)
-      ;(mockPrisma.equipment.update as jest.Mock).mockResolvedValue({
+      mockTx.equipment.update.mockResolvedValue({
         id: 'eq1',
         deletedAt: new Date(),
       })
       await EquipmentService.deleteEquipment('eq1', 'u1')
-      expect(mockPrisma.equipment.update).toHaveBeenCalledWith(
+      expect(mockTx.equipment.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'eq1' },
           data: expect.objectContaining({ deletedAt: expect.any(Date) }),
@@ -794,7 +972,7 @@ describe('EquipmentService', () => {
         new Date('2026-06-05')
       )
       expect(result.available).toBe(true)
-      expect(result.availableQuantity).toBe(3)
+      expect(result.availableQuantity).toBe(5)
     })
 
     it('returns unavailable when maintenance conflicts exist', async () => {
@@ -842,7 +1020,7 @@ describe('EquipmentService', () => {
         new Date('2026-06-05')
       )
       expect(result.available).toBe(true)
-      expect(result.availableQuantity).toBe(5)
+      expect(result.availableQuantity).toBe(3)
       expect(result.rentedQuantity).toBe(2)
       expect(result.overlappingBookings ?? []).toHaveLength(1)
       expect((result.overlappingBookings ?? [])[0]).toMatchObject({

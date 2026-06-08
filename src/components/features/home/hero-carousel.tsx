@@ -11,7 +11,6 @@ import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { useLocale } from '@/hooks/use-locale'
 import { PublicContainer } from '@/components/public/public-container'
-import { PublicSearch } from '@/components/public/public-search'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 
@@ -19,6 +18,12 @@ export interface HeroSlideData {
   id: string
   imageUrl: string
   mobileImageUrl: string | null
+  mobileAspectRatio: string
+  mobileFocalX: number
+  mobileFocalY: number
+  desktopAspectRatio: string
+  desktopFocalX: number
+  desktopFocalY: number
   videoUrl: string | null
   titleAr: string
   titleEn: string
@@ -174,7 +179,19 @@ export function HeroCarousel({
   const hasValidImageUrl = (url: string | null | undefined) =>
     typeof url === 'string' &&
     url.trim().length > 0 &&
-    (url.startsWith('http://') || url.startsWith('https://'))
+    (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/'))
+
+  const mobileObjectPosition = (slide: HeroSlideData) => {
+    const x = Number.isFinite(slide.mobileFocalX) ? slide.mobileFocalX : 50
+    const y = Number.isFinite(slide.mobileFocalY) ? slide.mobileFocalY : 50
+    return `${x}% ${y}%`
+  }
+
+  const desktopObjectPosition = (slide: HeroSlideData) => {
+    const x = Number.isFinite(slide.desktopFocalX) ? slide.desktopFocalX : 50
+    const y = Number.isFinite(slide.desktopFocalY) ? slide.desktopFocalY : 50
+    return `${x}% ${y}%`
+  }
 
   return (
     <section
@@ -190,15 +207,6 @@ export function HeroCarousel({
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.1)_0%,_transparent_60%)]" />
       <div className="absolute -end-24 -top-24 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
       <div className="absolute -bottom-32 -start-32 h-80 w-80 rounded-full bg-black/10 blur-3xl" />
-
-      {/* Search bar – left corner at golden ratio (38.2% from top) */}
-      <div className="pointer-events-none absolute start-0 end-0 top-[38.2%] z-10">
-        <PublicContainer className="pointer-events-auto">
-          <div className="w-full max-w-md">
-            <PublicSearch />
-          </div>
-        </PublicContainer>
-      </div>
 
       <div className="embla relative">
         <div
@@ -243,6 +251,7 @@ export function HeroCarousel({
                           className="object-cover md:hidden"
                           sizes="100vw"
                           aria-hidden
+                          style={{ objectPosition: mobileObjectPosition(slide) }}
                           onError={() => handleVideoMobileImageError(slide.id)}
                         />
                       )}
@@ -267,6 +276,7 @@ export function HeroCarousel({
                               sizes="100vw"
                               priority={index === 0}
                               aria-hidden
+                              style={{ objectPosition: mobileObjectPosition(slide) }}
                               onError={() => handleImageError(slide.id)}
                             />
                           </span>
@@ -279,21 +289,40 @@ export function HeroCarousel({
                               sizes="100vw"
                               priority={index === 0}
                               aria-hidden
+                              style={{ objectPosition: desktopObjectPosition(slide) }}
                               onError={() => handleImageError(slide.id)}
                             />
                           </span>
                         </>
                       ) : (
-                        <Image
-                          src={slide.imageUrl}
-                          alt={getSlideText(slide, locale).title || 'FlixCam hero banner'}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 100vw"
-                          priority={index === 0}
-                          aria-hidden
-                          onError={() => handleImageError(slide.id)}
-                        />
+                        <>
+                          <span className="absolute inset-0 md:hidden">
+                            <Image
+                              src={slide.imageUrl}
+                              alt={getSlideText(slide, locale).title || 'FlixCam hero banner'}
+                              fill
+                              className="object-cover"
+                              sizes="100vw"
+                              priority={index === 0}
+                              aria-hidden
+                              style={{ objectPosition: mobileObjectPosition(slide) }}
+                              onError={() => handleImageError(slide.id)}
+                            />
+                          </span>
+                          <span className="absolute inset-0 hidden md:block">
+                            <Image
+                              src={slide.imageUrl}
+                              alt={getSlideText(slide, locale).title || 'FlixCam hero banner'}
+                              fill
+                              className="object-cover"
+                              sizes="100vw"
+                              priority={index === 0}
+                              aria-hidden
+                              style={{ objectPosition: desktopObjectPosition(slide) }}
+                              onError={() => handleImageError(slide.id)}
+                            />
+                          </span>
+                        </>
                       )}
                     </>
                   )}

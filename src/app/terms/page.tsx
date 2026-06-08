@@ -1,8 +1,9 @@
 /**
- * Phase 0.6: Terms of Service placeholder.
+ * Terms of Service (FIX-052).
  */
 
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'الشروط والأحكام | Terms of Service | FlixCam.rent',
@@ -13,42 +14,75 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
-      <h1 className="mb-6 text-3xl font-bold">الشروط والأحكام</h1>
-      <p className="mb-4 text-muted-foreground">
-        تم وضع هذه الصفحة كعنصر نائب. يرجى استبدال المحتوى بنص الشروط والأحكام المعتمد قانونيًا.
-      </p>
-      <section className="prose prose-neutral dark:prose-invert max-w-none space-y-6">
-        <p className="text-sm text-amber-600">
-          This is a template. Consult legal counsel before use.
-        </p>
-        <h2>Acceptance of Terms</h2>
-        <p>
-          By using the site and placing a booking you agree to these terms and our rental policies.
-        </p>
-        <h2>Services</h2>
-        <p>
-          We provide equipment and studio rental services. Prices and availability are as shown at
-          checkout. Quotes may be subject to change until payment is confirmed.
-        </p>
-        <h2>Deposit & Payment</h2>
-        <p>
-          A refundable deposit is required per our policy. Payment is due as indicated. Late payment
-          may result in cancellation.
-        </p>
-        <h2>Cancellation & Refunds</h2>
-        <p>
-          Cancellation and refund rules are set out in our Rental Policies. Refunds are processed
-          within a defined period after approval.
-        </p>
-        <h2>Liability</h2>
-        <p>
-          You are responsible for equipment from pickup until return. Damage or loss may be charged
-          per our policies. We are not liable for consequential losses arising from use of rented
-          equipment.
-        </p>
-        <h2>Contact</h2>
-        <p>For questions about these terms, contact us via the Support page.</p>
+    <main className="container mx-auto max-w-3xl px-4 py-12" dir="rtl" lang="ar">
+      <h1 className="mb-2 text-3xl font-bold">الشروط والأحكام</h1>
+      <p className="mb-8 text-sm text-muted-foreground">آخر تحديث: يونيو 2026</p>
+
+      <section className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
+        <div>
+          <h2>1. القبول</h2>
+          <p>
+            باستخدامك لموقع FlixCam.rent أو إتمام حجز، فإنك توافق على هذه الشروط و{' '}
+            <Link href="/policies">سياسات الإيجار</Link> و<Link href="/privacy">سياسة الخصوصية</Link>.
+          </p>
+        </div>
+
+        <div>
+          <h2>2. الخدمة</h2>
+          <p>
+            نوفر إيجار معدات تصوير واستوديوهات. الأسعار والتوفر كما هو معروض عند الدفع. العروض
+            السعرية قابلة للتغيير حتى تأكيد الدفع.
+          </p>
+        </div>
+
+        <div>
+          <h2>3. الحجز والدفع</h2>
+          <ul>
+            <li>يلزم تأكيد الحجز بالدفع أو الموافقة الائتمانية المعتمدة.</li>
+            <li>قد يُطلب تأمين/وديعة قابلة للاسترداد بعد فحص المرتجعات.</li>
+            <li>التأخير في الدفع قد يؤدي إلى إلغاء الحجز.</li>
+            <li>الأسعار تشمل ضريبة القيمة المضافة حيث ينطبق.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2>4. الاستلام والإرجاع</h2>
+          <p>
+            العميل مسؤول عن المعدات من لحظة الاستلام حتى الإرجاع. يجب إرجاعها بالحالة المتفق
+            عليها. التأخير أو التلف قد يترتب عليه رسوم وفق{' '}
+            <Link href="/policies">سياسة الأضرار والتأخير</Link>.
+          </p>
+        </div>
+
+        <div>
+          <h2>5. الإلغاء والاسترداد</h2>
+          <p>
+            تخضع الإلغاءات والاستردادات لجدول سياسات الإيجار المنشور. تُعالج المبالغ المستردة خلال
+            المدة المحددة بعد الموافقة.
+          </p>
+        </div>
+
+        <div>
+          <h2>6. حدود المسؤولية</h2>
+          <p>
+            لا نتحمل الأضرار غير المباشرة أو فقدان الأرباح الناتج عن استخدام المعدات. مسؤوليتنا
+            محدودة بقيمة الحجز ما لم يكن النص النظامي يقضي بغير ذلك.
+          </p>
+        </div>
+
+        <div>
+          <h2>7. القانون الحاكم</h2>
+          <p>تخضع هذه الشروط لأنظمة المملكة العربية السعودية. النزاعات تُحل أمام المحاكم المختصة.</p>
+        </div>
+
+        <div dir="ltr" lang="en" className="border-t pt-8">
+          <h2>Terms of Service (English Summary)</h2>
+          <p>
+            By booking on FlixCam.rent you agree to our rental policies and privacy policy. You are
+            responsible for equipment from pickup to return. Cancellations follow published rental
+            policies. Governing law: Kingdom of Saudi Arabia.
+          </p>
+        </div>
       </section>
     </main>
   )

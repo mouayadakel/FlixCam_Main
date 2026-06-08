@@ -9,6 +9,7 @@ import { useKitWizardStore, getKitWizardTotalDaily } from '@/lib/stores/kit-wiza
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { formatSar } from '@/lib/utils/format.utils'
 
 const DURATION_PRESETS = [
   { days: 1, savePercent: null, popular: false },
@@ -18,17 +19,8 @@ const DURATION_PRESETS = [
   { days: 30, savePercent: 33, popular: false },
 ] as const
 
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
 export function StepDuration() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const durationDays = useKitWizardStore((s) => s.durationDays)
   const setDuration = useKitWizardStore((s) => s.setDuration)
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
@@ -63,7 +55,7 @@ export function StepDuration() {
             <span className="font-semibold text-text-heading">
               {days} {days === 1 ? t('kit.day') : t('kit.days')}
             </span>
-            <span className="mt-1 text-sm text-text-muted">{formatSar(totalDaily * days)}</span>
+            <span className="mt-1 text-sm text-text-muted">{formatSar(totalDaily * days, locale)}</span>
             {savePercent != null && (
               <span className="mt-1 text-xs font-medium text-green-600">
                 {t('kit.savePercent').replace('{percent}', String(savePercent))}
@@ -92,17 +84,17 @@ export function StepDuration() {
       <div className="mt-8 rounded-xl border border-border-light bg-surface-light p-4">
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">{t('kit.dailyRate')}</span>
-          <span className="font-medium">{formatSar(totalDaily)}</span>
+          <span className="font-medium">{formatSar(totalDaily, locale)}</span>
         </div>
         <div className="mt-2 flex justify-between text-sm">
           <span className="text-text-muted">
             × {durationDays} {t('kit.days')}
           </span>
-          <span className="font-medium">{formatSar(subtotal)}</span>
+          <span className="font-medium">{formatSar(subtotal, locale)}</span>
         </div>
         <div className="mt-3 flex justify-between border-t border-border-light pt-3 font-semibold">
           <span>{t('kit.subtotal')}</span>
-          <span>{formatSar(subtotal)}</span>
+          <span>{formatSar(subtotal, locale)}</span>
         </div>
       </div>
     </div>

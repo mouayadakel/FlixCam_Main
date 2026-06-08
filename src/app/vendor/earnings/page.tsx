@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils/format.utils'
 import { VendorEarningsClient } from './vendor-earnings-client'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 export default async function VendorEarningsPage() {
   const session = await auth()
+  const { locale, dir } = await getRequestLocale()
   if (!session?.user?.id) redirect('/login?callbackUrl=/vendor/earnings')
 
   const vendor = await prisma.vendor.findFirst({
@@ -62,32 +64,32 @@ export default async function VendorEarningsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'vendor.earningsPage')}</h1>
-        <p className="mt-1 text-muted-foreground">{t('ar', 'vendor.earningsSummaryDesc')}</p>
+        <h1 className="text-3xl font-bold">{t(locale, 'vendor.earningsPage')}</h1>
+        <p className="mt-1 text-muted-foreground">{t(locale, 'vendor.earningsSummaryDesc')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('ar', 'vendor.totalGrossRevenue')}
+              {t(locale, 'vendor.totalGrossRevenue')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.gross)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.allTime')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'vendor.allTime')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('ar', 'vendor.platformCommission')}
+              {t(locale, 'vendor.platformCommission')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.commission)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t('ar', 'vendor.commissionRate').replace(
+              {t(locale, 'vendor.commissionRate').replace(
                 '{rate}',
                 String(Number(vendor.commissionRate))
               )}
@@ -96,22 +98,22 @@ export default async function VendorEarningsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.netEarnings')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'vendor.netEarnings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totals.net)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.allTime')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'vendor.allTime')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.thisMonth')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'vendor.thisMonth')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(thisMonthNet)}</div>
             <p className={`mt-1 text-xs ${growthPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {growthPct >= 0 ? '+' : ''}
-              {t('ar', 'vendor.vsLastMonth').replace('{pct}', growthPct.toFixed(1))}
+              {t(locale, 'vendor.vsLastMonth').replace('{pct}', growthPct.toFixed(1))}
             </p>
           </CardContent>
         </Card>
@@ -119,7 +121,7 @@ export default async function VendorEarningsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'vendor.monthlyEarnings')}</CardTitle>
+          <CardTitle>{t(locale, 'vendor.monthlyEarnings')}</CardTitle>
         </CardHeader>
         <CardContent>
           <VendorEarningsClient monthlyData={monthlyData} />

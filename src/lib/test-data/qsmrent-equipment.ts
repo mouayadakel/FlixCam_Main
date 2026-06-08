@@ -6,7 +6,7 @@
 
 export const QSM_RENT_SOURCE = 'https://www.qsmrent.com/en/shop' as const
 
-/** Category slugs that exist in FlixCam seed (prisma/seed.ts CATEGORIES) */
+/** Category slugs that exist in FlixCam seed (prisma/seed.ts CATEGORIES, incl. crew) */
 export const QSM_CATEGORY_MAP = {
   cameras: 'cameras',
   lenses: 'lenses',
@@ -21,7 +21,7 @@ export const QSM_CATEGORY_MAP = {
   filters: 'camera-accessories',
   'sound-equipment': 'audio',
   cables: 'camera-accessories',
-  crew: 'grip', // طاقم عمل / crew – map to grip or generic
+  crew: 'crew',
   cinematic: 'camera-accessories',
   offers: 'cameras',
   lights: 'lighting',
@@ -111,7 +111,7 @@ export const QSMRENT_EQUIPMENT: QsmRentEquipmentItem[] = [
   {
     name: 'Director of Photography مدير تصوير وإضاءة',
     dailyPriceSar: 5000,
-    categorySlug: 'grip',
+    categorySlug: 'crew',
     description: 'Crew / DP service',
   },
   {
@@ -404,7 +404,7 @@ export const QSMRENT_EQUIPMENT: QsmRentEquipmentItem[] = [
   {
     name: 'Sound Engineer مهندس صوت',
     dailyPriceSar: 2000,
-    categorySlug: 'audio',
+    categorySlug: 'crew',
     description: 'Crew / sound engineer',
   },
   {

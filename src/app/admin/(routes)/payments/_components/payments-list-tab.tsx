@@ -42,6 +42,8 @@ interface Payment {
   bookingId: string
   amount: number
   status: PaymentStatus
+  gateway?: string | null
+  externalId?: string | null
   tapTransactionId?: string | null
   tapChargeId?: string | null
   refundAmount?: number | null
@@ -76,6 +78,7 @@ const STATUS_LABELS: Record<
   PROCESSING: { ar: 'قيد المعالجة', en: 'Processing', variant: 'secondary' },
   SUCCESS: { ar: 'نجح', en: 'Success', variant: 'default' },
   FAILED: { ar: 'فشل', en: 'Failed', variant: 'destructive' },
+  AMOUNT_MISMATCH: { ar: 'عدم تطابق المبلغ', en: 'Amount mismatch', variant: 'destructive' },
   REFUNDED: { ar: 'مسترد', en: 'Refunded', variant: 'destructive' },
   PARTIALLY_REFUNDED: { ar: 'مسترد جزئياً', en: 'Partially Refunded', variant: 'secondary' },
 }
@@ -98,6 +101,7 @@ export default function PaymentsListTab() {
     'PROCESSING',
     'SUCCESS',
     'FAILED',
+    'AMOUNT_MISMATCH',
     'REFUNDED',
     'PARTIALLY_REFUNDED',
   ]
@@ -321,7 +325,7 @@ export default function PaymentsListTab() {
                   </TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {payment.tapTransactionId || payment.tapChargeId ? 'Tap / بطاقة' : '—'}
+                    {payment.gateway ? payment.gateway.toUpperCase() : '—'}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(payment.status)}>
@@ -345,9 +349,9 @@ export default function PaymentsListTab() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {payment.tapTransactionId ? (
+                    {payment.externalId || payment.tapTransactionId ? (
                       <div className="font-mono text-sm">
-                        {payment.tapTransactionId.substring(0, 20)}...
+                        {(payment.externalId || payment.tapTransactionId || '').substring(0, 20)}...
                       </div>
                     ) : (
                       '-'

@@ -12,6 +12,7 @@ import { InvoiceService } from '@/lib/services/invoice.service'
 import { InvoicePolicy } from '@/lib/policies/invoice.policy'
 import { PdfService } from '@/lib/services/pdf.service'
 import { ForbiddenError } from '@/lib/errors'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const buffer = await PdfService.generateInvoicePdfBuffer({
       invoice,
       locale,
-      includeZatcaQr: false,
+      includeZatcaQr: true,
     })
 
     const filename = `invoice-${invoice.invoiceNumber}.pdf`
@@ -46,11 +47,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         'Content-Length': String(buffer.length),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof ForbiddenError) {
       return NextResponse.json({ error: error.message }, { status: 403 })
     }
-    console.error('Invoice PDF error:', error)
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
+    logger.error('Invoice PDF error', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

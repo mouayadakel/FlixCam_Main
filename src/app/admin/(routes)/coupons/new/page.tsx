@@ -38,10 +38,26 @@ export default function NewCouponPage() {
     maxDiscountAmount: '',
     usageLimit: '',
     validFrom: new Date().toISOString().split('T')[0],
-    validUntil: '',
+    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     description: '',
     isActive: true,
+    canCombineWithOtherOffers: true,
   })
+
+  const parseLocalizedNumber = (value: string): number | null => {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+
+    const normalized = trimmed
+      .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+      .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+      .replace(/٬/g, '')
+      .replace(/,/g, '')
+      .replace(/٫/g, '.')
+
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : null
+  }
 
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -64,7 +80,9 @@ export default function NewCouponPage() {
       return
     }
 
-    if (!formData.value || Number(formData.value) <= 0) {
+    const parsedValue = parseLocalizedNumber(formData.value)
+
+    if (parsedValue === null || parsedValue <= 0) {
       toast({
         title: 'خطأ',
         description: 'يرجى إدخال قيمة صحيحة للخصم',
@@ -84,28 +102,46 @@ export default function NewCouponPage() {
 
     setLoading(true)
     try {
+      const parsedMinPurchaseAmount = parseLocalizedNumber(formData.minPurchaseAmount)
+      const parsedMaxDiscountAmount = parseLocalizedNumber(formData.maxDiscountAmount)
+      const parsedUsageLimit = parseLocalizedNumber(formData.usageLimit)
+
+      const payload = {
+        code: formData.code.toUpperCase(),
+        type: formData.type,
+        value: parsedValue,
+        validFrom: formData.validFrom,
+        validUntil: formData.validUntil,
+        ...(parsedMinPurchaseAmount !== null && {
+          minPurchaseAmount: parsedMinPurchaseAmount,
+        }),
+        ...(parsedMaxDiscountAmount !== null && {
+          maxDiscountAmount: parsedMaxDiscountAmount,
+        }),
+        ...(parsedUsageLimit !== null && {
+          usageLimit: parsedUsageLimit,
+        }),
+        ...(formData.description.trim() !== '' && {
+          description: formData.description.trim(),
+        }),
+        canCombineWithOtherOffers: formData.canCombineWithOtherOffers,
+      }
+
       const response = await fetch('/api/coupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          code: formData.code.toUpperCase(),
-          type: formData.type,
-          value: Number(formData.value),
-          minPurchaseAmount: formData.minPurchaseAmount ? Number(formData.minPurchaseAmount) : null,
-          maxDiscountAmount: formData.maxDiscountAmount ? Number(formData.maxDiscountAmount) : null,
-          usageLimit: formData.usageLimit ? Number(formData.usageLimit) : null,
-          validFrom: formData.validFrom,
-          validUntil: formData.validUntil,
-          description: formData.description || null,
-          status: formData.isActive ? 'active' : 'inactive',
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'فشل إنشاء الكوبون')
+        const detailMessage =
+          Array.isArray(error.details) && error.details.length > 0
+            ? error.details.map((d: any) => d.message).filter(Boolean).join('، ')
+            : null
+        throw new Error(detailMessage || error.error || 'فشل إنشاء الكوبون')
       }
 
       const coupon = await response.json()
@@ -301,6 +337,19 @@ export default function NewCouponPage() {
                 placeholder="وصف الكوبون والعرض..."
                 rows={3}
               />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={formData.canCombineWithOtherOffers}
+                onCheckedChange={(checked) => setFormData({ ...formData, canCombineWithOtherOffers: checked })}
+              />
+              <div className="space-y-1">
+                <Label>الدمج مع العروض الأخرى</Label>
+                <p className="text-xs text-muted-foreground">
+                  إذا تم إلغاء تفعيل هذا الخيار، لن يطبق الخصم على الباقات (Packages) والأطقم (Kits) أو المعدات التي تطبق السعر الأسبوعي/الشهري.
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">

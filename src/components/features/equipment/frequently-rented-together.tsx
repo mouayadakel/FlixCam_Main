@@ -101,7 +101,7 @@ export function FrequentlyRentedTogether({ equipmentId }: FrequentlyRentedTogeth
                         src={PLACEHOLDER}
                         alt={item.model ?? item.sku ?? item.id}
                         fill
-                        className="object-cover"
+                        className="object-contain bg-white"
                         sizes="(max-width: 640px) 100vw, 33vw"
                       />
                     ) : (
@@ -109,7 +109,7 @@ export function FrequentlyRentedTogether({ equipmentId }: FrequentlyRentedTogeth
                         src={imgUrl}
                         alt={item.model ?? item.sku ?? item.id}
                         fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-contain bg-white transition-transform duration-300 group-hover:scale-105"
                         sizes="(max-width: 640px) 100vw, 33vw"
                         unoptimized={isExternalImageUrl(imgUrl)}
                         onError={() => handleImgError(item.id)}

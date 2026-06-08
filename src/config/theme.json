@@ -10,8 +10,8 @@
     "accent": "#4D4D4D"
   },
   "assets": {
-    "logoMain": "/images/flixcam-logo.png",
-    "logoInverted": "/images/flixcam-logo.png"
+    "logoMain": "/images/flixcam-logo.avif",
+    "logoInverted": "/images/flixcam-logo.avif"
   },
   "uiStyle": {
     "borderRadius": "4px",

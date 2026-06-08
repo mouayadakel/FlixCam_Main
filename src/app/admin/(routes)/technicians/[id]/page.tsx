@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/utils/format.utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 interface TechnicianDetail {
   id: string
@@ -140,7 +141,7 @@ export default function TechnicianDetailPage() {
                 <Phone className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">الهاتف</p>
-                  <p className="font-medium" dir="ltr">
+                  <p className="font-medium" dir={EMBED_LTR}>
                     {tech.phone}
                   </p>
                 </div>

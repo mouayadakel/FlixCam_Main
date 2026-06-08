@@ -66,14 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json()
     const validated = updateMaintenanceSchema.parse(body)
 
-    // Get audit context
-    const headers = req.headers
-    const auditContext = {
-      ipAddress: headers.get('x-forwarded-for') || headers.get('x-real-ip') || undefined,
-      userAgent: headers.get('user-agent') || undefined,
-    }
-
-    const maintenance = await MaintenanceService.update(id, validated, userId, auditContext)
+    const maintenance = await MaintenanceService.update(id, validated, userId)
 
     return NextResponse.json({
       success: true,
@@ -119,13 +112,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     // Get audit context
-    const headers = req.headers
-    const auditContext = {
-      ipAddress: headers.get('x-forwarded-for') || headers.get('x-real-ip') || undefined,
-      userAgent: headers.get('user-agent') || undefined,
-    }
-
-    await MaintenanceService.delete(id, userId, auditContext)
+    await MaintenanceService.delete(id, userId)
 
     return NextResponse.json({
       success: true,

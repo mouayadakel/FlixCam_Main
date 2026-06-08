@@ -64,12 +64,10 @@ export async function POST(request: NextRequest) {
       for (const b of futureBookings) {
         await tx.booking.update({
           where: { id: b.id },
-          data: {
-            status: BookingStatus.CANCELLED,
-            cancelledAt: new Date(),
-            cancellationReason: 'Account deletion requested',
-            updatedBy: userId,
-          },
+        data: {
+          status: BookingStatus.CANCELLED,
+          updatedBy: userId,
+        },
         })
       }
 

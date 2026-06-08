@@ -52,7 +52,7 @@ export async function POST(
         id: true,
         name: true,
         email: true,
-        idVerificationStatus: true,
+        verificationStatus: true,
       },
     })
 
@@ -60,7 +60,7 @@ export async function POST(
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    if (user.idVerificationStatus !== 'PENDING_REVIEW') {
+    if (user.verificationStatus !== 'PENDING') {
       return NextResponse.json(
         { error: 'Customer ID is not pending review' },
         { status: 400 }
@@ -71,10 +71,17 @@ export async function POST(
       await prisma.user.update({
         where: { id: customerId },
         data: {
-          idVerificationStatus: 'VERIFIED',
-          idVerifiedAt: new Date(),
-          idVerifiedBy: session.user.id,
-          idRejectionReason: null,
+          verificationStatus: 'VERIFIED',
+        },
+      })
+
+      await prisma.verificationDocument.updateMany({
+        where: { userId: customerId, status: 'pending' },
+        data: {
+          status: 'verified',
+          reviewedBy: session.user.id,
+          reviewedAt: new Date(),
+          rejectionReason: null,
         },
       })
 
@@ -89,10 +96,17 @@ export async function POST(
       await prisma.user.update({
         where: { id: customerId },
         data: {
-          idVerificationStatus: 'REJECTED',
-          idRejectionReason: parsed.rejectionReason ?? 'No reason provided',
-          idVerifiedAt: null,
-          idVerifiedBy: null,
+          verificationStatus: 'REJECTED',
+        },
+      })
+
+      await prisma.verificationDocument.updateMany({
+        where: { userId: customerId, status: 'pending' },
+        data: {
+          status: 'rejected',
+          rejectionReason: parsed.rejectionReason ?? 'No reason provided',
+          reviewedBy: session.user.id,
+          reviewedAt: new Date(),
         },
       })
 

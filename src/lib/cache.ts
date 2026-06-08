@@ -36,7 +36,7 @@ async function redisWhenReady(redis: Redis): Promise<void> {
 const memoryStore = new Map<string, { value: unknown; expiresAt: number }>()
 
 const TTL = {
-  websiteContent: 3600,
+  websiteContent: 60,
   /** FAQ list (short TTL so admin changes appear quickly). */
   faq: 60,
   /** Policy list (short TTL so admin changes appear quickly). */
@@ -164,6 +164,31 @@ export async function cacheDelete(namespace: CacheNamespace, keyPart: string): P
     await redisDel(key)
   } else {
     memoryStore.delete(key)
+  }
+}
+
+/**
+ * Invalidate all keys within a namespace.
+ */
+export async function cacheClearNamespace(namespace: CacheNamespace): Promise<void> {
+  const prefix = `cache:${namespace}:`
+  if (isRedisAvailable()) {
+    try {
+      const redis = getRedisClient()
+      await redisWhenReady(redis)
+      const keys = await redis.keys(`${prefix}*`)
+      if (keys.length > 0) {
+        await redis.del(...keys)
+      }
+    } catch (e) {
+      logger.warn('Cache redis clear namespace error', { namespace, error: serializeError(e) })
+    }
+  } else {
+    for (const key of memoryStore.keys()) {
+      if (key.startsWith(prefix)) {
+        memoryStore.delete(key)
+      }
+    }
   }
 }
 

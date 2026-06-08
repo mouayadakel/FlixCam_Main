@@ -27,6 +27,7 @@ export function FooterBrandTab({ footer, onSave }: FooterBrandTabProps) {
   const [descriptionAr, setDescriptionAr] = useState(brand?.descriptionAr ?? '')
   const [descriptionEn, setDescriptionEn] = useState(brand?.descriptionEn ?? '')
   const [showBrand, setShowBrand] = useState(brand?.showBrand ?? true)
+  const headerLogoPath = '/images/flixcam-logo.avif'
 
   useEffect(() => {
     if (footer?.brand) {
@@ -47,8 +48,8 @@ export function FooterBrandTab({ footer, onSave }: FooterBrandTabProps) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          logoLight: logoLight || '/logos/flixcam-light.svg',
-          logoDark: logoDark || '/logos/flixcam-dark.svg',
+          logoLight: logoLight || headerLogoPath,
+          logoDark: logoDark || headerLogoPath,
           companyNameAr: companyNameAr || 'فليكس كام',
           companyNameEn: companyNameEn || 'Flixcam',
           descriptionAr,
@@ -86,6 +87,7 @@ export function FooterBrandTab({ footer, onSave }: FooterBrandTabProps) {
             value={logoLight}
             onChange={setLogoLight}
             label="الشعار الفاتح"
+            cmsFolder="footer/brand"
           />
         </div>
         <div className="space-y-2">
@@ -94,8 +96,19 @@ export function FooterBrandTab({ footer, onSave }: FooterBrandTabProps) {
             value={logoDark}
             onChange={setLogoDark}
             label="الشعار الداكن"
+            cmsFolder="footer/brand"
           />
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setLogoLight(headerLogoPath)
+            setLogoDark(headerLogoPath)
+          }}
+        >
+          استخدام شعار الهيدر الحالي
+        </Button>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>اسم الشركة (عربي)</Label>

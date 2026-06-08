@@ -21,6 +21,7 @@ import { PublicSearch } from './public-search'
 import { MiniCart } from './mini-cart'
 import { MobileNav } from './mobile-nav'
 import { NotificationBell } from './notification-bell'
+import { useBranding } from '@/hooks/use-branding'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -33,12 +34,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { siteConfig } from '@/config/site.config'
 import { cn } from '@/lib/utils'
+import { getDashboardPath } from '@/lib/auth/dashboard-routing'
 
 const MAIN_LINKS = [
   { href: '/', key: 'nav.home' as const },
@@ -50,6 +53,7 @@ const MAIN_LINKS = [
 
 const MORE_LINKS = [
   { href: '/about', key: 'nav.about' as const },
+  { href: '/contact', key: 'nav.contact' as const },
   { href: '/faq', key: 'nav.faq' as const },
   { href: '/terms', key: 'nav.policies' as const },
 ] as const
@@ -58,19 +62,14 @@ interface PublicHeaderProps {
   hiddenRoutes?: Set<string>
 }
 
-function getDashboardUrl(role: string | undefined): string {
-  const r = role?.toUpperCase()
-  if (r === 'CUSTOMER' || r === 'DATA_ENTRY') return '/portal/dashboard'
-  if (r === 'VENDOR') return '/vendor/dashboard'
-  return '/admin/dashboard'
-}
-
 export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
   const { t, dir } = useLocale()
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const authModal = useAuthModalOptional()
+  const { logoUrl } = useBranding()
   const [scrolled, setScrolled] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const isAuthenticated = status === 'authenticated' && !!session?.user
 
   const mainLinks = hiddenRoutes?.size
@@ -108,12 +107,12 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
               aria-label={siteConfig.brandName}
             >
               <Image
-                src="/images/flixcam-logo.png"
+                src={logoUrl || "/images/flixcam-logo.avif"}
                 alt={siteConfig.brandName}
                 width={180}
                 height={56}
                 className="h-12 w-auto object-contain md:h-14"
-                style={{ width: 'auto', height: 'auto' }}
+                style={{ width: '171px', height: 'auto' }}
                 priority
               />
             </Link>
@@ -190,30 +189,38 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
             {/* CTAs – end (right in LTR, left in RTL): Cart, Account, Language */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="md:hidden">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t('common.search')}
-                        className="h-10 w-10 rounded-full text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-                      >
-                        <Search className="h-5 w-5" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[420px]" aria-describedby={undefined}>
-                      <DialogHeader>
-                        <DialogTitle id="mobile-search-title" className="sr-only">
-                          {t('common.search')}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="pt-2">
-                        <PublicSearch />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('common.search')}
+                      className="h-10 w-10 rounded-full text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:h-9 lg:w-9"
+                    >
+                      <Search className="h-5 w-5 lg:h-4.5 lg:w-4.5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent
+                    className="top-[max(0.5rem,env(safe-area-inset-top))] max-h-[calc(100dvh-1rem-env(safe-area-inset-top))] w-[calc(100vw-1.5rem)] max-w-[28rem] translate-y-0 overflow-y-auto overflow-x-visible rounded-2xl border border-border-light bg-background p-0 shadow-2xl"
+                    aria-describedby={undefined}
+                  >
+                    <DialogHeader className="border-b border-border-light px-5 pb-3 pt-5">
+                      <DialogTitle className="text-base font-semibold text-text-heading">
+                        {t('header.searchEquipment')}
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-text-muted">
+                        {t('header.searchPlaceholder')}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="px-5 pb-5 pt-3">
+                      <PublicSearch
+                        mode="dialog"
+                        autoFocus
+                        onNavigate={() => setMobileSearchOpen(false)}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <div className="hidden items-center gap-2 lg:flex">
                   <MiniCart />
                   <NotificationBell />
@@ -242,7 +249,12 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-white/10" />
                         <DropdownMenuItem asChild className="cursor-pointer text-white/90 focus:bg-white/10 focus:text-white">
-                          <Link href={getDashboardUrl(session.user.role as string | undefined)}>
+                          <Link
+                            href={getDashboardPath(
+                              session.user.role as string | undefined,
+                              session.user.assignedRoles
+                            )}
+                          >
                             <LayoutDashboard className="me-2 h-4 w-4" />
                             {t('nav.dashboard')}
                           </Link>
@@ -304,6 +316,7 @@ export function PublicHeader({ hiddenRoutes }: PublicHeaderProps = {}) {
                   <LanguageSwitcher />
                 </div>
                 <div className="flex items-center gap-1 lg:hidden">
+                  <LanguageSwitcher />
                   <NotificationBell />
                   <MiniCart />
                   <MobileNav hiddenRoutes={hiddenRoutes} />

@@ -295,7 +295,7 @@ export class MarketingService {
   private static async getTargetAudience(targetAudience: string[]) {
     if (targetAudience.length === 0) {
       return prisma.user.findMany({
-        where: { status: 'active', deletedAt: null },
+        where: { status: 'ACTIVE', deletedAt: null },
         select: { id: true, email: true, name: true, phone: true },
       })
     }

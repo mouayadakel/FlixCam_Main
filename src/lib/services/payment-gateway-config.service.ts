@@ -1,12 +1,13 @@
 /**
  * @file payment-gateway-config.service.ts
- * @description Payment gateway configuration storage: DB + .env fallback, list/save/getEnabledGateways
+ * @description Payment gateway configuration: DB storage + env. At runtime, .env overrides DB per key (stale DB keys must not shadow deployment env).
  * @module lib/services/payment-gateway-config
  */
 
 import { prisma } from '@/lib/db/prisma'
 import { encrypt, decrypt, isEncrypted } from '@/lib/utils/encryption'
 import { AuditService } from './audit.service'
+import { isImplementedGatewaySlug } from '@/lib/integrations/payment-gateway/registry'
 
 /** Env var names per gateway slug and credential key (for fallback when not in DB) */
 export const GATEWAY_ENV_KEYS: Record<string, Record<string, string>> = {
@@ -84,15 +85,52 @@ export interface EnabledGatewayPublic {
   publishableKey?: string
 }
 
+type PaymentGatewayConfigDelegate = {
+  findMany?: (...args: any[]) => Promise<any>
+  findFirst?: (...args: any[]) => Promise<any>
+  update?: (...args: any[]) => Promise<any>
+  updateMany?: (...args: any[]) => Promise<any>
+  create?: (...args: any[]) => Promise<any>
+}
+
+function getPaymentGatewayConfigDelegate(): PaymentGatewayConfigDelegate | null {
+  return ((prisma as unknown as { paymentGatewayConfig?: PaymentGatewayConfigDelegate })
+    .paymentGatewayConfig ?? null)
+}
+
+function isMissingPaymentGatewayConfigTableError(err: unknown): boolean {
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
+  return (
+    msg.includes('paymentgatewayconfig') ||
+    msg.includes('does not exist') ||
+    msg.includes("doesn't exist") ||
+    msg.includes('unknown arg') ||
+    (msg.includes('relation') && msg.includes('exist')) ||
+    (msg.includes('table') && msg.includes('exist')) ||
+    msg.includes('no such table')
+  )
+}
+
 function getEnvFallback(slug: string): PaymentGatewayCredentials {
   const keys = GATEWAY_ENV_KEYS[slug]
   if (!keys) return {}
   const out: PaymentGatewayCredentials = {}
   for (const [credKey, envVar] of Object.entries(keys)) {
-    const v = process.env[envVar]
+    const v = process.env[envVar]?.trim()
     if (v) out[credKey] = v
   }
   return out
+}
+
+/**
+ * Per-key merge: environment (deployment) wins over DB so live keys in `MOYASAR_*` etc. are not
+ * overridden by older test keys still stored in PaymentGatewayConfig.
+ */
+export function mergePaymentGatewayCredentials(
+  envCreds: PaymentGatewayCredentials,
+  dbCreds: PaymentGatewayCredentials
+): PaymentGatewayCredentials {
+  return { ...dbCreds, ...envCreds }
 }
 
 export class PaymentGatewayConfigService {
@@ -102,6 +140,7 @@ export class PaymentGatewayConfigService {
    * If PaymentGatewayConfig table does not exist (migration not run), returns defaults so UI can load.
    */
   static async listConfigs(): Promise<PaymentGatewayConfigForAdmin[]> {
+    const delegate = getPaymentGatewayConfigDelegate()
     let rows: Array<{
       slug: string
       enabled: boolean
@@ -111,33 +150,28 @@ export class PaymentGatewayConfigService {
       lastCheckOk: boolean | null
       credentialsEnc: string | null
     }>
-    try {
-      rows = await prisma.paymentGatewayConfig.findMany({
-        where: { deletedAt: null },
-        select: {
-          slug: true,
-          enabled: true,
-          displayName: true,
-          sortOrder: true,
-          lastCheckedAt: true,
-          lastCheckOk: true,
-          credentialsEnc: true,
-        },
-      })
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
-      const isMissingTable =
-        msg.includes('paymentgatewayconfig') ||
-        msg.includes('does not exist') ||
-        msg.includes("doesn't exist") ||
-        msg.includes('unknown arg') ||
-        (msg.includes('relation') && msg.includes('exist')) ||
-        (msg.includes('table') && msg.includes('exist')) ||
-        msg.includes('no such table')
-      if (isMissingTable) {
-        rows = []
-      } else {
-        throw err
+    if (!delegate?.findMany) {
+      rows = []
+    } else {
+      try {
+        rows = await delegate.findMany({
+          where: { deletedAt: null },
+          select: {
+            slug: true,
+            enabled: true,
+            displayName: true,
+            sortOrder: true,
+            lastCheckedAt: true,
+            lastCheckOk: true,
+            credentialsEnc: true,
+          },
+        })
+      } catch (err) {
+        if (isMissingPaymentGatewayConfigTableError(err)) {
+          rows = []
+        } else {
+          throw err
+        }
       }
     }
     const bySlug = new Map(rows.map((r) => [r.slug, r]))
@@ -163,12 +197,12 @@ export class PaymentGatewayConfigService {
         ...(GATEWAY_ENV_KEYS[slug] ? Object.keys(GATEWAY_ENV_KEYS[slug]) : []),
       ])
       for (const k of keySet) {
-        if (dbCreds[k]) {
-          credentialSources[k] = 'db'
-          credentialMask[k] = '***'
-        } else if (envCreds[k]) {
+        if (envCreds[k]) {
           credentialSources[k] = 'env'
           credentialMask[k] = '••• from .env'
+        } else if (dbCreds[k]) {
+          credentialSources[k] = 'db'
+          credentialMask[k] = '***'
         }
       }
       result.push({
@@ -190,10 +224,20 @@ export class PaymentGatewayConfigService {
    * Get credentials stored in DB only (no .env fallback). Used when merging partial credential updates.
    */
   static async getConfigDbOnly(slug: string): Promise<PaymentGatewayCredentials> {
-    const row = await prisma.paymentGatewayConfig.findFirst({
-      where: { slug, deletedAt: null },
-      select: { credentialsEnc: true },
-    })
+    const delegate = getPaymentGatewayConfigDelegate()
+    if (!delegate?.findFirst) return {}
+
+    let row: { credentialsEnc: string | null } | null = null
+    try {
+      row = await delegate.findFirst({
+        where: { slug, deletedAt: null },
+        select: { credentialsEnc: true },
+      })
+    } catch (err) {
+      if (!isMissingPaymentGatewayConfigTableError(err)) {
+        throw err
+      }
+    }
     if (!row?.credentialsEnc) return {}
     try {
       const raw = decrypt(row.credentialsEnc)
@@ -204,14 +248,25 @@ export class PaymentGatewayConfigService {
   }
 
   /**
-   * Get merged credentials for server use (DB first, then .env fallback). Used by adapters and webhooks.
+   * Merged credentials for server use: .env overrides DB per key, then any DB-only keys apply.
+   * Used by adapters and webhooks.
    */
   static async getConfig(slug: string): Promise<PaymentGatewayCredentials | null> {
-    const row = await prisma.paymentGatewayConfig.findFirst({
-      where: { slug, deletedAt: null },
-      select: { credentialsEnc: true },
-    })
+    const delegate = getPaymentGatewayConfigDelegate()
     const envCreds = getEnvFallback(slug)
+    let row: { credentialsEnc: string | null } | null = null
+    if (delegate?.findFirst) {
+      try {
+        row = await delegate.findFirst({
+          where: { slug, deletedAt: null },
+          select: { credentialsEnc: true },
+        })
+      } catch (err) {
+        if (!isMissingPaymentGatewayConfigTableError(err)) {
+          throw err
+        }
+      }
+    }
     let dbCreds: PaymentGatewayCredentials = {}
     if (row?.credentialsEnc) {
       try {
@@ -221,7 +276,7 @@ export class PaymentGatewayConfigService {
         // fall through to env
       }
     }
-    const merged: PaymentGatewayCredentials = { ...envCreds, ...dbCreds }
+    const merged = mergePaymentGatewayCredentials(envCreds, dbCreds)
     if (Object.keys(merged).length === 0) return null
     return merged
   }
@@ -230,18 +285,36 @@ export class PaymentGatewayConfigService {
    * Get config shape for admin UI: merged credentials masked, with source per key (db vs env).
    */
   static async getConfigForAdmin(slug: string): Promise<PaymentGatewayConfigForAdmin | null> {
-    const row = await prisma.paymentGatewayConfig.findFirst({
-      where: { slug, deletedAt: null },
-      select: {
-        slug: true,
-        enabled: true,
-        displayName: true,
-        sortOrder: true,
-        lastCheckedAt: true,
-        lastCheckOk: true,
-        credentialsEnc: true,
-      },
-    })
+    const delegate = getPaymentGatewayConfigDelegate()
+    let row: {
+      slug: string
+      enabled: boolean
+      displayName: string | null
+      sortOrder: number
+      lastCheckedAt: Date | null
+      lastCheckOk: boolean | null
+      credentialsEnc: string | null
+    } | null = null
+    if (delegate?.findFirst) {
+      try {
+        row = await delegate.findFirst({
+          where: { slug, deletedAt: null },
+          select: {
+            slug: true,
+            enabled: true,
+            displayName: true,
+            sortOrder: true,
+            lastCheckedAt: true,
+            lastCheckOk: true,
+            credentialsEnc: true,
+          },
+        })
+      } catch (err) {
+        if (!isMissingPaymentGatewayConfigTableError(err)) {
+          throw err
+        }
+      }
+    }
     const envCreds = getEnvFallback(slug)
     let dbCreds: PaymentGatewayCredentials = {}
     if (row?.credentialsEnc) {
@@ -260,12 +333,12 @@ export class PaymentGatewayConfigService {
       ...(GATEWAY_ENV_KEYS[slug] ? Object.keys(GATEWAY_ENV_KEYS[slug]) : []),
     ])
     for (const k of keySet) {
-      if (dbCreds[k]) {
-        credentialSources[k] = 'db'
-        credentialMask[k] = '***'
-      } else if (envCreds[k]) {
+      if (envCreds[k]) {
         credentialSources[k] = 'env'
         credentialMask[k] = '••• from .env'
+      } else if (dbCreds[k]) {
+        credentialSources[k] = 'db'
+        credentialMask[k] = '***'
       }
     }
     if (!row) {
@@ -294,7 +367,7 @@ export class PaymentGatewayConfigService {
   }
 
   /**
-   * Save or update gateway config. Credentials are encrypted. Overrides .env for provided keys.
+   * Save or update gateway config (encrypted in DB). At runtime, .env still overrides the same keys if set.
    */
   static async saveConfig(
     slug: string,
@@ -303,16 +376,21 @@ export class PaymentGatewayConfigService {
     userId: string,
     options?: { displayName?: string | null; sortOrder?: number }
   ): Promise<void> {
+    const delegate = getPaymentGatewayConfigDelegate()
+    if (!delegate?.findFirst || !delegate?.update || !delegate?.create) {
+      throw new Error('PaymentGatewayConfig model is not available in Prisma client')
+    }
+
     const encrypted = credentials && Object.keys(credentials).length > 0
       ? encrypt(JSON.stringify(credentials))
       : null
-    const existing = await prisma.paymentGatewayConfig.findFirst({
+    const existing = await delegate.findFirst({
       where: { slug, deletedAt: null },
       select: { id: true },
     })
     const now = new Date()
     if (existing) {
-      await prisma.paymentGatewayConfig.update({
+      await delegate.update({
         where: { id: existing.id },
         data: {
           enabled,
@@ -324,7 +402,7 @@ export class PaymentGatewayConfigService {
         },
       })
     } else {
-      await prisma.paymentGatewayConfig.create({
+      await delegate.create({
         data: {
           slug,
           enabled,
@@ -353,7 +431,12 @@ export class PaymentGatewayConfigService {
     updates: { enabled?: boolean; displayName?: string | null; sortOrder?: number },
     userId: string
   ): Promise<void> {
-    const existing = await prisma.paymentGatewayConfig.findFirst({
+    const delegate = getPaymentGatewayConfigDelegate()
+    if (!delegate?.findFirst || !delegate?.update || !delegate?.create) {
+      throw new Error('PaymentGatewayConfig model is not available in Prisma client')
+    }
+
+    const existing = await delegate.findFirst({
       where: { slug, deletedAt: null },
       select: { id: true },
     })
@@ -367,12 +450,12 @@ export class PaymentGatewayConfigService {
     if (updates.sortOrder !== undefined) data.sortOrder = updates.sortOrder
 
     if (existing) {
-      await prisma.paymentGatewayConfig.update({
+      await delegate.update({
         where: { id: existing.id },
         data,
       })
     } else {
-      await prisma.paymentGatewayConfig.create({
+      await delegate.create({
         data: {
           slug,
           enabled: updates.enabled ?? false,
@@ -396,27 +479,24 @@ export class PaymentGatewayConfigService {
    * Get enabled gateways for checkout, ordered by sortOrder. Public info only (no secrets).
    */
   static async getEnabledGateways(): Promise<EnabledGatewayPublic[]> {
+    const delegate = getPaymentGatewayConfigDelegate()
     let rows: Array<{ slug: string; displayName: string | null; sortOrder: number }>
+    if (!delegate?.findMany) {
+      return []
+    }
     try {
-      rows = await prisma.paymentGatewayConfig.findMany({
+      rows = await delegate.findMany({
         where: { enabled: true, deletedAt: null },
         orderBy: { sortOrder: 'asc' },
         select: { slug: true, displayName: true, sortOrder: true },
       })
     } catch (err) {
-      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase()
-      const isMissingTable =
-        msg.includes('paymentgatewayconfig') ||
-        msg.includes('does not exist') ||
-        msg.includes("doesn't exist") ||
-        (msg.includes('relation') && msg.includes('exist')) ||
-        (msg.includes('table') && msg.includes('exist')) ||
-        msg.includes('no such table')
-      if (isMissingTable) return []
+      if (isMissingPaymentGatewayConfigTableError(err)) return []
       throw err
     }
     const result: EnabledGatewayPublic[] = []
     for (const r of rows) {
+      if (!isImplementedGatewaySlug(r.slug)) continue
       const creds = await this.getConfig(r.slug)
       const publishableKey = creds?.publicKey ?? creds?.publishableKey
       result.push({
@@ -433,8 +513,13 @@ export class PaymentGatewayConfigService {
    * Batch update sort order. slugOrder = ordered list of slugs (index = sortOrder).
    */
   static async reorder(slugOrder: string[], userId: string): Promise<void> {
+    const delegate = getPaymentGatewayConfigDelegate()
+    if (!delegate?.updateMany) {
+      throw new Error('PaymentGatewayConfig model is not available in Prisma client')
+    }
+
     const updates = slugOrder.map((slug, index) =>
-      prisma.paymentGatewayConfig.updateMany({
+      delegate.updateMany!({
         where: { slug, deletedAt: null },
         data: { sortOrder: index, updatedAt: new Date(), updatedBy: userId },
       })
@@ -452,7 +537,11 @@ export class PaymentGatewayConfigService {
    * Update last check result for a gateway (after Test connection).
    */
   static async setLastCheck(slug: string, ok: boolean): Promise<void> {
-    await prisma.paymentGatewayConfig.updateMany({
+    const delegate = getPaymentGatewayConfigDelegate()
+    if (!delegate?.updateMany) {
+      return
+    }
+    await delegate.updateMany({
       where: { slug, deletedAt: null },
       data: { lastCheckedAt: new Date(), lastCheckOk: ok },
     })

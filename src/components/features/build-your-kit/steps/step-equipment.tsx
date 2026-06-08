@@ -13,18 +13,10 @@ import { EquipmentSkeleton } from '../kit-skeleton'
 import { cn } from '@/lib/utils'
 import { Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
 
 export function StepEquipment() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const selectedCategoryId = useKitWizardStore((s) => s.selectedCategoryId)
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
   const addEquipment = useKitWizardStore((s) => s.addEquipment)
@@ -173,7 +165,7 @@ export function StepEquipment() {
         >
           <span className="text-sm font-medium text-text-heading">
             {t('kit.itemsSelected').replace('{count}', String(selectedCount))} —{' '}
-            {formatSar(totalDaily)} / {t('kit.perDay')}
+            {formatSar(totalDaily, locale)} / {t('kit.perDay')}
           </span>
         </div>
       )}

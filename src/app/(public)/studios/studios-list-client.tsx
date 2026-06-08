@@ -36,24 +36,10 @@ interface StudioItem {
 
 type SortOption = 'name' | 'price-asc' | 'price-desc' | 'capacity'
 
-const PRICE_RANGES = [
-  { label: 'الكل', value: 'all', min: 0, max: Infinity },
-  { label: 'أقل من 200 ر.س', value: '0-200', min: 0, max: 200 },
-  { label: '200 – 500 ر.س', value: '200-500', min: 200, max: 500 },
-  { label: '500 – 1000 ر.س', value: '500-1000', min: 500, max: 1000 },
-  { label: 'أكثر من 1000 ر.س', value: '1000+', min: 1000, max: Infinity },
-]
-
-const CAPACITY_RANGES = [
-  { label: 'الكل', value: 'all', min: 0, max: Infinity },
-  { label: '1 – 5 أشخاص', value: '1-5', min: 1, max: 5 },
-  { label: '6 – 15 شخص', value: '6-15', min: 6, max: 15 },
-  { label: '16 – 30 شخص', value: '16-30', min: 16, max: 30 },
-  { label: 'أكثر من 30', value: '30+', min: 31, max: Infinity },
-]
+type RangeOption = { label: string; value: string; min: number; max: number }
 
 export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
-  const { t } = useLocale()
+  const { t, dir } = useLocale()
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [priceRange, setPriceRange] = useState<string>('all')
@@ -61,6 +47,28 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
   const [locationFilter, setLocationFilter] = useState<string>('all')
   const [sort, setSort] = useState<SortOption>('name')
   const [showFilters, setShowFilters] = useState(false)
+
+  const priceRanges: RangeOption[] = useMemo(
+    () => [
+      { label: t('studios.priceRangeAll'), value: 'all', min: 0, max: Infinity },
+      { label: t('studios.priceRangeUnder200'), value: '0-200', min: 0, max: 200 },
+      { label: t('studios.priceRange200to500'), value: '200-500', min: 200, max: 500 },
+      { label: t('studios.priceRange500to1000'), value: '500-1000', min: 500, max: 1000 },
+      { label: t('studios.priceRangeOver1000'), value: '1000+', min: 1000, max: Infinity },
+    ],
+    [t]
+  )
+
+  const capacityRanges: RangeOption[] = useMemo(
+    () => [
+      { label: t('studios.capacityRangeAll'), value: 'all', min: 0, max: Infinity },
+      { label: t('studios.capacity1to5'), value: '1-5', min: 1, max: 5 },
+      { label: t('studios.capacity6to15'), value: '6-15', min: 6, max: 15 },
+      { label: t('studios.capacity16to30'), value: '16-30', min: 16, max: 30 },
+      { label: t('studios.capacityOver30'), value: '30+', min: 31, max: Infinity },
+    ],
+    [t]
+  )
 
   const studioTypes = useMemo(() => {
     const types = new Set(studios.map((s) => s.studioType).filter(Boolean) as string[])
@@ -114,14 +122,14 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
     }
 
     if (priceRange !== 'all') {
-      const range = PRICE_RANGES.find((r) => r.value === priceRange)
+      const range = priceRanges.find((r) => r.value === priceRange)
       if (range) {
         result = result.filter((s) => s.hourlyRate >= range.min && s.hourlyRate < range.max)
       }
     }
 
     if (capacityRange !== 'all') {
-      const range = CAPACITY_RANGES.find((r) => r.value === capacityRange)
+      const range = capacityRanges.find((r) => r.value === capacityRange)
       if (range) {
         result = result.filter((s) => {
           const cap = s.capacity ?? 0
@@ -149,10 +157,10 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
     }
 
     return result
-  }, [studios, search, typeFilter, priceRange, capacityRange, locationFilter, sort])
+  }, [studios, search, typeFilter, priceRange, capacityRange, locationFilter, sort, priceRanges, capacityRanges])
 
   return (
-    <div className="space-y-8" dir="rtl">
+    <div className="space-y-8" dir={dir}>
       {/* ── Hero Section ── */}
       <section className="relative overflow-hidden rounded-2xl bg-hero-gradient px-6 py-10 text-white sm:px-10 sm:py-14 md:py-16">
         <div className="absolute inset-0 bg-card-shine opacity-50" />
@@ -203,7 +211,7 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              aria-label="ترتيب حسب"
+              aria-label={t('studios.ariaSortBy')}
               className="rounded-xl border border-input bg-background px-3 py-2.5 text-sm shadow-card"
             >
               <option value="name">{t('studios.sortName')}</option>
@@ -227,7 +235,7 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    aria-label="فلترة حسب النوع"
+                    aria-label={t('studios.ariaFilterType')}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="all">{t('studios.filterAllTypes')}</option>
@@ -247,10 +255,10 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  aria-label="فلترة حسب السعر"
+                  aria-label={t('studios.ariaFilterPrice')}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 >
-                  {PRICE_RANGES.map((r) => (
+                  {priceRanges.map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
                     </option>
@@ -265,10 +273,10 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                 <select
                   value={capacityRange}
                   onChange={(e) => setCapacityRange(e.target.value)}
-                  aria-label="فلترة حسب السعة"
+                  aria-label={t('studios.ariaFilterCapacity')}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 >
-                  {CAPACITY_RANGES.map((r) => (
+                  {capacityRanges.map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
                     </option>
@@ -284,7 +292,7 @@ export function StudiosListClient({ studios }: { studios: StudioItem[] }) {
                   <select
                     value={locationFilter}
                     onChange={(e) => setLocationFilter(e.target.value)}
-                    aria-label="فلترة حسب الموقع"
+                    aria-label={t('studios.ariaFilterLocation')}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="all">{t('studios.filterAllLocations')}</option>

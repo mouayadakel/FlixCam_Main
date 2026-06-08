@@ -11,6 +11,8 @@ import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { generateMasterFill } from '@/lib/services/ai-content-generation.service'
 import { prisma } from '@/lib/db/prisma'
 import { TranslationLocale } from '@prisma/client'
+import { normalizeImportedSpecifications } from '@/lib/utils/specifications-import.utils'
+import { flattenStructuredSpecs } from '@/lib/utils/specifications.utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,18 +23,25 @@ type PreviewRow = {
   category?: string
   categoryName?: string
   brand?: string
-  specifications?: Record<string, any>
+  specifications?: unknown
+  specificationsRawNotes?: unknown
   locale?: TranslationLocale
   boxContents?: string
 }
 
-function normalizeSpecs(input: unknown): Record<string, unknown> {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) return {}
-  const obj = input as Record<string, unknown>
-  const entries = Object.entries(obj)
-    .map(([k, v]) => [String(k).trim(), v] as const)
-    .filter(([k, v]) => k.length > 0 && v != null && String(v).trim() !== '')
-    .slice(0, 10)
+function normalizeSpecs(
+  specsRaw: unknown,
+  specsRawNotes: unknown,
+  categoryHint?: string
+): Record<string, unknown> {
+  const normalized = normalizeImportedSpecifications({
+    specsRaw,
+    specsRawNotes,
+    categoryHint,
+  })
+  if (!normalized.structured) return {}
+  const flat = flattenStructuredSpecs(normalized.structured)
+  const entries = Object.entries(flat).slice(0, 12)
   return Object.fromEntries(entries)
 }
 
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
       rowsWithCategoryName.map(async (row, idx) => {
         const category = row.categoryName ?? row.category ?? 'General'
         const brand = row.brand?.trim() || 'Unknown'
-        const specs = normalizeSpecs(row.specifications)
+        const specs = normalizeSpecs(row.specifications, row.specificationsRawNotes, category)
         const existingDescription =
           [row.longDescription, row.shortDescription].filter(Boolean).join('\n\n') || null
 

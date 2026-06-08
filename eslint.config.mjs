@@ -6,9 +6,6 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   {
     rules: {
-      // Kept as warn: alt-text, anonymous-default-export (low noise)
-      'jsx-a11y/alt-text': 'warn',
-      'import/no-anonymous-default-export': 'warn',
       // Off until incrementally fixed: setState-in-effect and deps need per-file refactors
       'react-hooks/exhaustive-deps': 'off',
       'react-hooks/set-state-in-effect': 'off',
@@ -24,6 +21,7 @@ const eslintConfig = defineConfig([
   },
   globalIgnores([
     '.next/**',
+    '.next.bak.*/**',
     'out/**',
     'build/**',
     'next-env.d.ts',
@@ -32,6 +30,7 @@ const eslintConfig = defineConfig([
     'dist/**',
     '.turbo/**',
     '.history/**',
+    'app-nested-backup/**',
     'docs/**',
     '*.lock',
     '.env',

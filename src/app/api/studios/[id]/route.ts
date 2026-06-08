@@ -9,7 +9,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateStudioSchema } from '@/lib/validators/studio.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError, NotFoundError } from '@/lib/errors'
+import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 
 function slugify(name: string): string {
   return name
@@ -62,8 +63,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+    if (!(await hasPermission(session.user.id, PERMISSIONS.STUDIO_UPDATE))) {
+      throw new ForbiddenError('You do not have permission to update studios')
     }
 
     const { id } = await params
@@ -161,6 +165,10 @@ export async function DELETE(
     const session = await auth()
     if (!session?.user) {
       throw new UnauthorizedError()
+    }
+
+    if (!(await hasPermission(session.user.id, PERMISSIONS.STUDIO_DELETE))) {
+      throw new ForbiddenError('You do not have permission to delete studios')
     }
 
     const { id } = await params

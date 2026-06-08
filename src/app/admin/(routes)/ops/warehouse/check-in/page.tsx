@@ -15,12 +15,14 @@ import {
   CheckCircle,
   AlertCircle,
   Search,
+  Camera,
   User,
   Calendar,
   AlertTriangle,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ImageUpload } from '@/components/forms/image-upload'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,6 +38,9 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate } from '@/lib/utils/format.utils'
+import { BarcodeScanner } from '@/components/warehouse/barcode-scanner'
+import { BarcodeWedgeInput } from '@/components/warehouse/barcode-wedge-input'
+import { matchBookingEquipmentLine } from '@/lib/warehouse/match-booking-equipment'
 
 interface Booking {
   id: string
@@ -67,6 +72,7 @@ interface ItemCondition {
   itemId: string
   condition: 'good' | 'damaged' | 'missing'
   notes: string
+  images?: string[]
 }
 
 const CONDITION_CONFIG = {
@@ -87,6 +93,56 @@ export default function CheckInPage() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
   const [itemConditions, setItemConditions] = useState<Map<string, ItemCondition>>(new Map())
   const [generalNotes, setGeneralNotes] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
+
+  const handleScan = async (decodedText: string) => {
+    if (!selectedBooking) return
+
+    const scan = decodedText.trim()
+    let item = matchBookingEquipmentLine(selectedBooking.equipment, scan, 'checkin')
+
+    if (!item) {
+      try {
+        const res = await fetch('/api/warehouse/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            barcode: scan,
+            bookingId: selectedBooking.id,
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.equipment?.equipmentId) {
+          item = matchBookingEquipmentLine(
+            selectedBooking.equipment,
+            scan,
+            'checkin',
+            data.equipment.equipmentId
+          )
+        }
+      } catch {
+        // fall through
+      }
+    }
+
+    if (item) {
+      if (!checkedItems.has(item.id)) {
+        handleToggleItem(item.id)
+        toast({
+          title: 'تم العثور على المعدة',
+          description: `تم تحديد ${item.equipment.sku} للإرجاع`,
+        })
+      } else {
+        toast({ title: 'هذه المعدة محددة بالفعل' })
+      }
+    } else {
+      toast({
+        title: 'لم يتم العثور على المعدة',
+        description: `الرمز ${scan} غير موجود في هذا الحجز أو غير قابل للإرجاع`,
+        variant: 'destructive',
+      })
+    }
+  }
 
   const bookingIdFromUrl = searchParams?.get('booking')
 
@@ -191,6 +247,7 @@ export default function CheckInPage() {
           equipmentId: id,
           condition: condition?.condition || 'good',
           notes: condition?.notes || null,
+          images: condition?.images || [],
         }
       })
 
@@ -373,15 +430,27 @@ export default function CheckInPage() {
               {/* Equipment List with Condition */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle>المعدات وحالتها</CardTitle>
-                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                      {checkedItems.size ===
-                      selectedBooking.equipment.filter((e) => e.checkedOut && !e.checkedIn).length
-                        ? 'إلغاء تحديد الكل'
-                        : 'تحديد الكل'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setScannerOpen(true)}
+                        disabled={!selectedBooking}
+                      >
+                        <Camera className="ms-1 h-4 w-4" />
+                        مسح
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                        {checkedItems.size ===
+                        selectedBooking.equipment.filter((e) => e.checkedOut && !e.checkedIn).length
+                          ? 'إلغاء تحديد الكل'
+                          : 'تحديد الكل'}
+                      </Button>
+                    </div>
                   </div>
+                  <BarcodeWedgeInput enabled={!!selectedBooking} onScan={handleScan} />
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -449,13 +518,40 @@ export default function CheckInPage() {
                                   </div>
                                   {(condition?.condition === 'damaged' ||
                                     condition?.condition === 'missing') && (
-                                    <Input
-                                      placeholder="وصف المشكلة..."
-                                      value={condition?.notes || ''}
-                                      onChange={(e) =>
-                                        handleConditionNotes(item.id, e.target.value)
-                                      }
-                                    />
+                                    <>
+                                      <Input
+                                        placeholder="وصف المشكلة..."
+                                        value={condition?.notes || ''}
+                                        onChange={(e) =>
+                                          handleConditionNotes(item.id, e.target.value)
+                                        }
+                                      />
+                                      <div className="space-y-4 pt-4 border-t mt-4">
+                                        <label className="text-sm font-medium">
+                                          صور الأضرار (إن وجدت)
+                                        </label>
+                                        <ImageUpload
+                                          multiple
+                                          value={itemConditions.get(item.id)?.images || []}
+                                          onChange={(urls: string[]) => {
+                                            const current = itemConditions.get(item.id) || {
+                                              itemId: item.id,
+                                              condition: 'good',
+                                              notes: '',
+                                            }
+                                            setItemConditions(
+                                              new Map(
+                                                itemConditions.set(item.id, {
+                                                  ...current,
+                                                  images: urls,
+                                                })
+                                              )
+                                            )
+                                          }}
+                                          disabled={processing}
+                                        />
+                                      </div>
+                                    </>
                                   )}
                                 </div>
                               )}
@@ -515,6 +611,13 @@ export default function CheckInPage() {
           )}
         </div>
       </div>
+
+      <BarcodeScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScan}
+        mode="CHECKIN"
+      />
     </div>
   )
 }

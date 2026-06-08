@@ -42,6 +42,9 @@
     "scripts",
     "prisma/scripts",
     "docs",
+    "app-nested-backup",
+    "scratch",
+    "prisma",
     "src/lib/services/__tests__/product-equipment-sync.service.test.ts"
   ]
 }

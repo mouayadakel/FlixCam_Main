@@ -33,12 +33,14 @@ const mockInventoryItemUpdate = jest.fn().mockResolvedValue({})
 const mockImportJobRowFindMany = jest.fn().mockResolvedValue([])
 const mockProductTranslationUpdateMany = jest.fn().mockResolvedValue({ count: 1 })
 const mockBrandFindUnique = jest.fn().mockResolvedValue(null)
+const mockBrandFindFirst = jest.fn().mockResolvedValue(null)
 
 jest.mock('@/lib/db/prisma', () => ({
   prisma: {
     brand: {
       upsert: (...args: unknown[]) => mockBrandUpsert(...args),
       findUnique: (...args: unknown[]) => mockBrandFindUnique(...args),
+      findFirst: (...args: unknown[]) => mockBrandFindFirst(...args),
     },
     category: { findUnique: (...args: unknown[]) => mockCategoryFindUnique(...args) },
     product: {
@@ -122,6 +124,7 @@ describe('processImportJob', () => {
     mockSaveMappingHistory.mockResolvedValue(undefined)
     mockBrandUpsert.mockResolvedValue({ id: 'brand1' })
     mockBrandFindUnique.mockResolvedValue(null)
+    mockBrandFindFirst.mockResolvedValue(null)
     mockCategoryFindUnique.mockResolvedValue({ name: 'Cameras' })
     mockGenerateUniqueSKU.mockResolvedValue('CAM-001')
     mockLookupDeepSpecs.mockReturnValue(null)
@@ -497,14 +500,21 @@ describe('processImportJob', () => {
       expect.objectContaining({
         translations: expect.arrayContaining([
           expect.objectContaining({
-            specifications: { sensor: 'Full Frame', resolution: '4K' },
+            specifications: expect.objectContaining({
+              groups: expect.any(Array),
+            }),
           }),
         ]),
       })
     )
+    const createPayload = ProductCatalogService.create.mock.calls[0][0]
+    const enSpecs = createPayload.translations.find((t: any) => t.locale === 'en')?.specifications
+    const allSpecs = enSpecs.groups.flatMap((g: any) => g.specs)
+    expect(allSpecs.some((s: any) => s.key === 'sensor' && s.value === 'Full Frame')).toBe(true)
+    expect(allSpecs.length).toBeGreaterThan(0)
   })
 
-  it('throws when specifications JSON is invalid', async () => {
+  it('does not fail row when specifications text is invalid JSON', async () => {
     const ImportService = require('../import.service').ImportService
     mockMapColumns.mockResolvedValue([
       { sourceHeader: 'name', mappedField: 'name', confidence: 90 },
@@ -536,8 +546,8 @@ describe('processImportJob', () => {
     expect(ImportService.markRow).toHaveBeenCalledWith(
       'job1',
       1,
-      'ERROR',
-      expect.objectContaining({ error: expect.stringContaining('Specifications JSON invalid') })
+      'SUCCESS',
+      expect.objectContaining({ productId: expect.any(String) })
     )
   })
 
@@ -577,11 +587,18 @@ describe('processImportJob', () => {
       expect.objectContaining({
         translations: expect.arrayContaining([
           expect.objectContaining({
-            specifications: { sensor: 'APS-C', weight: '500g' },
+            specifications: expect.objectContaining({
+              groups: expect.any(Array),
+            }),
           }),
         ]),
       })
     )
+    const createPayload = ProductCatalogService.create.mock.calls[0][0]
+    const enSpecs = createPayload.translations.find((t: any) => t.locale === 'en')?.specifications
+    const allSpecs = enSpecs.groups.flatMap((g: any) => g.specs)
+    expect(allSpecs.some((s: any) => s.key === 'sensor' && s.value === 'APS-C')).toBe(true)
+    expect(allSpecs.some((s: any) => s.key === 'weight' && s.value === '500g')).toBe(true)
   })
 
   it('uses suggestion specifications, boxContents, tags', async () => {
@@ -661,7 +678,7 @@ describe('processImportJob', () => {
     expect(createCall.translations.map((t: { locale: string }) => t.locale)).toContain('zh')
   })
 
-  it('uses barcode from Barcode key and updates existing product', async () => {
+  it('uses barcode from Barcode key and skips existing product (no overwrite)', async () => {
     const ImportService = require('../import.service').ImportService
     const ProductCatalogService = require('../product-catalog.service').ProductCatalogService
     mockMapColumns.mockResolvedValue([
@@ -690,21 +707,22 @@ describe('processImportJob', () => {
     })
     mockProductFindUnique.mockResolvedValue({ id: 'prod-existing', deletedAt: null })
     ProductCatalogService.update.mockResolvedValue({ id: 'prod-existing' })
-    mockImportJobRowFindMany.mockResolvedValue([{ productId: 'prod-existing' }])
+    mockImportJobRowFindMany.mockResolvedValue([])
 
     await processImportJob('job1')
 
-    expect(ProductCatalogService.update).toHaveBeenCalledWith('prod-existing', expect.any(Object))
+    expect(ProductCatalogService.update).not.toHaveBeenCalled()
     expect(ImportService.markRow).toHaveBeenCalledWith(
       'job1',
       1,
-      'SUCCESS',
+      'SKIPPED',
       expect.objectContaining({ productId: 'prod-existing' })
     )
     expect(ProductCatalogService.create).not.toHaveBeenCalled()
   })
 
-  it('restores soft-deleted product when barcode exists', async () => {
+  it('skips row when barcode exists (does not restore soft-deleted product)', async () => {
+    const ImportService = require('../import.service').ImportService
     const ProductCatalogService = require('../product-catalog.service').ProductCatalogService
     mockGetJob.mockResolvedValue({
       id: 'job1',
@@ -726,19 +744,18 @@ describe('processImportJob', () => {
       deletedAt: null,
     })
     mockProductFindUnique.mockResolvedValue({ id: 'prod-deleted', deletedAt: new Date() })
-    mockProductUpdate.mockResolvedValue({})
-    ProductCatalogService.update.mockResolvedValue({ id: 'prod-deleted' })
-    mockImportJobRowFindMany.mockResolvedValue([{ productId: 'prod-deleted' }])
+    mockImportJobRowFindMany.mockResolvedValue([])
 
     await processImportJob('job1')
 
-    expect(mockProductUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 'prod-deleted' },
-        data: { deletedAt: null, deletedBy: null },
-      })
+    expect(mockProductUpdate).not.toHaveBeenCalled()
+    expect(ProductCatalogService.update).not.toHaveBeenCalled()
+    expect(ImportService.markRow).toHaveBeenCalledWith(
+      'job1',
+      1,
+      'SKIPPED',
+      expect.objectContaining({ productId: 'prod-deleted' })
     )
-    expect(ProductCatalogService.update).toHaveBeenCalled()
   })
 
   it('handles SKU duplicate in DB by generating fallback', async () => {
@@ -770,7 +787,8 @@ describe('processImportJob', () => {
     expect(mockGenerateUniqueSKU).toHaveBeenCalled()
   })
 
-  it('handles Barcode already exists on create by updating product', async () => {
+  it('handles Barcode already exists on create by skipping (no overwrite)', async () => {
+    const ImportService = require('../import.service').ImportService
     const ProductCatalogService = require('../product-catalog.service').ProductCatalogService
     const { ValidationError } = require('@/lib/errors')
     mockGetJob.mockResolvedValue({
@@ -787,7 +805,6 @@ describe('processImportJob', () => {
         },
       ],
     })
-    mockInventoryItemFindFirst.mockResolvedValue(null)
     ProductCatalogService.create.mockRejectedValueOnce(new ValidationError('Barcode already exists'))
     mockInventoryItemFindFirst
       .mockResolvedValueOnce(null)
@@ -798,16 +815,22 @@ describe('processImportJob', () => {
         deletedAt: null,
       })
     mockProductFindUnique.mockResolvedValue({ id: 'prod-existing', deletedAt: null })
-    ProductCatalogService.update.mockResolvedValue({ id: 'prod-existing' })
-    mockImportJobRowFindMany.mockResolvedValue([{ productId: 'prod-existing' }])
+    mockImportJobRowFindMany.mockResolvedValue([])
 
     await processImportJob('job1')
 
-    expect(ProductCatalogService.update).toHaveBeenCalledWith('prod-existing', expect.any(Object))
+    expect(ProductCatalogService.update).not.toHaveBeenCalled()
     expect(ProductCatalogService.create).toHaveBeenCalledTimes(1)
+    expect(ImportService.markRow).toHaveBeenCalledWith(
+      'job1',
+      1,
+      'SKIPPED',
+      expect.objectContaining({ productId: 'prod-existing' })
+    )
   })
 
-  it('restores product and inventory when Barcode exists and both were soft-deleted', async () => {
+  it('skips when Barcode exists and inventory/product were soft-deleted (no restore)', async () => {
+    const ImportService = require('../import.service').ImportService
     const ProductCatalogService = require('../product-catalog.service').ProductCatalogService
     const { ValidationError } = require('@/lib/errors')
     mockGetJob.mockResolvedValue({
@@ -834,26 +857,19 @@ describe('processImportJob', () => {
         deletedAt: new Date('2025-01-01'),
       })
     mockProductFindUnique.mockResolvedValue({ id: 'prod-deleted', deletedAt: new Date('2025-01-01') })
-    mockProductUpdate.mockResolvedValue({})
-    mockInventoryItemUpdate.mockResolvedValue({})
-    ProductCatalogService.update.mockResolvedValue({ id: 'prod-deleted' })
-    mockImportJobRowFindMany.mockResolvedValue([{ productId: 'prod-deleted' }])
+    mockImportJobRowFindMany.mockResolvedValue([])
 
     await processImportJob('job1')
 
-    expect(mockProductUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 'prod-deleted' },
-        data: { deletedAt: null, deletedBy: null },
-      })
+    expect(mockProductUpdate).not.toHaveBeenCalled()
+    expect(mockInventoryItemUpdate).not.toHaveBeenCalled()
+    expect(ProductCatalogService.update).not.toHaveBeenCalled()
+    expect(ImportService.markRow).toHaveBeenCalledWith(
+      'job1',
+      1,
+      'SKIPPED',
+      expect.objectContaining({ productId: 'prod-deleted' })
     )
-    expect(mockInventoryItemUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ id: 'inv1' }),
-        data: { deletedAt: null, deletedBy: null },
-      })
-    )
-    expect(ProductCatalogService.update).toHaveBeenCalled()
   })
 
   it('marks row error when Barcode already exists but existingItem not found', async () => {
@@ -1051,7 +1067,8 @@ describe('processImportJob', () => {
     expect(createCall.inventoryItems[0].barcode).toBe('123456789012')
   })
 
-  it('restores deleted inventory item when barcode exists', async () => {
+  it('skips when barcode matches soft-deleted inventory item (no restore)', async () => {
+    const ImportService = require('../import.service').ImportService
     const ProductCatalogService = require('../product-catalog.service').ProductCatalogService
     mockGetJob.mockResolvedValue({
       id: 'job1',
@@ -1067,23 +1084,25 @@ describe('processImportJob', () => {
         },
       ],
     })
-    mockInventoryItemFindFirst.mockResolvedValue({
-      id: 'inv-deleted',
-      parentProductId: 'prod1',
-      deletedAt: new Date(),
-    })
+    mockInventoryItemFindFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue({
+        id: 'inv-deleted',
+        parentProductId: 'prod1',
+        deletedAt: new Date(),
+      })
     mockProductFindUnique.mockResolvedValue({ id: 'prod1', deletedAt: null })
-    mockInventoryItemUpdate.mockResolvedValue({})
-    ProductCatalogService.update.mockResolvedValue({ id: 'prod1' })
-    mockImportJobRowFindMany.mockResolvedValue([{ productId: 'prod1' }])
+    mockImportJobRowFindMany.mockResolvedValue([])
 
     await processImportJob('job1')
 
-    expect(mockInventoryItemUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: 'inv-deleted' },
-        data: { deletedAt: null, deletedBy: null },
-      })
+    expect(mockInventoryItemUpdate).not.toHaveBeenCalled()
+    expect(ProductCatalogService.update).not.toHaveBeenCalled()
+    expect(ImportService.markRow).toHaveBeenCalledWith(
+      'job1',
+      1,
+      'SKIPPED',
+      expect.objectContaining({ productId: 'prod1' })
     )
   })
 

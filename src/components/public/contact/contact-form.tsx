@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { trackMetaEvent, MetaPixelEvents } from '@/lib/analytics/meta-pixel'
 
 const SUBJECT_OPTIONS = [
   { value: 'general', key: 'contactPage.subjectGeneral' },
@@ -32,6 +34,7 @@ export function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [subject, setSubject] = useState<string>('')
+  const [successWhatsappUrl, setSuccessWhatsappUrl] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -54,6 +57,7 @@ export function ContactForm() {
 
     setStatus('submitting')
     setErrorMessage(null)
+    setSuccessWhatsappUrl(null)
 
     try {
       const res = await fetch('/api/public/contact', {
@@ -67,7 +71,14 @@ export function ContactForm() {
         setErrorMessage(json.error || t('contactPage.error'))
         return
       }
+      const wa =
+        typeof json.whatsappUrl === 'string' &&
+        (json.whatsappUrl.startsWith('http://') || json.whatsappUrl.startsWith('https://'))
+          ? json.whatsappUrl
+          : null
+      setSuccessWhatsappUrl(wa)
       setStatus('success')
+      trackMetaEvent(MetaPixelEvents.CONTACT, { content_name: 'Contact form' })
       form.reset()
       setSubject('')
     } catch {
@@ -85,6 +96,16 @@ export function ContactForm() {
         <p className="text-lg font-medium text-green-800 dark:text-green-200">
           {t('contactPage.success')}
         </p>
+        {successWhatsappUrl ? (
+          <a
+            href={successWhatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center rounded-md bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-hover"
+          >
+            {t('contactPage.successWhatsapp')}
+          </a>
+        ) : null}
       </div>
     )
   }
@@ -113,7 +134,7 @@ export function ContactForm() {
             required
             disabled={status === 'submitting'}
             className="w-full"
-            dir="ltr"
+            dir={EMBED_LTR}
           />
         </div>
       </div>
@@ -125,7 +146,7 @@ export function ContactForm() {
           type="tel"
           disabled={status === 'submitting'}
           className="w-full"
-          dir="ltr"
+          dir={EMBED_LTR}
         />
       </div>
       <div className="space-y-2">

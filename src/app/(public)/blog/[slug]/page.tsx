@@ -55,8 +55,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     },
     twitter: {
       card: 'summary_large_image',
+      site: process.env.NEXT_PUBLIC_TWITTER_SITE || process.env.NEXT_PUBLIC_TWITTER_HANDLE || '@FlixCam',
+      creator: process.env.NEXT_PUBLIC_TWITTER_HANDLE || '@FlixCam',
       title,
       description,
+      images: [imageUrl],
     },
   }
 }

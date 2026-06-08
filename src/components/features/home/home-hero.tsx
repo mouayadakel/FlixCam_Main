@@ -12,8 +12,8 @@ import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 import { HeroCarousel } from '@/components/features/home/hero-carousel'
-import { PublicSearch } from '@/components/public/public-search'
 import type { HeroBannerPublic } from '@/lib/services/hero-banner.service'
+import { usePersonalization } from '@/components/analytics/personalization-provider'
 
 const DEFAULT_HERO_IMAGE_URL =
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80'
@@ -27,6 +27,25 @@ export function HomeHero({
 }) {
   const resolvedHeroImage = heroImageUrl || DEFAULT_HERO_IMAGE_URL
   const { t } = useLocale()
+  const { campaign, isPersonalized } = usePersonalization()
+
+  // Dynamic Personalization Logic
+  let personalizedTitle = t('home.heroTitle')
+  let personalizedSubtitle = t('home.heroSubtitle')
+
+  if (isPersonalized) {
+    const campaignLower = campaign?.toLowerCase() || ''
+    if (campaignLower.includes('camera')) {
+      personalizedTitle = 'أفضل الكاميرات السينمائية للإيجار في الرياض'
+      personalizedSubtitle = 'اكتشف مجموعتنا المختارة من ARRI و Red و Sony للتصوير الاحترافي'
+    } else if (campaignLower.includes('studio')) {
+      personalizedTitle = 'استوديوهات تصوير احترافية مجهزة بالكامل'
+      personalizedSubtitle = 'مساحات إبداعية تناسب كافة احتياجات الإنتاج السينمائي والدرامي'
+    } else if (campaignLower.includes('offer') || campaignLower.includes('sale')) {
+      personalizedTitle = 'عروض حصرية لعملاء فليكس كام الجدد'
+      personalizedSubtitle = 'استفد من خصومات تصل إلى 20% على أول عملية حجز لك اليوم'
+    }
+  }
 
   if (banner?.slides?.length) {
     return (
@@ -54,27 +73,18 @@ export function HomeHero({
       <div className="absolute -bottom-32 -start-32 h-80 w-80 rounded-full bg-black/10 blur-3xl" />
 
       <PublicContainer>
-        {/* Search bar – left corner at golden ratio (38.2% from top) */}
-        <div className="absolute start-0 end-0 top-[38.2%] z-10">
-          <PublicContainer>
-            <div className="w-full max-w-md animate-fade-in opacity-0 [animation-delay:0.2s]">
-              <PublicSearch />
-            </div>
-          </PublicContainer>
-        </div>
-
         <div className="relative flex min-h-[400px] flex-col items-center gap-10 py-16 md:min-h-[440px] md:flex-row md:items-center md:gap-16 lg:py-20">
           {/* Text block – left on md+, first on small */}
           <div className="flex-1 animate-fade-in text-center opacity-0 md:text-start">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-sm">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-sm shadow-sm border border-white/10">
               <span className="h-1.5 w-1.5 animate-pulse-subtle rounded-full bg-brand-secondary-accent" />
-              {t('home.heroSubtitle')}
+              {isPersonalized ? `حملة: ${campaign}` : t('home.heroSubtitle')}
             </div>
             <h1 className="text-[28px] font-extrabold leading-tight text-white min-[640px]:text-hero-title md:text-[44px] lg:text-[52px]">
-              {t('home.heroTitle')}
+              {personalizedTitle}
             </h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-white/75 md:text-lg">
-              {t('home.heroSubtitle')}
+              {personalizedSubtitle}
             </p>
 
             <div className="mt-8 flex animate-fade-in flex-wrap items-center justify-center gap-3 opacity-0 [animation-delay:0.4s] md:justify-start">

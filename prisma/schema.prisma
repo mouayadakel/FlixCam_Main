@@ -146,6 +146,7 @@ model ImportJob {
   processedRows         Int               @default(0)
   successRows           Int               @default(0)
   errorRows             Int               @default(0)
+  skippedRows           Int               @default(0)
   errorMessage          String?
   aiProcessingStatus    String?
   imageProcessingStatus String?
@@ -336,8 +337,15 @@ model User {
   taxId                   String?
   companyName             String?
   billingAddress          String?
+  creditLimit             Decimal?                 @db.Decimal(12, 2)
+  isBlacklisted           Boolean                  @default(false)
+  blacklistReason         String?
+  blacklistedAt           DateTime?
+  blacklistedBy           String?
   twoFactorVerifiedAt     DateTime?
   twoFactorBackupCodes    Json?
+  whatsappOptIn           Boolean                  @default(false)
+  whatsappOptInAt         DateTime?
   userRoles               AssignedUserRole[]
   auditLogs               AuditLog[]
   authTokens              AuthToken[]
@@ -365,6 +373,12 @@ model User {
   permissions             UserPermission[]
   vendor                  Vendor?
   verificationDocuments   VerificationDocument[]
+  referrals               Referral[]
+  warehouseScans          WarehouseScan[]
+  waitlistEntries         WaitlistEntry[]
+  deviceTokens            DeviceToken[]
+  pushSubscriptions       PushSubscription[]
+  managedWarehouses       Warehouse[]              @relation("WarehouseManager")
 
   @@index([email])
   @@index([role])
@@ -413,6 +427,18 @@ model SavedEquipment {
   @@unique([userId, equipmentId])
   @@index([userId])
   @@index([equipmentId])
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model PermissionCategory {
@@ -632,6 +658,23 @@ model Event {
   @@index([timestamp])
 }
 
+/// [FIX 4] Moyasar payout / balance transfer webhook audit trail (no booking link required)
+model MoyasarPayoutWebhookRecord {
+  id                String   @id @default(cuid())
+  moyasarResourceId String   @unique
+  eventClass        String
+  eventType         String
+  amountHalalah     Int?
+  currency          String?  @default("SAR")
+  failureReason     String?
+  rawPayload        Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([eventType])
+  @@index([eventClass])
+}
+
 model Vendor {
   id             String         @id @default(cuid())
   userId         String         @unique
@@ -668,22 +711,23 @@ model Vendor {
 }
 
 model VendorPayout {
-  id               String       @id @default(cuid())
+  id               String        @id @default(cuid())
   vendorId         String
   bookingId        String?
   periodStart      DateTime?
   periodEnd        DateTime?
-  grossAmount      Decimal      @db.Decimal(10, 2)
-  commissionAmount Decimal      @db.Decimal(10, 2)
-  netAmount        Decimal      @db.Decimal(10, 2)
-  status           PayoutStatus @default(PENDING)
+  grossAmount      Decimal       @db.Decimal(10, 2)
+  commissionAmount Decimal       @db.Decimal(10, 2)
+  netAmount        Decimal       @db.Decimal(10, 2)
+  status           PayoutStatus  @default(PENDING)
   paidAt           DateTime?
   bankRef          String?
   notes            String?
-  createdAt        DateTime     @default(now())
+  createdAt        DateTime      @default(now())
   createdBy        String?
-  updatedAt        DateTime     @updatedAt
-  vendor           Vendor       @relation(fields: [vendorId], references: [id])
+  updatedAt        DateTime      @updatedAt
+  ledgerEntries    LedgerEntry[]
+  vendor           Vendor        @relation(fields: [vendorId], references: [id])
 
   @@index([vendorId])
   @@index([status])
@@ -693,9 +737,15 @@ model VendorPayout {
 model Category {
   id                     String                  @id @default(cuid())
   name                   String
+  nameAr                 String?
+  nameEn                 String?
+  nameZh                 String?
+  nameFr                 String?
   slug                   String                  @unique
   description            String?
   parentId               String?
+  isActive               Boolean                 @default(true)
+  sortOrder              Int                     @default(0)
   createdAt              DateTime                @default(now())
   createdBy              String?
   updatedAt              DateTime                @updatedAt
@@ -711,6 +761,8 @@ model Category {
 
   @@index([slug])
   @@index([parentId])
+  @@index([isActive])
+  @@index([sortOrder])
   @@index([deletedAt])
 }
 
@@ -766,6 +818,10 @@ model Equipment {
   specConfidence           Float?
   specLastInferredAt       DateTime?
   specSource               String?
+  rentalCycles             Int                       @default(0)
+  maxCyclesBeforeService   Int                       @default(50)
+  lastServiceDate          DateTime?
+  needsService             Boolean                   @default(false)
   nameEn                   String?
   nameZh                   String?
   descriptionEn            String?
@@ -786,6 +842,9 @@ model Equipment {
   quoteEquipment           QuoteEquipment[]
   savedByUsers             SavedEquipment[]
   shootTypeRecommendations ShootTypeRecommendation[]
+  warehouseScans           WarehouseScan[]
+  stocks                   EquipmentStock[]
+  waitlistEntries          WaitlistEntry[]
 
   @@index([sku])
   @@index([slug])
@@ -798,6 +857,7 @@ model Equipment {
   @@index([featured])
   @@index([deletedAt])
   @@index([budgetTier])
+  @@index([needsService])
 }
 
 model ShootType {
@@ -1052,12 +1112,15 @@ model StudioSchedule {
   openTime  String
   closeTime String
   isClosed  Boolean  @default(false)
+  deletedAt DateTime?
+  deletedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   studio    Studio   @relation(fields: [studioId], references: [id])
 
   @@unique([studioId, dayOfWeek])
   @@index([studioId])
+  @@index([deletedAt])
 }
 
 model StudioAddOn {
@@ -1095,14 +1158,15 @@ model Booking {
   studioId                 String?
   studioStartTime          DateTime?
   studioEndTime            DateTime?
-  totalAmount              Decimal            @db.Decimal(10, 2)
-  depositAmount            Decimal?           @db.Decimal(10, 2)
-  vatAmount                Decimal            @db.Decimal(10, 2)
+  totalAmount              Decimal            @db.Decimal(12, 2)
+  depositAmount            Decimal?           @db.Decimal(12, 2)
+  vatAmount                Decimal            @db.Decimal(12, 2)
   notes                    String?
   softLockExpiresAt        DateTime?
   actualReturnDate         DateTime?
-  lateFeeAmount            Decimal?           @db.Decimal(10, 2)
+  lateFeeAmount            Decimal?           @db.Decimal(12, 2)
   recurringSeriesId        String?
+  sessionId                String?
   createdAt                DateTime           @default(now())
   createdBy                String
   updatedAt                DateTime           @updatedAt
@@ -1124,6 +1188,8 @@ model Booking {
   emergencyContactRelation String?
   checkoutFormData         Json?
   cartId                   String?            @unique
+  warehouseId              String?
+  warehouse                Warehouse?         @relation(fields: [warehouseId], references: [id])
   cart                     Cart?              @relation("CartToBooking", fields: [cartId], references: [id])
   createdByUser            User               @relation("CreatedBookings", fields: [createdBy], references: [id])
   customer                 User               @relation("CustomerBookings", fields: [customerId], references: [id])
@@ -1134,12 +1200,16 @@ model Booking {
   contracts                Contract[]
   damageClaims             DamageClaim[]
   deliveries               Delivery[]
+  deposit                  Deposit?
   inspections              Inspection[]
   invoices                 Invoice[]
+  ledgerEntries            LedgerEntry[]
   payments                 Payment[]
   promissoryNotes          PromissoryNote[]
   quotes                   Quote?             @relation("ConvertedFromQuote")
+  refunds                  Refund[]
   reviews                  Review?
+  warehouseScans           WarehouseScan[]
 
   @@index([bookingNumber])
   @@index([customerId])
@@ -1148,6 +1218,7 @@ model Booking {
   @@index([studioId])
   @@index([softLockExpiresAt])
   @@index([recurringSeriesId])
+  @@index([sessionId])
   @@index([cartId])
   @@index([deletedAt])
 }
@@ -1229,6 +1300,7 @@ model Kit {
   description     String?
   discountPercent Decimal?       @db.Decimal(5, 2)
   isActive        Boolean        @default(true)
+  cmsData         Json?
   createdAt       DateTime       @default(now())
   createdBy       String?
   updatedAt       DateTime       @updatedAt
@@ -1272,6 +1344,9 @@ model DamageClaim {
   severity         DamageSeverity
   description      String
   photos           Json?
+  checkoutPhotos   Json?
+  checkinPhotos    Json?
+  aiAnalysis       Json?
   estimatedCost    Decimal        @db.Decimal(10, 2)
   actualCost       Decimal?       @db.Decimal(10, 2)
   status           ClaimStatus    @default(PENDING)
@@ -1280,6 +1355,10 @@ model DamageClaim {
   resolvedAt       DateTime?
   customerNotified Boolean        @default(false)
   insuranceClaim   Boolean        @default(false)
+  createdBy        String?
+  updatedBy        String?
+  deletedAt        DateTime?
+  deletedBy        String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   booking          Booking        @relation(fields: [bookingId], references: [id])
@@ -1339,12 +1418,23 @@ model PricingRule {
 model Payment {
   id               String            @id @default(cuid())
   bookingId        String
-  amount           Decimal           @db.Decimal(10, 2)
+  amount           Decimal           @db.Decimal(12, 2)
   status           PaymentStatus     @default(PENDING)
+  gateway          String?
+  externalId       String?           @unique
   tapTransactionId String?
   tapChargeId      String?
-  refundAmount     Decimal?          @db.Decimal(10, 2)
+  refundAmount     Decimal?          @db.Decimal(12, 2)
   refundReason     String?
+  gatewayFee       Decimal?          @db.Decimal(12, 2)
+  netAmount        Decimal?          @db.Decimal(12, 2)
+  currency         String            @default("SAR")
+  amountUnit       String            @default("RIYAL")
+  paidAt           DateTime?
+  reconciledAt     DateTime?
+  chargebackAt     DateTime?
+  chargebackRef    String?
+  metadata         Json?
   createdAt        DateTime          @default(now())
   createdBy        String?
   updatedAt        DateTime          @updatedAt
@@ -1353,10 +1443,13 @@ model Payment {
   deletedBy        String?
   approvalRequests ApprovalRequest[]
   invoicePayments  InvoicePayment[]
+  ledgerEntries    LedgerEntry[]
+  refunds          Refund[]
   booking          Booking           @relation(fields: [bookingId], references: [id])
 
   @@index([bookingId])
   @@index([status])
+  @@index([gateway])
   @@index([tapTransactionId])
   @@index([deletedAt])
 }
@@ -1390,6 +1483,7 @@ model Inspection {
   type        String
   checklist   Json
   notes       String?
+  images      Media[]
   createdAt   DateTime   @default(now())
   createdBy   String?
   updatedAt   DateTime   @updatedAt
@@ -1427,6 +1521,20 @@ model Notification {
   @@index([read])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model NotificationTemplate {
@@ -1652,7 +1760,7 @@ model ApprovalRequest {
 }
 
 model Media {
-  id            String     @id @default(cuid())
+  id            String      @id @default(cuid())
   url           String
   type          String
   filename      String
@@ -1660,22 +1768,25 @@ model Media {
   size          Int?
   equipmentId   String?
   studioId      String?
-  createdAt     DateTime   @default(now())
+  inspectionId  String?
+  createdAt     DateTime    @default(now())
   createdBy     String?
-  updatedAt     DateTime   @updatedAt
+  updatedAt     DateTime    @updatedAt
   updatedBy     String?
   deletedAt     DateTime?
   deletedBy     String?
-  pendingReview Boolean    @default(false)
+  pendingReview Boolean     @default(false)
   imageSource   String?
   qualityScore  Float?
-  sortOrder     Int?       @default(0)
+  sortOrder     Int?        @default(0)
   altText       String?
-  equipment     Equipment? @relation(fields: [equipmentId], references: [id])
-  studio        Studio?    @relation(fields: [studioId], references: [id])
+  equipment     Equipment?  @relation(fields: [equipmentId], references: [id])
+  studio        Studio?     @relation(fields: [studioId], references: [id])
+  inspection    Inspection? @relation(fields: [inspectionId], references: [id])
 
   @@index([equipmentId])
   @@index([studioId])
+  @@index([inspectionId])
   @@index([type])
   @@index([deletedAt])
   @@index([pendingReview])
@@ -1749,10 +1860,13 @@ model Branch {
   latitude     Float?
   longitude    Float?
   workingHours Json?
+  deletedAt    DateTime?
+  deletedBy    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([isActive])
+  @@index([deletedAt])
 }
 
 model DeliveryZone {
@@ -1765,44 +1879,51 @@ model DeliveryZone {
   leadTimeHrs Int      @default(24)
   isActive    Boolean  @default(true)
   cities      String[]
+  deletedAt   DateTime?
+  deletedBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([isActive])
+  @@index([deletedAt])
 }
 
 model Quote {
-  id              String           @id @default(cuid())
-  quoteNumber     String           @unique
-  customerId      String
-  status          QuoteStatus      @default(DRAFT)
-  startDate       DateTime
-  endDate         DateTime
-  validUntil      DateTime
-  studioId        String?
-  studioStartTime DateTime?
-  studioEndTime   DateTime?
-  subtotal        Decimal          @db.Decimal(10, 2)
-  discount        Decimal?         @db.Decimal(10, 2)
-  vatAmount       Decimal          @db.Decimal(10, 2)
-  totalAmount     Decimal          @db.Decimal(10, 2)
-  depositAmount   Decimal?         @db.Decimal(10, 2)
-  equipment       Json
-  notes           String?
-  bookingId       String?          @unique
-  convertedAt     DateTime?
-  createdAt       DateTime         @default(now())
-  createdBy       String
-  updatedAt       DateTime         @updatedAt
-  updatedBy       String?
-  deletedAt       DateTime?
-  deletedBy       String?
-  cartId          String?          @unique
-  booking         Booking?         @relation("ConvertedFromQuote", fields: [bookingId], references: [id])
-  cart            Cart?            @relation("CartToQuote", fields: [cartId], references: [id])
-  customer        User             @relation(fields: [customerId], references: [id])
-  studio          Studio?          @relation(fields: [studioId], references: [id])
-  equipmentItems  QuoteEquipment[]
+  id                   String           @id @default(cuid())
+  quoteNumber          String           @unique
+  customerId           String
+  status               QuoteStatus      @default(DRAFT)
+  startDate            DateTime
+  endDate              DateTime
+  validUntil           DateTime
+  studioId             String?
+  studioStartTime      DateTime?
+  studioEndTime        DateTime?
+  subtotal             Decimal          @db.Decimal(12, 2)
+  discount             Decimal?         @db.Decimal(10, 2)
+  discountAmount       Decimal          @default(0) @db.Decimal(12, 2)
+  vatRate              Decimal          @default(0.15) @db.Decimal(5, 4)
+  vatAmount            Decimal          @db.Decimal(12, 2)
+  totalAmount          Decimal          @db.Decimal(12, 2)
+  depositAmount        Decimal?         @db.Decimal(12, 2)
+  equipment            Json
+  notes                String?
+  bookingId            String?          @unique
+  convertedToInvoiceId String?
+  convertedAt          DateTime?
+  createdAt            DateTime         @default(now())
+  createdBy            String
+  updatedAt            DateTime         @updatedAt
+  updatedBy            String?
+  deletedAt            DateTime?
+  deletedBy            String?
+  cartId               String?          @unique
+  booking              Booking?         @relation("ConvertedFromQuote", fields: [bookingId], references: [id])
+  cart                 Cart?            @relation("CartToQuote", fields: [cartId], references: [id])
+  customer             User             @relation(fields: [customerId], references: [id])
+  studio               Studio?          @relation(fields: [studioId], references: [id])
+  equipmentItems       QuoteEquipment[]
+  lineItems            QuoteLineItem[]
 
   @@index([quoteNumber])
   @@index([customerId])
@@ -1813,14 +1934,62 @@ model Quote {
   @@index([deletedAt])
 }
 
+model Referral {
+  id             String           @id @default(cuid())
+  code           String           @unique
+  influencerId   String?
+  name           String?
+  commissionRate Decimal          @default(0.05) @db.Decimal(10, 2)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+  user           User?            @relation(fields: [influencerId], references: [id])
+  payouts        ReferralPayout[]
+
+  @@index([code])
+  @@index([deletedAt])
+}
+
+model ReferralPayout {
+  id            String    @id @default(cuid())
+  referralId    String
+  amount        Decimal   @db.Decimal(10, 2)
+  currency      String    @default("SAR")
+  status        String    @default("PENDING") // PENDING, PAID, CANCELLED
+  periodStart   DateTime
+  periodEnd     DateTime
+  paidAt        DateTime?
+  transactionId String?
+  createdAt     DateTime  @default(now())
+  referral      Referral  @relation(fields: [referralId], references: [id])
+
+  @@index([referralId])
+  @@index([status])
+}
+
+model AbExperiment {
+  id             String    @id @default(cuid())
+  name           String    @unique
+  description    String?
+  status         String    @default("ACTIVE") // ACTIVE, DRAFT, COMPLETED
+  winningVariant String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@index([name])
+  @@index([status])
+  @@index([deletedAt])
+}
+
 model QuoteEquipment {
   id          String    @id @default(cuid())
   quoteId     String
   equipmentId String
   quantity    Int       @default(1)
-  dailyRate   Decimal   @db.Decimal(10, 2)
+  dailyRate   Decimal   @db.Decimal(12, 2)
   totalDays   Int
-  subtotal    Decimal   @db.Decimal(10, 2)
+  subtotal    Decimal   @db.Decimal(12, 2)
   createdAt   DateTime  @default(now())
   createdBy   String?
   updatedAt   DateTime  @updatedAt
@@ -1834,6 +2003,31 @@ model QuoteEquipment {
   @@index([quoteId])
   @@index([equipmentId])
   @@index([deletedAt])
+}
+
+model QuoteLineItem {
+  id               String       @id @default(cuid())
+  quoteId          String
+  type             LineItemType
+  description      String
+  quantity         Decimal      @db.Decimal(10, 2)
+  unitPrice        Decimal      @db.Decimal(12, 2)
+  discountPct      Decimal      @default(0) @db.Decimal(5, 4)
+  discountAmt      Decimal      @default(0) @db.Decimal(12, 2)
+  vatRate          Decimal      @default(0.15) @db.Decimal(5, 4)
+  vatAmount        Decimal      @default(0) @db.Decimal(12, 2)
+  lineTotal        Decimal      @db.Decimal(12, 2)
+  lineTotalWithVat Decimal      @default(0) @db.Decimal(12, 2)
+  sortOrder        Int          @default(0)
+  startDate        DateTime?
+  endDate          DateTime?
+  rentalDays       Int?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  quote            Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+  @@index([type])
 }
 
 model Maintenance {
@@ -1870,33 +2064,46 @@ model Maintenance {
 }
 
 model Invoice {
-  id              String           @id @default(cuid())
-  invoiceNumber   String           @unique
+  id              String                 @id @default(cuid())
+  invoiceNumber   String                 @unique
   customerId      String
   bookingId       String?
-  type            InvoiceType      @default(BOOKING)
-  status          InvoiceStatus    @default(DRAFT)
-  issueDate       DateTime         @default(now())
+  type            InvoiceType            @default(BOOKING)
+  status          InvoiceStatus          @default(DRAFT)
+  issueDate       DateTime               @default(now())
   dueDate         DateTime
   paidDate        DateTime?
-  subtotal        Decimal          @db.Decimal(10, 2)
-  discount        Decimal?         @db.Decimal(10, 2)
-  vatAmount       Decimal          @db.Decimal(10, 2)
-  totalAmount     Decimal          @db.Decimal(10, 2)
-  paidAmount      Decimal          @default(0) @db.Decimal(10, 2)
-  remainingAmount Decimal          @db.Decimal(10, 2)
+  subtotal        Decimal                @db.Decimal(12, 2)
+  discount        Decimal?               @db.Decimal(12, 2)
+  discountAmount  Decimal                @default(0) @db.Decimal(12, 2)
+  vatRate         Decimal                @default(0.15) @db.Decimal(5, 4)
+  vatAmount       Decimal                @db.Decimal(12, 2)
+  totalAmount     Decimal                @db.Decimal(12, 2)
+  depositAmount   Decimal                @default(0) @db.Decimal(12, 2)
+  paidAmount      Decimal                @default(0) @db.Decimal(12, 2)
+  refundedAmount  Decimal                @default(0) @db.Decimal(12, 2)
+  remainingAmount Decimal                @db.Decimal(12, 2)
   items           Json
   notes           String?
   paymentTerms    String?
-  createdAt       DateTime         @default(now())
+  paymentMethod   String?
+  lockedAt        DateTime?
+  lockedBy        String?
+  zatcaQR         String?
+  zatcaHash       String?
+  zatcaStatus     ZATCAStatus            @default(PENDING)
+  createdAt       DateTime               @default(now())
   createdBy       String
-  updatedAt       DateTime         @updatedAt
+  updatedAt       DateTime               @updatedAt
   updatedBy       String?
   deletedAt       DateTime?
   deletedBy       String?
-  booking         Booking?         @relation(fields: [bookingId], references: [id])
-  customer        User             @relation(fields: [customerId], references: [id])
+  booking         Booking?               @relation(fields: [bookingId], references: [id])
+  customer        User                   @relation(fields: [customerId], references: [id])
+  ledgerEntries   LedgerEntry[]
+  lineItems       InvoiceLineItem[]
   payments        InvoicePayment[]
+  statusHistory   InvoiceStatusHistory[]
 
   @@index([invoiceNumber])
   @@index([customerId])
@@ -1910,7 +2117,7 @@ model InvoicePayment {
   id        String    @id @default(cuid())
   invoiceId String
   paymentId String
-  amount    Decimal   @db.Decimal(10, 2)
+  amount    Decimal   @db.Decimal(12, 2)
   paidAt    DateTime  @default(now())
   createdAt DateTime  @default(now())
   createdBy String?
@@ -1927,29 +2134,134 @@ model InvoicePayment {
   @@index([deletedAt])
 }
 
+model InvoiceLineItem {
+  id               String       @id @default(cuid())
+  invoiceId        String
+  type             LineItemType
+  description      String
+  quantity         Decimal      @db.Decimal(10, 2)
+  unitPrice        Decimal      @db.Decimal(12, 2)
+  discountPct      Decimal      @default(0) @db.Decimal(5, 4)
+  discountAmt      Decimal      @default(0) @db.Decimal(12, 2)
+  vatRate          Decimal      @default(0.15) @db.Decimal(5, 4)
+  vatAmount        Decimal      @db.Decimal(12, 2)
+  lineTotal        Decimal      @db.Decimal(12, 2)
+  lineTotalWithVat Decimal      @db.Decimal(12, 2)
+  startDate        DateTime?
+  endDate          DateTime?
+  rentalDays       Int?
+  sortOrder        Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  invoice          Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([type])
+  @@index([sortOrder])
+}
+
+model InvoiceStatusHistory {
+  id         String         @id @default(cuid())
+  invoiceId  String
+  fromStatus InvoiceStatus?
+  toStatus   InvoiceStatus
+  changedBy  String
+  reason     String?
+  createdAt  DateTime       @default(now())
+  invoice    Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([createdAt])
+}
+
+model InvoiceSequence {
+  id      String @id @default(cuid())
+  year    Int    @unique
+  lastNum Int    @default(0)
+
+  @@index([year])
+}
+
+model Refund {
+  id              String        @id @default(cuid())
+  paymentId       String
+  bookingId       String?
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @default("SAR")
+  reason          String?
+  status          RefundStatus  @default(PENDING)
+  gatewayRefundId String?
+  processedBy     String?
+  processedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  booking         Booking?      @relation(fields: [bookingId], references: [id])
+  ledgerEntries   LedgerEntry[]
+  payment         Payment       @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([processedAt])
+}
+
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  type        LedgerEntryType
+  amount      Decimal         @db.Decimal(12, 2)
+  currency    String          @default("SAR")
+  bookingId   String?
+  invoiceId   String?
+  paymentId   String?
+  refundId    String?
+  payoutId    String?
+  couponId    String?
+  account     String
+  description String
+  reference   String?
+  booking     Booking?        @relation(fields: [bookingId], references: [id])
+  coupon      Coupon?         @relation(fields: [couponId], references: [id])
+  invoice     Invoice?        @relation(fields: [invoiceId], references: [id])
+  payment     Payment?        @relation(fields: [paymentId], references: [id])
+  refund      Refund?         @relation(fields: [refundId], references: [id])
+  payout      VendorPayout?   @relation(fields: [payoutId], references: [id])
+
+  @@index([bookingId])
+  @@index([invoiceId])
+  @@index([paymentId])
+  @@index([refundId])
+  @@index([payoutId])
+  @@index([couponId])
+  @@index([createdAt])
+  @@index([account])
+}
+
 model Coupon {
-  id                     String       @id @default(cuid())
-  code                   String       @unique
-  name                   String
-  type                   CouponType
-  discountValue          Decimal?     @db.Decimal(10, 2)
-  discountPercentage     Decimal?     @db.Decimal(5, 2)
-  minimumAmount          Decimal?     @db.Decimal(10, 2)
-  maximumDiscount        Decimal?     @db.Decimal(10, 2)
-  validFrom              DateTime
-  validUntil             DateTime
-  usageLimit             Int?
-  usedCount              Int          @default(0)
-  status                 CouponStatus @default(ACTIVE)
-  applicableEquipmentIds Json?
-  description            String?
-  createdAt              DateTime     @default(now())
-  createdBy              String
-  updatedAt              DateTime     @updatedAt
-  updatedBy              String?
-  deletedAt              DateTime?
-  deletedBy              String?
-  applicableStudioIds    Json?
+  id                        String        @id @default(cuid())
+  code                      String        @unique
+  name                      String
+  type                      CouponType
+  discountValue             Decimal?      @db.Decimal(10, 2)
+  discountPercentage        Decimal?      @db.Decimal(5, 2)
+  minimumAmount             Decimal?      @db.Decimal(10, 2)
+  maximumDiscount           Decimal?      @db.Decimal(10, 2)
+  validFrom                 DateTime
+  validUntil                DateTime
+  usageLimit                Int?
+  usedCount                 Int           @default(0)
+  status                    CouponStatus  @default(ACTIVE)
+  applicableEquipmentIds    Json?
+  description               String?
+  createdAt                 DateTime      @default(now())
+  createdBy                 String
+  updatedAt                 DateTime      @updatedAt
+  updatedBy                 String?
+  deletedAt                 DateTime?
+  deletedBy                 String?
+  applicableStudioIds       Json?
+  canCombineWithOtherOffers Boolean       @default(true)
+  ledgerEntries             LedgerEntry[]
 
   @@index([code])
   @@index([status])
@@ -2002,6 +2314,9 @@ model Delivery {
   driverId       String?
   trackingNumber String?
   notes          String?
+  currentLat     Float?
+  currentLng     Float?
+  lastLocationAt DateTime?
   createdAt      DateTime       @default(now())
   createdBy      String
   updatedAt      DateTime       @updatedAt
@@ -2010,6 +2325,8 @@ model Delivery {
   deletedBy      String?
   booking        Booking        @relation(fields: [bookingId], references: [id])
   driver         User?          @relation(fields: [driverId], references: [id])
+  warehouseId    String?
+  warehouse      Warehouse?     @relation(fields: [warehouseId], references: [id])
 
   @@index([deliveryNumber])
   @@index([bookingId])
@@ -2119,43 +2436,49 @@ model HeroBanner {
 }
 
 model HeroSlide {
-  id             String     @id @default(cuid())
-  bannerId       String
-  imageUrl       String
-  mobileImageUrl String?
-  videoUrl       String?
-  titleAr        String
-  titleEn        String
-  titleZh        String?
-  subtitleAr     String?
-  subtitleEn     String?
-  subtitleZh     String?
-  badgeTextAr    String?
-  badgeTextEn    String?
-  badgeTextZh    String?
-  ctaTextAr      String?
-  ctaTextEn      String?
-  ctaTextZh      String?
-  ctaUrl         String?
-  ctaStyle       String     @default("primary")
-  cta2TextAr     String?
-  cta2TextEn     String?
-  cta2TextZh     String?
-  cta2Url        String?
-  cta2Style      String?
-  order          Int        @default(0)
-  isActive       Boolean    @default(true)
-  overlayOpacity Float      @default(0.3)
-  textPosition   String     @default("start")
-  publishAt      DateTime?
-  unpublishAt    DateTime?
-  createdAt      DateTime   @default(now())
-  createdBy      String?
-  updatedAt      DateTime   @updatedAt
-  updatedBy      String?
-  deletedAt      DateTime?
-  deletedBy      String?
-  banner         HeroBanner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+  id                String     @id @default(cuid())
+  bannerId          String
+  imageUrl          String
+  mobileImageUrl    String?
+  mobileAspectRatio String     @default("auto")
+  mobileFocalX      Float      @default(50)
+  mobileFocalY      Float      @default(50)
+  desktopAspectRatio String    @default("16/9")
+  desktopFocalX     Float      @default(50)
+  desktopFocalY     Float      @default(50)
+  videoUrl          String?
+  titleAr           String
+  titleEn           String
+  titleZh           String?
+  subtitleAr        String?
+  subtitleEn        String?
+  subtitleZh        String?
+  badgeTextAr       String?
+  badgeTextEn       String?
+  badgeTextZh       String?
+  ctaTextAr         String?
+  ctaTextEn         String?
+  ctaTextZh         String?
+  ctaUrl            String?
+  ctaStyle          String     @default("primary")
+  cta2TextAr        String?
+  cta2TextEn        String?
+  cta2TextZh        String?
+  cta2Url           String?
+  cta2Style         String?
+  order             Int        @default(0)
+  isActive          Boolean    @default(true)
+  overlayOpacity    Float      @default(0.3)
+  textPosition      String     @default("start")
+  publishAt         DateTime?
+  unpublishAt       DateTime?
+  createdAt         DateTime   @default(now())
+  createdBy         String?
+  updatedAt         DateTime   @updatedAt
+  updatedBy         String?
+  deletedAt         DateTime?
+  deletedBy         String?
+  banner            HeroBanner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
 
   @@index([bannerId])
   @@index([order])
@@ -2208,24 +2531,47 @@ model PolicyItem {
 }
 
 model Cart {
-  id             String     @id @default(cuid())
-  userId         String?    @unique
-  sessionId      String?    @unique
-  couponCode     String?
-  discountAmount Decimal?   @db.Decimal(10, 2)
-  subtotal       Decimal    @default(0) @db.Decimal(10, 2)
-  total          Decimal    @default(0) @db.Decimal(10, 2)
-  lastSyncedAt   DateTime?
-  expiresAt      DateTime
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  booking        Booking?   @relation("CartToBooking")
-  user           User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items          CartItem[]
-  quote          Quote?     @relation("CartToQuote")
+  id                           String     @id @default(cuid())
+  userId                       String?    @unique
+  sessionId                    String?    @unique
+  couponCode                   String?
+  addons                       Json?
+  discountAmount               Decimal?   @db.Decimal(10, 2)
+  subtotal                     Decimal    @default(0) @db.Decimal(10, 2)
+  total                        Decimal    @default(0) @db.Decimal(10, 2)
+  lastSyncedAt                 DateTime?
+  abandonedCheckoutEmailSentAt DateTime?
+  expiresAt                    DateTime
+  deletedAt                    DateTime?
+  deletedBy                    String?
+  createdAt                    DateTime   @default(now())
+  updatedAt                    DateTime   @updatedAt
+  booking                      Booking?   @relation("CartToBooking")
+  priceLock                    PriceLock?
+  user                         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                        CartItem[]
+  quote                        Quote?     @relation("CartToQuote")
 
   @@index([userId])
   @@index([sessionId])
+  @@index([expiresAt])
+  @@index([deletedAt])
+}
+
+model PriceLock {
+  id            String   @id @default(cuid())
+  cartId        String   @unique
+  lockedPricing Json
+  subtotal      Decimal  @db.Decimal(12, 2)
+  vatAmount     Decimal  @db.Decimal(12, 2)
+  totalAmount   Decimal  @db.Decimal(12, 2)
+  depositAmount Decimal  @default(0) @db.Decimal(12, 2)
+  currency      String   @default("SAR")
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
   @@index([expiresAt])
 }
 
@@ -2244,6 +2590,8 @@ model CartItem {
   subtotal      Decimal      @db.Decimal(10, 2)
   isAvailable   Boolean      @default(true)
   lastCheckedAt DateTime?    @default(now())
+  deletedAt     DateTime?
+  deletedBy     String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   cart          Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade)
@@ -2255,6 +2603,7 @@ model CartItem {
   @@index([equipmentId])
   @@index([studioId])
   @@index([kitId])
+  @@index([deletedAt])
 }
 
 model CheckoutFormSection {
@@ -2306,6 +2655,9 @@ model Receiver {
   idNumber   String
   phone      String
   idPhotoUrl String
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
@@ -2471,13 +2823,46 @@ model FooterNewsletter {
 }
 
 model NewsletterSubscription {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  source    String?
+  id          String   @id @default(cuid())
+  email       String   @unique
+  createdAt   DateTime @default(now())
+  source      String?
+  name        String?
+  language    String   @default("ar")
+  status      String   @default("active")
+  mailchimpId String?
 
   @@index([email])
   @@index([source])
+  @@index([status])
+}
+
+model MarketingSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  label     String
+  category  String
+  type      String   @default("text")
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model MarketingEvent {
+  id         String   @id @default(cuid())
+  eventType  String
+  source     String?
+  pageUrl    String?
+  entityType String?
+  entityId   String?
+  value      Float?
+  currency   String   @default("SAR")
+  sessionId  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([eventType, createdAt])
+  @@index([createdAt])
 }
 
 model BlogCategory {
@@ -2739,12 +3124,67 @@ model PromissoryNote {
   letterType             String?
   booking                Booking?  @relation(fields: [bookingId], references: [id])
   debtor                 User      @relation(fields: [debtorId], references: [id])
+  deposits               Deposit[]
 
   @@index([noteNumber])
   @@index([debtorId])
   @@index([bookingId])
   @@index([status])
   @@index([noteType])
+}
+
+model Deposit {
+  id               String          @id @default(cuid())
+  bookingId        String          @unique
+  amount           Decimal         @db.Decimal(12, 2)
+  status           DepositStatus   @default(PENDING)
+  collectedAt      DateTime?
+  collectedRef     String?
+  returnedAt       DateTime?
+  returnedRef      String?
+  deductionAmt     Decimal?        @db.Decimal(12, 2)
+  deductionNote    String?
+  promissoryNoteId String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  booking          Booking         @relation(fields: [bookingId], references: [id])
+  promissoryNote   PromissoryNote? @relation(fields: [promissoryNoteId], references: [id])
+
+  @@index([status])
+  @@index([promissoryNoteId])
+}
+
+model CompanySettings {
+  id                 String   @id @default("global")
+  nameAr             String?
+  nameEn             String
+  logoUrl            String?
+  address            String?
+  city               String?
+  country            String   @default("SA")
+  phone              String?
+  email              String?
+  website            String?
+  vatNumber          String?
+  crNumber           String?
+  vatRate            Decimal  @default(0.15) @db.Decimal(5, 4)
+  vatInclusive       Boolean  @default(false)
+  zatcaEnabled       Boolean  @default(false)
+  zatcaEnv           String?
+  zatcaCert          String?
+  zatcaPrivateKey    String?
+  invoicePrefix      String   @default("INV")
+  quotePrefix        String   @default("QUO")
+  invoiceNotes       String?
+  paymentTermsDays   Int      @default(30)
+  bankName           String?
+  bankAccount        String?
+  bankIBAN           String?
+  bankSwift          String?
+  termsAndConditions String?
+  cancellationPolicy String?
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
 }
 
 model SiteSetting {
@@ -2878,6 +3318,47 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   PARTIALLY_REFUNDED
+  AMOUNT_MISMATCH
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum ZATCAStatus {
+  PENDING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  CLEARED
+}
+
+enum LineItemType {
+  EQUIPMENT
+  STUDIO
+  PACKAGE
+  ADDON
+  DELIVERY
+  COUPON_DISCOUNT
+  MANUAL_DISCOUNT
+  VAT
+}
+
+enum DepositStatus {
+  PENDING
+  COLLECTED
+  RETURNED
+  PARTIALLY_RETURNED
+  FORFEITED
 }
 
 enum FeatureFlagScope {
@@ -2931,6 +3412,8 @@ enum NotificationTrigger {
   MAINTENANCE_DUE
   DAILY_SUMMARY
   ABANDONED_CART
+  WHALE_SIGN_IN
+  REFERRAL_SIGNUP
 }
 
 enum MessageLogStatus {
@@ -2995,6 +3478,7 @@ enum EventStatus {
   PENDING
   PROCESSED
   FAILED
+  SKIPPED
 }
 
 enum VendorStatus {
@@ -3048,6 +3532,7 @@ enum ImportRowStatus {
   PENDING
   SUCCESS
   ERROR
+  SKIPPED
 }
 
 enum QuoteStatus {
@@ -3168,6 +3653,7 @@ enum DeliveryStatus {
   PENDING
   SCHEDULED
   IN_TRANSIT
+  DISPATCHED
   DELIVERED
   FAILED
   CANCELLED
@@ -3223,4 +3709,119 @@ enum CartItemType {
   STUDIO
   PACKAGE
   KIT
+}
+
+enum WarehouseScanType {
+  CHECKOUT
+  CHECKIN
+}
+
+/// Customer waitlist for equipment availability (public /api/waitlist + cron expiry)
+model WaitlistEntry {
+  id               String    @id @default(cuid())
+  equipmentId      String
+  userId           String?
+  guestEmail       String?
+  desiredStartDate DateTime
+  desiredEndDate   DateTime
+  desiredQty       Int       @default(1)
+  status           String    @default("WAITING")
+  expiresAt        DateTime
+  notifiedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  equipment        Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([equipmentId, status])
+  @@index([userId])
+  @@index([guestEmail])
+  @@index([expiresAt])
+}
+
+model WarehouseScan {
+  id          String            @id @default(cuid())
+  bookingId   String
+  equipmentId String
+  type        WarehouseScanType
+  barcode     String
+  scannedBy   String
+  createdAt   DateTime          @default(now())
+
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [scannedBy], references: [id])
+
+  @@index([bookingId])
+  @@index([equipmentId])
+  @@index([barcode])
+  @@index([scannedBy])
+}
+
+model Warehouse {
+  id         String           @id @default(cuid())
+  name       String
+  city       String
+  address    String
+  managerId  String?
+  isActive   Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  stocks     EquipmentStock[]
+  manager    User?            @relation("WarehouseManager", fields: [managerId], references: [id])
+  bookings   Booking[]
+  deliveries Delivery[]
+
+  @@index([city])
+}
+
+model EquipmentStock {
+  id          String    @id @default(cuid())
+  equipmentId String
+  warehouseId String
+  quantity    Int       @default(0)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([equipmentId, warehouseId])
+  @@index([equipmentId])
+  @@index([warehouseId])
+}
+
+model ChatConversation {
+  id            String        @id @default(cuid())
+  sessionId     String
+  channel       String        @default("public")
+  userId        String?
+  handoverAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  messages      ChatMessage[]
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([channel])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  role           String
+  content        String           @db.Text
+  createdAt      DateTime         @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model ChatbotSettings {
+  id          String   @id @default("global")
+  greetingAr  String?
+  greetingEn  String?
+  tone        String   @default("professional")
+  companyName String?
+  faqEntries  Json?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
 }

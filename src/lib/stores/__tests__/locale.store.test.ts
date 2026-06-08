@@ -6,7 +6,7 @@
 import { useLocaleStore } from '../locale.store'
 
 jest.mock('@/lib/i18n/locales', () => ({
-  DEFAULT_LOCALE: 'en',
+  DEFAULT_LOCALE: 'ar',
   getDir: jest.fn((locale: string) => (locale === 'ar' ? 'rtl' : 'ltr')),
 }))
 

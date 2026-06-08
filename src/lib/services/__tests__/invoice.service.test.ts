@@ -19,12 +19,19 @@ jest.mock('@/lib/db/prisma', () => ({
     },
     user: { findFirst: jest.fn() },
     booking: { findFirst: jest.fn() },
-    payment: { create: jest.fn() },
-    invoicePayment: { create: jest.fn() },
+    payment: { create: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+    invoicePayment: { create: jest.fn(), createMany: jest.fn() },
+    companySettings: {
+      findFirst: jest.fn().mockResolvedValue({ vatRate: 0.15, invoicePrefix: 'INV', quotePrefix: 'QUO' }),
+    },
+    invoiceSequence: {
+      upsert: jest.fn().mockResolvedValue({ year: new Date().getFullYear(), lastNum: 1 }),
+    },
   },
 }))
 
 jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
   hasPermission: jest.fn(),
 }))
 
@@ -44,7 +51,10 @@ const mockInvoiceCount = prisma.invoice.count as jest.Mock
 const mockUserFindFirst = prisma.user.findFirst as jest.Mock
 const mockBookingFindFirst = prisma.booking.findFirst as jest.Mock
 const mockPaymentCreate = prisma.payment?.create as jest.Mock
+const mockPaymentFindMany = prisma.payment?.findMany as jest.Mock
+const mockPaymentFindFirst = prisma.payment?.findFirst as jest.Mock
 const mockInvoicePaymentCreate = prisma.invoicePayment?.create as jest.Mock
+const mockInvoicePaymentCreateMany = prisma.invoicePayment?.createMany as jest.Mock
 const hasPermission = require('@/lib/auth/permissions').hasPermission as jest.Mock
 const { AuditService } = require('../audit.service')
 
@@ -240,6 +250,9 @@ describe('InvoiceService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     hasPermission.mockResolvedValue(true)
+    mockPaymentFindMany?.mockResolvedValue([])
+    mockPaymentFindFirst?.mockResolvedValue(null)
+    mockInvoicePaymentCreateMany?.mockResolvedValue({ count: 0 })
   })
 
   describe('create', () => {
@@ -314,11 +327,8 @@ describe('InvoiceService', () => {
       expect(mockInvoiceCreate).toHaveBeenCalled()
     })
 
-    it('retries generateInvoiceNumber when collision occurs', async () => {
+    it('generates invoice number from company settings and sequence', async () => {
       mockUserFindFirst.mockResolvedValue({ id: 'c1' })
-      mockInvoiceFindFirst
-        .mockResolvedValueOnce({ id: 'existing' })
-        .mockResolvedValueOnce(null)
       mockInvoiceCreate.mockResolvedValue({
         ...baseInvoice,
         items: baseInvoice.items,
@@ -334,7 +344,8 @@ describe('InvoiceService', () => {
         'u1'
       )
       expect(result).toBeDefined()
-      expect(mockInvoiceFindFirst.mock.calls.length).toBeGreaterThanOrEqual(2)
+      expect(prisma.companySettings.findFirst).toHaveBeenCalled()
+      expect(prisma.invoiceSequence.upsert).toHaveBeenCalled()
     })
 
     it('passes auditContext ipAddress and userAgent to AuditService when provided', async () => {
@@ -453,6 +464,7 @@ describe('InvoiceService', () => {
 
   describe('getById', () => {
     it('throws ForbiddenError when user lacks invoice.read', async () => {
+      mockInvoiceFindFirst.mockResolvedValue({ ...baseInvoice, customerId: 'other-customer' })
       hasPermission.mockResolvedValue(false)
       await expect(InvoiceService.getById('inv1', 'u1')).rejects.toThrow(ForbiddenError)
     })
@@ -628,6 +640,7 @@ describe('InvoiceService', () => {
     it('creates invoice when booking exists and no invoice', async () => {
       const booking = {
         id: 'bk1',
+        bookingNumber: 'BK-1',
         customerId: 'c1',
         customer: { id: 'c1', name: 'C', email: 'c@test.com', phone: null, taxId: null, companyName: null, billingAddress: null },
         equipment: [
@@ -636,6 +649,9 @@ describe('InvoiceService', () => {
             quantity: 1,
           },
         ],
+        studio: null,
+        totalAmount: 400,
+        vatAmount: 60,
         payments: [],
         startDate: new Date('2026-06-01'),
         endDate: new Date('2026-06-05'),
@@ -653,9 +669,51 @@ describe('InvoiceService', () => {
       expect(mockInvoiceCreate).toHaveBeenCalled()
     })
 
+    it('uses authoritative booking totals for studio-only bookings', async () => {
+      const booking = {
+        id: 'bk1',
+        bookingNumber: 'BK-1',
+        customerId: 'c1',
+        customer: { id: 'c1', name: 'C', email: 'c@test.com', phone: null, taxId: null, companyName: null, billingAddress: null },
+        studio: { name: 'Main Studio' },
+        equipment: [],
+        totalAmount: 1000,
+        vatAmount: 150,
+        payments: [{ amount: { toNumber: () => 1150 } }],
+        startDate: new Date('2026-06-01'),
+        endDate: new Date('2026-06-03'),
+        createdBy: 'u1',
+      }
+
+      mockInvoiceFindFirst.mockResolvedValue(null)
+      mockBookingFindFirst.mockResolvedValue(booking)
+      mockInvoiceCreate.mockResolvedValue({
+        ...baseInvoice,
+        bookingId: 'bk1',
+        status: 'PAID',
+        subtotal: 1000,
+        vatAmount: 150,
+        totalAmount: 1150,
+      })
+
+      await InvoiceService.autoGenerateForBooking('bk1')
+
+      expect(mockInvoiceCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            subtotal: expect.anything(),
+            vatAmount: expect.anything(),
+            totalAmount: expect.anything(),
+            status: 'PAID',
+          }),
+        })
+      )
+    })
+
     it('creates invoice with PAID status when booking has full payment', async () => {
       const booking = {
         id: 'bk1',
+        bookingNumber: 'BK-1',
         customerId: 'c1',
         customer: { id: 'c1', name: 'C', email: 'c@test.com', phone: null, taxId: null, companyName: null, billingAddress: null },
         equipment: [
@@ -664,7 +722,10 @@ describe('InvoiceService', () => {
             quantity: 1,
           },
         ],
-        payments: [{ amount: { toNumber: () => 500 } }],
+        studio: null,
+        totalAmount: 400,
+        vatAmount: 60,
+        payments: [{ amount: { toNumber: () => 460 } }],
         startDate: new Date('2026-06-01'),
         endDate: new Date('2026-06-05'),
         createdBy: 'u1',

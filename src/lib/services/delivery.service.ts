@@ -12,7 +12,7 @@ import { AuditService } from './audit.service'
 import { BookingService } from './booking.service'
 import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
-import { hasPermission } from '@/lib/auth/permissions'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import {
   DeliveryType as PrismaDeliveryType,
   DeliveryStatus as PrismaDeliveryStatus,
@@ -24,6 +24,7 @@ export type DeliveryStatus =
   | 'scheduled'
   | 'in_transit'
   | 'delivered'
+  | 'dispatched'
   | 'failed'
   | 'cancelled'
 
@@ -107,6 +108,7 @@ export class DeliveryService {
       scheduled: 'SCHEDULED',
       in_transit: 'IN_TRANSIT',
       delivered: 'DELIVERED',
+      dispatched: 'DISPATCHED' as any,
       failed: 'FAILED',
       cancelled: 'CANCELLED',
     }
@@ -122,7 +124,7 @@ export class DeliveryService {
     userId: string,
     auditContext?: { ipAddress?: string; userAgent?: string }
   ) {
-    const canSchedule = await hasPermission(userId, 'delivery.schedule' as any)
+    const canSchedule = await hasPermission(userId, PERMISSIONS.DELIVERY_MANAGE)
     if (!canSchedule) {
       throw new ForbiddenError('You do not have permission to schedule deliveries')
     }
@@ -218,7 +220,7 @@ export class DeliveryService {
     userId: string,
     auditContext?: { ipAddress?: string; userAgent?: string }
   ) {
-    const canUpdate = await hasPermission(userId, 'delivery.update' as any)
+    const canUpdate = await hasPermission(userId, PERMISSIONS.DELIVERY_UPDATE_STATUS)
     if (!canUpdate) {
       throw new ForbiddenError('You do not have permission to update deliveries')
     }
@@ -285,7 +287,7 @@ export class DeliveryService {
     auditContext?: { ipAddress?: string; userAgent?: string },
     deliveryIdParam?: string
   ) {
-    const canUpdate = await hasPermission(userId, 'delivery.update' as any)
+    const canUpdate = await hasPermission(userId, PERMISSIONS.DELIVERY_UPDATE_STATUS)
     if (!canUpdate) {
       throw new ForbiddenError('You do not have permission to update delivery status')
     }
@@ -361,7 +363,7 @@ export class DeliveryService {
     bookingId: string,
     userId: string
   ): Promise<DeliveryTrackingInfo[]> {
-    const canView = await hasPermission(userId, 'delivery.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.DELIVERY_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }
@@ -417,7 +419,7 @@ export class DeliveryService {
       dateTo?: Date
     } = {}
   ) {
-    const canView = await hasPermission(userId, 'delivery.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.DELIVERY_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }
@@ -455,6 +457,7 @@ export class DeliveryService {
 
     return deliveries.map((d) => ({
       id: d.id,
+      bookingId: d.bookingId,
       deliveryNumber: d.deliveryNumber,
       bookingNumber: d.booking.bookingNumber,
       type: this.mapFromPrismaType(d.type),
@@ -464,6 +467,7 @@ export class DeliveryService {
       city: d.city,
       contactName: d.contactName,
       contactPhone: d.contactPhone,
+      notes: d.notes,
       driver: d.driver,
       equipment: d.booking.equipment.map((be) => ({
         id: be.equipment.id,
@@ -485,7 +489,7 @@ export class DeliveryService {
       dateTo?: Date
     } = {}
   ) {
-    const canView = await hasPermission(userId, 'delivery.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.DELIVERY_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view deliveries')
     }
@@ -533,5 +537,65 @@ export class DeliveryService {
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,
     }))
+  }
+
+  static async updateDriverLocation(
+    deliveryId: string,
+    lat: number,
+    lng: number,
+    userId: string
+  ) {
+    const delivery = await prisma.delivery.findFirst({
+      where: { id: deliveryId, driverId: userId, deletedAt: null },
+    })
+
+    if (!delivery) throw new NotFoundError('Delivery', deliveryId)
+
+    return (prisma as any).delivery.update({
+      where: { id: deliveryId },
+      data: {
+        currentLat: lat,
+        currentLng: lng,
+        lastLocationAt: new Date(),
+      },
+    })
+  }
+
+  static async getTrackingInfo(deliveryId: string) {
+    const delivery = await (prisma as any).delivery.findFirst({
+      where: { id: deliveryId, deletedAt: null },
+      include: {
+        booking: {
+          select: {
+            bookingNumber: true,
+            deliveryAddress: true,
+            deliveryLat: true,
+            deliveryLng: true,
+          },
+        },
+        driver: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!delivery) throw new NotFoundError('Delivery', deliveryId)
+
+    return {
+      id: delivery.id,
+      deliveryNumber: delivery.deliveryNumber,
+      status: this.mapFromPrismaStatus(delivery.status),
+      currentLocation: (delivery as any).currentLat ? { lat: (delivery as any).currentLat, lng: (delivery as any).currentLng } : null,
+      destination: {
+        address: delivery.booking.deliveryAddress,
+        lat: delivery.booking.deliveryLat,
+        lng: delivery.booking.deliveryLng,
+      },
+      driver: delivery.driver,
+      lastUpdate: (delivery as any).lastLocationAt,
+    }
   }
 }

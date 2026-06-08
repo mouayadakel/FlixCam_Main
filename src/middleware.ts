@@ -9,6 +9,12 @@ import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { enforceReadOnly } from '@/lib/middleware/read-only-edge'
+import {
+  canAccessAdminDashboard,
+  getNonAdminDashboardPath,
+  normalizeRole,
+  normalizeRoleList,
+} from '@/lib/auth/dashboard-routing'
 
 // Role hierarchy for permission checking
 const ROLE_HIERARCHY: Record<string, number> = {
@@ -19,14 +25,6 @@ const ROLE_HIERARCHY: Record<string, number> = {
   driver: 3,
   technician: 3,
   client: 1,
-}
-
-/**
- * Check if user role has access to a route
- */
-function hasRoleAccess(userRole: string | undefined, requiredRoles: string[]): boolean {
-  if (!userRole) return false
-  return requiredRoles.includes(userRole)
 }
 
 /**
@@ -91,6 +89,11 @@ export default async function middleware(req: NextRequest) {
         },
       }
     : null
+  const tokenAssignedRoles = Array.isArray(token?.assignedRoles)
+    ? token.assignedRoles.filter((role): role is string => typeof role === 'string')
+    : []
+  const normalizedAssignedRoles = normalizeRoleList(tokenAssignedRoles)
+  const normalizedLegacyRole = normalizeRole(session?.user?.role)
 
   // Enforce read-only mode for write operations
   if (pathname.startsWith('/api')) {
@@ -135,7 +138,20 @@ export default async function middleware(req: NextRequest) {
   // API routes - check authentication
   if (pathname.startsWith('/api')) {
     // Public API routes (Phase 3: guest cart + public catalog)
-    const publicApiRoutes = ['/api/auth', '/api/health', '/api/cart', '/api/public', '/api/newsletter', '/api/footer']
+    const publicApiRoutes = [
+      '/api/auth',
+      '/api/health',
+      '/api/cart',
+      '/api/public',
+      '/api/newsletter',
+      '/api/footer',
+      '/api/webhooks',
+      '/api/push/vapid-public-key',
+      // Machine-auth routes — handlers verify CRON_SECRET / API keys
+      '/api/cron',
+      '/api/revalidate-blog',
+      '/api/meta-conversions',
+    ]
     if (publicApiRoutes.some((route) => pathname.startsWith(route))) {
       return NextResponse.next()
     }
@@ -143,6 +159,13 @@ export default async function middleware(req: NextRequest) {
     // Protected API routes require authentication
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (pathname.startsWith('/api/admin')) {
+      const hasAdminAccess = canAccessAdminDashboard(session.user?.role, tokenAssignedRoles)
+      if (!hasAdminAccess) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
   }
 
@@ -155,44 +178,35 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    const userRole = session.user?.role?.toLowerCase()
-
     // Settings routes - allow super_admin and admin
     if (pathname.startsWith('/admin/settings')) {
-      if (!hasRoleAccess(userRole, ['super_admin', 'admin'])) {
-        return NextResponse.redirect(new URL('/admin/dashboard', req.url))
+      const canAccessSettings =
+        normalizedLegacyRole === 'super_admin' ||
+        normalizedLegacyRole === 'admin' ||
+        normalizedAssignedRoles.some((role) => role === 'super_admin' || role === 'admin')
+
+      if (!canAccessSettings) {
+        const fallback = getNonAdminDashboardPath(session.user?.role, tokenAssignedRoles)
+        return NextResponse.redirect(new URL(fallback ?? '/admin/dashboard', req.url))
       }
     }
 
     // Super admin routes
     if (pathname.startsWith('/admin/super')) {
-      if (!hasRoleAccess(userRole, ['super_admin'])) {
-        return NextResponse.redirect(new URL('/admin/dashboard', req.url))
+      const isSuperAdmin =
+        normalizedLegacyRole === 'super_admin' ||
+        normalizedAssignedRoles.includes('super_admin')
+
+      if (!isSuperAdmin) {
+        const fallback = getNonAdminDashboardPath(session.user?.role, tokenAssignedRoles)
+        return NextResponse.redirect(new URL(fallback ?? '/admin/dashboard', req.url))
       }
     }
 
-    // Admin routes - require admin, staff roles, or super_admin
-    if (
-      !hasRoleAccess(userRole, [
-        'super_admin',
-        'admin',
-        'sales_manager',
-        'accountant',
-        'customer_service',
-        'marketing_manager',
-        'risk_manager',
-        'approval_agent',
-        'auditor',
-        'ai_operator',
-        'warehouse',
-        'driver',
-        'technician',
-      ])
-    ) {
-      // Customer/client users should be redirected to portal (UserRole CUSTOMER/DATA_ENTRY)
-      const clientRoles = ['data_entry', 'customer']
-      if (clientRoles.includes(userRole || '')) {
-        return NextResponse.redirect(new URL('/portal/dashboard', req.url))
+    if (!canAccessAdminDashboard(session.user?.role, tokenAssignedRoles)) {
+      const fallback = getNonAdminDashboardPath(session.user?.role, tokenAssignedRoles)
+      if (fallback) {
+        return NextResponse.redirect(new URL(fallback, req.url))
       }
       // Unauthorized - redirect to 403
       return NextResponse.redirect(new URL('/403', req.url))

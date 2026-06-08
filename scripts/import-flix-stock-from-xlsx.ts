@@ -103,7 +103,8 @@ async function main() {
   const args = new Set(process.argv.slice(2))
   const commit = args.has('--commit')
 
-  const filePath = 'docs/Flix Stock invintory  (1).xlsx'
+  const fileArg = process.argv.find((a) => a.startsWith('--file='))?.slice('--file='.length)
+  const filePath = fileArg ?? 'Flixcam_invetory.all-equipment.full-data.xlsx'
   const createdBy = process.env.IMPORT_CREATED_BY ?? 'system'
 
   const stats: ImportStats = {
@@ -129,8 +130,8 @@ async function main() {
   for (const sheetName of wb.sheetNames) {
     const data = wb.getSheetData(sheetName)
     if (!data.length) continue
-    const headers = Object.keys(data[0] ?? {})
-    const rows: unknown[][] = [headers, ...data.map((row) => headers.map((h) => row[h] ?? ''))]
+    const rawHeaders = Object.keys(data[0] ?? {})
+    const rows: unknown[][] = [rawHeaders, ...data.map((row) => rawHeaders.map((h) => row[h] ?? ''))]
     if (!rows.length) continue
 
     const headers = normalizeHeaders(rows[0] ?? [])

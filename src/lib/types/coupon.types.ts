@@ -23,6 +23,7 @@ export interface Coupon {
   validUntil: Date
   applicableTo?: string[] | null // Equipment IDs or categories
   description?: string | null
+  canCombineWithOtherOffers: boolean
   createdAt: Date
   updatedAt: Date
   createdBy?: string | null
@@ -40,6 +41,7 @@ export interface CouponCreateInput {
   validUntil: Date
   applicableTo?: string[]
   description?: string
+  canCombineWithOtherOffers?: boolean
 }
 
 export interface CouponUpdateInput {
@@ -54,12 +56,16 @@ export interface CouponUpdateInput {
   validUntil?: Date
   applicableTo?: string[]
   description?: string
+  canCombineWithOtherOffers?: boolean
 }
 
 export interface CouponValidationResult {
   valid: boolean
   discountAmount: number
   error?: string
+  metadata?: {
+    canCombineWithOtherOffers?: boolean
+  }
 }
 
 export interface CouponFilterInput {

@@ -9,6 +9,7 @@
 import { prisma } from '@/lib/db/prisma'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hasPermission } from '@/lib/auth/permissions'
+import { getVATRate } from '@/lib/vat'
 import type {
   ReportType,
   ReportFilter,
@@ -20,7 +21,10 @@ import type {
   InventoryReport,
   DashboardStats,
 } from '@/lib/types/reports.types'
-import { BookingStatus, EquipmentCondition } from '@prisma/client'
+import { BookingStatus, EquipmentCondition, PaymentStatus, type UserRole } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
+
+const CUSTOMER_ROLE_STATS_LIST: UserRole[] = ['CUSTOMER', 'DATA_ENTRY']
 
 const ZERO = 0
 
@@ -178,8 +182,8 @@ export class ReportsService {
         bookings: data.bookings,
       }))
 
-    // Calculate VAT (15%)
-    const vatAmount = totalRevenue * 0.15
+    const vatRate = (await getVATRate()).toNumber()
+    const vatAmount = totalRevenue * vatRate
     const netRevenue = totalRevenue - vatAmount
 
     return {
@@ -612,26 +616,81 @@ export class ReportsService {
       throw new ForbiddenError('You do not have permission to view reports')
     }
 
-    // Get bookings for revenue
-    const bookings = await prisma.booking.findMany({
-      where: {
-        deletedAt: null,
-        createdAt: {
-          gte: filter.dateFrom,
-          lte: filter.dateTo,
-        },
-        status: { not: 'CANCELLED' },
-      },
-    })
+    const paymentDateWhere = {
+      OR: [
+        { paidAt: { gte: filter.dateFrom, lte: filter.dateTo } },
+        { paidAt: null, createdAt: { gte: filter.dateFrom, lte: filter.dateTo } },
+      ],
+    }
 
-    const totalRevenue = bookings.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0)
+    const [paymentsInPeriod, pendingPayments, refunds, invoices, payouts] = await Promise.all([
+      prisma.payment.findMany({
+        where: {
+          deletedAt: null,
+          status: PaymentStatus.SUCCESS,
+          ...paymentDateWhere,
+        },
+      }),
+      prisma.payment.findMany({
+        where: {
+          deletedAt: null,
+          status: PaymentStatus.PENDING,
+          createdAt: { gte: filter.dateFrom, lte: filter.dateTo },
+        },
+      }),
+      prisma.refund.findMany({
+        where: {
+          status: 'COMPLETED',
+          processedAt: { gte: filter.dateFrom, lte: filter.dateTo },
+        },
+      }),
+      prisma.invoice.findMany({
+        where: {
+          deletedAt: null,
+          updatedAt: { gte: filter.dateFrom, lte: filter.dateTo },
+        },
+      }),
+      prisma.vendorPayout.findMany({
+        where: {
+          status: 'PAID',
+          paidAt: { gte: filter.dateFrom, lte: filter.dateTo },
+        },
+      }),
+    ])
+
+    const totalRevenueDecimal = paymentsInPeriod.reduce(
+      (sum, payment) => sum.plus(payment.amount),
+      new Decimal(0)
+    )
+    const totalRefundsDecimal = refunds.reduce(
+      (sum, refund) => sum.plus(refund.amount),
+      new Decimal(0)
+    )
+    const totalPayoutsDecimal = payouts.reduce(
+      (sum, payout) => sum.plus(payout.netAmount),
+      new Decimal(0)
+    )
+    const totalPendingDecimal = pendingPayments.reduce(
+      (sum, payment) => sum.plus(payment.amount),
+      new Decimal(0)
+    )
+    const totalVATDecimal = invoices
+      .filter((invoice) => invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID')
+      .reduce((sum, invoice) => sum.plus(invoice.vatAmount), new Decimal(0))
+
+    const totalRevenue = totalRevenueDecimal.toNumber()
+    const totalRefunds = totalRefundsDecimal.toNumber()
+    const totalPayouts = totalPayoutsDecimal.toNumber()
+    const totalPending = totalPendingDecimal.toNumber()
+    const totalVAT = totalVATDecimal.toNumber()
 
     // Revenue by period
     const revenuePeriodMap = new Map<string, number>()
-    bookings.forEach((booking) => {
-      const month = booking.createdAt.toISOString().substring(0, 7)
+    paymentsInPeriod.forEach((payment) => {
+      const date = payment.paidAt ?? payment.createdAt
+      const month = date.toISOString().substring(0, 7)
       const existing = revenuePeriodMap.get(month) || 0
-      revenuePeriodMap.set(month, existing + Number(booking.totalAmount || 0))
+      revenuePeriodMap.set(month, existing + Number(payment.amount || 0))
     })
 
     const revenueByPeriod = Array.from(revenuePeriodMap.entries())
@@ -641,10 +700,12 @@ export class ReportsService {
         revenue,
       }))
 
-    // Expenses (placeholder - would need expenses tracking)
     const expenses = {
-      total: 0,
-      byCategory: [] as Array<{ category: string; amount: number }>,
+      total: totalRefunds + totalPayouts,
+      byCategory: [
+        { category: 'Refunds', amount: totalRefunds },
+        { category: 'Vendor payouts', amount: totalPayouts },
+      ].filter((item) => item.amount > 0),
     }
 
     // Profit
@@ -653,33 +714,49 @@ export class ReportsService {
 
     const profitByPeriod = revenueByPeriod.map((r) => ({
       period: r.period,
-      profit: r.revenue, // Would subtract expenses
-      margin: r.revenue > 0 ? ((r.revenue - 0) / r.revenue) * 100 : 0,
+      profit: r.revenue,
+      margin: r.revenue > 0 ? (r.revenue / r.revenue) * 100 : 0,
     }))
 
-    // Payments (placeholder - would need payment service integration)
+    const paymentsByMethodMap = new Map<string, { amount: number; count: number }>()
+    paymentsInPeriod.forEach((payment) => {
+      const method = payment.gateway || 'manual'
+      const existing = paymentsByMethodMap.get(method) || { amount: 0, count: 0 }
+      existing.amount += Number(payment.amount || 0)
+      existing.count += 1
+      paymentsByMethodMap.set(method, existing)
+    })
+
     const payments = {
       totalReceived: totalRevenue,
-      totalPending: 0,
-      totalRefunded: 0,
-      byMethod: [] as Array<{ method: string; amount: number; count: number }>,
+      totalPending,
+      totalRefunded: totalRefunds,
+      byMethod: Array.from(paymentsByMethodMap.entries()).map(([method, data]) => ({
+        method,
+        amount: data.amount,
+        count: data.count,
+      })),
     }
 
-    // Invoices (placeholder - would need invoice service integration)
-    const invoices = {
-      total: bookings.length,
-      paid: bookings.filter((b) => b.status === 'CLOSED' || b.status === 'ACTIVE').length,
-      pending: bookings.filter((b) => b.status === 'PAYMENT_PENDING' || b.status === 'CONFIRMED')
+    const invoiceStats = {
+      total: invoices.length,
+      paid: invoices.filter((invoice) => invoice.status === 'PAID').length,
+      pending: invoices.filter((invoice) => invoice.status === 'SENT' || invoice.status === 'DRAFT')
         .length,
-      overdue: 0,
-      totalAmount: totalRevenue,
+      overdue: invoices.filter((invoice) => invoice.status === 'OVERDUE').length,
+      totalAmount: invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0),
     }
 
-    // VAT
-    const totalVAT = totalRevenue * 0.15
+    const vatPeriodMap = new Map<string, number>()
+    invoices
+      .filter((invoice) => invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID')
+      .forEach((invoice) => {
+        const month = invoice.updatedAt.toISOString().substring(0, 7)
+        vatPeriodMap.set(month, (vatPeriodMap.get(month) || 0) + Number(invoice.vatAmount || 0))
+      })
     const vatByPeriod = revenueByPeriod.map((r) => ({
       period: r.period,
-      vat: r.revenue * 0.15,
+      vat: vatPeriodMap.get(r.period) || 0,
     }))
 
     return {
@@ -695,7 +772,7 @@ export class ReportsService {
         byPeriod: profitByPeriod,
       },
       payments,
-      invoices,
+      invoices: invoiceStats,
       vat: {
         total: totalVAT,
         collected: totalVAT,
@@ -902,7 +979,7 @@ export class ReportsService {
       totalEquipment > 0 ? ((totalEquipment - availableEquipment) / totalEquipment) * 100 : 0
 
     // Customer stats (CUSTOMER = new sign-ups, DATA_ENTRY = legacy customer placeholder)
-    const customerRoleFilter = { role: { in: ['CUSTOMER', 'DATA_ENTRY'] as const } }
+    const customerRoleFilter = { role: { in: CUSTOMER_ROLE_STATS_LIST } }
     const [totalCustomers, newCustomersThisMonth, newCustomersLastMonth] = await Promise.all([
       prisma.user.count({ where: { ...customerRoleFilter, deletedAt: null } }),
       prisma.user.count({

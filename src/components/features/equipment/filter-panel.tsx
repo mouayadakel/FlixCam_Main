@@ -30,8 +30,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { DateRangePicker } from '@/components/ui/date-range-picker'
-import { PriceRangeSlider } from '@/components/ui/price-range-slider'
 import { MultiSelectCheckbox } from '@/components/ui/multi-select-checkbox'
 import { useCallback, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -44,19 +42,7 @@ const SORT_OPTIONS = [
   { value: 'newest', labelKey: 'equipment.sortNewest' },
 ] as const
 
-const DEFAULT_PRICE_MIN = 0
-const DEFAULT_PRICE_MAX = 100000
-
-function getDefaultDates(): { start: string; end: string } {
-  const start = new Date()
-  start.setDate(start.getDate() + 1)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 7)
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  }
-}
+// Price and rental-date filtering are intentionally hidden in the public catalog UI.
 
 interface Brand {
   id: string
@@ -88,12 +74,6 @@ function FilterContent({
   setLocalQ,
   sort,
   categoryId,
-  priceMin,
-  setPriceMin,
-  priceMax,
-  setPriceMax,
-  startDate,
-  endDate,
   brandIds,
   brandOptions,
   hasFilters,
@@ -102,13 +82,9 @@ function FilterContent({
   handleSearchSubmit,
   handleSortChange,
   handleCategoryChange,
-  handlePriceApply,
-  handleStartDateChange,
-  handleEndDateChange,
   handleBrandToggle,
   removeChip,
   clearAll,
-  defaultDates,
 }: {
   categories: Category[]
   brands: Brand[]
@@ -118,12 +94,6 @@ function FilterContent({
   setLocalQ: (v: string) => void
   sort: string
   categoryId: string
-  priceMin: number
-  setPriceMin: (v: number) => void
-  priceMax: number
-  setPriceMax: (v: number) => void
-  startDate: string
-  endDate: string
   brandIds: string[]
   brandOptions: { id: string; label: string }[]
   hasFilters: boolean
@@ -131,13 +101,9 @@ function FilterContent({
   handleSearchSubmit: (e: React.FormEvent) => void
   handleSortChange: (v: string) => void
   handleCategoryChange: (v: string) => void
-  handlePriceApply: () => void
-  handleStartDateChange: (v: string) => void
-  handleEndDateChange: (v: string) => void
   handleBrandToggle: (id: string, checked: boolean) => void
   removeChip: (key: string) => void
   clearAll: () => void
-  defaultDates: { start: string; end: string }
 }) {
   return (
     <div className="space-y-4">
@@ -208,7 +174,7 @@ function FilterContent({
       {/* Collapsible filter sections */}
       <Accordion
         type="multiple"
-        defaultValue={['category', 'sort', 'dates', 'price', 'brands']}
+        defaultValue={['category', 'sort', 'brands']}
         className="space-y-1"
       >
         {/* Category */}
@@ -227,7 +193,7 @@ function FilterContent({
               <SelectContent>
                 <SelectItem value="all">{t('common.viewAll')}</SelectItem>
                 {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
+                    <SelectItem key={c.id} value={c.slug}>
                     {c.name}
                   </SelectItem>
                 ))}
@@ -257,50 +223,6 @@ function FilterContent({
                 ))}
               </SelectContent>
             </Select>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Dates */}
-        <AccordionItem value="dates" className="border-b-0">
-          <AccordionTrigger className="px-0 py-3 text-xs font-medium uppercase tracking-wider text-text-muted hover:text-text-heading hover:no-underline">
-            {t('equipment.rentalDates')}
-          </AccordionTrigger>
-          <AccordionContent className="pb-3 pt-0">
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onStartDateChange={handleStartDateChange}
-              onEndDateChange={handleEndDateChange}
-              startLabel={t('checkout.startDate')}
-              endLabel={t('checkout.endDate')}
-              minStart={defaultDates.start}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Price */}
-        <AccordionItem value="price" className="border-b-0">
-          <AccordionTrigger className="px-0 py-3 text-xs font-medium uppercase tracking-wider text-text-muted hover:text-text-heading hover:no-underline">
-            {t('equipment.priceRange')}
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3 pb-3 pt-0">
-            <PriceRangeSlider
-              min={priceMin}
-              max={priceMax}
-              onMinChange={setPriceMin}
-              onMaxChange={setPriceMax}
-              absoluteMin={DEFAULT_PRICE_MIN}
-              absoluteMax={DEFAULT_PRICE_MAX}
-              label={t('equipment.pricePerDay') ?? 'Price per day (SAR)'}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full rounded-xl border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5"
-              onClick={handlePriceApply}
-            >
-              {t('common.apply') ?? 'Apply'}
-            </Button>
           </AccordionContent>
         </AccordionItem>
 
@@ -337,15 +259,10 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLocale()
-  const defaultDates = useMemo(getDefaultDates, [])
 
   const q = searchParams?.get('q') ?? ''
   const sort = searchParams?.get('sort') ?? 'recommended'
   const categoryId = searchParams?.get('categoryId') ?? ''
-  const priceMinParam = searchParams?.get('priceMin')
-  const priceMaxParam = searchParams?.get('priceMax')
-  const startDateParam = searchParams?.get('startDate') ?? defaultDates.start
-  const endDateParam = searchParams?.get('endDate') ?? defaultDates.end
   const brandIdsParam = searchParams?.get('brandIds') ?? ''
   const brandIds = useMemo(
     () =>
@@ -359,14 +276,6 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
   )
 
   const [localQ, setLocalQ] = useState(q)
-  const [priceMin, setPriceMin] = useState(
-    priceMinParam ? parseInt(priceMinParam, 10) : DEFAULT_PRICE_MIN
-  )
-  const [priceMax, setPriceMax] = useState(
-    priceMaxParam ? parseInt(priceMaxParam, 10) : DEFAULT_PRICE_MAX
-  )
-  const [startDate, setStartDate] = useState(startDateParam)
-  const [endDate, setEndDate] = useState(endDateParam)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const updateParams = useCallback(
@@ -392,23 +301,8 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
   }
 
   const handleCategoryChange = (value: string) => {
+    // `categoryId` in URL represents a Category slug (API supports slug or id, but UI uses slug)
     updateParams({ categoryId: value || undefined })
-  }
-
-  const handlePriceApply = () => {
-    updateParams({
-      priceMin: priceMin > DEFAULT_PRICE_MIN ? String(priceMin) : undefined,
-      priceMax: priceMax < DEFAULT_PRICE_MAX ? String(priceMax) : undefined,
-    })
-  }
-
-  const handleStartDateChange = (start: string) => {
-    setStartDate(start)
-    updateParams({ startDate: start, endDate })
-  }
-  const handleEndDateChange = (end: string) => {
-    setEndDate(end)
-    updateParams({ startDate, endDate: end })
   }
 
   const handleBrandToggle = (id: string, checked: boolean) => {
@@ -418,10 +312,6 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
 
   const clearAll = () => {
     setLocalQ('')
-    setPriceMin(DEFAULT_PRICE_MIN)
-    setPriceMax(DEFAULT_PRICE_MAX)
-    setStartDate(defaultDates.start)
-    setEndDate(defaultDates.end)
     router.push('/equipment', { scroll: false })
   }
 
@@ -429,8 +319,6 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
     !!q ||
     !!categoryId ||
     sort !== 'recommended' ||
-    (priceMinParam && parseInt(priceMinParam, 10) > DEFAULT_PRICE_MIN) ||
-    (priceMaxParam && parseInt(priceMaxParam, 10) < DEFAULT_PRICE_MAX) ||
     brandIds.length > 0
 
   const brandOptions = useMemo(() => brands.map((b) => ({ id: b.id, label: b.name })), [brands])
@@ -440,23 +328,19 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
     const chips: { key: string; label: string }[] = []
     if (q) chips.push({ key: 'q', label: `"${q}"` })
     if (categoryId) {
-      const cat = categories.find((c) => c.id === categoryId)
+      const cat = categories.find((c) => c.slug === categoryId)
       if (cat) chips.push({ key: 'category', label: cat.name })
     }
     if (sort !== 'recommended') {
       const opt = SORT_OPTIONS.find((o) => o.value === sort)
       chips.push({ key: 'sort', label: t(opt?.labelKey ?? '') ?? sort })
     }
-    if (priceMinParam && parseInt(priceMinParam, 10) > DEFAULT_PRICE_MIN)
-      chips.push({ key: 'priceMin', label: `Min: ${priceMinParam} SAR` })
-    if (priceMaxParam && parseInt(priceMaxParam, 10) < DEFAULT_PRICE_MAX)
-      chips.push({ key: 'priceMax', label: `Max: ${priceMaxParam} SAR` })
     for (const bid of brandIds) {
       const brand = brands.find((b) => b.id === bid)
       if (brand) chips.push({ key: `brand:${bid}`, label: brand.name })
     }
     return chips
-  }, [q, categoryId, sort, priceMinParam, priceMaxParam, brandIds, categories, brands, t])
+  }, [q, categoryId, sort, brandIds, categories, brands, t])
 
   const removeChip = useCallback(
     (key: string) => {
@@ -465,13 +349,7 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
         updateParams({ q: undefined })
       } else if (key === 'category') updateParams({ categoryId: undefined })
       else if (key === 'sort') updateParams({ sort: undefined })
-      else if (key === 'priceMin') {
-        setPriceMin(DEFAULT_PRICE_MIN)
-        updateParams({ priceMin: undefined })
-      } else if (key === 'priceMax') {
-        setPriceMax(DEFAULT_PRICE_MAX)
-        updateParams({ priceMax: undefined })
-      } else if (key.startsWith('brand:')) {
+      else if (key.startsWith('brand:')) {
         const bid = key.replace('brand:', '')
         const next = brandIds.filter((b) => b !== bid)
         updateParams({ brandIds: next.length ? next.join(',') : undefined })
@@ -489,12 +367,6 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
     setLocalQ,
     sort,
     categoryId,
-    priceMin,
-    setPriceMin,
-    priceMax,
-    setPriceMax,
-    startDate,
-    endDate,
     brandIds,
     brandOptions,
     hasFilters,
@@ -502,13 +374,9 @@ export function FilterPanel({ categories, brands, total, className }: FilterPane
     handleSearchSubmit,
     handleSortChange,
     handleCategoryChange,
-    handlePriceApply,
-    handleStartDateChange,
-    handleEndDateChange,
     handleBrandToggle,
     removeChip,
     clearAll,
-    defaultDates,
   }
 
   const filterCount = activeChips.length

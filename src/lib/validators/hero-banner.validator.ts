@@ -6,8 +6,48 @@
 
 import { z } from 'zod'
 
-const urlOptional = z.string().url().optional().nullable().or(z.literal(''))
-const urlRequired = z.string().min(1, 'Image URL is required').url()
+/** https? URLs or same-site paths (e.g. `/uploads/cms/...` from admin upload). */
+export function isValidWebsiteMediaUrl(value: string): boolean {
+  const t = value.trim()
+  if (!t) return false
+  if (t.startsWith('/')) {
+    if (t.startsWith('//')) return false
+    if (t.includes('..')) return false
+    return /^\/[\w/.?%=#&~-]+$/i.test(t) && t.length >= 2
+  }
+  try {
+    const u = new URL(t)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const slideMediaUrlRequired = z
+  .string()
+  .min(1, 'Image URL is required')
+  .refine((s) => isValidWebsiteMediaUrl(s), {
+    message: 'Must be a valid http(s) URL or absolute path (e.g. /uploads/...)',
+  })
+
+const slideMediaUrlOptional = z.preprocess(
+  (v) => (v === null || v === undefined || v === '' ? undefined : String(v).trim()),
+  z.union([
+    z.undefined(),
+    z.string().refine((s) => isValidWebsiteMediaUrl(s), {
+      message: 'Must be a valid http(s) URL or absolute path',
+    }),
+  ])
+)
+
+/** Optional absolute http(s) URL (e.g. external video). Paths not used for videoUrl today. */
+const videoUrlOptional = z.preprocess(
+  (v) => (v === null || v === undefined || v === '' ? undefined : String(v).trim()),
+  z.union([
+    z.undefined(),
+    z.string().url({ message: 'Must be a valid http(s) URL' }),
+  ])
+)
 
 export const createBannerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
@@ -24,10 +64,18 @@ export const createBannerSchema = z.object({
 
 export const updateBannerSchema = createBannerSchema.partial()
 
+const slideAspectRatioSchema = z.enum(['auto', '1/1', '4/5', '3/4', '9/16', '16/9'])
+
 export const createSlideSchema = z.object({
-  imageUrl: urlRequired,
-  mobileImageUrl: urlOptional,
-  videoUrl: urlOptional,
+  imageUrl: slideMediaUrlRequired,
+  mobileImageUrl: slideMediaUrlOptional,
+  mobileAspectRatio: slideAspectRatioSchema.optional(),
+  mobileFocalX: z.number().min(0).max(100).optional(),
+  mobileFocalY: z.number().min(0).max(100).optional(),
+  desktopAspectRatio: slideAspectRatioSchema.optional(),
+  desktopFocalX: z.number().min(0).max(100).optional(),
+  desktopFocalY: z.number().min(0).max(100).optional(),
+  videoUrl: videoUrlOptional,
 
   titleAr: z.string().min(1, 'Arabic title is required').max(500),
   titleEn: z.string().min(1, 'English title is required').max(500),

@@ -169,6 +169,7 @@ export default function IntegrationsPage() {
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="daftra">Daftra ERP</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="webhooks">API/Webhooks</TabsTrigger>
         </TabsList>
@@ -412,6 +413,139 @@ export default function IntegrationsPage() {
                   className={`rounded-md p-3 ${testResults.whatsapp.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}
                 >
                   {testResults.whatsapp.message}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="daftra" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Daftra ERP Integration</CardTitle>
+                  <CardDescription>
+                    Sync invoices, clients, payments, and tax data with Daftra API v2
+                  </CardDescription>
+                </div>
+                {getIntegration('daftra')?.configured ? (
+                  <Badge className="bg-green-100 text-green-800">
+                    <CheckCircle2 className="me-1 h-3 w-3" />
+                    Connected
+                  </Badge>
+                ) : (
+                  <Badge className="bg-yellow-100 text-yellow-800">
+                    <XCircle className="me-1 h-3 w-3" />
+                    Not Configured
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between space-x-2 rounded-md border p-3">
+                <div className="space-y-0.5">
+                  <Label>Enable Daftra Integration</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically sync customer data and invoices on creation
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const integration = getIntegration('daftra')
+                    const nextEnabled = !(integration?.enabled ?? false)
+                    try {
+                      setSaving((prev) => ({ ...prev, daftra: true }))
+                      const response = await fetch('/api/integrations/daftra', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          config: configValues.daftra || integration?.config || {},
+                          enabled: nextEnabled,
+                        }),
+                      })
+                      if (!response.ok) throw new Error('Failed to update integration state')
+                      toast({
+                        title: nextEnabled ? 'Integration Enabled' : 'Integration Disabled',
+                        description: `Daftra ERP sync is now ${nextEnabled ? 'active' : 'inactive'}.`,
+                      })
+                      await fetchIntegrations()
+                    } catch (e: any) {
+                      toast({
+                        title: 'Error',
+                        description: e.message || 'Failed to toggle integration',
+                        variant: 'destructive',
+                      })
+                    } finally {
+                      setSaving((prev) => ({ ...prev, daftra: false }))
+                    }
+                  }}
+                >
+                  {getIntegration('daftra')?.enabled ? 'Disable' : 'Enable'}
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="daftra-subdomain">Daftra Subdomain</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="daftra-subdomain"
+                    placeholder="e.g. yourcompany"
+                    value={
+                      configValues.daftra?.subdomain ||
+                      getIntegration('daftra')?.config.subdomain ||
+                      ''
+                    }
+                    onChange={(e) => updateConfigValue('daftra', 'subdomain', e.target.value)}
+                  />
+                  <span className="text-sm text-muted-foreground">.daftra.com</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Enter your Daftra subdomain prefix
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="daftra-api-key">API Key (v2)</Label>
+                <PasswordInput
+                  id="daftra-api-key"
+                  placeholder="Enter your Daftra API Key"
+                  value={
+                    configValues.daftra?.apiKey ||
+                    getIntegration('daftra')?.config.apiKey ||
+                    ''
+                  }
+                  onChange={(e) => updateConfigValue('daftra', 'apiKey', e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Your secure Daftra API v2 key (will be encrypted safely using AES-256-CBC)
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleTestConnection('daftra')}
+                  disabled={testing.daftra || !getIntegration('daftra')?.configured}
+                >
+                  {testing.daftra && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  Test Connection
+                </Button>
+                <Button onClick={() => handleSaveConfig('daftra')} disabled={saving.daftra}>
+                  {saving.daftra && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  Save Configuration
+                </Button>
+              </div>
+              {testResults.daftra && (
+                <div
+                  className={`rounded-md p-3 ${
+                    testResults.daftra.success
+                      ? 'bg-green-50 text-green-800'
+                      : 'bg-red-50 text-red-800'
+                  }`}
+                >
+                  {testResults.daftra.message}
                 </div>
               )}
             </CardContent>

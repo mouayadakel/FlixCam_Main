@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 interface VideoUrlInputProps {
   value?: string
@@ -86,7 +87,7 @@ export function VideoUrlInput({
             value={url}
             onChange={(e) => handleChange(e.target.value)}
             className="pe-10"
-            dir="ltr"
+            dir={EMBED_LTR}
           />
         </div>
         {url && (

@@ -1,6 +1,6 @@
 /**
  * @file page.tsx
- * @description Vendors page with tabs: Vendors List, Payouts
+ * @description Vendors & Supplier Sourcing – Smart Purchase Orders, catalogs, and new gear intake scanners.
  * @module app/admin/(routes)/vendors
  */
 
@@ -20,8 +20,12 @@ const PayoutsTab = dynamic(
   () => import('./payouts/page').then((m) => ({ default: m.default })),
   { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
 )
+const ProcurementTab = dynamic(
+  () => import('./_components/procurement-tab').then((m) => ({ default: m.default })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
 
-const TAB_VALUES = ['list', 'payouts'] as const
+const TAB_VALUES = ['list', 'payouts', 'procurement'] as const
 
 export default function VendorsPage() {
   const searchParams = useSearchParams()
@@ -51,13 +55,14 @@ export default function VendorsPage() {
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">الموردون</h1>
+        <h1 className="text-3xl font-black">الموردون وإدارة مشتريات الأصول</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="mb-4">
-          <TabsTrigger value="list">قائمة الموردين</TabsTrigger>
-          <TabsTrigger value="payouts">المدفوعات</TabsTrigger>
+          <TabsTrigger value="list" className="font-bold">قائمة الموردين</TabsTrigger>
+          <TabsTrigger value="payouts" className="font-bold">المدفوعات والعمولات</TabsTrigger>
+          <TabsTrigger value="procurement" className="font-bold">طلبات الشراء والعهد (Procurement)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="mt-0">
@@ -65,6 +70,9 @@ export default function VendorsPage() {
         </TabsContent>
         <TabsContent value="payouts" className="mt-0">
           <PayoutsTab />
+        </TabsContent>
+        <TabsContent value="procurement" className="mt-0">
+          <ProcurementTab />
         </TabsContent>
       </Tabs>
     </div>

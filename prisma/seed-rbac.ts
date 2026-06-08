@@ -157,6 +157,8 @@ const PERMISSIONS: Array<{
   { name: 'studio.update', categoryName: 'studio', sortOrder: 3 },
   { name: 'studio.delete', categoryName: 'studio', sortOrder: 4 },
   { name: 'studio.manage_blackouts', categoryName: 'studio', sortOrder: 5 },
+  { name: 'cms.studio.read', categoryName: 'studio', sortOrder: 6, description: 'View studio CMS content' },
+  { name: 'cms.studio.update', categoryName: 'studio', sortOrder: 7, description: 'Edit studio CMS & uploads' },
   // kit
   { name: 'kit.create', categoryName: 'kit', sortOrder: 1 },
   { name: 'kit.read', categoryName: 'kit', sortOrder: 2 },
@@ -328,6 +330,8 @@ const SYSTEM_ROLES = [
       'delivery.read',
       'approval.read',
       'dashboard.read',
+      'cms.studio.read',
+      'cms.studio.update',
     ],
   },
   {
@@ -449,7 +453,15 @@ const CUSTOM_ROLES: Array<{
     name: 'marketing_manager',
     displayName: 'Marketing Manager',
     displayNameAr: 'مدير التسويق',
-    permissions: ['marketing.*', 'coupon.*', 'client.read', 'reports.read', 'dashboard.read'],
+    permissions: [
+      'marketing.*',
+      'coupon.*',
+      'client.read',
+      'reports.read',
+      'dashboard.read',
+      'cms.studio.read',
+      'cms.studio.update',
+    ],
   },
   {
     name: 'risk_manager',

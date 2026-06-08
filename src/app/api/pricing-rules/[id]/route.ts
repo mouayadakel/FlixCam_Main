@@ -6,10 +6,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { hasPermission } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
 import { updatePricingRuleSchema } from '@/lib/validators/pricing-rule.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError, NotFoundError } from '@/lib/errors'
+import { ForbiddenError, NotFoundError, UnauthorizedError } from '@/lib/errors'
 import { Decimal } from '@prisma/client/runtime/library'
 
 function shapeRule(r: {
@@ -52,6 +53,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   try {
     const session = await auth()
     if (!session?.user) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, 'pricing.read' as never))) {
+      throw new ForbiddenError()
+    }
     const { id } = await params
     const rule = await prisma.pricingRule.findUnique({
       where: { id },
@@ -68,6 +72,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const session = await auth()
     if (!session?.user) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, 'pricing.update' as never))) {
+      throw new ForbiddenError()
+    }
     const { id } = await params
     const existing = await prisma.pricingRule.findUnique({ where: { id } })
     if (!existing) throw new NotFoundError('Pricing rule', id)
@@ -142,6 +149,9 @@ export async function DELETE(
   try {
     const session = await auth()
     if (!session?.user) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, 'pricing.delete' as never))) {
+      throw new ForbiddenError()
+    }
     const { id } = await params
     const existing = await prisma.pricingRule.findUnique({ where: { id } })
     if (!existing) throw new NotFoundError('Pricing rule', id)

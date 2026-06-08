@@ -16,9 +16,11 @@ import Link from 'next/link'
 import { formatDate } from '@/lib/utils/format.utils'
 import { FileText, CheckCircle, Clock } from 'lucide-react'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 export default async function PortalContractsPage() {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/contracts')
@@ -52,18 +54,18 @@ export default async function PortalContractsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'portal.myContracts')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('ar', 'portal.myContractsDesc')}</p>
+        <h1 className="text-3xl font-bold">{t(locale, 'portal.myContracts')}</h1>
+        <p className="mt-2 text-muted-foreground">{t(locale, 'portal.myContractsDesc')}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.contractsList')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.contractsList')}</CardTitle>
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground">{t('ar', 'portal.noContracts')}</p>
+              <p className="text-muted-foreground">{t(locale, 'portal.noContracts')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -76,26 +78,26 @@ export default async function PortalContractsPage() {
                     <div className="mb-2 flex items-center gap-3">
                       <FileText className="h-5 w-5 text-muted-foreground" />
                       <span className="text-lg font-medium">
-                        {t('ar', 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
+                        {t(locale, 'portal.contractHash').replace('{id}', contract.id.slice(0, 8))}
                       </span>
                       <Badge variant={contract.signedAt ? 'default' : 'secondary'}>
                         {contract.signedAt
-                          ? t('ar', 'portal.signed')
-                          : t('ar', 'portal.awaitingSignature')}
+                          ? t(locale, 'portal.signed')
+                          : t(locale, 'portal.awaitingSignature')}
                       </Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.booking')}:</span> #
+                        <span className="font-medium">{t(locale, 'portal.booking')}:</span> #
                         {contract.booking.bookingNumber}
                       </div>
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.createdDate')}:</span>{' '}
+                        <span className="font-medium">{t(locale, 'portal.createdDate')}:</span>{' '}
                         {formatDate(contract.createdAt)}
                       </div>
                       {contract.signedAt && (
                         <div>
-                          <span className="font-medium">{t('ar', 'portal.signedDate')}:</span>{' '}
+                          <span className="font-medium">{t(locale, 'portal.signedDate')}:</span>{' '}
                           {formatDate(contract.signedAt)}
                         </div>
                       )}
@@ -105,8 +107,8 @@ export default async function PortalContractsPage() {
                     <Link href={`/portal/contracts/${contract.id}`}>
                       <Button variant="outline" size="sm">
                         {!contract.signedAt
-                          ? t('ar', 'portal.signContract')
-                          : t('ar', 'portal.viewContract')}
+                          ? t(locale, 'portal.signContract')
+                          : t(locale, 'portal.viewContract')}
                       </Button>
                     </Link>
                   </div>

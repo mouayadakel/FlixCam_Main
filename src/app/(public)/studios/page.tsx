@@ -8,16 +8,19 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { unstable_cache } from 'next/cache'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
 
-export const metadata: Metadata = {
-  title: t('ar', 'seo.studiosTitle'),
-  description: t('ar', 'seo.studiosDescription'),
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getRequestLocale()
+  return {
+  title: t(locale, 'seo.studiosTitle'),
+  description: t(locale, 'seo.studiosDescription'),
   alternates: generateAlternatesMetadata('/studios'),
   keywords: ['استوديو تصوير', 'studio rental', 'استوديو الرياض', 'تصوير سينمائي'],
   openGraph: {
-    title: t('ar', 'seo.studiosTitle'),
-    description: t('ar', 'seo.studiosDescription'),
+    title: t(locale, 'seo.studiosTitle'),
+    description: t(locale, 'seo.studiosDescription'),
     type: 'website',
   },
   twitter: {
@@ -25,6 +28,7 @@ export const metadata: Metadata = {
     title: 'استوديوهات التصوير | FlixCam.rent',
     description: 'استأجر استوديوهات تصوير احترافية في الرياض.',
   },
+  }
 }
 
 import { prisma } from '@/lib/db/prisma'
@@ -50,7 +54,12 @@ const getStudios = unstable_cache(
         hasAC: true,
         hasChangingRooms: true,
         address: true,
-        media: { take: 1, select: { id: true, url: true, type: true } },
+        media: {
+          where: { deletedAt: null },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+          take: 1,
+          select: { id: true, url: true, type: true },
+        },
       },
       orderBy: { name: 'asc' },
     })
@@ -59,7 +68,7 @@ const getStudios = unstable_cache(
       hourlyRate: s.hourlyRate ? Number(s.hourlyRate) : 0,
     }))
   },
-  ['public-studios-list'],
+['public-studios-list', 'media-sort-v1'],
   { revalidate: 300 }
 )
 

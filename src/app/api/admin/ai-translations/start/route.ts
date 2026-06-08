@@ -5,45 +5,66 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { z } from 'zod'
+import { auth } from '@/lib/auth'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import {
+  createTranslationJobId,
+  deepMergeTranslations,
+  flattenTranslations,
+  getTranslationJob,
+  listTranslationJobs,
+  loadLocaleMessages,
+  setTranslationJob,
+  unflattenTranslations,
+  type TranslationJob,
+} from '@/lib/services/ai-translations-admin.service'
 
-interface TranslationJob {
-  id: string
-  status: 'pending' | 'running' | 'completed' | 'failed'
-  progress: number
-  sourceLocale: string
-  targetLocales: string[]
-  keysProcessed: number
-  totalKeys: number
-  createdAt: Date
-  completedAt?: Date
-  error?: string
+const startSchema = z.object({
+  sourceLocale: z.string().min(2).max(10),
+  targetLocales: z.array(z.string().min(2).max(10)).min(1),
+  selectedKeys: z.array(z.string().min(1).max(300)).optional(),
+  apiKey: z.string().min(1).optional(),
+})
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
-
-// In-memory storage (in production, use database)
-const jobs = new Map<string, TranslationJob>()
 
 export async function POST(request: NextRequest) {
   try {
-    const { sourceLocale, targetLocales, apiKey, selectedKeys } = await request.json()
-
-    if (!apiKey) {
-      return NextResponse.json({ error: 'OpenAI API key is required' }, { status: 400 })
+    const session = await auth()
+    const userId = session?.user?.id
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const canManageTranslations = await hasPermission(userId, PERMISSIONS.SETTINGS_UPDATE)
+    if (!canManageTranslations) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Initialize OpenAI client
+    const body: unknown = await request.json().catch(() => null)
+    const parsed = startSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    }
+
+    const { sourceLocale, targetLocales, selectedKeys, apiKey: bodyApiKey } = parsed.data
+    const apiKey = bodyApiKey ?? process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Translation service unavailable' }, { status: 503 })
+    }
+
     const openai = new OpenAI({ apiKey })
-
-    // Load source translations
-    const sourceTranslations = await import(`@/messages/${sourceLocale}.json`)
-    const allKeys = Object.keys(flattenObject(sourceTranslations.default))
-
-    // Filter keys if selection provided
+    const sourceTranslations = await loadLocaleMessages(sourceLocale)
+    const sourceFlat = flattenTranslations(sourceTranslations)
+    const allKeys = Object.keys(sourceFlat)
     const keysToTranslate = selectedKeys?.length
       ? allKeys.filter((key) => selectedKeys.includes(key))
       : allKeys
 
     const job: TranslationJob = {
-      id: generateJobId(),
+      id: createTranslationJobId(),
       status: 'pending',
       progress: 0,
       sourceLocale,
@@ -51,12 +72,11 @@ export async function POST(request: NextRequest) {
       keysProcessed: 0,
       totalKeys: keysToTranslate.length,
       createdAt: new Date(),
+      translationsByLocale: {},
     }
 
-    jobs.set(job.id, job)
-
-    // Start translation in background
-    startTranslationJob(job.id, openai, sourceTranslations.default, keysToTranslate)
+    setTranslationJob(job)
+    void startTranslationJob(job.id, openai, sourceFlat, keysToTranslate)
 
     return NextResponse.json(job)
   } catch (error) {
@@ -66,56 +86,48 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const jobList = Array.from(jobs.values()).sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-  )
-  return NextResponse.json({ jobs: jobList })
+  return NextResponse.json({ jobs: listTranslationJobs() })
 }
 
 async function startTranslationJob(
   jobId: string,
   openai: OpenAI,
-  sourceTranslations: any,
+  sourceTranslationsFlat: Record<string, string>,
   keysToTranslate: string[]
 ) {
-  const job = jobs.get(jobId)!
+  const job = getTranslationJob(jobId)
+  if (!job) return
   job.status = 'running'
 
   const batchSize = 10
-  const targetLocales = job.targetLocales
-
   try {
     for (let i = 0; i < keysToTranslate.length; i += batchSize) {
       const batch = keysToTranslate.slice(i, i + batchSize)
-
-      // Process each target locale
-      for (const targetLocale of targetLocales) {
-        await translateBatch(openai, sourceTranslations, batch, targetLocale, job)
+      for (const targetLocale of job.targetLocales) {
+        await translateBatch(openai, sourceTranslationsFlat, batch, targetLocale, job)
       }
 
       job.keysProcessed = Math.min(i + batchSize, keysToTranslate.length)
-      job.progress = (job.keysProcessed / job.totalKeys) * 100
-
-      // Small delay to avoid rate limiting
+      job.progress = job.totalKeys > 0 ? (job.keysProcessed / job.totalKeys) * 100 : 100
       await new Promise((resolve) => setTimeout(resolve, 1000))
     }
 
     job.status = 'completed'
     job.completedAt = new Date()
-  } catch (error) {
+  } catch {
     job.status = 'failed'
-    job.error = error instanceof Error ? error.message : 'Unknown error'
+    job.error = 'Translation job failed'
   }
 }
 
 async function translateBatch(
   openai: OpenAI,
-  sourceTranslations: any,
+  sourceTranslationsFlat: Record<string, string>,
   keys: string[],
   targetLocale: string,
   job: TranslationJob
 ) {
-  const localeNames = {
+  const localeNames: Record<string, string> = {
     ar: 'Arabic',
     en: 'English',
     zh: 'Chinese (Simplified)',
@@ -124,17 +136,17 @@ async function translateBatch(
     hi: 'Hindi',
   }
 
+  const sourceChunk = Object.fromEntries(
+    keys.map((key) => [key, sourceTranslationsFlat[key] ?? ''])
+  )
+
   const prompt = `
-Translate the following JSON keys from English to ${localeNames[targetLocale as keyof typeof localeNames]}.
+Translate the following JSON keys from English to ${localeNames[targetLocale] ?? targetLocale}.
 Maintain the JSON structure exactly. Only translate the values, not the keys.
 Keep the same tone and meaning. For technical terms, use standard translations.
 
 Source JSON:
-${JSON.stringify(
-  Object.fromEntries(keys.map((key) => [key, getNestedValue(sourceTranslations, key)])),
-  null,
-  2
-)}
+${JSON.stringify(sourceChunk, null, 2)}
 
 Requirements:
 1. Return ONLY valid JSON
@@ -147,91 +159,27 @@ Requirements:
 Translated JSON:
 `
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 4000,
-    })
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.3,
+    max_tokens: 4000,
+  })
 
-    const translatedText = response.choices[0]?.message?.content
-    if (!translatedText) {
-      throw new Error('No translation received')
-    }
-
-    // Parse and save translations
-    const translated = JSON.parse(translatedText)
-
-    // Load existing target translations
-    const targetTranslations = await import(`@/messages/${targetLocale}.json`)
-    const merged = deepMerge(targetTranslations.default, unflattenObject(translated))
-
-    // Save to file (in production, use database)
-    await saveTranslations(targetLocale, merged)
-  } catch (error) {
-    console.error(`Failed to translate batch to ${targetLocale}:`, error)
-    throw error
+  const translatedText = response.choices[0]?.message?.content
+  if (!translatedText) {
+    throw new Error('No translation received')
   }
-}
 
-function flattenObject(obj: any, prefix = ''): Record<string, any> {
-  const flattened: Record<string, any> = {}
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const newKey = prefix ? `${prefix}.${key}` : key
-      if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-        Object.assign(flattened, flattenObject(obj[key], newKey))
-      } else {
-        flattened[newKey] = obj[key]
-      }
-    }
+  const parsed = JSON.parse(translatedText) as unknown
+  if (!isObject(parsed)) {
+    throw new Error('Invalid translation payload')
   }
-  return flattened
-}
 
-function unflattenObject(flat: Record<string, any>): any {
-  const result: any = {}
-  for (const key in flat) {
-    if (flat.hasOwnProperty(key)) {
-      const keys = key.split('.')
-      let current = result
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) {
-          current[keys[i]] = {}
-        }
-        current = current[keys[i]]
-      }
-      current[keys[keys.length - 1]] = flat[key]
-    }
+  const current = job.translationsByLocale?.[targetLocale] ?? {}
+  const merged = deepMergeTranslations(current, unflattenTranslations(parsed))
+  job.translationsByLocale = {
+    ...(job.translationsByLocale ?? {}),
+    [targetLocale]: merged,
   }
-  return result
-}
-
-function getNestedValue(obj: any, key: string): any {
-  return key.split('.').reduce((current, k) => current?.[k], obj)
-}
-
-function deepMerge(target: any, source: any): any {
-  const output = { ...target }
-  for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      output[key] = deepMerge(target[key] || {}, source[key])
-    } else {
-      output[key] = source[key]
-    }
-  }
-  return output
-}
-
-async function saveTranslations(locale: string, translations: any) {
-  const fs = await import('fs/promises')
-  const path = await import('path')
-
-  const filePath = path.join(process.cwd(), `src/messages/${locale}.json`)
-  await fs.writeFile(filePath, JSON.stringify(translations, null, 2), 'utf-8')
-}
-
-function generateJobId(): string {
-  return `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }

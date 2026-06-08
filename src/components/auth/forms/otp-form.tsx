@@ -16,6 +16,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { Loader2 } from 'lucide-react'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 export interface OtpFormProps {
   registrationToken: string
@@ -153,7 +154,7 @@ export function OtpForm({ registrationToken, phone, onSuccess, onBack }: OtpForm
         </h3>
         <p className="text-sm text-text-muted">
           {t('auth.codeSentTo')} <br />
-          <span className="font-semibold text-text-body" dir="ltr">
+          <span className="font-semibold text-text-body" dir={EMBED_LTR}>
             {masked}
           </span>
         </p>
@@ -168,7 +169,7 @@ export function OtpForm({ registrationToken, phone, onSuccess, onBack }: OtpForm
             disabled={isLoading || tooManyAttempts}
             autoFocus
           >
-            <InputOTPGroup dir="ltr">
+            <InputOTPGroup dir={EMBED_LTR}>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />

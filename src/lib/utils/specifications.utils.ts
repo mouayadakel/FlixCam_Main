@@ -8,6 +8,7 @@ import type {
   SpecHighlight,
   QuickSpec,
   StructuredSpecifications,
+  IconName,
 } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
 
@@ -33,7 +34,15 @@ export function flattenStructuredSpecs(specs: StructuredSpecifications): Record<
 
   for (const group of specs.groups) {
     for (const spec of group.specs) {
-      if (spec.key) out[spec.key] = String(spec.value ?? '')
+      if (spec.key) {
+        const val = String(spec.value ?? '')
+        const isCorrupt = val.toLowerCase().includes('object object') || 
+                         val.toLowerCase().includes('object]') ||
+                         val.toLowerCase().includes('[object')
+        if (!isCorrupt) {
+          out[spec.key] = val
+        }
+      }
     }
   }
 
@@ -56,6 +65,23 @@ export function flattenStructuredSpecs(specs: StructuredSpecifications): Record<
   }
 
   return out
+}
+
+/**
+ * Detect duplicate SpecItem.key values across all groups (compare/compare matrix risk).
+ */
+export function detectSpecKeyCollisions(specs: StructuredSpecifications): Array<{ key: string; count: number }> {
+  const counts = new Map<string, number>()
+  for (const group of specs.groups) {
+    for (const spec of group.specs) {
+      const k = spec.key?.trim()
+      if (!k) continue
+      counts.set(k, (counts.get(k) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()]
+    .filter(([, c]) => c > 1)
+    .map(([key, count]) => ({ key, count }))
 }
 
 /**
@@ -103,7 +129,9 @@ export function getSpecArray(specs: unknown, key: string): string[] {
 // Conversion
 // ============================================================================
 
-const RESERVED_KEYS = ['mode', 'html', 'customHtml', 'highlights', 'quickSpecs', 'groups']
+// Keys that are not "spec rows" and should not be converted into group items.
+// Notes/customHtml are rendered as rich blocks in the UI, not as a single mega-row.
+const RESERVED_KEYS = ['mode', 'html', 'customHtml', 'highlights', 'quickSpecs', 'groups', 'notes']
 
 /**
  * Maps AI-generated keys (spec-templates) to categoryTemplate keys for correct group placement.
@@ -113,12 +141,12 @@ const KEY_ALIASES: Record<string, string> = {
   // Cameras
   sensor_size: 'sensor',
   sensor_type: 'sensor',
-  effective_pixels: 'resolution',
-  max_photo_resolution: 'resolution',
+  sensor_resolution: 'sensor',
+  effective_pixels: 'sensor',
+  max_photo_resolution: 'sensor',
   max_video_resolution: 'video',
-  max_framerate: 'video',
-  max_framerate_4k: 'video',
-  max_framerate_1080p: 'video',
+  video_resolution: 'video',
+  resolution: 'video',
   base_iso: 'iso',
   max_iso: 'iso',
   dual_native_iso: 'iso',
@@ -131,12 +159,15 @@ const KEY_ALIASES: Record<string, string> = {
   hdmi_version: 'hdmi',
   battery_type: 'battery',
   battery_life_minutes: 'battery',
+  battery_life: 'battery',
   usb_charging: 'usbCharging',
   lcd_size: 'display',
   lcd_resolution: 'display',
   lcd_touchscreen: 'display',
   lcd_type: 'display',
   lcd_articulating: 'display',
+  screen: 'display',
+  screen_size: 'display',
   evf_resolution: 'evf',
   evf_magnification: 'evf',
   ibis: 'stabilization',
@@ -144,10 +175,14 @@ const KEY_ALIASES: Record<string, string> = {
   weather_sealed: 'weather',
   body_material: 'weather',
   media_type: 'recording',
+  recording_media: 'recording',
   card_slots: 'recording',
+  media_slots: 'recording',
   codec: 'recording',
   internal_codec: 'recording',
   external_codec: 'recording',
+  video_specs: 'video',
+  stills_specs: 'sensor',
   // Lenses
   focal_length: 'focalLength',
   focal_length_range: 'focalLength',
@@ -205,7 +240,7 @@ const KEY_ALIASES: Record<string, string> = {
   tilt_range: 'panTilt',
   folded_length_cm: 'folded',
   // Monitors
-  screen_size: 'size',
+  // screen_size already mapped above
   brightness_nits: 'brightness',
   panel_type: 'panelType',
   touch_screen: 'touchscreen',
@@ -240,8 +275,44 @@ const KEY_ALIASES: Record<string, string> = {
 }
 
 /** Exported for ai-spec-parser: maps AI keys to template keys when checking existing specs */
-export function resolveSpecKey(key: string): string {
-  return KEY_ALIASES[key] ?? key
+export function resolveSpecKey(key: string, value?: string): string {
+  const normalizedKey = key.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_')
+  const resolved = KEY_ALIASES[normalizedKey] ?? KEY_ALIASES[key] ?? key
+
+  // Heuristic: if a key resolved to 'video' but the value looks like sensor resolution (MP)
+  if (resolved === 'video' && value && /(megapixels?|mp)\b/i.test(String(value))) {
+    return 'sensor'
+  }
+
+  return resolved
+}
+
+/**
+ * Convert flat specifications to structured format.
+ * If categoryHint is provided, matches keys against category template and distributes into groups.
+ * Uses KEY_ALIASES to map AI-generated keys (e.g. sensor_size) to template keys (e.g. sensor).
+ */
+/**
+ * Safely converts any value to a string for specification storage.
+ * Prevents [object Object] corruption.
+ */
+export function safeStringifySpecValue(v: unknown): string {
+  if (v == null) return ''
+  if (typeof v === 'string') return v.trim()
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (typeof v === 'object') {
+    // If it's an object, check for common value fields
+    const obj = v as Record<string, unknown>
+    if (typeof obj.value === 'string') return obj.value.trim()
+    if (typeof obj.label === 'string' && typeof obj.value === 'string') return `${obj.label}: ${obj.value}`
+    // Fallback to JSON stringify instead of [object Object]
+    try {
+      return JSON.stringify(v)
+    } catch {
+      return 'Error: Unstringifiable value'
+    }
+  }
+  return String(v)
 }
 
 /**
@@ -255,7 +326,7 @@ export function convertFlatToStructured(
 ): StructuredSpecifications {
   const entries = Object.entries(flatSpecs)
     .filter(([key]) => !RESERVED_KEYS.includes(key))
-    .map(([k, v]) => [k, String(v ?? '')] as [string, string])
+    .map(([k, v]) => [k, safeStringifySpecValue(v)] as [string, string])
 
   const template = categoryHint ? categoryTemplates[categoryHint.toLowerCase()] : undefined
 
@@ -263,8 +334,8 @@ export function convertFlatToStructured(
     const groups: SpecGroup[] = template.groups.map((g) => ({
       ...g,
       specs: g.specs.map((s) => {
-        const pair = entries.find(([k]) => {
-          const resolved = resolveSpecKey(k)
+        const pair = entries.find(([k, v]) => {
+          const resolved = resolveSpecKey(k, v)
           return (
             resolved === s.key ||
             resolved.toLowerCase() === s.key.toLowerCase() ||
@@ -274,23 +345,35 @@ export function convertFlatToStructured(
         })
         return {
           ...s,
-          value: pair ? String(pair[1] ?? '') : s.value,
+          value: pair ? safeStringifySpecValue(pair[1]) : s.value,
         }
       }),
     }))
     const usedKeys = new Set(
       template.groups.flatMap((g) => g.specs.map((s) => s.key.toLowerCase()))
     )
-    const remaining = entries.filter(([k]) => {
-      const resolved = resolveSpecKey(k).toLowerCase()
-      return !usedKeys.has(resolved) && !usedKeys.has(k.toLowerCase())
+    
+    // Track keys added to remaining to prevent duplicates in groups[0]
+    const remainingKeysAdded = new Set<string>()
+
+    const remaining = entries.filter(([k, v]) => {
+      const resolved = resolveSpecKey(k, v).toLowerCase()
+      const isAlreadyUsed = usedKeys.has(resolved) || usedKeys.has(k.toLowerCase())
+      if (isAlreadyUsed) return false
+      
+      const normalizedK = k.trim().toLowerCase()
+      if (remainingKeysAdded.has(normalizedK) || normalizedK === '') return false
+      
+      remainingKeysAdded.add(normalizedK)
+      return true
     })
+
     if (remaining.length > 0 && groups[0]) {
       groups[0].specs.push(
         ...remaining.map(([key, value]) => ({
-          key,
-          label: key.replace(/([A-Z])/g, ' $1').trim(),
-          value: String(value ?? ''),
+          key: key.trim() || 'unnamed_spec',
+          label: key.replace(/([A-Z])/g, ' $1').trim() || 'Unnamed Specification',
+          value: safeStringifySpecValue(value),
           type: 'text' as const,
         }))
       )
@@ -298,15 +381,18 @@ export function convertFlatToStructured(
 
     const allSpecs = groups.flatMap((g) => g.specs)
     const TOP_KEYS: Record<string, string[]> = {
-      cameras: ['sensor', 'video', 'iso', 'mount', 'weight'],
-      lenses: ['focalLength', 'maxAperture', 'mount', 'format'],
-      lighting: ['output', 'colorTemp', 'cri', 'power'],
-      audio: ['pattern', 'frequency', 'spl'],
-      tripods: ['maxLoad', 'maxHeight', 'headType'],
-      grip: ['maxLoad', 'maxHeight', 'headType'],
-      monitors: ['size', 'resolution', 'brightness'],
-      stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours'],
-      drones: ['max_flight_time_min', 'max_speed_kmh', 'max_transmission_range'],
+      cameras: ['sensor_size', 'max_video_resolution', 'dynamic_range', 'codec', 'mount_type'],
+      lenses: ['focal_length', 'max_aperture', 'mount_type', 'image_circle', 'elements_groups'],
+      lighting: ['power_watts', 'color_temp_range', 'cri', 'output_lux_1m', 'beam_angle'],
+      audio: ['type', 'polar_pattern', 'frequency_response', 'max_spl_db', 'wireless_range_m'],
+      monitors: ['screen_size', 'resolution', 'brightness_nits', 'color_space', 'panel_type'],
+      grip: ['max_load_kg', 'max_height_cm', 'head_type', 'material', 'leg_sections'],
+      tripods: ['max_load_kg', 'max_height_cm', 'head_type', 'material', 'leg_sections'],
+      stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours', 'follow_modes', 'weight_kg'],
+      drones: ['max_flight_time_min', 'max_video_resolution', 'camera_sensor_size', 'max_transmission_range', 'max_speed_kmh'],
+      power: ['capacity_wh', 'voltage', 'mount_type', 'max_output_watts', 'd_tap_outputs'],
+      recorders: ['max_resolution', 'codec', 'media_type', 'screen_size', 'sdi_input'],
+      wireless: ['max_range_m', 'latency_ms', 'max_resolution', 'frequency_band', 'antenna_type'],
       accessories: ['type', 'compatibility', 'material'],
     }
     const topKeys = categoryHint ? TOP_KEYS[categoryHint.toLowerCase()] ?? [] : []
@@ -314,9 +400,9 @@ export function convertFlatToStructured(
       .map((k) => allSpecs.find((s) => s.key === k))
       .filter((s): s is SpecItem => s != null && s.value != null && String(s.value).trim() !== '')
       .slice(0, 6)
-      .map((s) => ({ icon: 'star', label: s.label, value: s.value }))
+      .map((s) => ({ icon: 'star' as IconName, label: s.label, value: s.value }))
     const highlights = quickSpecs.slice(0, 4).map((s) => ({
-      icon: 'star',
+      icon: 'star' as IconName,
       label: s.label,
       value: s.value,
       sublabel: '',
@@ -335,13 +421,51 @@ export function convertFlatToStructured(
     specs: entries.map(([key, value]) => ({
       key,
       label: key.replace(/([A-Z])/g, ' $1').trim(),
-      value: String(value ?? ''),
+      value: safeStringifySpecValue(value),
       type: 'text' as const,
     })),
   }
   const customHtml =
     typeof flatSpecs.customHtml === 'string' ? flatSpecs.customHtml : undefined
   return { groups: [generalGroup], ...(customHtml !== undefined && { customHtml }) }
+}
+
+/**
+ * Detects if structured specifications contain any corrupted [object Object] values.
+ */
+export function hasCorruptedValues(specs: StructuredSpecifications): boolean {
+  try {
+    const raw = JSON.stringify(specs).toLowerCase()
+    return raw.includes('object object') || raw.includes('object]') || raw.includes('[object')
+  } catch {
+    return false
+  }
+}
+
+export function repairSpecifications(specs: StructuredSpecifications): StructuredSpecifications {
+  const isCorrupt = (v: unknown) => {
+    if (typeof v !== 'string') return false
+    const low = v.toLowerCase()
+    return (
+      low.includes('object object') ||
+      low.includes('object]') ||
+      low.includes('[object') ||
+      low === 'undefined' ||
+      low === 'null'
+    )
+  }
+  const repair = (s: string) => (isCorrupt(s) ? '' : s)
+
+  // Explicitly return ONLY valid StructuredSpecifications keys to prune root corruption
+  return {
+    groups: (specs.groups || []).map((g) => ({
+      ...g,
+      specs: (g.specs || []).map((s) => ({ ...s, value: repair(s.value) })),
+    })),
+    highlights: specs.highlights?.map((h) => ({ ...h, value: repair(h.value) })),
+    quickSpecs: specs.quickSpecs?.map((q) => ({ ...q, value: repair(q.value) })),
+    ...(specs.customHtml !== undefined && { customHtml: specs.customHtml }),
+  }
 }
 
 // ============================================================================
@@ -356,7 +480,7 @@ export function extractQuickSpecs(specs: StructuredSpecifications, maxCount = 4)
     })
   })
   return allSpecs.slice(0, maxCount).map(({ spec, groupIcon }) => ({
-    icon: groupIcon,
+    icon: groupIcon as IconName,
     label: spec.label,
     value: spec.value,
   }))
@@ -371,7 +495,7 @@ export function extractHighlights(specs: StructuredSpecifications, maxCount = 4)
   return topSpecs.map((spec) => {
     const parts = spec.value.split(/[()]/)
     return {
-      icon: keyGroup.icon,
+      icon: keyGroup.icon as IconName,
       label: spec.label,
       value: parts[0].trim(),
       sublabel: parts[1]?.trim(),
@@ -420,6 +544,7 @@ export const categoryTemplates: Record<string, Partial<StructuredSpecifications>
         specs: [
           { key: 'sensor', label: 'Sensor', labelAr: 'المستشعر', value: '', highlight: true },
           { key: 'video', label: 'Video', labelAr: 'الفيديو', value: '', highlight: true },
+          { key: 'mount', label: 'Lens Mount', labelAr: 'قاعدة العدسة', value: '', highlight: true },
           { key: 'iso', label: 'ISO Range', labelAr: 'نطاق ISO', value: '', type: 'range' },
           { key: 'autofocus', label: 'Autofocus', labelAr: 'التركيز التلقائي', value: '' },
           { key: 'stabilization', label: 'Stabilization', labelAr: 'الاستقرار', value: '' },
@@ -450,7 +575,7 @@ export const categoryTemplates: Record<string, Partial<StructuredSpecifications>
         icon: 'hard-drive',
         priority: 3,
         specs: [
-          { key: 'recording', label: 'Card Slots', labelAr: 'منافذ الذاكرة', value: '' },
+          { key: 'recording', label: 'Recording Media', labelAr: 'وسائط التسجيل', value: '' },
           { key: 'battery', label: 'Battery', labelAr: 'البطارية', value: '' },
           {
             key: 'usbCharging',
@@ -470,13 +595,6 @@ export const categoryTemplates: Record<string, Partial<StructuredSpecifications>
           { key: 'wifi', label: 'WiFi', labelAr: 'واي فاي', value: '', type: 'boolean' },
           { key: 'bluetooth', label: 'Bluetooth', labelAr: 'بلوتوث', value: '', type: 'boolean' },
           { key: 'hdmi', label: 'HDMI', labelAr: 'HDMI', value: '' },
-          {
-            key: 'mount',
-            label: 'Lens Mount',
-            labelAr: 'قاعدة العدسة',
-            value: '',
-            highlight: true,
-          },
         ],
       },
     ],

@@ -255,12 +255,9 @@ async function checkConditions(
       case 'client_blacklisted': {
         const customerBlacklist = await prisma.user.findUnique({
           where: { id: booking.customerId },
-          select: { status: true },
+          select: { isBlacklisted: true, status: true },
         })
-        if (
-          customerBlacklist?.status === 'blacklisted' ||
-          customerBlacklist?.status === 'suspended'
-        ) {
+        if (customerBlacklist?.isBlacklisted || customerBlacklist?.status === 'LOCKED') {
           return { valid: false, failedCondition: condition }
         }
         break

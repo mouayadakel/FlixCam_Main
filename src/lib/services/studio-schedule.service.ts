@@ -22,7 +22,7 @@ export class StudioScheduleService {
    */
   static async getSchedule(studioId: string): Promise<ScheduleEntry[]> {
     const rows = await prisma.studioSchedule.findMany({
-      where: { studioId },
+      where: { studioId, deletedAt: null },
       orderBy: { dayOfWeek: 'asc' },
     })
 

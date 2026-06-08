@@ -77,7 +77,8 @@ export class ImportService {
     jobId: string,
     deltaProcessed: number,
     deltaSuccess: number,
-    deltaError: number
+    deltaError: number,
+    deltaSkipped: number = 0
   ) {
     await prisma.importJob.update({
       where: { id: jobId },
@@ -85,6 +86,7 @@ export class ImportService {
         processedRows: { increment: deltaProcessed },
         successRows: { increment: deltaSuccess },
         errorRows: { increment: deltaError },
+        ...(deltaSkipped > 0 ? { skippedRows: { increment: deltaSkipped } } : {}),
       },
     })
   }

@@ -229,6 +229,90 @@ export function mapSourceToProductImageSource(source: ImageSourceType): ImageSou
 }
 
 /**
+ * Use Equipment.media as the master source: copy all linked image URLs to Product and
+ * ProductImage (approved). Equipment media is never modified.
+ */
+export async function promoteEquipmentMediaToProduct(equipmentId: string): Promise<number> {
+  const equipment = await prisma.equipment.findFirst({
+    where: { id: equipmentId, deletedAt: null },
+    include: {
+      media: {
+        where: { deletedAt: null, type: 'image' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      },
+    },
+  })
+  if (!equipment) return 0
+
+  const productId = equipment.productId ?? equipment.id
+  const product = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
+    select: { id: true },
+  })
+  if (!product) return 0
+
+  const urls = [
+    ...new Set(
+      equipment.media
+        .map((m) => m.url.trim())
+        .filter((url) => url && !isPlaceholderUrl(url))
+    ),
+  ]
+  if (urls.length === 0) return 0
+
+  const [hero, ...gallery] = urls
+  const photoStatus = urls.length >= MIN_APPROVED_REAL_PHOTOS ? 'sufficient' : 'incomplete'
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: {
+      featuredImage: hero,
+      galleryImages: gallery.length > 0 ? gallery : [],
+      photoStatus,
+    },
+  })
+
+  await prisma.productImage.updateMany({
+    where: { productId, isDeleted: false },
+    data: { isPrimary: false },
+  })
+
+  for (let index = 0; index < urls.length; index++) {
+    const url = urls[index]
+    const imageSource = url.includes('/uploads/') ? ImageSource.UPLOAD : ImageSource.WEB_SCRAPED
+    const existing = await prisma.productImage.findFirst({
+      where: { productId, url, isDeleted: false },
+    })
+    if (existing) {
+      await prisma.productImage.update({
+        where: { id: existing.id },
+        data: {
+          imageSource,
+          pendingReview: false,
+          isPrimary: index === 0,
+          sortOrder: index,
+          reviewReason: null,
+          rejectionReason: null,
+        },
+      })
+    } else {
+      await prisma.productImage.create({
+        data: {
+          productId,
+          url,
+          imageSource,
+          pendingReview: false,
+          isPrimary: index === 0,
+          sortOrder: index,
+        },
+      })
+    }
+  }
+
+  return urls.length
+}
+
+/**
  * Promote approved ProductImage rows into Product.featuredImage and Product.galleryImages.
  * Sets photoStatus based on completeness. Does not sync to Equipment (caller does that).
  */

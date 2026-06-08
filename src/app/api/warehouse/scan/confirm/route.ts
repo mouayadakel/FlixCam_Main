@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { WarehouseScanType } from '@prisma/client'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
@@ -60,71 +61,89 @@ export async function POST(request: NextRequest) {
         throw new Error('Booking equipment item not found')
       }
 
+      const eqRow = await tx.equipment.findFirst({
+        where: { id: equipmentId, deletedAt: null },
+        select: { sku: true, barcode: true },
+      })
+      const barcode = (eqRow?.barcode && eqRow.barcode.trim()) || eqRow?.sku || equipmentId
+
       if (action === 'dispatch') {
-        if (bookingItem.itemStatus !== 'PENDING') {
+        const existingOut = await tx.warehouseScan.findFirst({
+          where: { bookingId, equipmentId, type: WarehouseScanType.CHECKOUT },
+        })
+        if (existingOut) {
           throw new Error('Item already dispatched')
         }
-
-        await tx.bookingEquipment.update({
-          where: { id: bookingEquipmentId },
-          data: {
-            itemStatus: 'DISPATCHED',
-            dispatchedAt: now,
-            dispatchedBy: userId,
-            conditionOnDispatch: conditionNotes ?? null,
-          },
-        })
-
-        const allItems = await tx.bookingEquipment.findMany({
-          where: { bookingId, deletedAt: null },
-          select: { itemStatus: true },
-        })
-        const allDispatched = allItems.every((i) => i.itemStatus === 'DISPATCHED')
-        if (allDispatched) {
-          await tx.booking.update({
-            where: { id: bookingId },
-            data: { status: 'ACTIVE' },
-          })
-        }
       } else {
-        if (bookingItem.itemStatus !== 'DISPATCHED') {
+        const existingOut = await tx.warehouseScan.findFirst({
+          where: { bookingId, equipmentId, type: WarehouseScanType.CHECKOUT },
+        })
+        if (!existingOut) {
           throw new Error('Item not dispatched yet')
         }
-
-        await tx.bookingEquipment.update({
-          where: { id: bookingEquipmentId },
-          data: {
-            itemStatus: 'RETURNED',
-            returnedAt: now,
-            returnedBy: userId,
-            conditionOnReturn: conditionNotes ?? null,
-          },
+        const existingIn = await tx.warehouseScan.findFirst({
+          where: { bookingId, equipmentId, type: WarehouseScanType.CHECKIN },
         })
-
-        const allItems = await tx.bookingEquipment.findMany({
-          where: { bookingId, deletedAt: null },
-          select: { itemStatus: true },
-        })
-        const allReturned = allItems.every((i) => i.itemStatus === 'RETURNED')
-        if (allReturned) {
-          await tx.booking.update({
-            where: { id: bookingId },
-            data: { status: 'RETURNED', actualReturnDate: now },
-          })
+        if (existingIn) {
+          throw new Error('Item already returned')
         }
       }
 
-      await tx.scanEvent.create({
+      await tx.warehouseScan.create({
         data: {
-          equipmentId,
           bookingId,
-          action: action === 'dispatch' ? 'DISPATCH' : 'RETURN',
-          performedBy: userId,
-          conditionNotes: conditionNotes ?? null,
-          conditionPhotos: conditionPhotos ?? undefined,
-          scannedAt: now,
+          equipmentId,
+          type: action === 'dispatch' ? WarehouseScanType.CHECKOUT : WarehouseScanType.CHECKIN,
+          barcode,
+          scannedBy: userId,
         },
       })
+
+      if (action === 'dispatch') {
+        const lines = await tx.bookingEquipment.findMany({
+          where: { bookingId, deletedAt: null },
+          select: { equipmentId: true },
+        })
+        const expectedIds = [...new Set(lines.map((l) => l.equipmentId))]
+        const checkoutRows = await tx.warehouseScan.groupBy({
+          by: ['equipmentId'],
+          where: { bookingId, type: WarehouseScanType.CHECKOUT },
+        })
+        if (
+          expectedIds.length > 0 &&
+          checkoutRows.length >= expectedIds.length
+        ) {
+          const checkedOut = new Set(checkoutRows.map((r) => r.equipmentId))
+          if (expectedIds.every((idVal) => checkedOut.has(idVal))) {
+            await tx.booking.update({
+              where: { id: bookingId },
+              data: { status: 'ACTIVE' },
+            })
+          }
+        }
+      } else {
+        const lines = await tx.bookingEquipment.findMany({
+          where: { bookingId, deletedAt: null },
+          select: { equipmentId: true },
+        })
+        const expectedIds = [...new Set(lines.map((l) => l.equipmentId))]
+        const checkinRows = await tx.warehouseScan.groupBy({
+          by: ['equipmentId'],
+          where: { bookingId, type: WarehouseScanType.CHECKIN },
+        })
+        if (
+          expectedIds.length > 0 &&
+          checkinRows.length >= expectedIds.length
+        ) {
+          const checkedIn = new Set(checkinRows.map((r) => r.equipmentId))
+          if (expectedIds.every((idVal) => checkedIn.has(idVal))) {
+            await tx.booking.update({
+              where: { id: bookingId },
+              data: { status: 'RETURNED', actualReturnDate: now },
+            })
+          }
+        }
+      }
 
       return { action }
     })

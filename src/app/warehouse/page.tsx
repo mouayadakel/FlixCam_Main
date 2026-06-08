@@ -36,7 +36,7 @@ export default async function WarehouseDashboardPage() {
     include: {
       customer: { select: { name: true, phone: true } },
       equipment: {
-        where: { deletedAt: null, itemStatus: 'PENDING' },
+        where: { deletedAt: null },
         include: { equipment: { select: { model: true, sku: true } } },
       },
     },
@@ -53,7 +53,7 @@ export default async function WarehouseDashboardPage() {
     include: {
       customer: { select: { name: true, phone: true } },
       equipment: {
-        where: { deletedAt: null, itemStatus: 'DISPATCHED' },
+        where: { deletedAt: null },
         include: { equipment: { select: { model: true, sku: true } } },
       },
     },

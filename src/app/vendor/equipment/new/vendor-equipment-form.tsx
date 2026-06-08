@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import { ImageUpload } from '@/components/forms/image-upload'
+import { ImageGallery } from '@/components/forms/image-gallery'
 
 interface Category {
   id: string
@@ -236,14 +238,19 @@ export function VendorEquipmentForm({
         />
       </div>
 
-      <div>
-        <Label htmlFor="featuredImageUrl">رابط صورة رئيسية</Label>
-        <Input
-          id="featuredImageUrl"
-          type="url"
+      <div className="space-y-6 rounded-lg border p-4 shadow-sm">
+        <ImageUpload
+          label="الصورة الرئيسية"
           value={form.featuredImageUrl}
-          onChange={(e) => setForm((p) => ({ ...p, featuredImageUrl: e.target.value }))}
-          placeholder="https://..."
+          onChange={(url: string | string[]) =>
+            setForm((p) => ({ ...p, featuredImageUrl: Array.isArray(url) ? url[0] : url }))
+          }
+        />
+        
+        <ImageGallery
+          label="معرض الصور"
+          value={form.galleryImageUrls}
+          onChange={(urls) => setForm((p) => ({ ...p, galleryImageUrls: urls }))}
         />
       </div>
 

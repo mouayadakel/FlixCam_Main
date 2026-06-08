@@ -69,20 +69,22 @@ export async function GET(req: NextRequest) {
     }
 
     if (searchParams.get('pageSize')) {
-      filters.pageSize = parseInt(searchParams.get('pageSize')!)
+      filters.limit = parseInt(searchParams.get('pageSize')!, 10)
     }
 
-    // Validate filters
     const validated = maintenanceFilterSchema.parse(filters)
 
     const result = await MaintenanceService.list(userId, validated)
+
+    const pageNum = validated.page ?? 1
+    const limitNum = validated.limit ?? 10
 
     return NextResponse.json({
       success: true,
       data: result.maintenance,
       total: result.total,
-      page: result.page,
-      pageSize: result.pageSize,
+      page: pageNum,
+      pageSize: limitNum,
     })
   } catch (error: any) {
     if (error instanceof ForbiddenError) {
@@ -120,14 +122,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validated = createMaintenanceSchema.parse(body)
 
-    // Get audit context
-    const headers = req.headers
-    const auditContext = {
-      ipAddress: headers.get('x-forwarded-for') || headers.get('x-real-ip') || undefined,
-      userAgent: headers.get('user-agent') || undefined,
-    }
-
-    const maintenance = await MaintenanceService.create(validated, userId, auditContext)
+    const maintenance = await MaintenanceService.create(validated, userId)
 
     return NextResponse.json({
       success: true,

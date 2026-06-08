@@ -5,10 +5,18 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { MockActivity } from '@/lib/utils/mock-data'
+
+/** Presentational view-model for a recent-activity feed row (not a persisted entity). */
+export interface ActivityItem {
+  id: string
+  action: string
+  user: string
+  resource: string
+  timestamp: string
+}
 
 interface RecentActivityProps {
-  activities: MockActivity[]
+  activities: ActivityItem[]
 }
 
 export function RecentActivity({ activities }: RecentActivityProps) {

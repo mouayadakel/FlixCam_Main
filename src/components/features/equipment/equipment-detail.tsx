@@ -18,13 +18,23 @@ import { EquipmentGallery } from './equipment-gallery'
 import { EquipmentPriceBlock, type TierKey } from './equipment-price-block'
 import { EquipmentCard } from './equipment-card'
 import { useCartStore } from '@/lib/stores/cart.store'
+import { calculateRentalDays } from '@/lib/pricing/rental-days'
+import { useCheckoutStore } from '@/lib/stores/checkout.store'
 import { AvailabilityBadge, getAvailabilityStatus } from './availability-badge'
 import { AvailabilityPreview } from './availability-preview'
+import { WaitlistJoinButton } from './waitlist-join-button'
 import { SaveEquipmentButton } from './save-equipment-button'
 import { CompareButton } from './compare-button'
-import { SpecificationsDisplay, QuickSpecPills } from './specifications-display'
+import { QuickSpecPills } from './specifications-display'
+import { SpecsPanel } from './specs-panel'
 import { FrequentlyRentedTogether } from './frequently-rented-together'
 import { WhatsAppRentButton } from './whatsapp-rent-button'
+import { CrewProfileCard } from './crew-profile-card'
+import { CrewAvailabilitySection } from './crew-availability-section'
+import { isQuoteOnlyCrew } from '@/lib/utils/crew-equipment.utils'
+import { UniversalShareBar } from '@/components/shared/share-bar'
+import { trackMetaEvent, MetaPixelEvents } from '@/lib/analytics/meta-pixel'
+import { useWhatsAppPrefillStore } from '@/lib/stores/whatsapp-prefill.store'
 import type { EquipmentCardItem } from './equipment-card'
 import type { AnySpecifications } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
@@ -56,6 +66,10 @@ function getDefaultDates(): { today: string; start: string; end: string } {
 }
 
 interface EquipmentDetailProps {
+  sharePageUrl: string
+  shareTitle: string
+  shareImageUrl?: string
+  equipmentSlug: string
   equipment: {
     id: string
     sku: string
@@ -64,7 +78,7 @@ interface EquipmentDetailProps {
     weeklyPrice: number | null
     monthlyPrice: number | null
     quantityAvailable: number | null
-    category: { name: string; slug: string } | null
+    category: { id: string; name: string; slug: string } | null
     brand: { name: string; slug: string } | null
     media: { id: string; url: string; type: string }[]
     specifications?:
@@ -79,18 +93,47 @@ interface EquipmentDetailProps {
     requiresAssistant?: boolean
   }
   recommendations: EquipmentCardItem[]
+  linkedEquipment?: EquipmentCardItem[]
+  recommendedCrew?: EquipmentCardItem[]
 }
 
-const REQUIRES_ASSISTANT_MESSAGE: Record<'ar' | 'en' | 'zh', string> = {
+function logMarketingEvent(
+  eventType: string,
+  payload: Record<string, string | undefined>
+): void {
+  void fetch('/api/public/marketing-event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventType,
+      pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+      ...payload,
+    }),
+  }).catch(() => {})
+}
+
+const REQUIRES_ASSISTANT_MESSAGE: Record<'ar' | 'en' | 'zh' | 'fr', string> = {
   ar: 'هذه المعدة تتطلب إضافة مساعد للتشغيل.',
   en: 'This equipment requires an assistant to operate.',
   zh: '此设备需要助理操作。',
+  fr: 'Cet équipement nécessite un assistant technique.',
 }
 
-export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailProps) {
+export function EquipmentDetail({
+  equipment,
+  recommendations,
+  linkedEquipment = [],
+  recommendedCrew = [],
+  sharePageUrl,
+  shareTitle,
+  shareImageUrl,
+  equipmentSlug,
+}: EquipmentDetailProps) {
   const { t, locale } = useLocale()
   const { toast } = useToast()
   const addItem = useCartStore((s) => s.addItem)
+  const setAddons = useCheckoutStore((s) => s.setAddons)
+  const checkoutAddons = useCheckoutStore((s) => s.addons)
   const defaultDates = useMemo(getDefaultDates, [])
   const [startDate, setStartDate] = useState(defaultDates.start)
   const [endDate, setEndDate] = useState(defaultDates.end)
@@ -167,7 +210,7 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
   const available = availabilityStatus === 'available' || availabilityStatus === 'limited'
 
   const handleAddToCart = async () => {
-    if (!available) return
+    if (!available || isQuoteOnly) return
     const start = new Date(startDate)
     const end = new Date(endDate)
     if (end <= start) {
@@ -193,6 +236,19 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
         title: t('common.addToCart'),
         description: equipment.model ?? equipment.sku,
       })
+
+      // UX hint: If this equipment requires an assistant, pre-select technician add-on for checkout.
+      if (equipment.requiresAssistant) {
+        setAddons({
+          ...checkoutAddons,
+          technician: true,
+          technicianHours: checkoutAddons.technicianHours ?? 1,
+        })
+        toast({
+          title: 'تنبيه',
+          description: 'هذه المعدة تتطلب مساعداً. تم تفعيل خيار الفني تلقائياً ضمن إضافات الدفع.',
+        })
+      }
     } catch (e) {
       toast({
         title: t('common.error'),
@@ -205,12 +261,52 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
   }
 
   const title = equipment.model ?? equipment.sku
+  const localeKey = locale === 'zh' ? 'zh' : locale === 'ar' ? 'ar' : locale === 'fr' ? 'fr' : 'en'
+  const isCrewItem =
+    equipment.customFields?.itemType === 'crew' || equipment.category?.slug === 'crew'
+  const isQuoteOnly = isQuoteOnlyCrew(
+    equipment.customFields,
+    equipment.sku,
+    equipment.category?.slug
+  )
+  const setWaOverride = useWhatsAppPrefillStore((s) => s.setMessageOverride)
+
+  useEffect(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const line = `${shareTitle}\n${origin}/equipment/${equipmentSlug}`
+    const msg = locale === 'ar' ? `مرحباً، أود الاستفسار عن تأجير: ${line}` : `Hi, I'm interested in renting: ${line}`
+    setWaOverride(msg)
+    
+    import('@/lib/analytics/track-event').then(({ trackMarketingEvent }) => {
+      trackMarketingEvent({
+        eventType: 'ViewContent',
+        entityType: 'Equipment',
+        entityId: equipment.id,
+        value: equipment.dailyPrice,
+        price: equipment.dailyPrice,
+        quantity: 1,
+        itemName: title,
+        itemBrand: equipment.brand?.name,
+        itemCategory: equipment.category?.name,
+      })
+    })
+    return () => setWaOverride(null)
+  }, [
+    equipment.id,
+    equipment.dailyPrice,
+    equipment.brand?.name,
+    equipment.category?.name,
+    title,
+    shareTitle,
+    equipmentSlug,
+    locale,
+    setWaOverride,
+  ])
 
   const rentalDays = useMemo(() => {
     const s = new Date(startDate)
     const e = new Date(endDate)
-    const diff = Math.ceil((e.getTime() - s.getTime()) / 86400000)
-    return diff > 0 ? diff : 1
+    return calculateRentalDays(s, e)
   }, [startDate, endDate])
 
   const estimatedTotal = useMemo(() => {
@@ -261,9 +357,27 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
             className="flex items-center gap-3 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-500 dark:bg-amber-950/40 dark:text-amber-100"
           >
             <AlertTriangle className="h-6 w-6 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-            <p className="font-medium">
-              {REQUIRES_ASSISTANT_MESSAGE[locale === 'zh' ? 'zh' : locale === 'ar' ? 'ar' : 'en']}
-            </p>
+            <p className="font-medium">{REQUIRES_ASSISTANT_MESSAGE[localeKey]}</p>
+          </div>
+        )}
+
+        {isCrewItem && (
+          <div
+            role="status"
+            className="flex items-center gap-3 rounded-xl border border-brand-primary/30 bg-brand-primary/5 px-4 py-3 text-text-heading"
+          >
+            <Clock className="h-5 w-5 shrink-0 text-brand-primary" aria-hidden />
+            <p className="text-sm font-medium">{t('equipment.crewHireNotice')}</p>
+          </div>
+        )}
+
+        {isQuoteOnly && (
+          <div
+            role="status"
+            className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950"
+          >
+            <AlertCircle className="h-5 w-5 shrink-0" aria-hidden />
+            <p className="text-sm font-medium">{t('equipment.crewQuoteOnlyNotice')}</p>
           </div>
         )}
 
@@ -272,6 +386,13 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
           {/* Left column: Gallery + Tabs */}
           <div className="min-w-0 space-y-8">
             <EquipmentGallery media={equipment.media} alt={title} />
+
+            {isCrewItem && (
+              <>
+                <CrewProfileCard customFields={equipment.customFields} fallbackTitle={title} />
+                <CrewAvailabilitySection equipmentId={equipment.id} />
+              </>
+            )}
 
             {/* Quick spec pills (between gallery and tabs, structured specs only) */}
             {equipment.specifications &&
@@ -327,12 +448,12 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
               </TabsContent>
 
               <TabsContent value="specs" className="pt-6">
-                <SpecificationsDisplay
-                  specifications={(equipment.specifications ?? null) as AnySpecifications | null}
+                <SpecsPanel
+                  specs={(equipment.specifications ?? null) as AnySpecifications | null}
                   locale={locale === 'ar' ? 'ar' : 'en'}
-                  showQuickSpecPills={false}
-                  showAllLabel={t('equipment.specShowAll')}
-                  showLessLabel={t('equipment.specShowLess')}
+                  mode="enhanced"
+                  categoryHint={equipment.category?.slug ?? equipment.category?.name ?? undefined}
+                  comparisonReady
                 />
               </TabsContent>
 
@@ -405,6 +526,14 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                     <span className="font-medium">{equipment.vendor.companyName}</span>
                   </div>
                 )}
+                <div className="mt-4">
+                  <UniversalShareBar
+                    url={sharePageUrl}
+                    title={shareTitle}
+                    imageUrl={shareImageUrl}
+                    onShare={(platform) => logMarketingEvent(`share_${platform}`, { entityId: equipment.id })}
+                  />
+                </div>
               </div>
 
               {/* Availability */}
@@ -483,9 +612,17 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                   </div>
                 )}
                 {availCheck === 'unavailable' && (
-                  <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+                    </div>
+                    <WaitlistJoinButton
+                      equipmentId={equipment.id}
+                      startDate={startDate}
+                      endDate={endDate}
+                      desiredQty={quantity}
+                    />
                   </div>
                 )}
               </div>
@@ -541,44 +678,54 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
                 </div>
               )}
 
-              {/* Add to cart */}
-              <div className="space-y-3">
-                <Button
-                  size="lg"
-                  disabled={!available || isAdding}
-                  onClick={handleAddToCart}
-                  className="h-12 w-full rounded-xl bg-brand-primary font-semibold shadow-md transition-all hover:bg-brand-primary-hover hover:shadow-lg active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isAdding ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      {t('common.loading') ?? 'Adding...'}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4" />
-                      {t('common.addToCart')}
-                    </span>
-                  )}
-                </Button>
-
-                {added && (
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    asChild
-                    className="h-12 w-full rounded-xl border-brand-primary/20 font-semibold text-brand-primary hover:bg-brand-primary/5"
-                  >
-                    <Link href="/cart" className="flex items-center gap-2">
-                      {t('cart.viewCart')}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+              {isQuoteOnly ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-text-muted">{t('equipment.crewRequestQuote')}</p>
+                  <WhatsAppRentButton equipmentName={title} equipmentId={equipment.id} />
+                  <Button size="lg" variant="outline" asChild className="h-12 w-full rounded-xl">
+                    <Link href="/contact">{t('equipment.crewContactUs')}</Link>
                   </Button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    <Button
+                      size="lg"
+                      disabled={!available || isAdding}
+                      onClick={handleAddToCart}
+                      className="h-12 w-full rounded-xl bg-brand-primary font-semibold shadow-md transition-all hover:bg-brand-primary-hover hover:shadow-lg active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {isAdding ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          {t('common.loading') ?? 'Adding...'}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <ShoppingCart className="h-4 w-4" />
+                          {t('common.addToCart')}
+                        </span>
+                      )}
+                    </Button>
 
-              {/* WhatsApp Quick Rent */}
-              <WhatsAppRentButton equipmentName={title} equipmentId={equipment.id} />
+                    {added && (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        asChild
+                        className="h-12 w-full rounded-xl border-brand-primary/20 font-semibold text-brand-primary hover:bg-brand-primary/5"
+                      >
+                        <Link href="/cart" className="flex items-center gap-2">
+                          {t('cart.viewCart')}
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  <WhatsAppRentButton equipmentName={title} equipmentId={equipment.id} />
+                </>
+              )}
 
               {/* Deposit notice — يظهر للعميل: التأمين إلزامي أم لا */}
               {(() => {
@@ -693,9 +840,17 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
               </div>
             )}
             {availCheck === 'unavailable' && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-                <AlertCircle className="h-3.5 w-3.5" />
-                <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>المعدة غير متاحة في بعض الأيام، يرجى اختيار تاريخ آخر</span>
+                </div>
+                <WaitlistJoinButton
+                  equipmentId={equipment.id}
+                  startDate={startDate}
+                  endDate={endDate}
+                  desiredQty={quantity}
+                />
               </div>
             )}
 
@@ -748,6 +903,40 @@ export function EquipmentDetail({ equipment, recommendations }: EquipmentDetailP
 
       {/* Frequently Rented Together */}
       <FrequentlyRentedTogether equipmentId={equipment.id} />
+
+      {linkedEquipment.length > 0 && (
+        <section className="border-t border-border-light/50 pt-10">
+          <div className="mb-6">
+            <h2 className="text-section-title text-text-heading">
+              {isCrewItem
+                ? t('equipment.relatedEquipmentForRole')
+                : (t('equipment.relatedEquipment') ?? 'Related equipment')}
+            </h2>
+            {isCrewItem && (
+              <p className="mt-2 text-sm text-text-muted">{t('equipment.relatedEquipmentForRoleHint')}</p>
+            )}
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {linkedEquipment.map((item) => (
+              <EquipmentCard key={item.id} item={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!isCrewItem && recommendedCrew.length > 0 && (
+        <section className="border-t border-border-light/50 pt-10">
+          <div className="mb-6">
+            <h2 className="text-section-title text-text-heading">{t('equipment.recommendedCrew')}</h2>
+            <p className="mt-2 text-sm text-text-muted">{t('equipment.recommendedCrewHint')}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {recommendedCrew.map((item) => (
+              <EquipmentCard key={item.id} item={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recommendations */}
       {recommendations.length > 0 && (

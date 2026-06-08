@@ -113,6 +113,20 @@ describe('ImportService', () => {
         },
       })
     })
+
+    it('increments skippedRows when deltaSkipped > 0', async () => {
+      mockUpdate.mockResolvedValue({})
+      await ImportService.bumpProgress('j1', 3, 1, 0, 2)
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: {
+          processedRows: { increment: 3 },
+          successRows: { increment: 1 },
+          errorRows: { increment: 0 },
+          skippedRows: { increment: 2 },
+        },
+      })
+    })
   })
 
   describe('markComplete', () => {

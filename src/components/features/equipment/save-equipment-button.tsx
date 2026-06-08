@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import { useLocale } from '@/hooks/use-locale'
 import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,7 @@ export function SaveEquipmentButton({
   className,
 }: SaveEquipmentButtonProps) {
   const { data: session, status } = useSession()
+  const { t } = useLocale()
   const [saved, setSaved] = useState(initialSaved)
   const [loading, setLoading] = useState(false)
   const [animating, setAnimating] = useState(false)
@@ -68,7 +70,7 @@ export function SaveEquipmentButton({
   return (
     <button
       type="button"
-      aria-label={saved ? 'Remove from saved' : 'Save to list'}
+      aria-label={saved ? t('equipment.removeFromSaved') : t('equipment.saveToList')}
       onClick={handleClick}
       disabled={loading}
       className={cn(

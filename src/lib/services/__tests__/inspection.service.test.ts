@@ -14,14 +14,20 @@ jest.mock('@/lib/db/prisma', () => ({
     equipment: { findFirst: jest.fn() },
     bookingEquipment: { findFirst: jest.fn() },
     inspection: { create: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn() },
+    media: { create: jest.fn() },
+    $transaction: jest.fn(),
   },
 }))
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: jest.fn() }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: jest.fn(),
+}))
 jest.mock('../audit.service', () => ({ AuditService: { log: jest.fn() } }))
 
 const mockBookingFindFirst = prisma.booking.findFirst as jest.Mock
 const mockEquipmentFindFirst = prisma.equipment.findFirst as jest.Mock
 const mockBookingEquipmentFindFirst = prisma.bookingEquipment.findFirst as jest.Mock
+const mockTransaction = prisma.$transaction as jest.Mock
 const mockInspectionCreate = prisma.inspection.create as jest.Mock
 const mockInspectionFindFirst = prisma.inspection.findFirst as jest.Mock
 const mockInspectionFindMany = prisma.inspection.findMany as jest.Mock
@@ -34,6 +40,9 @@ describe('InspectionService', () => {
     jest.clearAllMocks()
     mockHasPermission.mockResolvedValue(true)
     mockAuditLog.mockResolvedValue(undefined)
+    mockTransaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+      fn(prisma)
+    )
   })
 
   describe('create', () => {

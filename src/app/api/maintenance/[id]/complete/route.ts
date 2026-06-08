@@ -33,19 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json()
     const validated = completeMaintenanceSchema.parse(body)
 
-    // Get audit context
-    const headers = req.headers
-    const auditContext = {
-      ipAddress: headers.get('x-forwarded-for') || headers.get('x-real-ip') || undefined,
-      userAgent: headers.get('user-agent') || undefined,
-    }
-
-    const maintenance = await MaintenanceService.complete(
-      id,
-      validated,
-      userId,
-      auditContext
-    )
+    const maintenance = await MaintenanceService.complete(id, validated, userId)
 
     return NextResponse.json({
       success: true,

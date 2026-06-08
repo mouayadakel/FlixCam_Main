@@ -230,7 +230,7 @@ export function CmsStudioTestimonialsTab({ studioId }: TestimonialsTabProps) {
                   value={form.avatarUrl}
                   onChange={(e) => setForm((f) => ({ ...f, avatarUrl: e.target.value }))}
                   placeholder="https://..."
-                  dir="ltr"
+                  dir="rtl"
                 />
               </div>
               <div className="flex items-center justify-between rounded-xl border p-3">

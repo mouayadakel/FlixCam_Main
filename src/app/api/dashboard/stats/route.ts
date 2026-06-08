@@ -5,10 +5,26 @@
  */
 
 import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { hasPermission } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
 
 export async function GET() {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const canReadFinancialDashboard =
+      session.user.role === 'ADMIN' ||
+      session.user.role === 'ACCOUNTANT' ||
+      (await hasPermission(session.user.id, 'reports.read_financial' as never))
+
+    if (!canReadFinancialDashboard) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Get current date info
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

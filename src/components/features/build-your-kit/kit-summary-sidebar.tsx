@@ -20,18 +20,10 @@ import { CircularProgress } from '@/components/ui/circular-progress'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
-const VAT_RATE = 0.15
 const FREE_DELIVERY_THRESHOLD_SAR = 2000
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 function completenessPercent(
   categorySteps: { categoryId: string }[],
@@ -48,7 +40,8 @@ function completenessPercent(
 }
 
 export function KitSummarySidebar({ className }: { className?: string }) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const { toast } = useToast()
   const prevCompletenessRef = useRef<number>(0)
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
@@ -63,7 +56,7 @@ export function KitSummarySidebar({ className }: { className?: string }) {
   const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
   const totalDaily = getKitWizardTotalDaily({ selectedEquipment })
   const subtotal = getKitWizardTotalAmount({ selectedEquipment, durationDays })
-  const vatAmount = Math.round(subtotal * VAT_RATE * 100) / 100
+  const vatAmount = Math.round(subtotal * vatRate * 100) / 100
   const total = subtotal + vatAmount
   const dailyAverage = durationDays > 0 ? total / durationDays : 0
 
@@ -186,7 +179,7 @@ export function KitSummarySidebar({ className }: { className?: string }) {
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-text-heading">{item.model ?? id}</p>
               <p className="text-xs text-text-muted">
-                {item.qty} × {formatSar(item.dailyPrice)}/day
+                {item.qty} × {formatSar(item.dailyPrice, locale)}/day
               </p>
             </div>
             <button
@@ -217,19 +210,19 @@ export function KitSummarySidebar({ className }: { className?: string }) {
         </div>
         <div className="flex justify-between border-t border-border-light pt-2">
           <dt className="text-text-muted">{t('kit.subtotal')}</dt>
-          <dd>{formatSar(subtotal)}</dd>
+          <dd>{formatSar(subtotal, locale)}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-text-muted">{t('kit.vat')}</dt>
-          <dd>{formatSar(vatAmount)}</dd>
+          <dd>{formatSar(vatAmount, locale)}</dd>
         </div>
         <div className="flex justify-between border-t border-border-light pt-2 font-semibold">
           <dt>{t('kit.total')}</dt>
-          <dd>{formatSar(total)}</dd>
+          <dd>{formatSar(total, locale)}</dd>
         </div>
         <div className="flex justify-between text-xs text-text-muted">
           <dt>{t('kit.dailyRate')}</dt>
-          <dd>{formatSar(dailyAverage)}/day avg</dd>
+          <dd>{formatSar(dailyAverage, locale)}/day avg</dd>
         </div>
       </dl>
 
@@ -239,7 +232,7 @@ export function KitSummarySidebar({ className }: { className?: string }) {
           <>
             <Progress value={freeDeliveryProgress} className="h-2" />
             <p className="mt-1 text-xs text-text-muted">
-              {t('kit.addMore')} {formatSar(gapToFreeDelivery)} {t('kit.freeDelivery')}
+              {t('kit.addMore')} {formatSar(gapToFreeDelivery, locale)} {t('kit.freeDelivery')}
             </p>
           </>
         ) : (
@@ -255,7 +248,7 @@ export function KitSummarySidebar({ className }: { className?: string }) {
           className="w-full bg-brand-primary hover:bg-brand-primary-hover"
           onClick={scrollToReview}
         >
-          {t('kit.addAllToCart')} ({formatSar(total)})
+          {t('kit.addAllToCart')} ({formatSar(total, locale)})
         </Button>
         <Button variant="outline" className="w-full" onClick={scrollToReview}>
           {t('kit.reviewKit')}

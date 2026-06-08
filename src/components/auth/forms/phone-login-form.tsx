@@ -21,6 +21,8 @@ import { useLocale } from '@/hooks/use-locale'
 import { sendOtpSchema } from '@/lib/validators/auth.validator'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
+import { getConfiguredPhonePlaceholder } from '@/lib/utils/contact-phone'
 
 export interface PhoneLoginFormProps {
   onSuccess: () => void
@@ -36,6 +38,7 @@ export function PhoneLoginForm({ onSuccess, onSwitchToEmail }: PhoneLoginFormPro
   const [isLoading, setIsLoading] = useState(false)
   const [resendTimer, setResendTimer] = useState(0)
   const [inlineError, setInlineError] = useState<string | null>(null)
+  const phonePlaceholder = getConfiguredPhonePlaceholder()
   const mounted = useRef(true)
 
   useEffect(() => {
@@ -168,7 +171,7 @@ export function PhoneLoginForm({ onSuccess, onSwitchToEmail }: PhoneLoginFormPro
   if (!otpSent) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="space-y-2" dir="ltr">
+        <div className="space-y-2" dir={EMBED_LTR}>
           <Label htmlFor="phone-login-phone" className="text-sm font-medium text-text-heading">
             {t('auth.phone')}
           </Label>
@@ -184,7 +187,7 @@ export function PhoneLoginForm({ onSuccess, onSwitchToEmail }: PhoneLoginFormPro
               defaultCountry="SA"
               countries={['SA']}
               addInternationalOption={false}
-              placeholder="05XXXXXXXX"
+              placeholder={phonePlaceholder}
               value={phone}
               onChange={(val) => setPhone((val as string) ?? '')}
               disabled={isLoading}
@@ -231,7 +234,7 @@ export function PhoneLoginForm({ onSuccess, onSwitchToEmail }: PhoneLoginFormPro
         </h3>
         <p className="text-sm text-text-muted">
           {t('auth.codeSentTo')}{' '}
-          <span className="font-semibold text-text-body" dir="ltr">
+          <span className="font-semibold text-text-body" dir={EMBED_LTR}>
             *** *** {phone.replace(/\D/g, '').slice(-3)}
           </span>
         </p>
@@ -252,7 +255,7 @@ export function PhoneLoginForm({ onSuccess, onSwitchToEmail }: PhoneLoginFormPro
             disabled={isLoading}
             autoFocus
           >
-            <InputOTPGroup dir="ltr">
+            <InputOTPGroup dir={EMBED_LTR}>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />

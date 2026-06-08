@@ -20,6 +20,7 @@ interface EquipmentItem {
   id: string
   sku: string | null
   model: string | null
+  slug?: string | null
   dailyPrice: number
   quantityAvailable: number | null
   category: { name: string; slug: string } | null
@@ -52,7 +53,7 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
   }, [])
 
   return (
-    <section className="bg-surface-light py-10 md:py-14">
+    <section className="bg-surface-light py-10 md:py-16">
       <PublicContainer>
         <div className="mb-8 flex items-end justify-between">
           <div>
@@ -110,7 +111,7 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                 return (
                   <Link
                     key={item.id}
-                    href={`/equipment/${item.id}`}
+                    href={`/equipment/${item.slug ?? item.id}`}
                     className="group flex w-[75vw] shrink-0 animate-fade-in-up snap-start flex-col overflow-hidden rounded-2xl border border-border-light/60 bg-white opacity-0 shadow-card transition-all duration-350 hover:-translate-y-1.5 hover:shadow-card-hover sm:w-full sm:animate-none sm:opacity-100"
                     style={{ animationDelay: `${0.1 * index}s` }}
                   >
@@ -119,7 +120,7 @@ export function HomeFeaturedEquipment({ items }: HomeFeaturedEquipmentProps) {
                         src={imageSrcById[item.id] || EQUIPMENT_PLACEHOLDER_IMAGE}
                         alt={item.model ?? item.sku ?? item.id}
                         fill
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        className="object-contain bg-white transition-transform duration-500 ease-out group-hover:scale-105"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         unoptimized={isExternalImageUrl(imageSrcById[item.id])}
                         onError={() => handleImageError(item.id)}

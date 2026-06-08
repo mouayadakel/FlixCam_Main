@@ -96,7 +96,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     if (!canWrite) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { id } = await params
-    await prisma.deliveryZone.delete({ where: { id } })
+    await prisma.deliveryZone.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedBy: session.user.id },
+    })
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('Delivery zone delete error:', e)

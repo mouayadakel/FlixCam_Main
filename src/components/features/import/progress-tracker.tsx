@@ -23,6 +23,7 @@ interface ProgressData {
       processed: number
       success: number
       errors: number
+      skipped?: number
       percentage: number
     }
     ai: {
@@ -167,8 +168,13 @@ export function ProgressTracker({ jobId, onComplete }: ProgressTrackerProps) {
               0, ensure Redis is running.
             </p>
           )}
-          <div className="flex gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span>✓ {products.success} success</span>
+            {(products.skipped ?? 0) > 0 && (
+              <span className="text-amber-700 dark:text-amber-500">
+                ⊘ {products.skipped} skipped (duplicate barcode)
+              </span>
+            )}
             {products.errors > 0 && (
               <span className="text-red-600">
                 <XCircle className="me-1 inline h-3 w-3" />

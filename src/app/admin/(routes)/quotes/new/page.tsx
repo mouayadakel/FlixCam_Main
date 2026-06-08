@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 interface Client {
   id: string
@@ -52,6 +53,7 @@ export default function NewQuotePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { vatRate, percentLabel } = useVatRate()
   const [loading, setLoading] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [equipment, setEquipment] = useState<Equipment[]>([])
@@ -64,8 +66,6 @@ export default function NewQuotePage() {
 
   const [items, setItems] = useState<QuoteItem[]>([])
   const [selectedEquipment, setSelectedEquipment] = useState('')
-
-  const VAT_RATE = 0.15
 
   useEffect(() => {
     loadData()
@@ -136,7 +136,7 @@ export default function NewQuotePage() {
       (sum, item) => sum + item.quantity * item.days * item.unitPrice,
       0
     )
-    const vatAmount = subtotal * VAT_RATE
+    const vatAmount = subtotal * vatRate
     const totalAmount = subtotal + vatAmount
     return { subtotal, vatAmount, totalAmount }
   }
@@ -375,7 +375,7 @@ export default function NewQuotePage() {
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">ضريبة القيمة المضافة (15%)</span>
+                    <span className="text-muted-foreground">ضريبة القيمة المضافة ({percentLabel})</span>
                     <span>{formatCurrency(vatAmount)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2 text-lg font-bold">

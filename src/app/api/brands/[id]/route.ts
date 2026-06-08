@@ -9,7 +9,9 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateBrandSchema } from '@/lib/validators/brand.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError, NotFoundError } from '@/lib/errors'
+import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import { cacheDelete } from '@/lib/cache'
 
 function shapeBrand(b: {
   id: string
@@ -19,7 +21,7 @@ function shapeBrand(b: {
   logo: string | null
   createdAt: Date
   deletedAt: Date | null
-  _count: { products: number }
+  _count: { equipment: number; products: number }
 }) {
   return {
     id: b.id,
@@ -29,7 +31,8 @@ function shapeBrand(b: {
     logoUrl: b.logo ?? null,
     website: null,
     isActive: !b.deletedAt,
-    _count: { products: b._count.products },
+    _count: { products: b._count.equipment },
+    equipmentCount: b._count.equipment,
     createdAt: b.createdAt.toISOString(),
   }
 }
@@ -53,7 +56,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         logo: true,
         createdAt: true,
         deletedAt: true,
-        _count: { select: { products: true } },
+        _count: { select: { equipment: true, products: true } },
       },
     })
 
@@ -70,7 +73,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
-    if (!session?.user) throw new UnauthorizedError()
+    if (!session?.user?.id) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, PERMISSIONS.BRAND_UPDATE))) {
+      throw new ForbiddenError('You do not have permission to update brands')
+    }
 
     const { id } = await params
     const body = await request.json()
@@ -117,9 +123,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         logo: true,
         createdAt: true,
         deletedAt: true,
-        _count: { select: { products: true } },
+        _count: { select: { equipment: true, products: true } },
       },
     })
+
+    await cacheDelete('websiteContent', 'brands')
 
     return NextResponse.json(shapeBrand(brand))
   } catch (error) {
@@ -136,7 +144,10 @@ export async function DELETE(
 ) {
   try {
     const session = await auth()
-    if (!session?.user) throw new UnauthorizedError()
+    if (!session?.user?.id) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, PERMISSIONS.BRAND_DELETE))) {
+      throw new ForbiddenError('You do not have permission to delete brands')
+    }
 
     const { id } = await params
     const existing = await prisma.brand.findFirst({
@@ -151,6 +162,8 @@ export async function DELETE(
         deletedBy: session.user.id,
       },
     })
+
+    await cacheDelete('websiteContent', 'brands')
 
     return NextResponse.json({ success: true })
   } catch (error) {

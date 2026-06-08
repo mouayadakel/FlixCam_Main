@@ -11,7 +11,11 @@ import { prisma } from '@/lib/db/prisma'
 import { AuditService } from './audit.service'
 import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
-import { hasPermission } from '@/lib/auth/permissions'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import { invoiceNumberService } from './invoice-number.service'
+import { getVATRate } from '@/lib/vat'
+import { calculateBestRate } from './cart.service'
+import { PricingService } from './pricing.service'
 import type {
   Invoice,
   InvoiceItem,
@@ -34,30 +38,15 @@ import { Decimal } from '@prisma/client/runtime/library'
  * Uses the Invoice model for proper data storage
  */
 export class InvoiceService {
+  private static roundCurrency(value: number): number {
+    return Math.round(value * 100) / 100
+  }
+
   /**
    * Generate unique invoice number
    */
   private static async generateInvoiceNumber(): Promise<string> {
-    const prefix = 'INV'
-    const year = new Date().getFullYear()
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    const invoiceNumber = `${prefix}-${year}-${timestamp}-${random}`
-
-    // Check uniqueness
-    const existing = await prisma.invoice.findFirst({
-      where: {
-        invoiceNumber,
-        deletedAt: null,
-      },
-    })
-
-    if (existing) {
-      // Retry with different random
-      return this.generateInvoiceNumber()
-    }
-
-    return invoiceNumber
+    return invoiceNumberService.nextConfiguredInvoiceNumber()
   }
 
   /**
@@ -100,7 +89,7 @@ export class InvoiceService {
   private static calculateTotals(
     items: Array<{ quantity: number; unitPrice: number; days?: number; [k: string]: unknown }>,
     discount: number = 0,
-    vatRate: number = 0.15
+    vatRate: number
   ): {
     itemsWithTotals: Array<InvoiceItem>
     subtotal: number
@@ -125,6 +114,193 @@ export class InvoiceService {
     return { itemsWithTotals, subtotal, vatAmount, totalAmount }
   }
 
+  private static async resolveBookingPaymentMethod(bookingId: string): Promise<string | null> {
+    const payment = await prisma.payment.findFirst({
+      where: { bookingId, status: 'SUCCESS', deletedAt: null },
+      orderBy: [{ paidAt: 'desc' }, { createdAt: 'desc' }],
+      select: { gateway: true },
+    })
+    return payment?.gateway?.trim() || null
+  }
+
+  private static buildAuthoritativeBookingInvoiceItems(booking: {
+    bookingNumber?: string | null
+    totalAmount: Decimal | number
+    vatAmount: Decimal | number
+    depositAmount?: Decimal | number | null
+    studio?: { name?: string | null } | null
+    equipment: Array<{
+      quantity: number
+      equipment: {
+        model?: string | null
+        sku?: string | null
+        dailyPrice?: Decimal | number | null
+      }
+    }>
+    startDate: Date
+    endDate: Date
+  }): {
+    itemsWithTotals: InvoiceItem[]
+    subtotal: number
+    vatAmount: number
+    totalAmount: number
+  } {
+    const rentalDays = Math.max(
+      1,
+      Math.ceil((booking.endDate.getTime() - booking.startDate.getTime()) / (1000 * 60 * 60 * 24))
+    )
+    const authoritativeSubtotal = this.roundCurrency(Number(booking.totalAmount || 0))
+    const authoritativeVatAmount = this.roundCurrency(Number(booking.vatAmount || 0))
+
+    const baseItems: InvoiceItem[] = booking.equipment.map((be) => ({
+      description: `${be.equipment.model || be.equipment.sku || 'Equipment'} (${rentalDays} days)`,
+      quantity: be.quantity,
+      unitPrice: Number(be.equipment.dailyPrice || 0),
+      days: rentalDays,
+      equipmentSku: be.equipment.sku || undefined,
+    }))
+
+    if (baseItems.length === 0 && booking.studio) {
+      baseItems.push({
+        description: `Studio booking${booking.studio.name ? ` - ${booking.studio.name}` : ''}`,
+        quantity: 1,
+        unitPrice:
+          rentalDays > 0 ? this.roundCurrency(authoritativeSubtotal / rentalDays) : authoritativeSubtotal,
+        days: rentalDays,
+      })
+    }
+
+    if (baseItems.length === 0) {
+      baseItems.push({
+        description: `Booking ${booking.bookingNumber || ''}`.trim(),
+        quantity: 1,
+        unitPrice: authoritativeSubtotal,
+      })
+    }
+
+    const itemsWithTotals = baseItems.map((item) => {
+      const days = item.days ?? 1
+      const total = this.roundCurrency(item.quantity * days * item.unitPrice)
+      return {
+        ...item,
+        total,
+      }
+    })
+
+    const computedSubtotal = this.roundCurrency(
+      itemsWithTotals.reduce((sum, item) => sum + Number(item.total || 0), 0)
+    )
+    const adjustmentAmount = this.roundCurrency(authoritativeSubtotal - computedSubtotal)
+
+    if (Math.abs(adjustmentAmount) > 0.01) {
+      itemsWithTotals.push({
+        description: 'Pricing adjustment',
+        quantity: 1,
+        unitPrice: adjustmentAmount,
+        total: adjustmentAmount,
+      })
+    }
+
+    const deposit = this.roundCurrency(Number(booking.depositAmount || 0))
+    if (deposit > 0) {
+      itemsWithTotals.unshift({
+        description: 'Security deposit (refundable)',
+        quantity: 1,
+        unitPrice: deposit,
+        total: deposit,
+      })
+    }
+
+    return {
+      itemsWithTotals,
+      subtotal: authoritativeSubtotal,
+      vatAmount: authoritativeVatAmount,
+      totalAmount: this.roundCurrency(authoritativeSubtotal + authoritativeVatAmount),
+    }
+  }
+
+  static async syncBookingInvoicePayments(bookingId: string, userId = 'system'): Promise<void> {
+    const invoice = await prisma.invoice.findFirst({
+      where: {
+        bookingId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        totalAmount: true,
+        status: true,
+      },
+    })
+
+    if (!invoice) {
+      return
+    }
+
+    const successfulPayments = await prisma.payment.findMany({
+      where: {
+        bookingId,
+        status: 'SUCCESS',
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    })
+
+    const paidAmount = this.roundCurrency(
+      successfulPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+    )
+    const remainingAmount = this.roundCurrency(Math.max(0, Number(invoice.totalAmount) - paidAmount))
+    const latestPaidAt =
+      successfulPayments.length > 0 ? successfulPayments[successfulPayments.length - 1].createdAt : null
+
+    let nextStatus = invoice.status
+    if (paidAmount <= 0 && invoice.status !== 'CANCELLED' && invoice.status !== 'OVERDUE') {
+      nextStatus = 'SENT'
+    } else if (remainingAmount <= 0) {
+      nextStatus = 'PAID'
+    } else if (paidAmount > 0) {
+      nextStatus = 'PARTIALLY_PAID'
+    }
+
+    const latestPayment = await prisma.payment.findFirst({
+      where: { bookingId, status: 'SUCCESS', deletedAt: null },
+      orderBy: [{ paidAt: 'desc' }, { createdAt: 'desc' }],
+      select: { gateway: true },
+    })
+
+    await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: {
+        paidAmount: new Decimal(paidAmount),
+        remainingAmount: new Decimal(remainingAmount),
+        status: nextStatus,
+        paidDate: remainingAmount <= 0 ? latestPaidAt : null,
+        paymentMethod: latestPayment?.gateway?.trim() || null,
+        updatedBy: userId,
+      },
+    })
+
+    if (successfulPayments.length > 0) {
+      await prisma.invoicePayment.createMany({
+        data: successfulPayments.map((payment) => ({
+          invoiceId: invoice.id,
+          paymentId: payment.id,
+          amount: payment.amount,
+          paidAt: payment.createdAt,
+          createdBy: userId,
+          updatedBy: userId,
+        })),
+        skipDuplicates: true,
+      })
+    }
+  }
+
   /**
    * Create invoice from booking or manually
    */
@@ -134,7 +310,7 @@ export class InvoiceService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Invoice> {
     // Check permission
-    const canCreate = await hasPermission(userId, 'invoice.create' as any)
+    const canCreate = await hasPermission(userId, PERMISSIONS.INVOICE_CREATE)
     if (!canCreate) {
       throw new ForbiddenError('You do not have permission to create invoices')
     }
@@ -166,9 +342,11 @@ export class InvoiceService {
     }
 
     const discount = input.discount || 0
+    const vatRate = (await getVATRate()).toNumber()
     const { itemsWithTotals, subtotal, vatAmount, totalAmount } = this.calculateTotals(
       input.items as unknown as Array<{ quantity: number; unitPrice: number; days?: number; vatRate?: number; vatAmount?: number; [k: string]: unknown }>,
-      discount
+      discount,
+      vatRate
     )
 
     const invoiceNumber = await this.generateInvoiceNumber()
@@ -268,6 +446,9 @@ export class InvoiceService {
         customer: {
           select: { id: true, name: true, email: true, phone: true, taxId: true, companyName: true, billingAddress: true },
         },
+        studio: {
+          select: { name: true },
+        },
         equipment: {
           where: { deletedAt: null },
           include: { equipment: { select: { model: true, sku: true, dailyPrice: true, weeklyPrice: true, monthlyPrice: true } } },
@@ -280,18 +461,8 @@ export class InvoiceService {
       throw new NotFoundError('Booking', bookingId)
     }
 
-    const rentalDays = Math.max(1, Math.ceil(
-      (booking.endDate.getTime() - booking.startDate.getTime()) / (1000 * 60 * 60 * 24)
-    ))
-
-    const items: Array<{ description: string; quantity: number; unitPrice: number; days: number }> = booking.equipment.map((be) => ({
-      description: `${be.equipment.model || be.equipment.sku} (${rentalDays} days)`,
-      quantity: be.quantity,
-      unitPrice: Number(be.equipment.dailyPrice),
-      days: rentalDays,
-    }))
-
-    const { itemsWithTotals, subtotal, vatAmount, totalAmount } = this.calculateTotals(items, 0)
+    const { itemsWithTotals, subtotal, vatAmount, totalAmount } =
+      this.buildAuthoritativeBookingInvoiceItems(booking)
     const invoiceNumber = await this.generateInvoiceNumber()
     const now = new Date()
     const dueDate = new Date(now)
@@ -301,6 +472,8 @@ export class InvoiceService {
       (sum: number, p: { amount: { toNumber: () => number } }) => sum + p.amount.toNumber(),
       0
     ) ?? 0
+    const paymentMethod = await this.resolveBookingPaymentMethod(booking.id)
+    const depositAmount = this.roundCurrency(Number(booking.depositAmount || 0))
 
     const invoice = await prisma.invoice.create({
       data: {
@@ -314,8 +487,10 @@ export class InvoiceService {
         subtotal: new Decimal(subtotal),
         vatAmount: new Decimal(vatAmount),
         totalAmount: new Decimal(totalAmount),
+        depositAmount: new Decimal(depositAmount),
         paidAmount: new Decimal(paidAmount),
         remainingAmount: new Decimal(Math.max(0, totalAmount - paidAmount)),
+        paymentMethod,
         items: itemsWithTotals as unknown as NonNullable<Prisma.InvoiceCreateInput['items']>,
         createdBy: booking.createdBy,
       },
@@ -345,25 +520,34 @@ export class InvoiceService {
       timestamp: now,
     } as any)
 
-    return this.transformToInvoice(invoice)
+    await this.syncBookingInvoicePayments(bookingId, booking.createdBy)
+
+    const refreshedInvoice = await prisma.invoice.findFirst({
+      where: { id: invoice.id, deletedAt: null },
+      include: {
+        customer: {
+          select: { id: true, name: true, email: true, phone: true, taxId: true, companyName: true, billingAddress: true },
+        },
+        booking: { select: { id: true, bookingNumber: true } },
+      },
+    })
+
+    return this.transformToInvoice(refreshedInvoice ?? invoice)
   }
 
   /**
    * Get invoice by ID
    */
   static async getById(id: string, userId: string): Promise<Invoice> {
-    // Check permission
-    const canView = await hasPermission(userId, 'invoice.read' as any)
-    if (!canView) {
-      throw new ForbiddenError('You do not have permission to view invoices')
-    }
-
     const invoice = await prisma.invoice.findFirst({
       where: {
         id,
         deletedAt: null,
       },
       include: {
+        lineItems: {
+          orderBy: { sortOrder: 'asc' },
+        },
         customer: {
           select: {
             id: true,
@@ -386,6 +570,11 @@ export class InvoiceService {
 
     if (!invoice) {
       throw new NotFoundError('Invoice', id)
+    }
+
+    const canStaff = await hasPermission(userId, 'invoice.read')
+    if (!canStaff && invoice.customerId !== userId) {
+      throw new ForbiddenError('You do not have permission to view this invoice')
     }
 
     // Check if overdue
@@ -425,7 +614,7 @@ export class InvoiceService {
     } = {}
   ): Promise<{ invoices: Invoice[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'invoice.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.INVOICE_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view invoices')
     }
@@ -518,7 +707,7 @@ export class InvoiceService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Invoice> {
     // Check permission
-    const canUpdate = await hasPermission(userId, 'invoice.update' as any)
+    const canUpdate = await hasPermission(userId, PERMISSIONS.INVOICE_UPDATE)
     if (!canUpdate) {
       throw new ForbiddenError('You do not have permission to update invoices')
     }
@@ -534,6 +723,14 @@ export class InvoiceService {
       throw new NotFoundError('Invoice', id)
     }
 
+    if (existingInvoice.lockedAt || existingInvoice.status === 'PAID') {
+      throw new ValidationError('Cannot update a paid or locked invoice')
+    }
+
+    if (existingInvoice.status === 'PARTIALLY_PAID') {
+      throw new ValidationError('Cannot update invoice amounts after partial payment')
+    }
+
     // Recalculate totals if items changed
     let updatedSubtotal = existingInvoice.subtotal
     let updatedVatAmount = existingInvoice.vatAmount
@@ -543,9 +740,11 @@ export class InvoiceService {
     let itemsToStore: InvoiceItem[] | undefined
     if (input.items) {
       const discount = input.discount ?? Number(existingInvoice.discount || 0)
+      const vatRate = (await getVATRate()).toNumber()
       const { itemsWithTotals, subtotal, vatAmount, totalAmount } = this.calculateTotals(
         input.items as unknown as Array<{ quantity: number; unitPrice: number; days?: number; vatRate?: number; vatAmount?: number; [k: string]: unknown }>,
-        discount
+        discount,
+        vatRate
       )
       updatedSubtotal = new Decimal(subtotal)
       updatedVatAmount = new Decimal(vatAmount)
@@ -553,8 +752,9 @@ export class InvoiceService {
       updatedRemainingAmount = new Decimal(totalAmount - Number(existingInvoice.paidAmount))
       itemsToStore = itemsWithTotals
     } else if (input.discount !== undefined) {
+      const vatRate = (await getVATRate()).toNumber()
       const taxableAmount = Math.max(0, Number(existingInvoice.subtotal) - input.discount)
-      const vatAmount = Math.round(taxableAmount * 0.15 * 100) / 100
+      const vatAmount = Math.round(taxableAmount * vatRate * 100) / 100
       const totalAmount = Math.round((taxableAmount + vatAmount) * 100) / 100
       updatedVatAmount = new Decimal(vatAmount)
       updatedTotalAmount = new Decimal(totalAmount)
@@ -624,7 +824,7 @@ export class InvoiceService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Invoice> {
     // Check permission
-    const canMarkPaid = await hasPermission(userId, 'invoice.mark_paid' as any)
+    const canMarkPaid = await hasPermission(userId, PERMISSIONS.INVOICE_MARK_PAID)
     if (!canMarkPaid) {
       throw new ForbiddenError('You do not have permission to record payments')
     }
@@ -645,6 +845,10 @@ export class InvoiceService {
     const newPaidAmount = Number(invoice.paidAmount) + input.amount
     const remainingAmount = Number(invoice.totalAmount) - newPaidAmount
 
+    if (newPaidAmount - Number(invoice.totalAmount) > 0.01) {
+      throw new ValidationError('Payment amount exceeds invoice outstanding balance')
+    }
+
     // Determine new status
     let newStatus: PrismaInvoiceStatus = invoice.status
     if (remainingAmount <= 0) {
@@ -661,6 +865,8 @@ export class InvoiceService {
         remainingAmount: new Decimal(remainingAmount),
         status: newStatus,
         paidDate: remainingAmount <= 0 ? paymentDate : undefined,
+        lockedAt: remainingAmount <= 0 ? paymentDate : undefined,
+        lockedBy: remainingAmount <= 0 ? userId : undefined,
         updatedBy: userId,
       },
       include: {
@@ -742,7 +948,7 @@ export class InvoiceService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Invoice> {
     // Check permission
-    const canCreate = await hasPermission(userId, 'invoice.create' as any)
+    const canCreate = await hasPermission(userId, PERMISSIONS.INVOICE_CREATE)
     if (!canCreate) {
       throw new ForbiddenError('You do not have permission to create invoices')
     }
@@ -773,6 +979,8 @@ export class InvoiceService {
                 sku: true,
                 model: true,
                 dailyPrice: true,
+                weeklyPrice: true,
+                monthlyPrice: true,
                 categoryId: true,
                 category: { select: { id: true, name: true } },
               },
@@ -798,27 +1006,37 @@ export class InvoiceService {
       throw new ValidationError('Invoice already exists for this booking')
     }
 
-    // Calculate rental days
+    // Build line items with optimal weekly/monthly rates; VAT applied once in create() via calculateTotals()
     const startDate = new Date(booking.startDate)
     const endDate = new Date(booking.endDate)
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const days = Math.max(1, PricingService.calculateRentalDays(startDate, endDate))
 
     const items = booking.equipment.map((be) => {
-      const dailyPrice = Number(be.equipment.dailyPrice || 0)
-      const total = dailyPrice * be.quantity * days
-      const vatAmount = total * 0.15
-      return {
-        description: `${be.equipment.sku}${be.equipment.model ? ` - ${be.equipment.model}` : ''} (${be.quantity} × ${days} days)`,
-        quantity: be.quantity,
-        unitPrice: dailyPrice,
+      const eq = be.equipment
+      const dailyPrice = Number(eq.dailyPrice || 0)
+      const weeklyPrice = eq.weeklyPrice ? Number(eq.weeklyPrice) : null
+      const monthlyPrice = eq.monthlyPrice ? Number(eq.monthlyPrice) : null
+      const { effectiveTotal } = calculateBestRate(
         days,
-        total,
-        vatRate: 15,
-        vatAmount,
-        equipmentId: be.equipment.id,
-        equipmentSku: be.equipment.sku,
-        categoryId: be.equipment.category?.id,
-        categoryName: be.equipment.category?.name,
+        be.quantity,
+        dailyPrice,
+        weeklyPrice,
+        monthlyPrice
+      )
+      const effectiveUnitPrice =
+        be.quantity * days > 0
+          ? this.roundCurrency(effectiveTotal / (be.quantity * days))
+          : dailyPrice
+
+      return {
+        description: `${eq.sku}${eq.model ? ` - ${eq.model}` : ''} (${be.quantity} × ${days} days)`,
+        quantity: be.quantity,
+        unitPrice: effectiveUnitPrice,
+        days,
+        equipmentId: eq.id,
+        equipmentSku: eq.sku,
+        categoryId: eq.categoryId ?? undefined,
+        categoryName: eq.category?.name ?? undefined,
       }
     })
 
@@ -847,7 +1065,7 @@ export class InvoiceService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<void> {
     // Check permission
-    const canDelete = await hasPermission(userId, 'invoice.delete' as any)
+    const canDelete = await hasPermission(userId, PERMISSIONS.INVOICE_DELETE)
     if (!canDelete) {
       throw new ForbiddenError('You do not have permission to delete invoices')
     }
@@ -861,6 +1079,10 @@ export class InvoiceService {
 
     if (!invoice) {
       throw new NotFoundError('Invoice', id)
+    }
+
+    if (invoice.lockedAt || invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID') {
+      throw new ValidationError('Cannot delete an invoice with payments or a locked invoice')
     }
 
     // Soft delete
@@ -886,6 +1108,32 @@ export class InvoiceService {
   /**
    * Transform Prisma Invoice to Invoice type (helper method)
    */
+  private static mapPrismaLineItemsToInvoiceItems(invoice: {
+    lineItems?: Array<{
+      description: string
+      quantity: unknown
+      unitPrice: unknown
+      rentalDays: number | null
+      lineTotal: unknown
+      vatAmount: unknown
+      vatRate: unknown
+    }>
+    items?: unknown
+  }): InvoiceItem[] {
+    if (invoice.lineItems?.length) {
+      return invoice.lineItems.map((li) => ({
+        description: li.description,
+        quantity: Number(li.quantity),
+        unitPrice: Number(li.unitPrice),
+        ...(li.rentalDays != null && li.rentalDays > 0 ? { days: li.rentalDays } : {}),
+        total: Number(li.lineTotal),
+        vatAmount: Number(li.vatAmount),
+        vatRate: Number(li.vatRate),
+      }))
+    }
+    return (invoice.items || []) as InvoiceItem[]
+  }
+
   private static transformToInvoice(invoice: any): Invoice {
     return {
       id: invoice.id,
@@ -903,9 +1151,11 @@ export class InvoiceService {
       totalAmount: Number(invoice.totalAmount || 0),
       paidAmount: Number(invoice.paidAmount || 0),
       remainingAmount: Number(invoice.remainingAmount || 0),
-      items: (invoice.items || []) as any,
+      items: this.mapPrismaLineItemsToInvoiceItems(invoice),
       notes: invoice.notes,
       paymentTerms: invoice.paymentTerms,
+      paymentMethod: invoice.paymentMethod ?? null,
+      depositAmount: Number(invoice.depositAmount || 0),
       customer: invoice.customer,
       booking: invoice.booking,
       createdAt: invoice.createdAt,

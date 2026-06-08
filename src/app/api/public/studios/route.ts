@@ -25,7 +25,12 @@ export async function GET(request: NextRequest) {
       description: true,
       capacity: true,
       hourlyRate: true,
-      media: { take: 1, select: { id: true, url: true, type: true } },
+      media: {
+        where: { deletedAt: null },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        take: 1,
+        select: { id: true, url: true, type: true },
+      },
     },
     orderBy: { name: 'asc' },
   })

@@ -251,7 +251,7 @@ export default function AccountBookingsPage() {
                       <div className="flex gap-2">
                         {booking.invoices && booking.invoices.length > 0 && (
                           <Button size="sm" variant="outline" asChild>
-                            <Link href={`/account/invoices/${booking.invoices[0].id}`}>
+                            <Link href={`/portal/invoices/${booking.invoices[0].id}`}>
                               <FileText className="ms-1 h-3 w-3" />
                               الفاتورة
                             </Link>

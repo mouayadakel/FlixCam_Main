@@ -1,6 +1,6 @@
 /**
  * @file route.ts
- * @description API for deposit tracking – bookings with depositAmount > 0
+ * @description API for deposit tracking – uses Deposit model lifecycle
  * @module app/api/finance/deposits
  */
 
@@ -8,8 +8,17 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { hasPermission } from '@/lib/auth/permissions'
+import { DepositStatus, BookingStatus } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
+
+const DEPOSIT_STATUS_LABELS: Record<DepositStatus, string> = {
+  PENDING: 'pending',
+  COLLECTED: 'held',
+  RETURNED: 'refunded',
+  PARTIALLY_RETURNED: 'partially_refunded',
+  FORFEITED: 'forfeited',
+}
 
 export async function GET() {
   try {
@@ -23,45 +32,33 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const bookings = await prisma.booking.findMany({
-      where: {
-        deletedAt: null,
-        depositAmount: { not: null, gt: 0 },
-      },
-      select: {
-        id: true,
-        bookingNumber: true,
-        status: true,
-        depositAmount: true,
-        totalAmount: true,
-        startDate: true,
-        endDate: true,
-        createdAt: true,
-        customer: { select: { id: true, name: true, email: true } },
-        payments: {
-          where: { deletedAt: null },
-          select: { id: true, status: true, amount: true, refundAmount: true, createdAt: true },
+    const deposits = await prisma.deposit.findMany({
+      include: {
+        booking: {
+          select: {
+            id: true,
+            bookingNumber: true,
+            status: true,
+            depositAmount: true,
+            totalAmount: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            customer: { select: { id: true, name: true, email: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
     })
 
-    const now = new Date()
-    const data = bookings.map((b) => {
-      const deposit = Number(b.depositAmount ?? 0)
-      const successPayment = b.payments.find((p) => p.status === 'SUCCESS')
-      const refunded = b.payments.some(
-        (p) =>
-          p.status === 'REFUNDED' ||
-          p.status === 'PARTIALLY_REFUNDED' ||
-          (p.refundAmount && Number(p.refundAmount) > 0)
-      )
-      let depositStatus: 'paid' | 'pending' | 'refunded' = 'pending'
-      if (refunded) depositStatus = 'refunded'
-      else if (successPayment && Number(successPayment.amount) >= deposit) depositStatus = 'paid'
+    const data = deposits.map((d) => {
+      const b = d.booking
+      const deposit = Number(d.amount)
+      const depositStatus = DEPOSIT_STATUS_LABELS[d.status] ?? 'pending'
 
       return {
-        id: b.id,
+        id: d.id,
+        bookingId: b.id,
         bookingNumber: b.bookingNumber,
         status: b.status,
         depositAmount: deposit,
@@ -69,29 +66,48 @@ export async function GET() {
         startDate: b.startDate.toISOString(),
         endDate: b.endDate.toISOString(),
         createdAt: b.createdAt.toISOString(),
-        paidDate: successPayment?.createdAt?.toISOString() ?? null,
+        paidDate: d.collectedAt?.toISOString() ?? null,
+        returnedDate: d.returnedAt?.toISOString() ?? null,
         depositStatus,
+        depositLifecycle: d.status,
+        deductionAmount: d.deductionAmt != null ? Number(d.deductionAmt) : null,
         customer: b.customer,
       }
     })
 
-    const totalHeld = data
-      .filter((d) => d.depositStatus === 'paid' && !['CANCELLED', 'CLOSED'].includes(d.status))
+    const heldStatuses: DepositStatus[] = [DepositStatus.COLLECTED, DepositStatus.PARTIALLY_RETURNED]
+    const activeBookingStatuses: BookingStatus[] = [
+      BookingStatus.CONFIRMED,
+      BookingStatus.ACTIVE,
+      BookingStatus.RETURNED,
+      BookingStatus.PAYMENT_PENDING,
+    ]
+
+    const totalDepositsHeld = data
+      .filter(
+        (d) =>
+          heldStatuses.includes(d.depositLifecycle as DepositStatus) &&
+          activeBookingStatuses.includes(d.status as BookingStatus) &&
+          d.status !== BookingStatus.CANCELLED &&
+          d.status !== BookingStatus.CLOSED
+      )
       .reduce((s, d) => s + d.depositAmount, 0)
-    const pending = data
-      .filter((d) => d.depositStatus === 'pending')
+
+    const pendingDeposits = data
+      .filter((d) => d.depositLifecycle === DepositStatus.PENDING)
       .reduce((s, d) => s + d.depositAmount, 0)
-    const refunded = data
-      .filter((d) => d.depositStatus === 'refunded')
+
+    const refundedDeposits = data
+      .filter((d) => d.depositLifecycle === DepositStatus.RETURNED)
       .reduce((s, d) => s + d.depositAmount, 0)
 
     return NextResponse.json({
       data,
       total: data.length,
       summary: {
-        totalDepositsHeld: totalHeld,
-        pendingDeposits: pending,
-        refundedDeposits: refunded,
+        totalDepositsHeld,
+        pendingDeposits,
+        refundedDeposits,
       },
     })
   } catch (e) {

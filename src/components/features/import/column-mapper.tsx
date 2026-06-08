@@ -86,6 +86,7 @@ const SYSTEM_FIELDS = [
   { value: 'video', label: 'فيديو', group: 'media', color: 'blue' },
   // Content
   { value: 'specifications', label: 'المواصفات', group: 'ai', color: 'yellow' },
+  { value: 'specifications_raw_notes', label: 'ملاحظات المواصفات الخام', group: 'ai', color: 'yellow' },
   { value: 'box_contents', label: 'محتوى الصندوق', group: 'ai', color: 'yellow' },
   { value: 'tags', label: 'الوسوم', group: 'ai', color: 'yellow' },
   { value: 'related_products', label: 'منتجات ذات صلة', group: 'ai', color: 'yellow' },

@@ -7,6 +7,28 @@ const withBundleAnalyzer =
     : (x) => x
 
 // Phase 0.1: Security headers (CSP, CORS, XSS, HTTPS)
+// GTM / GA4: https://developers.google.com/tag-platform/security/guides/csp
+const CSP_GOOGLE_TAG = [
+  'https://www.googletagmanager.com',
+  'https://tagmanager.google.com',
+  'https://www.google-analytics.com',
+  'https://ssl.google-analytics.com',
+  'https://analytics.google.com',
+  'https://*.google-analytics.com',
+  'https://*.analytics.google.com',
+  'https://*.googletagmanager.com',
+].join(' ')
+
+/** Optional marketing pixels (GTM may load these; PublicTrackingScripts uses them when gtmId is empty) */
+const CSP_MARKETING_PIXEL_SCRIPTS = [
+  'https://sc-static.net', // Snapchat Snap Pixel
+  'https://connect.facebook.net', // Meta Pixel
+  'https://analytics.tiktok.com', // TikTok Pixel
+  'https://s.pinimg.com', // Pinterest tag loader
+  'https://static.ads-twitter.com', // X / Twitter Pixel
+  'https://www.clarity.ms', // Microsoft Clarity
+].join(' ')
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -18,11 +40,13 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-eval' 'unsafe-inline' ${CSP_GOOGLE_TAG} ${CSP_MARKETING_PIXEL_SCRIPTS}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https: wss:",
+      // GTM loads https://www.googletagmanager.com/ns.html in a hidden iframe (default-src does not allow it)
+      `frame-src 'self' https://www.googletagmanager.com`,
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -40,15 +64,27 @@ const nextConfig = {
   experimental: {
     cpus: 2,
     serverActions: {
-      bodySizeLimit: '50mb', // Allow Excel/CSV uploads up to 50MB
+      bodySizeLimit: '60mb', // Allow uploads up to 60MB
     },
   },
   // Next 16 route handler types expect async params; migrate routes incrementally (see CI_CD_AUDIT_REPORT.md)
-  typescript: { ignoreBuildErrors: true },
+  typescript: { ignoreBuildErrors: false },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
     remotePatterns: [
-      { protocol: 'http', hostname: '**' },
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: 'flixcam.rent' },
+      { protocol: 'https', hostname: 'www.flixcam.rent' },
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'http', hostname: '127.0.0.1' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'images.pexels.com' },
+      { protocol: 'https', hostname: 'logo.clearbit.com' },
+      { protocol: 'https', hostname: 'api.qrserver.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   async headers() {
@@ -108,4 +144,18 @@ const nextConfig = {
   },
 }
 
-module.exports = withBundleAnalyzer(nextConfig)
+let exportedConfig = withBundleAnalyzer(nextConfig)
+
+if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  try {
+    const { withSentryConfig } = require('@sentry/nextjs')
+    exportedConfig = withSentryConfig(exportedConfig, {
+      silent: true,
+      hideSourceMaps: true,
+    })
+  } catch {
+    // @sentry/nextjs optional at build time
+  }
+}
+
+module.exports = exportedConfig

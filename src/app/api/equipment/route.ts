@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { EquipmentService } from '@/lib/services/equipment.service'
 import { createEquipmentSchema } from '@/lib/validators/equipment.validator'
+import { cacheClearNamespace } from '@/lib/cache'
 
 function coerceEquipmentBody(body: Record<string, unknown>) {
   const out: Record<string, unknown> = { ...body }
@@ -123,6 +124,9 @@ export async function POST(request: NextRequest) {
       ...parsed.data,
       createdBy: session.user.id,
     })
+
+    // Clear public cache so the new equipment appears immediately
+    await cacheClearNamespace('equipmentList')
 
     return NextResponse.json(equipment, { status: 201 })
   } catch (error) {

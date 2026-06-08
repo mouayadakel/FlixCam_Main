@@ -114,6 +114,7 @@ export const verifyOtpSchema = z.object({
     .transform(normalizePhone)
     .refine((v) => /^966[0-9]{9}$/.test(v)),
   code: z.string().length(6, { message: 'الرمز 6 أرقام' }),
+  referralCode: z.string().optional(),
 })
 
 /**
@@ -130,7 +131,7 @@ export const deferredRegisterSchema = z.object({
     .string()
     .min(1, { message: 'رقم الجوال مطلوب' })
     .transform(normalizePhone)
-    .refine((v) => /^966[0-9]{9}$/.test(v), { message: 'رقم جوال سعودي غير صالح (05XXXXXXXX)' }),
+    .refine((v) => /^966[0-9]{9}$/.test(v), { message: 'رقم جوال سعودي غير صالح' }),
 })
 
 /**

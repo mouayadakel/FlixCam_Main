@@ -14,9 +14,23 @@ var mockTx: {
   product: { upsert: jest.Mock }
   productTranslation: { upsert: jest.Mock; findUnique: jest.Mock }
   equipment: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock; upsert: jest.Mock }
-  media: { findFirst: jest.Mock; create: jest.Mock; deleteMany: jest.Mock; updateMany: jest.Mock }
+  media: {
+    findFirst: jest.Mock
+    create: jest.Mock
+    deleteMany: jest.Mock
+    updateMany: jest.Mock
+    count: jest.Mock
+  }
   translation: { upsert: jest.Mock }
 }
+
+jest.mock('../product-photo.service', () => ({
+  isPlaceholderUrl: (url: string | null | undefined) => {
+    if (!url || typeof url !== 'string' || url.trim() === '') return true
+    return /placeholder/i.test(url)
+  },
+  getSyncReadyImageUrls: jest.fn().mockResolvedValue([]),
+}))
 
 jest.mock('@/lib/cache', () => ({
   cacheDelete: jest.fn().mockResolvedValue(undefined),
@@ -52,6 +66,7 @@ jest.mock('@/lib/db/prisma', () => {
       create: jest.fn(),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      count: jest.fn().mockResolvedValue(0),
     },
     translation: { upsert: jest.fn().mockResolvedValue({}) },
   }
@@ -350,6 +365,38 @@ describe('product-equipment-sync.service', () => {
       expect(urls).toContain('https://example.com/g2.jpg')
     })
 
+    it('preserves existing Equipment media when Product has no valid image URLs', async () => {
+      mockProductFindFirst.mockResolvedValue(
+        createMockProduct({
+          featuredImage: '/images/placeholder.jpg',
+          galleryImages: [],
+        })
+      )
+      mockTx.equipment.findFirst.mockResolvedValue({ id: 'prod-1', deletedAt: null })
+      mockTx.media.count.mockResolvedValue(2)
+
+      await syncProductToEquipment('prod-1')
+
+      expect(mockTx.media.deleteMany).not.toHaveBeenCalled()
+      expect(mockTx.media.create).not.toHaveBeenCalled()
+    })
+
+    it('preserves existing Equipment media even when Product has valid image URLs', async () => {
+      mockProductFindFirst.mockResolvedValue(
+        createMockProduct({
+          featuredImage: 'https://example.com/new-from-product.jpg',
+          galleryImages: ['https://example.com/g1.jpg'],
+        })
+      )
+      mockTx.equipment.findFirst.mockResolvedValue({ id: 'prod-1', deletedAt: null })
+      mockTx.media.count.mockResolvedValue(1)
+
+      await syncProductToEquipment('prod-1')
+
+      expect(mockTx.media.deleteMany).not.toHaveBeenCalled()
+      expect(mockTx.media.create).not.toHaveBeenCalled()
+    })
+
     it('skips creating media when media already exists for url+equipmentId', async () => {
       mockProductFindFirst.mockResolvedValue(
         createMockProduct({
@@ -434,7 +481,7 @@ describe('product-equipment-sync.service', () => {
       expect(createData.slug).toBe('english-name-1')
     })
 
-    it('returns slug on ensureUniqueSlug when findFirst throws', async () => {
+    it('propagates error when ensureUniqueSlug findFirst throws', async () => {
       mockProductFindFirst.mockResolvedValue(createMockProduct())
       mockTx.equipment.findFirst
         .mockResolvedValueOnce(null)
@@ -443,10 +490,7 @@ describe('product-equipment-sync.service', () => {
         .mockRejectedValueOnce(new Error('db error'))
         .mockResolvedValue(null)
 
-      await syncProductToEquipment('prod-1')
-
-      const createData = getEquipmentUpsertArg().create
-      expect(createData.slug).toBe('english-name')
+      await expect(syncProductToEquipment('prod-1')).rejects.toThrow('db error')
     })
 
     it('uses timestamp suffix when slug exhausted after max attempts', async () => {
@@ -463,7 +507,7 @@ describe('product-equipment-sync.service', () => {
       await syncProductToEquipment('prod-1')
 
       const createData = getEquipmentUpsertArg().create
-      expect(createData.slug).toMatch(/^english-name-\d+$/)
+      expect(createData.slug).toMatch(/^english-name-[a-z0-9]+$/)
     })
   })
 

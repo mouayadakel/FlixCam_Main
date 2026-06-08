@@ -55,9 +55,9 @@ export function StudioCard({ studio }: StudioCardProps) {
         {studio.media[0]?.url ? (
           <Image
             src={studio.media[0].url}
-            alt={studio.name}
+            alt={displayName}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (

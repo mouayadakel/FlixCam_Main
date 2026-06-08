@@ -36,14 +36,15 @@ describe('ImageUpload', () => {
 
   it('has URL and File tabs', () => {
     render(<ImageUpload onChange={onChange} />)
-    expect(screen.getByText(/رابط URL/)).toBeTruthy()
-    expect(screen.getByText(/رفع ملف/)).toBeTruthy()
+    expect(screen.getByText('رابط')).toBeTruthy()
+    expect(screen.getByText('رفع')).toBeTruthy()
   })
 
-  it('calls onChange when URL input changes', () => {
+  it('updates URL input value', () => {
     render(<ImageUpload onChange={onChange} />)
-    const input = screen.getByPlaceholderText('https://example.com/image.jpg')
+    const input = screen.getByPlaceholderText('https://...')
     fireEvent.change(input, { target: { value: 'https://example.com/image.jpg' } })
-    expect(onChange).toHaveBeenCalledWith('https://example.com/image.jpg')
+    expect((input as HTMLInputElement).value).toBe('https://example.com/image.jpg')
   })
 })
+

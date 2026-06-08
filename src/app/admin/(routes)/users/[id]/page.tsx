@@ -42,6 +42,7 @@ import { USER_STATUS_LABELS } from '@/lib/constants/user.constants'
 import { RoleBadge } from '@/components/admin/roles/role-badge'
 import { AssignRoleModal } from '@/components/admin/users/assign-role-modal'
 import { formatDateTime } from '@/lib/utils/format.utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 interface AuditLogEntry {
   id: string
@@ -322,13 +323,13 @@ export default function UserDetailPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">البريد</p>
-              <p className="font-medium" dir="ltr">
+              <p className="font-medium" dir={EMBED_LTR}>
                 {user.email}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">الهاتف</p>
-              <p className="font-medium" dir="ltr">
+              <p className="font-medium" dir={EMBED_LTR}>
                 {user.phone || '-'}
               </p>
             </div>
@@ -610,7 +611,7 @@ export default function UserDetailPage() {
               onChange={(e) => setHardDeleteConfirmPhrase(e.target.value)}
               placeholder="حذف أو DELETE"
               className="max-w-xs"
-              dir="ltr"
+              dir={EMBED_LTR}
             />
           </div>
           <AlertDialogFooter>

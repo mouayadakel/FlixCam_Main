@@ -170,31 +170,7 @@ export default function ActionCenterPage() {
         })
       }
 
-      // Add sample system actions for demo (these would come from a real notifications/tasks API)
-      const sampleSystemActions: ActionItem[] = [
-        {
-          id: 'system-1',
-          type: 'equipment',
-          priority: 'critical',
-          title: 'معدات تحتاج صيانة عاجلة',
-          description: '3 معدات في حالة صيانة تحتاج اهتمام',
-          actionUrl: '/admin/inventory/equipment?condition=MAINTENANCE',
-          actionLabel: 'عرض',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'system-2',
-          type: 'booking',
-          priority: 'high',
-          title: 'حجوزات تبدأ اليوم',
-          description: 'يوجد حجوزات مجدولة للبدء اليوم',
-          actionUrl: '/admin/calendar',
-          actionLabel: 'عرض',
-          createdAt: new Date().toISOString(),
-        },
-      ]
-
-      const allActions = [...pendingActions, ...sampleSystemActions]
+      const allActions = [...pendingActions]
 
       // Calculate stats
       const newStats: ActionStats = {

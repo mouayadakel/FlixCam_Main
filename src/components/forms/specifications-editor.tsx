@@ -49,32 +49,53 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import type {
-  SpecItem,
   SpecGroup,
   SpecHighlight,
+  SpecItem,
   QuickSpec,
   StructuredSpecifications,
+  IconName,
 } from '@/lib/types/specifications.types'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
-import { convertFlatToStructured, categoryTemplates } from '@/lib/utils/specifications.utils'
+import {
+  convertFlatToStructured,
+  categoryTemplates,
+  hasCorruptedValues,
+  repairSpecifications,
+} from '@/lib/utils/specifications.utils'
 import { SpecificationsDisplay } from '@/components/features/equipment/specifications-display'
 
 const ICON_OPTIONS = [
-  { value: 'star', label: 'Star' },
-  { value: 'zap', label: 'Power' },
-  { value: 'hard-drive', label: 'Storage' },
-  { value: 'wifi', label: 'Connectivity' },
-  { value: 'ruler', label: 'Dimensions' },
-  { value: 'cable', label: 'Cable' },
-  { value: 'monitor', label: 'Display' },
-  { value: 'camera', label: 'Camera' },
-  { value: 'sun', label: 'Sun' },
-  { value: 'gauge', label: 'Gauge' },
-  { value: 'info', label: 'Info' },
+  { value: 'star', label: 'Star / Featured' },
+  { value: 'zap', label: 'Power / Battery' },
+  { value: 'hard-drive', label: 'Storage / Media' },
+  { value: 'wifi', label: 'Wireless / Network' },
+  { value: 'ruler', label: 'Physical / Specs' },
+  { value: 'cable', label: 'I/O / Connectors' },
+  { value: 'monitor', label: 'Display / Screen' },
+  { value: 'camera', label: 'Camera / Still' },
+  { value: 'video', label: 'Video / Cinema' },
+  { value: 'aperture', label: 'Lenses / Optics' },
+  { value: 'scale', label: 'Weight / Payload' },
+  { value: 'layers', label: 'Sensor / Format' },
+  { value: 'move', label: 'Mount / Grip' },
+  { value: 'thermometer', label: 'Color Temp' },
+  { value: 'sun', label: 'Lighting / CRI' },
+  { value: 'gauge', label: 'Performance' },
+  { value: 'info', label: 'General Info' },
 ]
 
 const DEFAULT_STRUCTURED: StructuredSpecifications = {
   groups: [{ label: 'Specifications', labelAr: 'المواصفات', icon: 'star', priority: 1, specs: [] }],
+}
+
+function createSpecKeyFromLabel(label: string, fallback = 'spec_item'): string {
+  const normalized = label
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  return normalized || fallback
 }
 
 function escapeHtml(s: string): string {
@@ -97,7 +118,13 @@ function normalizeValue(
   categoryHint?: string
 ): StructuredSpecifications {
   if (!value || typeof value !== 'object') return DEFAULT_STRUCTURED
-  if (isStructuredSpecifications(value)) return value
+  if (isStructuredSpecifications(value)) {
+    // Auto-repair any corrupted values silently on load
+    if (hasCorruptedValues(value)) {
+      return repairSpecifications(value)
+    }
+    return value
+  }
   return convertFlatToStructured(value as Record<string, unknown>, categoryHint)
 }
 
@@ -105,10 +132,12 @@ function SpecItemEditor({
   spec,
   onChange,
   onDelete,
+  duplicateKey,
 }: {
   spec: SpecItem
   onChange: (s: SpecItem) => void
   onDelete: () => void
+  duplicateKey: boolean
 }) {
   return (
     <div className="group relative space-y-3 rounded-lg border border-border-light bg-white p-4 transition-all hover:border-brand-primary/30 hover:shadow-sm">
@@ -118,31 +147,39 @@ function SpecItemEditor({
       <div className="space-y-3 ps-6">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs font-medium text-text-muted">Key *</Label>
+            <Label className="text-xs font-medium text-text-muted">المفتاح *</Label>
             <Input
               value={spec.key}
               onChange={(e) => onChange({ ...spec, key: e.target.value })}
-              placeholder="e.g., sensor"
+              placeholder="مثال: sensor"
               className="mt-1"
             />
+            {duplicateKey && (
+              <p className="mt-1 text-xs text-red-600">هذا المفتاح مكرر في مجموعة أخرى.</p>
+            )}
           </div>
           <div>
-            <Label className="text-xs font-medium text-text-muted">Label (EN) *</Label>
+            <Label className="text-xs font-medium text-text-muted">التسمية (EN) *</Label>
             <Input
               value={spec.label}
               onChange={(e) => onChange({ ...spec, label: e.target.value })}
-              placeholder="e.g., Sensor"
+              onBlur={() => {
+                if (!spec.key.trim() && spec.label.trim()) {
+                  onChange({ ...spec, key: createSpecKeyFromLabel(spec.label) })
+                }
+              }}
+              placeholder="مثال: Sensor"
               className="mt-1"
             />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-xs font-medium text-text-muted">Value *</Label>
+            <Label className="text-xs font-medium text-text-muted">القيمة *</Label>
             <Input
               value={spec.value}
               onChange={(e) => onChange({ ...spec, value: e.target.value })}
-              placeholder="e.g., 12.1MP Full-Frame"
+              placeholder="مثال: 12.1MP Full-Frame"
               className="mt-1"
             />
           </div>
@@ -159,22 +196,22 @@ function SpecItemEditor({
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs font-medium text-text-muted">Type</Label>
+            <Label className="text-xs font-medium text-text-muted">النوع</Label>
             <select
               value={spec.type ?? 'text'}
               onChange={(e) => onChange({ ...spec, type: e.target.value as SpecItem['type'] })}
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               aria-label="Specification type"
             >
-              <option value="text">Text</option>
-              <option value="boolean">Yes/No</option>
-              <option value="range">Range Bar</option>
-              <option value="colorTemp">Color Temp</option>
+              <option value="text">نص</option>
+              <option value="boolean">نعم / لا</option>
+              <option value="range">شريط نطاق</option>
+              <option value="colorTemp">حرارة لون</option>
             </select>
           </div>
           {spec.type === 'range' && (
             <div>
-              <Label className="text-xs font-medium text-text-muted">Range %</Label>
+              <Label className="text-xs font-medium text-text-muted">النطاق %</Label>
               <Input
                 type="number"
                 min={0}
@@ -193,7 +230,7 @@ function SpecItemEditor({
                 onChange={(e) => onChange({ ...spec, highlight: e.target.checked })}
                 className="rounded border-border-light text-brand-primary focus:ring-brand-primary/20"
               />
-              <span className="text-xs font-medium text-text-muted">Highlight</span>
+              <span className="text-xs font-medium text-text-muted">مميز</span>
             </label>
           </div>
         </div>
@@ -218,6 +255,7 @@ function GroupEditor({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  duplicateKeys,
 }: {
   group: SpecGroup
   onChange: (g: SpecGroup) => void
@@ -226,6 +264,7 @@ function GroupEditor({
   onMoveDown?: () => void
   canMoveUp: boolean
   canMoveDown: boolean
+  duplicateKeys: Set<string>
 }) {
   const [expanded, setExpanded] = useState(true)
 
@@ -253,7 +292,7 @@ function GroupEditor({
         </button>
         <select
           value={group.icon}
-          onChange={(e) => onChange({ ...group, icon: e.target.value })}
+          onChange={(e) => onChange({ ...group, icon: e.target.value as any })}
           className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
           aria-label="Group icon"
         >
@@ -266,7 +305,7 @@ function GroupEditor({
         <Input
           value={group.label}
           onChange={(e) => onChange({ ...group, label: e.target.value })}
-          placeholder="Group Label (EN)"
+          placeholder="اسم المجموعة (EN)"
           className="flex-1 font-medium"
         />
         <Input
@@ -317,6 +356,7 @@ function GroupEditor({
             <SpecItemEditor
               key={`${spec.key}-${idx}`}
               spec={spec}
+              duplicateKey={duplicateKeys.has(spec.key.trim().toLowerCase())}
               onChange={(updated) => {
                 const next = [...group.specs]
                 next[idx] = updated
@@ -337,7 +377,7 @@ function GroupEditor({
             onClick={addSpec}
           >
             <Plus className="me-2 h-4 w-4" />
-            Add Specification
+            إضافة مواصفة
           </Button>
         </div>
       )}
@@ -356,6 +396,7 @@ export function SpecificationsEditor({
   const normalized = useMemo(() => normalizeValue(value, categoryHint), [value, categoryHint])
   const [state, setState] = useState<StructuredSpecifications>(normalized)
   const [viewMode, setViewMode] = useState<'htmlEditor' | 'edit' | 'preview' | 'htmlPreview' | 'json'>('edit')
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false)
   const [copied, setCopied] = useState(false)
   const [fetchDialogOpen, setFetchDialogOpen] = useState(false)
   const [fetchUrl, setFetchUrl] = useState('')
@@ -383,6 +424,12 @@ export function SpecificationsEditor({
     // Intentionally omit onChange to avoid re-sync when parent callback identity changes
      
   }, [value, categoryHint])
+
+  useEffect(() => {
+    if (!showAdvancedTools && ['htmlEditor', 'htmlPreview', 'json'].includes(viewMode)) {
+      setViewMode('edit')
+    }
+  }, [showAdvancedTools, viewMode])
 
   const syncChange = (next: StructuredSpecifications) => {
     setState(next)
@@ -432,6 +479,32 @@ export function SpecificationsEditor({
     syncChange({ ...state, quickSpecs })
   }
 
+  const duplicateKeySet = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const group of state.groups) {
+      for (const spec of group.specs) {
+        const key = spec.key.trim().toLowerCase()
+        if (!key) continue
+        counts.set(key, (counts.get(key) ?? 0) + 1)
+      }
+    }
+    return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key))
+  }, [state.groups])
+
+  const totalGroups = state.groups.length
+  const totalSpecs = state.groups.reduce((sum, group) => sum + group.specs.length, 0)
+  const highlightedCount = state.groups.reduce(
+    (sum, group) => sum + group.specs.filter((spec) => spec.highlight).length,
+    0
+  )
+
+  const isCorrupted = useMemo(() => hasCorruptedValues(state), [state])
+
+  const handleRepair = () => {
+    const repaired = repairSpecifications(state)
+    syncChange(repaired)
+  }
+
   const handleFetchFromUrl = async () => {
     const url = fetchUrl.trim()
     if (!url) {
@@ -470,129 +543,188 @@ export function SpecificationsEditor({
 
   return (
     <div className={cn('space-y-4', className)} dir="rtl">
-      {label && <Label>{label}</Label>}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      {label && <Label className="text-lg font-bold text-text-heading">{label}</Label>}
+
+      {isCorrupted && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/50 p-4 text-sm text-red-900 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Zap className="h-5 w-5 text-red-600" />
+            <p className="font-medium">
+              تم اكتشاف رموز غير صالحة ([object Object]) في البيانات. قد يؤدي ذلك لفشل الحفظ.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={handleRepair}
+            className="shrink-0 font-bold"
+          >
+            نظف وصحح البيانات الآن
+          </Button>
+        </div>
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border-light/40 pb-4">
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            variant={viewMode === 'htmlEditor' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('htmlEditor')}
-            title="محرر HTML / نصوص"
-          >
-            <FileText className="ms-1.5 h-4 w-4" />
-            HTML / نصوص
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === 'edit' ? 'default' : 'outline'}
+            variant={viewMode === 'edit' ? 'default' : 'secondary'}
             size="sm"
             onClick={() => setViewMode('edit')}
+            className="px-6 font-semibold shadow-sm"
           >
-            Edit
+            التحرير
           </Button>
           <Button
             type="button"
-            variant={viewMode === 'preview' ? 'default' : 'outline'}
+            variant={viewMode === 'preview' ? 'default' : 'secondary'}
             size="sm"
             onClick={() => setViewMode('preview')}
+            className="px-6 transition-all"
           >
             <Eye className="ms-1.5 h-4 w-4" />
-            Preview
+            معاينة
           </Button>
           <Button
             type="button"
-            variant={viewMode === 'htmlPreview' ? 'default' : 'outline'}
+            variant="ghost"
             size="sm"
-            onClick={() => setViewMode('htmlPreview')}
-            title="معاينة HTML"
+            onClick={() => setShowAdvancedTools((prev) => !prev)}
+            className="text-text-muted hover:text-brand-primary"
           >
-            <LayoutTemplate className="ms-1.5 h-4 w-4" />
-            HTML Preview
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === 'json' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('json')}
-          >
-            <Code className="ms-1.5 h-4 w-4" />
-            JSON
+            {showAdvancedTools ? 'إخفاء الخيارات' : 'خيارات إتقدمة'}
           </Button>
         </div>
-        {template && (
-          <Button
-            type="button"
-            size="sm"
-            onClick={loadTemplate}
-            className="bg-brand-primary hover:bg-brand-primary/90"
-          >
-            <Sparkles className="ms-1.5 h-4 w-4" />
-            Load {categoryHint} Template
-          </Button>
-        )}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setFetchError(null)
-            setFetchUrl('')
-            setFetchDialogOpen(true)
-          }}
-        >
-          <Link2 className="ms-1.5 h-4 w-4" />
-          جلب المواصفات من رابط
-        </Button>
-        {onAiInfer && (
+        <div className="flex items-center gap-4 text-xs font-medium text-text-muted">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-brand-primary/40"></span>
+            {totalSpecs} مواصفة
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-400/40"></span>
+            {highlightedCount} مميزة
+          </div>
+        </div>
+      </div>
+
+      {showAdvancedTools && (
+        <>
+          <div className="space-y-3 rounded-lg border border-dashed border-border-light bg-surface-light/30 p-3">
+            <p className="text-xs text-text-muted">خيارات إضافية للمستخدم المتقدم (JSON/HTML/استيراد).</p>
+            <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant={viewMode === 'htmlPreview' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('htmlPreview')}
+              title="معاينة HTML"
+            >
+              <LayoutTemplate className="ms-1.5 h-4 w-4" />
+              معاينة HTML
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'json' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('json')}
+            >
+              <Code className="ms-1.5 h-4 w-4" />
+              JSON
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'htmlEditor' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('htmlEditor')}
+              title="محرر HTML / نصوص"
+            >
+              <FileText className="ms-1.5 h-4 w-4" />
+              محرر HTML / نصوص
+            </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+          {template && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={loadTemplate}
+              className="bg-brand-primary hover:bg-brand-primary/90"
+            >
+              <Sparkles className="ms-1.5 h-4 w-4" />
+              تحميل قالب {categoryHint}
+            </Button>
+          )}
           <Button
             type="button"
             size="sm"
             variant="outline"
-            disabled={aiInferLoading}
-            onClick={async () => {
-              setAiInferLoading(true)
-              try {
-                const flat = await onAiInfer()
-                if (flat && Object.keys(flat).length > 0) {
-                  const inferred = convertFlatToStructured(flat, categoryHint)
-                  const mergedGroups = state.groups.map((g) => ({
-                    ...g,
-                    specs: [...g.specs],
-                  }))
-                  const existingKeys = new Set(
-                    mergedGroups.flatMap((g) => g.specs.map((s) => s.key))
-                  )
-                  const newSpecs = inferred.groups.flatMap((g) => g.specs)
-                  const firstGroup = mergedGroups[0]
-                  for (const spec of newSpecs) {
-                    if (!existingKeys.has(spec.key)) {
-                      if (firstGroup) {
-                        firstGroup.specs.push(spec)
-                      }
-                      existingKeys.add(spec.key)
-                    }
-                  }
-                  if (mergedGroups.length > 0) {
-                    syncChange({ ...state, groups: mergedGroups })
-                  } else {
-                    syncChange({ ...state, ...inferred })
-                  }
-                }
-              } finally {
-                setAiInferLoading(false)
-              }
+            onClick={() => {
+              setFetchError(null)
+              setFetchUrl('')
+              setFetchDialogOpen(true)
             }}
           >
-            {aiInferLoading ? (
-              <Loader2 className="ms-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="ms-1.5 h-4 w-4" />
-            )}
-            استنتاج AI
+            <Link2 className="ms-1.5 h-4 w-4" />
+            جلب المواصفات من رابط
           </Button>
-        )}
-      </div>
+          {onAiInfer && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={aiInferLoading}
+              onClick={async () => {
+                setAiInferLoading(true)
+                try {
+                  const flat = await onAiInfer()
+                  if (flat && Object.keys(flat).length > 0) {
+                    const inferred = convertFlatToStructured(flat, categoryHint)
+                    const mergedGroups = state.groups.map((g) => ({
+                      ...g,
+                      specs: [...g.specs],
+                    }))
+                    const existingKeys = new Set(
+                      mergedGroups.flatMap((g) => g.specs.map((s) => s.key))
+                    )
+                    for (const aiGroup of inferred.groups) {
+                      const targetGroup =
+                        mergedGroups.find(
+                          (g) =>
+                            g.label.toLowerCase() === aiGroup.label.toLowerCase() ||
+                            (!!g.labelAr && !!aiGroup.labelAr && g.labelAr === aiGroup.labelAr)
+                        ) ?? mergedGroups[0]
+                      if (!targetGroup) continue
+
+                      for (const spec of aiGroup.specs) {
+                        if (!existingKeys.has(spec.key)) {
+                          targetGroup.specs.push(spec)
+                          existingKeys.add(spec.key)
+                        }
+                      }
+                    }
+                    if (mergedGroups.length > 0) {
+                      syncChange({ ...state, groups: mergedGroups })
+                    } else {
+                      syncChange({ ...state, ...inferred })
+                    }
+                  }
+                } finally {
+                  setAiInferLoading(false)
+                }
+              }}
+            >
+              {aiInferLoading ? (
+                <Loader2 className="ms-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="ms-1.5 h-4 w-4" />
+              )}
+              استنتاج بالذكاء الاصطناعي
+            </Button>
+          )}
+          </div>
+        </>
+      )}
 
       <Dialog open={fetchDialogOpen} onOpenChange={setFetchDialogOpen}>
         <DialogContent className="sm:max-w-md" dir="rtl">
@@ -666,7 +798,7 @@ export function SpecificationsEditor({
               placeholder="<p>مثال: جدول أو قائمة مواصفات مخصصة...</p>"
               rows={14}
               className="font-mono text-sm"
-              dir="ltr"
+              dir="rtl"
             />
           </CardContent>
         </Card>
@@ -676,9 +808,20 @@ export function SpecificationsEditor({
         <div className="space-y-6">
           <Card>
             <CardContent className="pt-6">
-              <h4 className="mb-3 text-sm font-semibold text-text-heading">
-                Hero Highlights (optional)
-              </h4>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-text-heading">
+                    <Sparkles className="h-4 w-4 text-brand-primary" />
+                    النقاط الرئيسية (Tier 1: High-Level Highlights)
+                  </h4>
+                  <p className="text-xs text-text-muted">
+                    أهم مميزات المعدة التي تظهر في بطاقة المنتج العلوية.
+                  </p>
+                </div>
+                <div className="rounded-full bg-brand-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-primary">
+                  Professional
+                </div>
+              </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[0, 1, 2, 3].map((idx) => {
                   const h = (state.highlights ?? [])[idx] ?? {
@@ -689,17 +832,21 @@ export function SpecificationsEditor({
                   }
                   return (
                     <div key={idx} className="space-y-2">
-                      <Input
-                        placeholder="Icon (e.g. camera)"
+                      <select
                         value={h.icon}
                         onChange={(e) => {
                           const list = [...(state.highlights ?? [])]
-                          while (list.length <= idx)
-                            list.push({ icon: 'star', label: '', value: '' })
-                          list[idx] = { ...list[idx], icon: e.target.value }
+                          list[idx] = { ...list[idx], icon: e.target.value as IconName }
                           updateHighlights(list)
                         }}
-                      />
+                        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                      >
+                        {ICON_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                       <Input
                         placeholder="Label"
                         value={h.label}
@@ -742,26 +889,42 @@ export function SpecificationsEditor({
 
           <Card>
             <CardContent className="pt-6">
-              <h4 className="mb-3 text-sm font-semibold text-text-heading">
-                Quick Spec Pills (optional)
-              </h4>
-              <div className="space-y-2">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-text-heading">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    المواصفات السريعة (Tier 2: Quick Specs)
+                  </h4>
+                  <p className="text-xs text-text-muted">
+                    تظهر كـ Pills سريعة أعلى تفاصيل المنتج. مثالية للقيم الفنية المختصرة.
+                  </p>
+                </div>
+                <div className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-500">
+                  Quick View
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                 {[0, 1, 2, 3, 4, 5].map((idx) => {
                   const q = (state.quickSpecs ?? [])[idx] ?? { icon: 'star', label: '', value: '' }
                   return (
                     <div key={idx} className="flex gap-2">
-                      <Input
-                        placeholder="Icon"
+                      <select
                         value={q.icon}
                         onChange={(e) => {
                           const list = [...(state.quickSpecs ?? [])]
                           while (list.length <= idx)
                             list.push({ icon: 'star', label: '', value: '' })
-                          list[idx] = { ...list[idx], icon: e.target.value }
+                          list[idx] = { ...list[idx], icon: e.target.value as IconName }
                           updateQuickSpecs(list)
                         }}
-                        className="w-24"
-                      />
+                        className="w-24 rounded-md border border-input bg-background px-1 py-1 text-xs"
+                      >
+                        {ICON_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                       <Input
                         placeholder="Label"
                         value={q.label}
@@ -794,11 +957,19 @@ export function SpecificationsEditor({
           </Card>
 
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-text-heading">Groups</h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold text-text-heading">مجموعات المواصفات</h4>
+              {duplicateKeySet.size > 0 && (
+                <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+                  مفاتيح مكررة: {duplicateKeySet.size}
+                </span>
+              )}
+            </div>
             {state.groups.map((group, idx) => (
               <GroupEditor
                 key={`${group.label}-${idx}`}
                 group={group}
+                duplicateKeys={duplicateKeySet}
                 onChange={(updated) => {
                   const next = [...state.groups]
                   next[idx] = updated
@@ -823,7 +994,7 @@ export function SpecificationsEditor({
               onClick={addGroup}
             >
               <Plus className="ms-2 h-5 w-5" />
-              Add Group
+              إضافة مجموعة
             </Button>
           </div>
         </div>
@@ -890,12 +1061,12 @@ export function SpecificationsEditor({
             {copied ? (
               <>
                 <Check className="ms-1.5 h-4 w-4 text-emerald-500" />
-                Copied!
+                تم النسخ
               </>
             ) : (
               <>
                 <Copy className="ms-1.5 h-4 w-4" />
-                Copy
+                نسخ
               </>
             )}
           </Button>

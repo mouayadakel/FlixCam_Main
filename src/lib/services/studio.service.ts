@@ -581,7 +581,8 @@ export class StudioService {
             where: {
               deletedAt: null,
             },
-            take: 1, // Just get first image for list
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+            take: 1,
           },
           addOns: {
             where: {

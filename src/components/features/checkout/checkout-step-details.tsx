@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useLocale } from '@/hooks/use-locale'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,6 +23,7 @@ import {
   type DeliveryAddress,
 } from '@/lib/stores/checkout.store'
 import { Loader2 } from 'lucide-react'
+import { getConfiguredPhonePlaceholder } from '@/lib/utils/contact-phone'
 
 interface CheckoutStepDetailsProps {
   onSuccess: () => void
@@ -32,6 +34,7 @@ export function CheckoutStepDetails({ onSuccess }: CheckoutStepDetailsProps) {
   const { toast } = useToast()
   const setDetails = useCheckoutStore((s) => s.setDetails)
   const [loadingProfile, setLoadingProfile] = useState(true)
+  const phonePlaceholder = getConfiguredPhonePlaceholder()
 
   const form = useForm<CheckoutDetailsInput>({
     resolver: zodResolver(checkoutDetailsSchema),
@@ -134,7 +137,7 @@ export function CheckoutStepDetails({ onSuccess }: CheckoutStepDetailsProps) {
             <Input
               id="email"
               type="email"
-              dir="ltr"
+              dir={EMBED_LTR}
               {...form.register('email')}
               className="mt-1 h-12 text-base"
             />
@@ -147,8 +150,8 @@ export function CheckoutStepDetails({ onSuccess }: CheckoutStepDetailsProps) {
             <Input
               id="phone"
               type="tel"
-              dir="ltr"
-              placeholder="05XXXXXXXX"
+              dir={EMBED_LTR}
+              placeholder={phonePlaceholder}
               {...form.register('phone')}
               className="mt-1 h-12 text-base"
             />

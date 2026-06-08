@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -80,7 +81,7 @@ export function PriceLockNotice({
       <span>
         {t('checkout.priceLockNotice')}
         {secondsLeft != null && (
-          <span className="ms-1 font-mono" dir="ltr">
+          <span className="ms-1 font-mono" dir={EMBED_LTR}>
             ({timeText})
           </span>
         )}

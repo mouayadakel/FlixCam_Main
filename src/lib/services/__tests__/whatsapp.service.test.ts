@@ -1,12 +1,29 @@
 /**
- * Unit tests for whatsapp.service
+ * Unit tests for whatsapp.service (Twilio)
  */
+
+const mockMessagesCreate = jest.fn().mockResolvedValue({
+  sid: 'SM_wa_123',
+  status: 'sent',
+  errorMessage: null,
+  dateSent: new Date(),
+})
+jest.mock('twilio', () =>
+  jest.fn().mockImplementation(() => ({
+    messages: {
+      create: (...args: unknown[]) => mockMessagesCreate(...args),
+    },
+  }))
+)
 
 const mockMessageLogCreate = jest.fn().mockResolvedValue({})
 const mockMessageLogUpdateMany = jest.fn().mockResolvedValue({ count: 1 })
 
 jest.mock('@/lib/db/prisma', () => ({
   prisma: {
+    messagingChannelConfig: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     messageLog: {
       create: (...args: unknown[]) => mockMessageLogCreate(...args),
       updateMany: (...args: unknown[]) => mockMessageLogUpdateMany(...args),
@@ -14,44 +31,41 @@ jest.mock('@/lib/db/prisma', () => ({
   },
 }))
 
-const originalFetch = global.fetch
-
 describe('whatsapp.service', () => {
   beforeAll(() => {
-    process.env.WHATSAPP_ACCESS_TOKEN = 'token'
-    process.env.WHATSAPP_PHONE_NUMBER_ID = 'phone_id'
+    process.env.TWILIO_ACCOUNT_SID = 'AC'
+    process.env.TWILIO_AUTH_TOKEN = 'token'
+    process.env.TWILIO_WHATSAPP_PHONE_NUMBER = 'whatsapp:+14155238886'
   })
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockMessageLogCreate.mockResolvedValue({})
     mockMessageLogUpdateMany.mockResolvedValue({ count: 1 })
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ messages: [{ id: 'wamid.123' }] }),
-    }) as jest.Mock
-  })
-
-  afterAll(() => {
-    global.fetch = originalFetch
+    mockMessagesCreate.mockResolvedValue({
+      sid: 'SM_wa_123',
+      status: 'sent',
+      errorMessage: null,
+      dateSent: new Date(),
+    })
   })
 
   describe('normalizePhoneForWhatsApp', () => {
-    it('strips plus and normalizes to E.164 without plus', async () => {
+    it('formats E.164 with whatsapp prefix', async () => {
       const { normalizePhoneForWhatsApp } = await import('../whatsapp.service')
-      expect(normalizePhoneForWhatsApp('+966501234567')).toBe('966501234567')
+      expect(normalizePhoneForWhatsApp('+966501234567')).toBe('whatsapp:+966501234567')
     })
     it('adds 966 for local number', async () => {
       const { normalizePhoneForWhatsApp } = await import('../whatsapp.service')
-      expect(normalizePhoneForWhatsApp('501234567')).toBe('966501234567')
+      expect(normalizePhoneForWhatsApp('501234567')).toBe('whatsapp:+966501234567')
     })
     it('replaces leading 0 with 966', async () => {
       const { normalizePhoneForWhatsApp } = await import('../whatsapp.service')
-      expect(normalizePhoneForWhatsApp('0501234567')).toBe('966501234567')
+      expect(normalizePhoneForWhatsApp('0501234567')).toBe('whatsapp:+966501234567')
     })
     it('strips spaces and dashes', async () => {
       const { normalizePhoneForWhatsApp } = await import('../whatsapp.service')
-      expect(normalizePhoneForWhatsApp('050 123 4567')).toBe('966501234567')
+      expect(normalizePhoneForWhatsApp('050 123 4567')).toBe('whatsapp:+966501234567')
     })
   })
 
@@ -62,51 +76,26 @@ describe('whatsapp.service', () => {
       expect(isWhatsAppConfigured()).toBe(false)
       delete process.env.ENABLE_WHATSAPP
     })
-    it('returns true when token and phone id set', async () => {
+    it('returns true when Twilio env set', async () => {
       const { isWhatsAppConfigured } = await import('../whatsapp.service')
       expect(isWhatsAppConfigured()).toBe(true)
     })
   })
 
   describe('sendWhatsAppText', () => {
-    it('returns error when not configured', async () => {
-      const orig = process.env.WHATSAPP_ACCESS_TOKEN
-      delete process.env.WHATSAPP_ACCESS_TOKEN
-      jest.resetModules()
-      const { sendWhatsAppText } = await import('../whatsapp.service')
-      const result = await sendWhatsAppText('966501234567', 'Hi')
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('WhatsApp not configured')
-      process.env.WHATSAPP_ACCESS_TOKEN = orig
-    })
     it('sends text and logs when configured', async () => {
       const { sendWhatsAppText } = await import('../whatsapp.service')
       const result = await sendWhatsAppText('966501234567', 'Hello')
       expect(result.ok).toBe(true)
-      expect(result.messageId).toBe('wamid.123')
+      expect(result.messageId).toBe('SM_wa_123')
       expect(mockMessageLogCreate).toHaveBeenCalled()
     })
-    it('returns error when API returns non-ok response', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Unauthorized',
-        json: () => Promise.resolve({ error: { message: 'Invalid token' } }),
-      })
+    it('returns error when Twilio throws', async () => {
+      mockMessagesCreate.mockRejectedValueOnce(new Error('Invalid token'))
       const { sendWhatsAppText } = await import('../whatsapp.service')
       const result = await sendWhatsAppText('966501234567', 'Hi')
       expect(result.ok).toBe(false)
       expect(result.error).toBe('Invalid token')
-    })
-    it('falls back to statusText when API error has no message', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Internal Server Error',
-        json: () => Promise.resolve({}),
-      })
-      const { sendWhatsAppText } = await import('../whatsapp.service')
-      const result = await sendWhatsAppText('966501234567', 'Hi')
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('Internal Server Error')
     })
     it('skips log when logToMessageLog is false', async () => {
       const { sendWhatsAppText } = await import('../whatsapp.service')
@@ -124,7 +113,7 @@ describe('whatsapp.service', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             body: '[Template: hello_world]',
-            recipientPhone: '+966501234567',
+            recipientPhone: 'whatsapp:+966501234567',
           }),
         })
       )
@@ -135,53 +124,23 @@ describe('whatsapp.service', () => {
         { type: 'body', parameters: [{ type: 'text', text: 'Order #123' }] },
       ])
       expect(result.ok).toBe(true)
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockMessagesCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: expect.stringContaining('order_confirmation'),
+          body: 'Order #123',
         })
       )
-    })
-    it('returns error when not configured', async () => {
-      const origToken = process.env.WHATSAPP_ACCESS_TOKEN
-      const origPhone = process.env.WHATSAPP_PHONE_NUMBER_ID
-      delete process.env.WHATSAPP_ACCESS_TOKEN
-      delete process.env.WHATSAPP_PHONE_NUMBER_ID
-      jest.resetModules()
-      const { sendWhatsAppTemplate } = await import('../whatsapp.service')
-      const result = await sendWhatsAppTemplate('966501234567', 'hello', 'en')
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('WhatsApp not configured')
-      process.env.WHATSAPP_ACCESS_TOKEN = origToken
-      process.env.WHATSAPP_PHONE_NUMBER_ID = origPhone
     })
   })
 
   describe('sendWhatsAppInteractiveButtons', () => {
-    it('returns error when not configured', async () => {
-      const orig = process.env.WHATSAPP_ACCESS_TOKEN
-      delete process.env.WHATSAPP_ACCESS_TOKEN
-      jest.resetModules()
+    it('returns error when more than 3 buttons', async () => {
       const { sendWhatsAppInteractiveButtons } = await import('../whatsapp.service')
       const result = await sendWhatsAppInteractiveButtons('966501234567', 'Choose', [
         { id: '1', title: 'A' },
+        { id: '2', title: 'B' },
+        { id: '3', title: 'C' },
+        { id: '4', title: 'D' },
       ])
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('WhatsApp not configured')
-      process.env.WHATSAPP_ACCESS_TOKEN = orig
-    })
-    it('returns error when more than 3 buttons', async () => {
-      const { sendWhatsAppInteractiveButtons } = await import('../whatsapp.service')
-      const result = await sendWhatsAppInteractiveButtons(
-        '966501234567',
-        'Choose',
-        [
-          { id: '1', title: 'A' },
-          { id: '2', title: 'B' },
-          { id: '3', title: 'C' },
-          { id: '4', title: 'D' },
-        ]
-      )
       expect(result.ok).toBe(false)
       expect(result.error).toBe('Maximum 3 buttons allowed')
     })
@@ -192,30 +151,25 @@ describe('whatsapp.service', () => {
         { id: '2', title: 'Option B' },
       ])
       expect(result.ok).toBe(true)
+      expect(mockMessagesCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.stringContaining('Option A'),
+        })
+      )
     })
   })
 
   describe('sendWhatsAppDocument', () => {
-    it('returns error when not configured', async () => {
-      const orig = process.env.WHATSAPP_ACCESS_TOKEN
-      delete process.env.WHATSAPP_ACCESS_TOKEN
-      jest.resetModules()
-      const { sendWhatsAppDocument } = await import('../whatsapp.service')
-      const result = await sendWhatsAppDocument('966501234567', 'https://example.com/doc.pdf')
-      expect(result.ok).toBe(false)
-      expect(result.error).toBe('WhatsApp not configured')
-      process.env.WHATSAPP_ACCESS_TOKEN = orig
-    })
     it('sends document with caption', async () => {
       const { sendWhatsAppDocument } = await import('../whatsapp.service')
       const result = await sendWhatsAppDocument('966501234567', 'https://example.com/doc.pdf', {
         caption: 'Your invoice',
       })
       expect(result.ok).toBe(true)
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockMessagesCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: expect.stringContaining('document'),
+          body: 'Your invoice',
+          mediaUrl: ['https://example.com/doc.pdf'],
         })
       )
     })
@@ -225,12 +179,12 @@ describe('whatsapp.service', () => {
     it('updates message log by external id', async () => {
       const { MessageLogStatus } = await import('@prisma/client')
       const { updateMessageLogStatus } = await import('../whatsapp.service')
-      await updateMessageLogStatus('wamid.123', MessageLogStatus.DELIVERED, {
+      await updateMessageLogStatus('SM_wa_123', MessageLogStatus.DELIVERED, {
         deliveredAt: new Date(),
       })
       expect(mockMessageLogUpdateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { externalId: 'wamid.123' },
+          where: { externalId: 'SM_wa_123' },
           data: expect.objectContaining({ status: 'DELIVERED' }),
         })
       )

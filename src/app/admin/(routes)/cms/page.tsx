@@ -30,8 +30,12 @@ const CheckoutFormTab = dynamic(
   () => import('./checkout-form/page').then((m) => ({ default: m.default })),
   { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
 )
+const PackagesPageTab = dynamic(
+  () => import('./_components/packages-page-tab').then((m) => ({ default: m.CmsPackagesPageTab })),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full" /> }
+)
 
-const TAB_VALUES = ['faq', 'policies', 'featured', 'checkout-form'] as const
+const TAB_VALUES = ['faq', 'policies', 'featured', 'checkout-form', 'packages-page'] as const
 
 export default function CmsPage() {
   const searchParams = useSearchParams()
@@ -79,6 +83,7 @@ export default function CmsPage() {
           <TabsTrigger value="policies">السياسات</TabsTrigger>
           <TabsTrigger value="featured">المحتوى المميز</TabsTrigger>
           <TabsTrigger value="checkout-form">نموذج التسجيل</TabsTrigger>
+          <TabsTrigger value="packages-page">صفحة الباقات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="faq" className="mt-0">
@@ -92,6 +97,9 @@ export default function CmsPage() {
         </TabsContent>
         <TabsContent value="checkout-form" className="mt-0">
           <CheckoutFormTab />
+        </TabsContent>
+        <TabsContent value="packages-page" className="mt-0">
+          <PackagesPageTab />
         </TabsContent>
       </Tabs>
     </div>

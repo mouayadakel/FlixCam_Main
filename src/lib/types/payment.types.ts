@@ -15,6 +15,8 @@ export interface Payment {
   bookingId: string
   amount: number
   status: PaymentStatusType
+  gateway?: string | null
+  externalId?: string | null
   tapTransactionId?: string | null
   tapChargeId?: string | null
   refundAmount?: number | null
@@ -39,12 +41,16 @@ export interface Payment {
 export interface PaymentCreateInput {
   bookingId: string
   amount: number
+  gateway?: string
+  externalId?: string
   tapTransactionId?: string
   tapChargeId?: string
 }
 
 export interface PaymentUpdateInput {
   status?: PaymentStatusType
+  gateway?: string
+  externalId?: string
   tapTransactionId?: string
   tapChargeId?: string
 }

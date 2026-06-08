@@ -27,6 +27,7 @@ interface CategoryItem {
 interface FlatCategoryEntry {
   id: string
   name: string
+  slug: string
   isSubcategory: boolean
 }
 
@@ -63,10 +64,10 @@ export function EquipmentNavDropdown({
     const parents = categories.filter((c) => !c.parentId)
     const result: FlatCategoryEntry[] = []
     for (const parent of parents) {
-      result.push({ id: parent.id, name: parent.name, isSubcategory: false })
+      result.push({ id: parent.id, name: parent.name, slug: parent.slug, isSubcategory: false })
       const children = categories.filter((c) => c.parentId === parent.id)
       for (const child of children) {
-        result.push({ id: child.id, name: child.name, isSubcategory: true })
+        result.push({ id: child.id, name: child.name, slug: child.slug, isSubcategory: true })
       }
     }
     return result
@@ -216,7 +217,7 @@ export function EquipmentNavDropdown({
             {flatList.map((item) => (
               <li key={item.id}>
                 <Link
-                  href={`/equipment?categoryId=${item.id}`}
+                  href={`/equipment?categoryId=${item.slug}`}
                   onClick={onLinkClick}
                   role="menuitem"
                   className={cn(

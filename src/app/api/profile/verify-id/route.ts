@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
+import { VerificationStatus } from '@prisma/client'
 import { handleApiError } from '@/lib/utils/api-helpers'
 import { logger } from '@/lib/logger'
 
@@ -34,16 +35,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = verifyIdSubmitSchema.parse(body)
 
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        idDocumentType: parsed.documentType,
-        idDocumentNumber: parsed.documentNumber,
-        idDocumentUrl: parsed.documentUrl,
-        idVerificationStatus: 'PENDING_REVIEW',
-        idRejectionReason: null,
-      },
-    })
+    await prisma.$transaction([
+      prisma.verificationDocument.create({
+        data: {
+          userId: session.user.id,
+          documentType: parsed.documentType,
+          fileUrl: parsed.documentUrl,
+          filename: null,
+          mimeType: null,
+          status: 'pending_review',
+        },
+      }),
+      prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          verificationStatus: VerificationStatus.PENDING,
+        },
+      }),
+    ])
 
     logger.info('ID verification submitted', {
       userId: session.user.id,

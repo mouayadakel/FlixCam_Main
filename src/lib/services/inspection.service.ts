@@ -23,6 +23,7 @@ export interface InspectionInput {
   type: InspectionType
   checklist: InspectionChecklistItem[]
   notes?: string
+  images?: string[] // Cloudinary/S3 URLs
 }
 
 export class InspectionService {
@@ -84,32 +85,56 @@ export class InspectionService {
       throw new ValidationError('Checklist cannot be empty')
     }
 
-    // Create inspection
-    const inspection = await prisma.inspection.create({
-      data: {
-        bookingId: input.bookingId,
-        equipmentId: input.equipmentId,
-        type: input.type,
-        checklist: input.checklist as any,
-        notes: input.notes,
-        createdBy: userId,
-        updatedBy: userId,
-      },
-      include: {
-        booking: {
-          select: {
-            id: true,
-            bookingNumber: true,
+    // Create inspection in a transaction to include images
+    const inspection = await prisma.$transaction(async (tx) => {
+      const record = await tx.inspection.create({
+        data: {
+          bookingId: input.bookingId,
+          equipmentId: input.equipmentId,
+          type: input.type,
+          checklist: input.checklist as any,
+          notes: input.notes,
+          createdBy: userId,
+          updatedBy: userId,
+        },
+        include: {
+          booking: {
+            select: {
+              id: true,
+              bookingNumber: true,
+            },
+          },
+          equipment: {
+            select: {
+              id: true,
+              sku: true,
+              model: true,
+            },
           },
         },
-        equipment: {
-          select: {
-            id: true,
-            sku: true,
-            model: true,
-          },
-        },
-      },
+      })
+
+      // Create Media records if images provided
+      if (input.images && input.images.length > 0) {
+        await Promise.all(
+          input.images.map((url, index) =>
+            tx.media.create({
+              data: {
+                url,
+                type: 'IMAGE',
+                filename: `inspection_${record.id}_${index}`,
+                mimeType: 'image/jpeg',
+                inspectionId: record.id,
+                equipmentId: input.equipmentId,
+                createdBy: userId,
+                updatedBy: userId,
+              } as any,
+            })
+          )
+        )
+      }
+
+      return record
     })
 
     // Audit log
@@ -124,6 +149,7 @@ export class InspectionService {
         bookingId: input.bookingId,
         equipmentId: input.equipmentId,
         type: input.type,
+        hasImages: !!input.images?.length,
       },
     })
 

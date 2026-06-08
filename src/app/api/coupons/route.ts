@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: 'بيانات غير صالحة', details: error.errors },
+        { error: 'بيانات غير صالحة', details: error.issues || error.errors || [] },
         { status: 400 }
       )
     }
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: 'بيانات غير صالحة', details: error.errors },
+        { error: 'بيانات غير صالحة', details: error.issues || error.errors || [] },
         { status: 400 }
       )
     }

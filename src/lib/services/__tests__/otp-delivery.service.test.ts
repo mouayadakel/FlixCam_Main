@@ -35,12 +35,56 @@ describe('otp-delivery.service', () => {
     process.env = originalEnv
   })
 
-  it('uses WhatsApp first when available', async () => {
+  it('uses SMS first when dedicated SMS sender is configured', async () => {
     process.env = {
       ...process.env,
       NODE_ENV: 'production',
       ENABLE_WHATSAPP: 'true',
       ENABLE_SMS: 'true',
+      TWILIO_SMS_PHONE_NUMBER: '+15551234567',
+      OTP_TRY_WHATSAPP_FIRST: 'false',
+    }
+    mockSendSmsOtp.mockResolvedValue({ ok: true, messageId: 'SM456' })
+
+    const result = await deliverOtpCode({
+      phone: '966501234567',
+      code: '123456',
+    })
+
+    expect(result).toEqual({ ok: true, channel: 'sms' })
+    expect(mockSendSmsOtp).toHaveBeenCalled()
+    expect(mockSendWhatsAppOtp).not.toHaveBeenCalled()
+  })
+
+  it('uses WhatsApp first when no TWILIO_SMS_PHONE_NUMBER but WhatsApp sender env is set', async () => {
+    process.env = {
+      ...process.env,
+      NODE_ENV: 'production',
+      ENABLE_WHATSAPP: 'true',
+      ENABLE_SMS: 'true',
+      TWILIO_WHATSAPP_PHONE_NUMBER: 'whatsapp:+14155238886',
+    }
+    delete process.env.TWILIO_SMS_PHONE_NUMBER
+    delete process.env.OTP_TRY_WHATSAPP_FIRST
+    mockSendWhatsAppOtp.mockResolvedValue({ ok: true, messageId: 'WA123' })
+
+    const result = await deliverOtpCode({
+      phone: '966501234567',
+      code: '123456',
+    })
+
+    expect(result).toEqual({ ok: true, channel: 'whatsapp' })
+    expect(mockSendWhatsAppOtp).toHaveBeenCalled()
+    expect(mockSendSmsOtp).not.toHaveBeenCalled()
+  })
+
+  it('uses WhatsApp first when OTP_TRY_WHATSAPP_FIRST is true', async () => {
+    process.env = {
+      ...process.env,
+      NODE_ENV: 'production',
+      ENABLE_WHATSAPP: 'true',
+      ENABLE_SMS: 'true',
+      OTP_TRY_WHATSAPP_FIRST: 'true',
     }
     mockSendWhatsAppOtp.mockResolvedValue({ ok: true, messageId: 'WA123' })
 
@@ -53,12 +97,34 @@ describe('otp-delivery.service', () => {
     expect(mockSendSmsOtp).not.toHaveBeenCalled()
   })
 
-  it('falls back to SMS when WhatsApp fails', async () => {
+  it('falls back to WhatsApp when SMS fails (SMS-first order)', async () => {
     process.env = {
       ...process.env,
       NODE_ENV: 'production',
       ENABLE_WHATSAPP: 'true',
       ENABLE_SMS: 'true',
+      TWILIO_SMS_PHONE_NUMBER: '+15551234567',
+      OTP_TRY_WHATSAPP_FIRST: 'false',
+    }
+    mockSendSmsOtp.mockResolvedValue({ ok: false, error: 'SMS failed' })
+    mockSendWhatsAppOtp.mockResolvedValue({ ok: true, messageId: 'WA123' })
+
+    const result = await deliverOtpCode({
+      phone: '966501234567',
+      code: '123456',
+    })
+
+    expect(result).toEqual({ ok: true, channel: 'whatsapp' })
+    expect(mockSendWhatsAppOtp).toHaveBeenCalled()
+  })
+
+  it('falls back to SMS with custom body when WhatsApp fails (legacy order)', async () => {
+    process.env = {
+      ...process.env,
+      NODE_ENV: 'production',
+      ENABLE_WHATSAPP: 'true',
+      ENABLE_SMS: 'true',
+      OTP_TRY_WHATSAPP_FIRST: 'true',
     }
     mockSendWhatsAppOtp.mockResolvedValue({ ok: false, error: 'WA failed' })
     mockSendSmsText.mockResolvedValue({ ok: true, messageId: 'SM123' })
@@ -81,9 +147,11 @@ describe('otp-delivery.service', () => {
       NODE_ENV: 'development',
       ENABLE_WHATSAPP: 'true',
       ENABLE_SMS: 'true',
+      TWILIO_SMS_PHONE_NUMBER: '+15551234567',
+      OTP_TRY_WHATSAPP_FIRST: 'false',
     }
-    mockSendWhatsAppOtp.mockResolvedValue({ ok: false, error: 'WA failed' })
     mockSendSmsOtp.mockResolvedValue({ ok: false, error: 'SMS failed' })
+    mockSendWhatsAppOtp.mockResolvedValue({ ok: false, error: 'WA failed' })
 
     const result = await deliverOtpCode({
       phone: '966501234567',
@@ -93,7 +161,7 @@ describe('otp-delivery.service', () => {
     expect(result).toEqual({
       ok: true,
       channel: 'development',
-      error: 'SMS failed',
+      error: 'WA failed',
     })
   })
 
@@ -120,6 +188,32 @@ describe('otp-delivery.service', () => {
       error: 'From number invalid',
       userMessage: 'SMS not configured correctly. Please contact support.',
     })
+  })
+
+  it('returns combined guidance when SMS From is invalid and WhatsApp also fails', async () => {
+    process.env = {
+      ...process.env,
+      NODE_ENV: 'production',
+      ENABLE_WHATSAPP: 'true',
+      ENABLE_SMS: 'true',
+      TWILIO_SMS_PHONE_NUMBER: '+15551234567',
+      OTP_TRY_WHATSAPP_FIRST: 'false',
+    }
+    mockSendSmsOtp.mockResolvedValue({
+      ok: false,
+      error: 'From number invalid',
+      fromNumberInvalid: true,
+    })
+    mockSendWhatsAppOtp.mockResolvedValue({ ok: false, error: 'Template missing' })
+
+    const result = await deliverOtpCode({
+      phone: '966501234567',
+      code: '123456',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.userMessage).toContain('TWILIO_SMS_PHONE_NUMBER')
+    expect(result.error).toBe('Template missing')
   })
 
   it('skips WhatsApp OTP template for password reset when no dedicated template is configured and uses SMS', async () => {

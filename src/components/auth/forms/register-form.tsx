@@ -22,6 +22,8 @@ import {
 } from '@/lib/validators/auth.validator'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
+import { getConfiguredPhonePlaceholder } from '@/lib/utils/contact-phone'
 
 export interface RegisterFormProps {
   onOtpRequired: (data: { registrationToken: string; phone: string }) => void
@@ -35,6 +37,7 @@ export function RegisterForm({
   const { toast } = useToast()
   const { t, isRtl } = useLocale()
   const [isLoading, setIsLoading] = useState(false)
+  const phonePlaceholder = getConfiguredPhonePlaceholder()
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
@@ -152,7 +155,7 @@ export function RegisterForm({
             </p>
           )}
         </div>
-        <div className="space-y-2" dir="ltr">
+        <div className="space-y-2" dir={EMBED_LTR}>
           <Label htmlFor="register-phone" className="text-sm font-medium">
             {t('auth.phone')}
           </Label>
@@ -169,7 +172,7 @@ export function RegisterForm({
               defaultCountry="SA"
               countries={['SA']}
               addInternationalOption={false}
-              placeholder="05XXXXXXXX"
+              placeholder={phonePlaceholder}
               value={form.watch('phoneNumber')}
               onChange={(val) => form.setValue('phoneNumber', val as string)}
               disabled={isLoading}

@@ -9,17 +9,21 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { createBrandSchema } from '@/lib/validators/brand.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError } from '@/lib/errors'
+import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import { cacheDelete } from '@/lib/cache'
 
 /**
- * GET /api/brands - Get all brands (with product count and shape for admin UI)
+ * GET /api/brands - Get all brands (aligned with public homepage logic)
  */
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user) {
       throw new UnauthorizedError()
     }
+
+    const viewMode = request.nextUrl.searchParams.get('view') === 'raw' ? 'raw' : 'homepage'
 
     const brands = await prisma.brand.findMany({
       where: { deletedAt: null },
@@ -31,9 +35,10 @@ export async function GET(_request: NextRequest) {
         logo: true,
         createdAt: true,
         deletedAt: true,
-        _count: { select: { products: true } },
+        _count: { select: { equipment: true, products: true } },
       },
-      orderBy: { name: 'asc' },
+      orderBy:
+        viewMode === 'raw' ? { name: 'asc' } : { equipment: { _count: 'desc' } },
     })
 
     const shape = brands.map((b) => ({
@@ -44,7 +49,10 @@ export async function GET(_request: NextRequest) {
       logoUrl: b.logo ?? null,
       website: null,
       isActive: !b.deletedAt,
-      _count: { products: b._count.products },
+      _count: {
+        products: viewMode === 'raw' ? b._count.products : b._count.equipment,
+      },
+      equipmentCount: b._count.equipment,
       createdAt: b.createdAt.toISOString(),
     }))
 
@@ -60,8 +68,11 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+    if (!(await hasPermission(session.user.id, PERMISSIONS.BRAND_CREATE))) {
+      throw new ForbiddenError('You do not have permission to create brands')
     }
 
     const body = await request.json()
@@ -103,9 +114,11 @@ export async function POST(request: NextRequest) {
         description: true,
         logo: true,
         createdAt: true,
-        _count: { select: { products: true } },
+        _count: { select: { equipment: true, products: true } },
       },
     })
+
+    await cacheDelete('websiteContent', 'brands')
 
     return NextResponse.json({
       brand: {
@@ -113,7 +126,8 @@ export async function POST(request: NextRequest) {
         logoUrl: brand.logo,
         website: null,
         isActive: true,
-        _count: brand._count,
+        _count: { products: brand._count.equipment },
+        equipmentCount: brand._count.equipment,
         createdAt: brand.createdAt.toISOString(),
       },
     })

@@ -71,6 +71,7 @@ describe('TranslationService', () => {
     mockTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
         translation: {
+          deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
           updateMany: jest.fn().mockResolvedValue({}),
           create: jest.fn().mockResolvedValue({ id: 't_01', field: 'name', language: 'ar', value: 'اسم' }),
         },
@@ -103,10 +104,11 @@ describe('TranslationService', () => {
       expect(result.ar?.shortDescription).toBe('وصف قصير')
     })
 
-    it('returns empty locales when no translations', async () => {
+    it('returns all locales with empty strings when no translations', async () => {
       mockFindMany.mockResolvedValue([])
       const result = await TranslationService.getTranslationsByLocale('product', 'prod_01')
-      expect(Object.keys(result)).toHaveLength(0)
+      expect(Object.keys(result)).toEqual(['ar', 'en', 'zh'])
+      expect(result.en?.name).toBe('')
     })
   })
 

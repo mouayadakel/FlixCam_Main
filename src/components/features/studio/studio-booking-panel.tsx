@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
+import { trackMetaEvent, MetaPixelEvents } from '@/lib/analytics/meta-pixel'
 import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { StudioPublicData } from '@/lib/types/studio.types'
 import { trackStudioEvent } from '@/lib/analytics'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 
 interface StudioBookingPanelProps {
   studio: StudioPublicData
@@ -467,7 +469,7 @@ export function StudioBookingPanel({
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
             placeholder={t('studios.couponPlaceholder')}
             className="w-full rounded-xl border border-border-light/60 bg-surface-light py-2.5 pe-3 ps-9 text-sm placeholder:text-text-muted/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-            dir="ltr"
+            dir={EMBED_LTR}
           />
         </div>
       </div>
@@ -485,6 +487,14 @@ export function StudioBookingPanel({
               package_name: selectedPkg ? selectedPkg.nameAr || selectedPkg.name : 'hourly',
               addons_count: selectedAddOnIds.size,
               total,
+            })
+            import('@/lib/analytics/track-event').then(({ trackMarketingEvent }) => {
+              trackMarketingEvent({
+                eventType: 'Lead',
+                entityType: 'Studio',
+                entityId: studio.id,
+                value: total,
+              })
             })
           }
         }}

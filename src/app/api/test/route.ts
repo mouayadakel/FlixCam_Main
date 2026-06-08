@@ -27,25 +27,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Test database connection
-    const userCount = await prisma.user.count()
-    const equipmentCount = await prisma.equipment.count()
-    const categoryCount = await prisma.category.count()
+    // Lightweight connectivity probe only — do not expose row counts or
+    // internal error details on a public, unauthenticated endpoint.
+    await prisma.$queryRaw`SELECT 1`
 
     return NextResponse.json(
-      {
-        status: 'ok',
-        database: 'connected',
-        data: {
-          users: userCount,
-          equipment: equipmentCount,
-          categories: categoryCount,
-        },
-        rateLimit: {
-          remaining: rateLimit.remaining,
-          resetAt: rateLimit.resetAt,
-        },
-      },
+      { status: 'ok', database: 'connected' },
       {
         headers: {
           'X-RateLimit-Limit': '100',
@@ -54,23 +41,11 @@ export async function GET(request: Request) {
         },
       }
     )
-  } catch (error: any) {
-    // Handle database connection errors gracefully
-    const isConnectionError =
-      error.message?.includes("Can't reach database") ||
-      error.message?.includes('Environment variable not found: DATABASE_URL') ||
-      error.message?.includes('P1001')
-
+  } catch {
+    // Never echo the raw error to unauthenticated callers.
     return NextResponse.json(
-      {
-        status: isConnectionError ? 'database_not_configured' : 'error',
-        database: 'disconnected',
-        error: error.message,
-        message: isConnectionError
-          ? 'Database not configured. Please set up PostgreSQL and run migrations.'
-          : 'An error occurred',
-      },
-      { status: isConnectionError ? 503 : 500 }
+      { status: 'error', database: 'disconnected' },
+      { status: 503 }
     )
   }
 }

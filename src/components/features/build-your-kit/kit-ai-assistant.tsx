@@ -19,18 +19,10 @@ import { Button } from '@/components/ui/button'
 import { MessageCircle, Loader2, Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
 
 export function KitAiAssistant() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -154,7 +146,7 @@ export function KitAiAssistant() {
                   <p className="font-medium text-text-heading">{s.equipmentName}</p>
                   <p className="mb-2 text-sm text-text-muted">{s.reason}</p>
                   <p className="mb-2 text-sm text-text-muted">
-                    {formatSar(s.dailyPrice)}/day · Qty {s.quantity}
+                    {formatSar(s.dailyPrice, locale)}/day · Qty {s.quantity}
                   </p>
                   <Button
                     size="sm"

@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatSar } from '@/lib/utils/format.utils'
 
 interface PromissoryNoteDetail {
   id: string
@@ -59,15 +60,6 @@ const STATUS_KEYS: Record<string, string> = {
   CANCELLED: 'statusCancelled',
 }
 
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('ar-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
 function formatDate(d: string | null): string {
   if (!d) return '—'
   try {
@@ -85,7 +77,7 @@ function formatDate(d: string | null): string {
 
 export default function PromissoryNoteDetailPage() {
   const params = useParams()
-  const { t, dir } = useLocale()
+  const { t, dir, locale } = useLocale()
   const { toast } = useToast()
   const id = params?.id as string
   const [note, setNote] = useState<PromissoryNoteDetail | null>(null)
@@ -266,7 +258,7 @@ export default function PromissoryNoteDetailPage() {
             <CardDescription>{t('promissoryNote.admin.amountAndDetailsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p><span className="text-muted-foreground">{t('promissoryNote.admin.amount')}:</span> <span className="font-bold">{formatSar(note.amountSar)}</span></p>
+            <p><span className="text-muted-foreground">{t('promissoryNote.admin.amount')}:</span> <span className="font-bold">{formatSar(note.amountSar, locale)}</span></p>
             <p className="text-sm text-muted-foreground">{note.amountInWords}</p>
             <p><span className="text-muted-foreground">{t('promissoryNote.admin.invoiceNumber')}:</span> {note.invoiceNumber || '—'}</p>
             <p><span className="text-muted-foreground">{t('promissoryNote.admin.signedAtLabel')}:</span> {formatDate(note.signedAt)}</p>
@@ -295,7 +287,7 @@ export default function PromissoryNoteDetailPage() {
             <ul className="list-disc list-inside space-y-1">
               {note.equipmentItems.map((it, i) => (
                 <li key={i}>
-                  {it.name} × {it.quantity}: {formatSar(it.purchaseValue * it.quantity)}
+                  {it.name} × {it.quantity}: {formatSar(it.purchaseValue * it.quantity, locale)}
                 </li>
               ))}
             </ul>

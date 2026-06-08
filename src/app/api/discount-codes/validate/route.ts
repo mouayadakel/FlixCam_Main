@@ -1,11 +1,13 @@
 /**
  * @file route.ts
- * @description POST endpoint for validating discount/promo codes
+ * @description POST endpoint for validating promo codes (Coupon model)
  * @module app/api/discount-codes/validate
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { CouponStatus, CouponType } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 import { prisma } from '@/lib/db/prisma'
 import { logger } from '@/lib/logger'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
@@ -18,7 +20,7 @@ const validateCodeSchema = z.object({
 
 /**
  * POST /api/discount-codes/validate
- * Validates a discount code and returns the calculated discount amount.
+ * Validates a coupon code and returns the calculated discount amount.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -45,86 +47,62 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { code, bookingTotal, userId } = parsed.data
+    const { code, bookingTotal } = parsed.data
     const now = new Date()
 
-    const discountCode = await prisma.discountCode.findFirst({
+    const coupon = await prisma.coupon.findFirst({
       where: {
         code: code.toUpperCase(),
-        isActive: true,
         deletedAt: null,
+        status: CouponStatus.ACTIVE,
+        validFrom: { lte: now },
+        validUntil: { gte: now },
       },
     })
 
-    if (!discountCode) {
+    if (!coupon) {
       return NextResponse.json({ valid: false, error: 'Invalid discount code' })
     }
 
-    if (discountCode.validFrom > now) {
-      return NextResponse.json({ valid: false, error: 'This code is not yet active' })
-    }
-
-    if (discountCode.validUntil && discountCode.validUntil < now) {
-      return NextResponse.json({ valid: false, error: 'This code has expired' })
-    }
-
-    if (
-      discountCode.usageLimit !== null &&
-      discountCode.timesUsed >= discountCode.usageLimit
-    ) {
+    if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
       return NextResponse.json({ valid: false, error: 'This code has reached its usage limit' })
     }
 
-    if (userId && discountCode.usageLimitPerUser !== null) {
-      const userUsageCount = await prisma.discountCodeUsage.count({
-        where: {
-          discountCodeId: discountCode.id,
-          userId,
-        },
-      })
-
-      if (userUsageCount >= discountCode.usageLimitPerUser) {
-        return NextResponse.json({
-          valid: false,
-          error: 'You have already used this code the maximum number of times',
-        })
-      }
-    }
-
-    if (
-      discountCode.minOrderAmount !== null &&
-      bookingTotal < discountCode.minOrderAmount
-    ) {
+    if (coupon.minimumAmount !== null && new Decimal(bookingTotal).lt(coupon.minimumAmount)) {
+      const minStr = coupon.minimumAmount.toString()
       return NextResponse.json({
         valid: false,
-        error: `Minimum order amount of ${discountCode.minOrderAmount} SAR required`,
+        error: `Minimum order amount of ${minStr} SAR required`,
       })
     }
 
-    let discountAmount: number
-
-    if (discountCode.type === 'PERCENTAGE') {
-      const raw = (bookingTotal * discountCode.value) / 100
-      discountAmount =
-        discountCode.maxDiscountAmount !== null
-          ? Math.min(raw, discountCode.maxDiscountAmount)
-          : raw
+    let discountAmountDecimal: Decimal
+    if (coupon.type === CouponType.PERCENT) {
+      const pct = coupon.discountPercentage ?? new Decimal(0)
+      discountAmountDecimal = new Decimal(bookingTotal).times(pct).dividedBy(100)
     } else {
-      discountAmount = Math.min(discountCode.value, bookingTotal)
+      discountAmountDecimal = coupon.discountValue ?? new Decimal(0)
     }
 
-    discountAmount = Math.round(discountAmount * 100) / 100
+    if (coupon.maximumDiscount !== null && discountAmountDecimal.gt(coupon.maximumDiscount)) {
+      discountAmountDecimal = coupon.maximumDiscount
+    }
 
+    if (discountAmountDecimal.gt(bookingTotal)) {
+      discountAmountDecimal = new Decimal(bookingTotal)
+    }
+
+    const discountAmount = discountAmountDecimal.toDecimalPlaces(2).toNumber()
     const message =
-      discountCode.type === 'PERCENTAGE'
-        ? `${discountCode.value}% discount applied`
-        : `${discountCode.value} SAR discount applied`
+      coupon.type === CouponType.PERCENT
+        ? `${coupon.discountPercentage?.toString() ?? ''}% discount applied`
+        : `${coupon.discountValue?.toString() ?? ''} SAR discount applied`
 
     return NextResponse.json({
       valid: true,
       discountAmount,
       message,
-      codeId: discountCode.id,
+      codeId: coupon.id,
     })
   } catch (error) {
     logger.error('Discount code validation failed', { error })

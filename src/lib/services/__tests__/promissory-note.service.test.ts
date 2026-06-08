@@ -2,6 +2,13 @@
  * Unit tests for promissory-note.service
  */
 
+jest.mock('../deposit.service', () => ({
+  DepositService: {
+    ensureForBooking: jest.fn().mockResolvedValue(undefined),
+    markCollected: jest.fn().mockResolvedValue(undefined),
+  },
+}))
+
 import {
   getPromissoryNoteById,
   listPromissoryNotesForAdmin,

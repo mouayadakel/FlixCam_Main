@@ -21,6 +21,10 @@ export interface Client {
   verificationStatus?: string
   segmentId?: string | null
   segmentName?: string | null
+  isBlacklisted?: boolean
+  blacklistReason?: string | null
+  blacklistedAt?: Date | null
+  creditLimit?: number | null
   createdAt: Date
   updatedAt: Date
   // Statistics
@@ -43,6 +47,7 @@ export interface ClientUpdateInput {
   phone?: string
   status?: ClientStatus
   role?: UserRole
+  creditLimit?: number | null
 }
 
 export interface ClientFilterInput {

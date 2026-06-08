@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
-import { LOCALES, LOCALE_LABELS, type Locale } from '@/lib/i18n/locales'
+import { LAUNCH_LOCALES, LOCALE_LABELS, type LaunchLocale } from '@/lib/i18n/locales'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,28 +18,25 @@ import { Languages } from 'lucide-react'
 
 export function LanguageSwitcher() {
   const [mounted, setMounted] = useState(false)
-  const { locale, setLocale } = useLocale()
+  const { locale: storedLocale, setLocale } = useLocale()
+  const locale = storedLocale === 'ar' ? 'ar' : 'en'
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const handleSelect = (next: Locale) => {
+  const handleSelect = (next: LaunchLocale) => {
     setLocale(next)
   }
 
-  const ariaLabels: Record<Locale, string> = {
+  const ariaLabels: Record<LaunchLocale, string> = {
     ar: 'تبديل اللغة',
     en: 'Switch language',
-    zh: '切换语言',
-    fr: 'Changer de langue',
   }
 
-  const ariaCurrentLabels: Record<Locale, string> = {
+  const ariaCurrentLabels: Record<LaunchLocale, string> = {
     ar: 'اللغة الحالية',
     en: 'Current language',
-    zh: '当前语言',
-    fr: 'Langue actuelle',
   }
 
   // Render dropdown only after mount so Radix IDs match (avoids hydration mismatch)
@@ -75,7 +72,7 @@ export function LanguageSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[10rem]" role="menu">
-        {LOCALES.map((loc) => (
+        {LAUNCH_LOCALES.map((loc) => (
           <DropdownMenuItem
             key={loc}
             onClick={() => handleSelect(loc)}

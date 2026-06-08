@@ -3,6 +3,7 @@
  */
 
 import { create } from 'zustand'
+import { cartLinesToGa4Items } from '@/lib/analytics/ecommerce-data-layer'
 
 export interface CartItem {
   id: string
@@ -76,7 +77,7 @@ interface CartApiResponse {
 }
 
 async function apiGetCart(): Promise<CartApiResponse> {
-  const res = await fetch('/api/cart')
+  const res = await fetch('/api/cart', { cache: 'no-store' })
   if (!res.ok)
     throw new Error(
       await res
@@ -140,6 +141,30 @@ export const useCartStore = create<CartState>((set, get) => ({
         total: data.total ?? 0,
         items: data.items ?? [],
       })
+
+      // Tracking: AddToCart
+      let entityType: 'Equipment' | 'Studio' | undefined
+      if (body.itemType === 'EQUIPMENT') entityType = 'Equipment'
+      if (body.itemType === 'STUDIO') entityType = 'Studio'
+
+      const matched =
+        data.items?.find((row: CartItem) => {
+          if (body.equipmentId && row.equipmentId === body.equipmentId) return true
+          if (body.studioId && row.studioId === body.studioId) return true
+          if (body.kitId && row.kitId === body.kitId) return true
+          return false
+        }) ?? data.items?.[data.items.length - 1]
+
+      import('@/lib/analytics/track-event').then(({ trackMarketingEvent }) => {
+        trackMarketingEvent({
+          eventType: 'AddToCart',
+          entityType,
+          entityId: body.equipmentId || body.studioId || body.kitId,
+          value: matched?.subtotal ?? (body.dailyRate ? body.dailyRate * (body.quantity ?? 1) : 0),
+          itemName: matched?.equipmentName ?? matched?.studioName ?? matched?.kitName ?? undefined,
+          items: matched ? cartLinesToGa4Items([matched]) : undefined,
+        })
+      })
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed to add' })
       throw e
@@ -171,6 +196,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   removeItem: async (itemId) => {
     set({ error: null })
+    const removedSnapshot = get().items.find((row) => row.id === itemId)
     try {
       const res = await fetch(`/api/cart/${itemId}`, { method: 'DELETE' })
       const data = await res.json()
@@ -182,6 +208,25 @@ export const useCartStore = create<CartState>((set, get) => ({
         total: data.total ?? 0,
         items: data.items ?? [],
       })
+      if (removedSnapshot) {
+        let entityType: 'Equipment' | 'Studio' | undefined
+        if (removedSnapshot.itemType === 'EQUIPMENT') entityType = 'Equipment'
+        if (removedSnapshot.itemType === 'STUDIO') entityType = 'Studio'
+
+        import('@/lib/analytics/track-event').then(({ trackMarketingEvent }) => {
+          trackMarketingEvent({
+            eventType: 'RemoveFromCart',
+            entityType,
+            entityId:
+              removedSnapshot.equipmentId ??
+              removedSnapshot.studioId ??
+              removedSnapshot.kitId ??
+              removedSnapshot.packageId ??
+              removedSnapshot.id,
+            items: cartLinesToGa4Items([removedSnapshot]),
+          })
+        })
+      }
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed to remove' })
       throw e
@@ -201,7 +246,9 @@ export const useCartStore = create<CartState>((set, get) => ({
       set({
         couponCode: data.couponCode,
         discountAmount: data.discountAmount ?? 0,
+        subtotal: data.subtotal ?? 0,
         total: data.total ?? 0,
+        items: data.items ?? get().items,
       })
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Invalid coupon' })
@@ -216,9 +263,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       set({
-        couponCode: null,
-        discountAmount: 0,
+        couponCode: data.couponCode ?? null,
+        discountAmount: data.discountAmount ?? 0,
+        subtotal: data.subtotal ?? 0,
         total: data.total ?? get().subtotal,
+        items: data.items ?? get().items,
       })
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed' })

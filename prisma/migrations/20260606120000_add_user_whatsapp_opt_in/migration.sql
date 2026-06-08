@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "whatsappOptIn" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "User" ADD COLUMN "whatsappOptInAt" TIMESTAMP(3);

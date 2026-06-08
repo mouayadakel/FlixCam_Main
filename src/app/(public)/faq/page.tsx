@@ -6,13 +6,17 @@ import type { Metadata } from 'next'
 import { PublicContainer } from '@/components/public/public-container'
 import { FaqPageClient } from './faq-page-client'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
 
-export const metadata: Metadata = {
-  title: t('ar', 'seo.faqTitle'),
-  description: t('ar', 'seo.faqDescription'),
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getRequestLocale()
+  return {
+  title: t(locale, 'seo.faqTitle'),
+  description: t(locale, 'seo.faqDescription'),
   alternates: generateAlternatesMetadata('/faq'),
   keywords: ['أسئلة شائعة', 'تأجير معدات', 'FAQ', 'دعم العملاء', 'FlixCam'],
+  }
 }
 
 export default function FaqPage() {

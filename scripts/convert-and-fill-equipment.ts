@@ -25,7 +25,11 @@ import * as path from 'path'
 import XLSX from '@e965/xlsx'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBNoiZ-ky8diZxKMFShoTwR3IawAStPECQ'
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+if (!GEMINI_API_KEY) {
+  console.error('GEMINI_API_KEY is required. Set it in .env before running this script.')
+  process.exit(1)
+}
 const MODEL_NAME = 'gemini-2.0-flash'
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)

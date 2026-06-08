@@ -3,9 +3,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import type { UserStatus } from '@prisma/client'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { hasPermission } from '@/lib/auth/permissions'
+
+function parseUserStatus(value: string | null | undefined): UserStatus | undefined {
+  if (!value) return undefined
+  const up = value.toUpperCase()
+  if (up === 'ACTIVE' || up === 'LOCKED' || up === 'PENDING') {
+    return up as UserStatus
+  }
+  return undefined
+}
 
 export async function GET(request: NextRequest) {
   const session = await auth()
@@ -19,15 +29,17 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url)
   const search = searchParams.get('search')?.toLowerCase() || ''
-  const status = searchParams.get('status')?.toLowerCase()
+  const statusParam = searchParams.get('status')?.toLowerCase()
   const page = parseInt(searchParams.get('page') || '1', 10)
   const pageSize = parseInt(searchParams.get('pageSize') || '10', 10)
+
+  const statusFilter = parseUserStatus(statusParam)
 
   const technicians = await prisma.user.findMany({
     where: {
       deletedAt: null,
       role: 'TECHNICIAN',
-      ...(status && { status }),
+      ...(statusFilter && { status: statusFilter }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
@@ -43,11 +55,6 @@ export async function GET(request: NextRequest) {
       phone: true,
       status: true,
       _count: { select: { maintenance: true } },
-      maintenance: {
-        where: { status: { in: ['SCHEDULED', 'IN_PROGRESS'] }, deletedAt: null },
-        take: 1,
-        select: { id: true, maintenanceNumber: true },
-      },
     },
     orderBy: { name: 'asc' },
   })
@@ -58,9 +65,9 @@ export async function GET(request: NextRequest) {
     email: t.email ?? undefined,
     phone: t.phone ?? '—',
     specialty: '—',
-    status: t.status ?? 'active',
+    status: t.status ?? 'ACTIVE',
     jobs: t._count.maintenance,
-    currentAssignment: t.maintenance[0]?.maintenanceNumber ?? null,
+    currentAssignment: null as string | null,
   }))
 
   const total = data.length

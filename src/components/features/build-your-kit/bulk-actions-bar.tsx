@@ -11,25 +11,19 @@ import {
   getKitWizardSelectedCount,
 } from '@/lib/stores/kit-wizard.store'
 import { Button } from '@/components/ui/button'
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 export function BulkActionsBar() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
   const durationDays = useKitWizardStore((s) => s.durationDays)
   const setView = useKitWizardStore((s) => s.setView)
 
   const selectedCount = getKitWizardSelectedCount({ selectedEquipment })
   const totalAmount = getKitWizardTotalAmount({ selectedEquipment, durationDays })
-  const vatAmount = Math.round(totalAmount * 0.15 * 100) / 100
+  const vatAmount = Math.round(totalAmount * vatRate * 100) / 100
   const totalWithVat = totalAmount + vatAmount
   const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
 
@@ -39,7 +33,7 @@ export function BulkActionsBar() {
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border-light bg-surface-light p-4">
       <div>
         <p className="text-sm font-medium text-text-heading">
-          {totalUnits} {t('kit.items')} selected · {formatSar(totalWithVat)} ({durationDays}{' '}
+          {totalUnits} {t('kit.items')} selected · {formatSar(totalWithVat, locale)} ({durationDays}{' '}
           {t('kit.days')})
         </p>
         <p className="text-xs text-text-muted">

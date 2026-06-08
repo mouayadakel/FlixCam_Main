@@ -1,8 +1,15 @@
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { verifyCronSecret } from '@/lib/utils/cron-auth'
 import { prisma } from '@/lib/db/prisma'
 
-export async function GET() {
+export const dynamic = 'force-dynamic'
+
+
+export async function GET(request: NextRequest) {
   try {
+    if (!verifyCronSecret(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const expiredTime = new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
 
     console.log(`[Cron] Cleaning up expired PENDING users older than ${expiredTime.toISOString()}`)

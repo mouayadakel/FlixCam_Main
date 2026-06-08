@@ -35,6 +35,7 @@ interface Rule {
   trigger: string
   channels: string[]
   templateId: string | null
+  specificRecipients: string[] | null
   isActive: boolean
   triggerDelay: number
   delayMinutes: number
@@ -144,7 +145,7 @@ export default function AutomationRulesPage() {
           <div>
             <h1 className="text-2xl font-bold">قواعد الأتمتة</h1>
             <p className="text-muted-foreground">
-              عند حدوث حدث (مثل تأكيد الحجز) يتم إرسال رسالة عبر القنوات المختارة
+              عند حدوث حدث (مثل استلام الدفع) يتم إرسال الرسائل عبر القنوات والمستلمين الذين تحددهم هنا
             </p>
           </div>
         </div>
@@ -189,6 +190,11 @@ export default function AutomationRulesPage() {
                     ))}
                     <span className="text-xs text-muted-foreground">
                       تأخير {delayLabel(r)} · {RECIPIENT_TYPE_LABELS[r.recipientType]?.ar ?? r.recipientType}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {r.specificRecipients?.length
+                        ? `${r.specificRecipients.length} مستلم محدد`
+                        : 'كل المستلمين المطابقين'}
                     </span>
                     {r.sendWindow && (
                       <span className="text-xs text-muted-foreground">

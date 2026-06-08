@@ -13,15 +13,21 @@ import { SwipeActionItem } from '@/components/mobile/swipe-action'
 import { CartItemRow } from './cart-item-row'
 import { CartSummary } from './cart-summary'
 import { CouponField } from './coupon-field'
+import { formatSar } from '@/lib/utils/format.utils'
 
 interface CartListProps {
   onStartCheckout?: () => void
   /** When true, render summary sidebar. When false, only render items (for use in unified grid) */
   showSummary?: boolean
+  isCheckoutBusy?: boolean
 }
 
-export function CartList({ onStartCheckout, showSummary = true }: CartListProps) {
-  const { t } = useLocale()
+export function CartList({
+  onStartCheckout,
+  showSummary = true,
+  isCheckoutBusy = false,
+}: CartListProps) {
+  const { t, locale } = useLocale()
   const {
     items,
     subtotal,
@@ -123,7 +129,7 @@ export function CartList({ onStartCheckout, showSummary = true }: CartListProps)
           <div>
             <span className="text-sm text-text-muted">{t('cart.total')}</span>
             <p className="text-xl font-bold text-brand-primary">
-              {Math.round((subtotal - discountAmount) * 1.15 * 100) / 100} SAR
+              {formatSar(Math.round((subtotal - discountAmount) * 1.15 * 100) / 100, locale)}
             </p>
           </div>
           {onStartCheckout ? (
@@ -131,10 +137,10 @@ export function CartList({ onStartCheckout, showSummary = true }: CartListProps)
               type="button"
               size="lg"
               className="min-h-[44px] max-w-[200px] flex-1 rounded-xl bg-brand-primary font-semibold"
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isCheckoutBusy}
               onClick={onStartCheckout}
             >
-              {t('cart.checkout')}
+              {isCheckoutBusy ? t('common.loading') : t('cart.checkout')}
             </Button>
           ) : (
             <Button
@@ -170,6 +176,7 @@ export function CartList({ onStartCheckout, showSummary = true }: CartListProps)
             total={total}
             itemCount={items.length}
             onStartCheckout={onStartCheckout}
+            isCheckoutBusy={isCheckoutBusy}
           />
         </div>
       </div>
@@ -190,7 +197,7 @@ export function CartList({ onStartCheckout, showSummary = true }: CartListProps)
           <div>
             <span className="text-sm text-text-muted">{t('cart.total')}</span>
             <p className="text-xl font-bold text-brand-primary">
-              {Math.round((subtotal - discountAmount) * 1.15 * 100) / 100} SAR
+              {formatSar(Math.round((subtotal - discountAmount) * 1.15 * 100) / 100, locale)}
             </p>
           </div>
           {onStartCheckout ? (
@@ -198,10 +205,10 @@ export function CartList({ onStartCheckout, showSummary = true }: CartListProps)
               type="button"
               size="lg"
               className="min-h-[44px] max-w-[200px] flex-1 rounded-xl bg-brand-primary font-semibold"
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isCheckoutBusy}
               onClick={onStartCheckout}
             >
-              {t('cart.checkout')}
+              {isCheckoutBusy ? t('common.loading') : t('cart.checkout')}
             </Button>
           ) : (
             <Button

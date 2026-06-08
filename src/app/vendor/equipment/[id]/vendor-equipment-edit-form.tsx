@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import { ImageUpload } from '@/components/forms/image-upload'
+import { ImageGallery } from '@/components/forms/image-gallery'
 
 interface EquipmentWithRelations {
   id: string
@@ -25,6 +27,7 @@ interface EquipmentWithRelations {
   customFields: unknown
   category: { id: string; name: string }
   brand: { id: string; name: string } | null
+  media?: { url: string; type: string }[]
 }
 
 interface VendorEquipmentEditFormProps {
@@ -35,12 +38,21 @@ export function VendorEquipmentEditForm({ equipment }: VendorEquipmentEditFormPr
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  
   const customFields = (equipment.customFields as Record<string, unknown>) || {}
+
+  const existingFeatured = equipment.media?.find((m) => m.type === 'image')?.url || ''
+  const existingGallery = equipment.media?.filter((m, i) => m.type === 'image' && i > 0).map((m) => m.url) || []
+  
+  const [originalFeaturedImageUrl] = useState(existingFeatured)
+  const [originalGalleryImageUrls] = useState<string[]>(existingGallery)
+  
   const [form, setForm] = useState({
     model: equipment.model || '',
     condition: equipment.condition as 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR',
     boxContents: (customFields.boxContents as string) || '',
-    featuredImageUrl: '',
+    featuredImageUrl: existingFeatured,
+    galleryImageUrls: existingGallery,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +66,12 @@ export function VendorEquipmentEditForm({ equipment }: VendorEquipmentEditFormPr
           model: form.model || undefined,
           condition: form.condition,
           boxContents: form.boxContents || undefined,
-          featuredImageUrl: form.featuredImageUrl || undefined,
+          ...(form.featuredImageUrl !== originalFeaturedImageUrl && {
+            featuredImageUrl: form.featuredImageUrl || undefined,
+          }),
+          ...(JSON.stringify(form.galleryImageUrls) !== JSON.stringify(originalGalleryImageUrls) && {
+            galleryImageUrls: form.galleryImageUrls,
+          }),
         }),
       })
 
@@ -114,14 +131,21 @@ export function VendorEquipmentEditForm({ equipment }: VendorEquipmentEditFormPr
           rows={3}
         />
       </div>
-      <div>
-        <Label htmlFor="featuredImageUrl">رابط صورة جديدة</Label>
-        <Input
-          id="featuredImageUrl"
-          type="url"
+      <div className="space-y-6 rounded-lg border p-4 shadow-sm">
+        <ImageUpload
+          label="الصورة الرئيسية"
           value={form.featuredImageUrl}
-          onChange={(e) => setForm((p) => ({ ...p, featuredImageUrl: e.target.value }))}
-          placeholder="https://..."
+          onChange={(url: string | string[]) =>
+            setForm((p) => ({ ...p, featuredImageUrl: Array.isArray(url) ? url[0] : url }))
+          }
+          equipmentId={equipment.id}
+        />
+        
+        <ImageGallery
+          label="معرض الصور"
+          value={form.galleryImageUrls}
+          onChange={(urls) => setForm((p) => ({ ...p, galleryImageUrls: urls }))}
+          equipmentId={equipment.id}
         />
       </div>
       <Button type="submit" disabled={loading}>

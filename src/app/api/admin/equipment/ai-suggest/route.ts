@@ -19,7 +19,9 @@ import {
 import { generateMasterFill } from '@/lib/services/ai-content-generation.service'
 import { convertFlatToStructured, flattenStructuredSpecs } from '@/lib/utils/specifications.utils'
 import { isStructuredSpecifications } from '@/lib/types/specifications.types'
+import type { IconName } from '@/lib/types/specifications.types'
 import { resolveTemplateName } from '@/lib/ai/spec-templates'
+import { stringifySeoKeywords } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -135,12 +137,20 @@ export async function POST(request: NextRequest) {
         String(val).toLowerCase() !== 'n/a'
       )
     })
-    const mergedSpecs: Record<string, unknown> = { ...existingFlat }
+    const mergedSpecs: Record<string, string> = {}
+    // Copy existing, but skip corrupted values
+    for (const [k, v] of Object.entries(existingFlat)) {
+      const str = String(v ?? '').trim()
+      if (str && !str.includes('[object Object]') && str !== 'undefined' && str !== 'null') {
+        mergedSpecs[k] = str
+      }
+    }
+    // Merge AI inferred specs (only fill empty/missing keys)
     for (const s of specsToMerge) {
       const key = (s as { key: string }).key
       const value = (s as { value: string }).value
-      if (key && (mergedSpecs[key] == null || String(mergedSpecs[key]).trim() === '')) {
-        mergedSpecs[key] = value
+      if (key && (!mergedSpecs[key] || mergedSpecs[key].trim() === '')) {
+        mergedSpecs[key] = String(value ?? '').trim()
       }
     }
 
@@ -191,31 +201,26 @@ export async function POST(request: NextRequest) {
       categoryTemplateName
     )
 
-    // Auto-generate highlights from the top 4 most important specs
+    // Auto-generate highlights from the top 4 most important technical specs
     const topHighlightKeys: Record<string, string[]> = {
-      Cameras: ['sensor_size', 'max_video_resolution', 'codec', 'mount_type'],
-      Lenses: ['focal_length', 'max_aperture', 'mount_type', 'image_circle'],
-      Lighting: ['power_watts', 'color_temp_range', 'cri', 'output_lux_1m'],
-      Audio: ['type', 'polar_pattern', 'frequency_response', 'wireless_range_m'],
-      Monitors: ['screen_size', 'resolution', 'brightness_nits', 'color_space'],
-      Grip: ['max_load_kg', 'max_height_cm', 'head_type', 'material'],
-      Stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours', 'follow_modes'],
-      Drones: [
-        'max_flight_time_min',
-        'max_video_resolution',
-        'camera_sensor_size',
-        'max_transmission_range',
-      ],
-      Power: ['capacity_wh', 'voltage', 'mount_type', 'max_output_watts'],
-      Recorders: ['max_resolution', 'codec', 'media_type', 'screen_size'],
-      Wireless: ['max_range_m', 'latency_ms', 'max_resolution', 'frequency_band'],
+      Cameras: ['sensor_size', 'max_video_resolution', 'dynamic_range', 'codec', 'mount_type'],
+      Lenses: ['focal_length', 'max_aperture', 'mount_type', 'image_circle', 'elements_groups'],
+      Lighting: ['power_watts', 'color_temp_range', 'cri', 'output_lux_1m', 'beam_angle'],
+      Audio: ['type', 'polar_pattern', 'frequency_response', 'max_spl_db', 'wireless_range_m'],
+      Monitors: ['screen_size', 'resolution', 'brightness_nits', 'color_space', 'panel_type'],
+      Grip: ['max_load_kg', 'max_height_cm', 'head_type', 'material', 'leg_sections'],
+      Stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours', 'follow_modes', 'weight_kg'],
+      Drones: ['max_flight_time_min', 'max_video_resolution', 'camera_sensor_size', 'max_transmission_range', 'max_speed_kmh'],
+      Power: ['capacity_wh', 'voltage', 'mount_type', 'max_output_watts', 'd_tap_outputs'],
+      Recorders: ['max_resolution', 'codec', 'media_type', 'screen_size', 'sdi_input'],
+      Wireless: ['max_range_m', 'latency_ms', 'max_resolution', 'frequency_band', 'antenna_type'],
     }
     const highlightKeys =
       topHighlightKeys[categoryTemplateName] ?? Object.keys(mergedSpecs).slice(0, 4)
     const autoHighlights = highlightKeys
       .filter((k) => mergedSpecs[k] != null && String(mergedSpecs[k]).trim() !== '')
       .map((k) => ({
-        icon: 'star',
+        icon: 'star' as IconName,
         label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         value: String(mergedSpecs[k]),
       }))
@@ -223,15 +228,29 @@ export async function POST(request: NextRequest) {
       structuredSpecs.highlights = autoHighlights.slice(0, 4)
     }
 
-    // Auto-generate quick spec pills from first 6 specs
-    const quickSpecKeys = Object.keys(mergedSpecs)
+    // Auto-generate quick spec pills using category-specific keys
+    const quickSpecCategoryKeys: Record<string, string[]> = {
+      Cameras: ['sensor_size', 'max_video_resolution', 'max_framerate', 'codec', 'mount_type', 'weight_kg'],
+      Lenses: ['focal_length', 'max_aperture', 'mount_type', 'image_circle', 'minimum_focus_distance', 'weight_kg'],
+      Lighting: ['power_watts', 'color_temp_range', 'cri', 'output_lux_1m', 'beam_angle', 'weight_kg'],
+      Audio: ['type', 'polar_pattern', 'frequency_response', 'max_spl_db', 'connector_type', 'wireless_range_m'],
+      Monitors: ['screen_size', 'resolution', 'brightness_nits', 'color_space', 'hdmi_input', 'battery_type'],
+      Grip: ['max_load_kg', 'max_height_cm', 'head_type', 'leg_sections', 'weight_kg', 'material'],
+      Stabilizers: ['max_payload_kg', 'axis_count', 'battery_life_hours', 'follow_modes', 'weight_kg', 'charging_time'],
+      Drones: ['max_flight_time_min', 'max_video_resolution', 'camera_sensor_size', 'max_speed_kmh', 'max_transmission_range', 'weight_kg'],
+      Power: ['capacity_wh', 'voltage', 'mount_type', 'max_output_watts', 'd_tap_outputs', 'weight_kg'],
+      Recorders: ['max_resolution', 'codec', 'media_type', 'screen_size', 'sdi_input', 'hdmi_input'],
+      Wireless: ['max_range_m', 'latency_ms', 'max_resolution', 'frequency_band', 'hdmi_input', 'battery_life_hours'],
+    }
+    const qsKeys = quickSpecCategoryKeys[categoryTemplateName] ?? Object.keys(mergedSpecs).slice(0, 6)
+    structuredSpecs.quickSpecs = qsKeys
       .filter((k) => mergedSpecs[k] != null && String(mergedSpecs[k]).trim() !== '')
       .slice(0, 6)
-    structuredSpecs.quickSpecs = quickSpecKeys.map((k) => ({
-      icon: 'star',
-      label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      value: String(mergedSpecs[k]),
-    }))
+      .map((k) => ({
+        icon: 'star' as IconName,
+        label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        value: String(mergedSpecs[k]),
+      }))
 
     return NextResponse.json({
       specs: mergedSpecs,
@@ -242,7 +261,7 @@ export async function POST(request: NextRequest) {
         ? {
             metaTitle: masterResult.seo_title_en,
             metaDescription: masterResult.seo_desc_en,
-            metaKeywords: masterResult.seo_keywords_en,
+            metaKeywords: stringifySeoKeywords(masterResult.seo_keywords_en),
           }
         : { metaTitle: name, metaDescription: existingShortDescription ?? name, metaKeywords: '' },
       boxContents: (() => {
@@ -268,7 +287,7 @@ export async function POST(request: NextRequest) {
               longDescription: masterResult.long_desc_en || '',
               seoTitle: masterResult.seo_title_en || '',
               seoDescription: masterResult.seo_desc_en || '',
-              seoKeywords: masterResult.seo_keywords_en || '',
+              seoKeywords: stringifySeoKeywords(masterResult.seo_keywords_en),
             },
             ar: {
               name: masterResult.name_ar || '',
@@ -276,7 +295,7 @@ export async function POST(request: NextRequest) {
               longDescription: masterResult.long_desc_ar || '',
               seoTitle: masterResult.seo_title_ar || '',
               seoDescription: masterResult.seo_desc_ar || '',
-              seoKeywords: masterResult.seo_keywords_ar || '',
+              seoKeywords: stringifySeoKeywords(masterResult.seo_keywords_ar),
             },
             zh: {
               name: masterResult.name_zh || '',
@@ -284,7 +303,7 @@ export async function POST(request: NextRequest) {
               longDescription: masterResult.long_desc_zh || '',
               seoTitle: masterResult.seo_title_zh || '',
               seoDescription: masterResult.seo_desc_zh || '',
-              seoKeywords: masterResult.seo_keywords_zh || '',
+              seoKeywords: stringifySeoKeywords(masterResult.seo_keywords_zh),
             },
           }
         : undefined,

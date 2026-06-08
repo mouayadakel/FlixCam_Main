@@ -130,6 +130,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const { EventBus } = await import('@/lib/events/event-bus')
+    await EventBus.emit('review.submitted', {
+      reviewId: review.id,
+      userId: review.userId,
+      bookingId: review.bookingId,
+    })
+
     const b = review.booking!
     return NextResponse.json({
       review: {

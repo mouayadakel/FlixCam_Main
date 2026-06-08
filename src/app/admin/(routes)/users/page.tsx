@@ -7,6 +7,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { TableFilters } from '@/components/tables/table-filters'
 import { TablePagination } from '@/components/tables/table-pagination'
 import {
@@ -276,7 +277,7 @@ export default function UsersPage() {
                 const isDeactivated = !!user.deletedAt
                 const statusInfo = isDeactivated
                   ? USER_STATUS_LABELS.DEACTIVATED
-                  : (USER_STATUS_LABELS[user.status ?? 'ACTIVE'] ?? USER_STATUS_LABELS.ACTIVE)
+                  : (USER_STATUS_LABELS[(user.status as keyof typeof USER_STATUS_LABELS) ?? 'ACTIVE'] ?? USER_STATUS_LABELS.ACTIVE)
                 const isCurrentUser = user.id === currentUserId
                 return (
                   <TableRow key={user.id}>
@@ -297,7 +298,7 @@ export default function UsersPage() {
                             <span className="sr-only">إجراءات</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" dir="rtl">
+                        <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/users/${user.id}`}>
                               <Eye className="ms-2 h-4 w-4" />
@@ -445,7 +446,7 @@ export default function UsersPage() {
               onChange={(e) => setHardDeleteConfirmPhrase(e.target.value)}
               placeholder="حذف أو DELETE"
               className="max-w-xs"
-              dir="ltr"
+              dir={EMBED_LTR}
             />
           </div>
           <AlertDialogFooter>

@@ -18,7 +18,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
 interface TranslationSectionProps {
-  locale: 'ar' | 'en' | 'zh'
+  locale: 'ar' | 'en' | 'zh' | 'fr'
   value: {
     name?: string
     description?: string
@@ -29,10 +29,11 @@ interface TranslationSectionProps {
   className?: string
 }
 
-const localeLabels: Record<'ar' | 'en' | 'zh', string> = {
+const localeLabels: Record<'ar' | 'en' | 'zh' | 'fr', string> = {
   ar: 'العربية',
   en: 'English',
   zh: '中文',
+  fr: 'Français',
 }
 
 export function TranslationSection({

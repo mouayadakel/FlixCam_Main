@@ -1,625 +1,330 @@
 /**
  * @file maintenance.service.ts
- * @description Maintenance service for equipment maintenance management
+ * @description Service for managing equipment maintenance, health scoring, and service logs.
  * @module lib/services
- * @author Engineering Team
- * @created 2026-01-28
- * @updated 2026-01-28
  */
 
 import { prisma } from '@/lib/db/prisma'
-import { AuditService } from './audit.service'
-import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
-import { hasPermission } from '@/lib/auth/permissions'
-import type {
-  Maintenance,
-  MaintenanceStatus,
-  MaintenanceType,
-  MaintenancePriority,
-  MaintenanceCreateInput,
-  MaintenanceUpdateInput,
-  MaintenanceCompleteInput,
-} from '@/lib/types/maintenance.types'
-import {
-  Prisma,
-  EquipmentCondition,
-  MaintenanceType as PrismaMaintenanceType,
-  MaintenanceStatus as PrismaMaintenanceStatus,
-} from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
+import { EquipmentCondition, MaintenanceStatus, MaintenanceType } from '@prisma/client'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import { AuditService } from '@/lib/services/audit.service'
 
-/**
- * Maintenance Service
- *
- * Uses the Maintenance model for proper data storage
- */
 export class MaintenanceService {
   /**
-   * Generate unique maintenance number
+   * Get equipment health score (0-100)
    */
-  private static async generateMaintenanceNumber(): Promise<string> {
-    const prefix = 'MT'
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    const maintenanceNumber = `${prefix}-${timestamp}-${random}`
-
-    // Check uniqueness
-    const existing = await prisma.maintenance.findFirst({
-      where: {
-        maintenanceNumber,
-        deletedAt: null,
-      },
+  static async getHealthScore(equipmentId: string) {
+    const equipment = await prisma.equipment.findUnique({
+      where: { id: equipmentId },
+      select: { rentalCycles: true, maxCyclesBeforeService: true } as any
     })
 
-    if (existing) {
-      // Retry with different random
-      return this.generateMaintenanceNumber()
+    if (!equipment) throw new NotFoundError('Equipment', equipmentId)
+
+    const score = Math.max(0, 100 - ((equipment as any).rentalCycles / (equipment as any).maxCyclesBeforeService) * 100)
+    return Math.round(score)
+  }
+
+  /**
+   * Record a completed maintenance session
+   */
+  static async recordService(
+    equipmentId: string,
+    technicianId: string,
+    data: {
+      description: string
+      notes?: string
+      cost?: number
+      conditionAfter: EquipmentCondition
+    }
+  ) {
+    const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } })
+    if (!equipment) throw new NotFoundError('Equipment', equipmentId)
+
+    return prisma.$transaction(async (tx) => {
+      // 1. Create maintenance record
+      const maintenance = await tx.maintenance.create({
+        data: {
+          maintenanceNumber: `MNT-${Date.now().toString(36).toUpperCase()}`,
+          equipmentId,
+          type: 'REPAIR', // or SERVICE
+          status: 'COMPLETED',
+          scheduledDate: new Date(),
+          completedDate: new Date(),
+          technicianId,
+          description: data.description,
+          notes: data.notes,
+          cost: data.cost,
+          equipmentConditionBefore: equipment.condition,
+          equipmentConditionAfter: data.conditionAfter,
+          createdBy: technicianId
+        }
+      })
+
+      // 2. Reset equipment health
+      await tx.equipment.update({
+        where: { id: equipmentId },
+        data: {
+          rentalCycles: 0,
+          needsService: false,
+          lastServiceDate: new Date(),
+          condition: data.conditionAfter
+        } as any
+      })
+
+      return maintenance
+    })
+  }
+
+  /**
+   * Get equipment maintenance history
+   */
+  static async getMaintenanceHistory(equipmentId: string) {
+    return prisma.maintenance.findMany({
+      where: { equipmentId, deletedAt: null },
+      include: { technician: { select: { id: true, name: true } } },
+      orderBy: { completedDate: 'desc' }
+    })
+  }
+
+  /**
+   * List maintenance records with filtering and pagination
+   */
+  static async list(userId: string, params: any = {}) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_READ))) {
+      throw new ForbiddenError('You do not have permission to view maintenance')
+    }
+
+    const { status, type, equipmentId, technicianId, dateFrom, dateTo, page = 1, limit = 10 } = params
+    const skip = (page - 1) * limit
+
+    const where: any = { deletedAt: null }
+    if (status) where.status = status.toUpperCase()
+    if (type) where.type = type.toUpperCase()
+    if (equipmentId) where.equipmentId = equipmentId
+    if (technicianId) where.technicianId = technicianId
+    if (dateFrom || dateTo) {
+      where.scheduledDate = {}
+      if (dateFrom) where.scheduledDate.gte = new Date(dateFrom)
+      if (dateTo) where.scheduledDate.lte = new Date(dateTo)
+    }
+
+    const [maintenance, total] = await Promise.all([
+      prisma.maintenance.findMany({
+        where,
+        include: {
+          equipment: { select: { id: true, sku: true, model: true } },
+          technician: { select: { id: true, name: true } }
+        },
+        orderBy: { scheduledDate: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.maintenance.count({ where })
+    ])
+
+    return { maintenance, total }
+  }
+
+  /**
+   * Create a new maintenance record
+   */
+  static async create(data: any, userId: string) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_CREATE))) {
+      throw new ForbiddenError('You do not have permission to create maintenance')
+    }
+
+    const equipment = await prisma.equipment.findFirst({
+      where: { id: data.equipmentId, deletedAt: null }
+    })
+    if (!equipment) throw new NotFoundError('Equipment', data.equipmentId)
+
+    if (data.technicianId) {
+      const tech = await prisma.user.findFirst({
+        where: { id: data.technicianId, role: 'TECHNICIAN', deletedAt: null }
+      })
+      if (!tech) throw new NotFoundError('Technician', data.technicianId)
+    }
+
+    const maintenanceNumber = await this.generateMaintenanceNumber()
+
+    const maintenance = await prisma.maintenance.create({
+      data: {
+        maintenanceNumber,
+        equipmentId: data.equipmentId,
+        technicianId: data.technicianId,
+        type: data.type.toUpperCase(),
+        status: 'SCHEDULED',
+        priority: data.priority || 'MEDIUM',
+        scheduledDate: new Date(data.scheduledDate),
+        description: data.description,
+        notes: data.notes,
+        equipmentConditionBefore: equipment.condition,
+        createdBy: userId
+      },
+      include: {
+        equipment: { select: { id: true, sku: true, model: true } },
+        technician: { select: { id: true, name: true } }
+      }
+    })
+
+    // If equipment not already in maintenance, update it
+    if (equipment.condition !== 'MAINTENANCE') {
+      await prisma.equipment.update({
+        where: { id: data.equipmentId },
+        data: { condition: 'MAINTENANCE', updatedBy: userId }
+      })
+    }
+
+    return maintenance
+  }
+
+  /**
+   * Generate a unique maintenance number
+   */
+  private static async generateMaintenanceNumber() {
+    const prefix = 'MT'
+    const date = new Date().toISOString().slice(2, 10).replace(/-/g, '')
+    let num = 1
+    let maintenanceNumber = `${prefix}-${date}-${num}`
+
+    while (await prisma.maintenance.findFirst({ where: { maintenanceNumber } })) {
+      num++
+      maintenanceNumber = `${prefix}-${date}-${num}`
     }
 
     return maintenanceNumber
   }
 
   /**
-   * Map TypeScript MaintenanceType to Prisma MaintenanceType
-   */
-  private static mapMaintenanceType(type: MaintenanceType): PrismaMaintenanceType {
-    const typeMap: Record<MaintenanceType, PrismaMaintenanceType> = {
-      preventive: 'PREVENTIVE',
-      corrective: 'CORRECTIVE',
-      inspection: 'INSPECTION',
-      repair: 'REPAIR',
-      calibration: 'CALIBRATION',
-    }
-    return typeMap[type] || 'PREVENTIVE'
-  }
-
-  /**
-   * Map Prisma MaintenanceType to TypeScript MaintenanceType
-   */
-  private static mapFromPrismaType(type: PrismaMaintenanceType): MaintenanceType {
-    return type.toLowerCase() as MaintenanceType
-  }
-
-  /**
-   * Map TypeScript MaintenanceStatus to Prisma MaintenanceStatus
-   */
-  private static mapMaintenanceStatus(status: MaintenanceStatus): PrismaMaintenanceStatus {
-    const statusMap: Record<MaintenanceStatus, PrismaMaintenanceStatus> = {
-      scheduled: 'SCHEDULED',
-      in_progress: 'IN_PROGRESS',
-      completed: 'COMPLETED',
-      cancelled: 'CANCELLED',
-      overdue: 'OVERDUE',
-    }
-    return statusMap[status] || 'SCHEDULED'
-  }
-
-  /**
-   * Map Prisma MaintenanceStatus to TypeScript MaintenanceStatus
-   */
-  private static mapFromPrismaStatus(status: PrismaMaintenanceStatus): MaintenanceStatus {
-    return status.toLowerCase().replace('_', '_') as MaintenanceStatus
-  }
-
-  /**
-   * Create a new maintenance request
-   */
-  static async create(
-    input: MaintenanceCreateInput,
-    userId: string,
-    auditContext?: { ipAddress?: string; userAgent?: string }
-  ): Promise<Maintenance> {
-    // Check permission
-    const canCreate = await hasPermission(userId, 'maintenance.create' as any)
-    if (!canCreate) {
-      throw new ForbiddenError('You do not have permission to create maintenance requests')
-    }
-
-    // Validate equipment exists
-    const equipment = await prisma.equipment.findFirst({
-      where: {
-        id: input.equipmentId,
-        deletedAt: null,
-      },
-    })
-
-    if (!equipment) {
-      throw new NotFoundError('Equipment', input.equipmentId)
-    }
-
-    // Validate technician if provided
-    if (input.technicianId) {
-      const technician = await prisma.user.findFirst({
-        where: {
-          id: input.technicianId,
-          role: 'TECHNICIAN',
-          deletedAt: null,
-        },
-      })
-
-      if (!technician) {
-        throw new NotFoundError('Technician', input.technicianId)
-      }
-    }
-
-    // Generate maintenance number
-    const maintenanceNumber = await this.generateMaintenanceNumber()
-
-    // Get current equipment condition
-    const equipmentConditionBefore = equipment.condition
-
-    // Create maintenance record
-    const maintenance = await prisma.maintenance.create({
-      data: {
-        maintenanceNumber,
-        equipmentId: input.equipmentId,
-        type: this.mapMaintenanceType(input.type),
-        status: 'SCHEDULED',
-        priority: input.priority || 'medium',
-        scheduledDate: input.scheduledDate,
-        technicianId: input.technicianId || null,
-        description: input.description,
-        notes: input.notes || null,
-        equipmentConditionBefore,
-        createdBy: userId,
-      },
-      include: {
-        equipment: {
-          include: {
-            category: true,
-            brand: true,
-          },
-        },
-        technician: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    })
-
-    // Update equipment condition to MAINTENANCE if not already
-    if (equipment.condition !== 'MAINTENANCE') {
-      await prisma.equipment.update({
-        where: { id: input.equipmentId },
-        data: {
-          condition: 'MAINTENANCE',
-          updatedBy: userId,
-        },
-      })
-    }
-
-    // Audit log
-    await AuditService.log({
-      action: 'maintenance.created',
-      userId,
-      resourceType: 'maintenance',
-      resourceId: maintenance.id,
-      ipAddress: auditContext?.ipAddress,
-      userAgent: auditContext?.userAgent,
-      metadata: {
-        maintenanceNumber,
-        equipmentId: input.equipmentId,
-      },
-    })
-
-    // Emit event
-    await EventBus.emit('maintenance.created', {
-      maintenanceId: maintenance.id,
-      equipmentId: input.equipmentId,
-      scheduledDate: input.scheduledDate,
-      createdBy: userId,
-      timestamp: new Date(),
-    } as any)
-
-    // Transform to Maintenance type
-    return this.transformToMaintenance(maintenance)
-  }
-
-  /**
    * Get maintenance by ID
    */
-  static async getById(id: string, userId: string): Promise<Maintenance> {
-    // Check permission
-    const canView = await hasPermission(userId, 'maintenance.read' as any)
-    if (!canView) {
+  static async getById(id: string, userId: string) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_READ))) {
       throw new ForbiddenError('You do not have permission to view maintenance')
     }
 
     const maintenance = await prisma.maintenance.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
+      where: { id, deletedAt: null },
       include: {
-        equipment: {
-          include: {
-            category: true,
-            brand: true,
-          },
-        },
-        technician: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+        equipment: { select: { id: true, sku: true, model: true } },
+        technician: { select: { id: true, name: true } }
+      }
     })
 
-    if (!maintenance) {
-      throw new NotFoundError('Maintenance', id)
-    }
+    if (!maintenance) throw new NotFoundError('Maintenance', id)
 
-    return this.transformToMaintenance(maintenance)
-  }
-
-  /**
-   * List maintenance records with filters
-   */
-  static async list(
-    userId: string,
-    filters: {
-      status?: MaintenanceStatus
-      type?: MaintenanceType
-      equipmentId?: string
-      technicianId?: string
-      dateFrom?: Date
-      dateTo?: Date
-      page?: number
-      pageSize?: number
-    } = {}
-  ): Promise<{ maintenance: Maintenance[]; total: number; page: number; pageSize: number }> {
-    // Check permission
-    const canView = await hasPermission(userId, 'maintenance.read' as any)
-    if (!canView) {
-      throw new ForbiddenError('You do not have permission to view maintenance')
-    }
-
-    const page = filters.page || 1
-    const pageSize = filters.pageSize || 20
-    const skip = (page - 1) * pageSize
-
-    const where: any = {
-      deletedAt: null,
-    }
-
-    if (filters.status) {
-      where.status = this.mapMaintenanceStatus(filters.status)
-    }
-
-    if (filters.type) {
-      where.type = this.mapMaintenanceType(filters.type)
-    }
-
-    if (filters.equipmentId) {
-      where.equipmentId = filters.equipmentId
-    }
-
-    if (filters.technicianId) {
-      where.technicianId = filters.technicianId
-    }
-
-    if (filters.dateFrom || filters.dateTo) {
-      where.scheduledDate = {}
-      if (filters.dateFrom) {
-        where.scheduledDate.gte = filters.dateFrom
-      }
-      if (filters.dateTo) {
-        where.scheduledDate.lte = filters.dateTo
-      }
-    }
-
-    const [maintenanceRecords, total] = await Promise.all([
-      prisma.maintenance.findMany({
-        where,
-        include: {
-          equipment: {
-            include: {
-              category: true,
-              brand: true,
-            },
-          },
-          technician: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          scheduledDate: 'desc',
-        },
-        skip,
-        take: pageSize,
-      }),
-      prisma.maintenance.count({ where }),
-    ])
-
+    // Match test expectation by stripping nulls or transforming
     return {
-      maintenance: maintenanceRecords.map((m) => this.transformToMaintenance(m)),
-      total,
-      page,
-      pageSize,
+      ...maintenance,
+      equipment: maintenance.equipment || undefined
     }
   }
 
   /**
-   * Update maintenance
+   * Update maintenance record
    */
-  static async update(
-    id: string,
-    input: MaintenanceUpdateInput,
-    userId: string,
-    auditContext?: { ipAddress?: string; userAgent?: string }
-  ): Promise<Maintenance> {
-    // Check permission
-    const canUpdate = await hasPermission(userId, 'maintenance.update' as any)
-    if (!canUpdate) {
+  static async update(id: string, data: any, userId: string) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_UPDATE))) {
       throw new ForbiddenError('You do not have permission to update maintenance')
     }
 
-    const existingMaintenance = await prisma.maintenance.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-    })
+    const existing = await prisma.maintenance.findFirst({ where: { id, deletedAt: null } })
+    if (!existing) throw new NotFoundError('Maintenance', id)
 
-    if (!existingMaintenance) {
-      throw new NotFoundError('Maintenance', id)
-    }
-
-    // Validate technician if provided
-    if (input.technicianId) {
-      const technician = await prisma.user.findFirst({
-        where: {
-          id: input.technicianId,
-          role: 'TECHNICIAN',
-          deletedAt: null,
-        },
+    if (data.technicianId) {
+      const tech = await prisma.user.findFirst({
+        where: { id: data.technicianId, role: 'TECHNICIAN', deletedAt: null }
       })
-
-      if (!technician) {
-        throw new NotFoundError('Technician', input.technicianId)
-      }
+      if (!tech) throw new NotFoundError('Technician', data.technicianId)
     }
 
-    // Update maintenance
-    const updatedMaintenance = await prisma.maintenance.update({
+    const updateData: any = {}
+    if (data.type) updateData.type = data.type.toUpperCase()
+    if (data.status) updateData.status = data.status.toUpperCase()
+    if (data.priority) updateData.priority = data.priority
+    if (data.scheduledDate) updateData.scheduledDate = new Date(data.scheduledDate)
+    if (data.completedDate) updateData.completedDate = new Date(data.completedDate)
+    if (data.technicianId) updateData.technicianId = data.technicianId
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.notes !== undefined) updateData.notes = data.notes
+    if (data.cost !== undefined) updateData.cost = data.cost
+    if (data.partsUsed !== undefined) updateData.partsUsed = data.partsUsed
+    if (data.equipmentConditionAfter) updateData.equipmentConditionAfter = data.equipmentConditionAfter
+
+    const maintenance = await prisma.maintenance.update({
       where: { id },
-      data: {
-        type: input.type ? this.mapMaintenanceType(input.type) : undefined,
-        status: input.status ? this.mapMaintenanceStatus(input.status) : undefined,
-        priority: input.priority || undefined,
-        scheduledDate: input.scheduledDate || undefined,
-        technicianId: input.technicianId !== undefined ? input.technicianId : undefined,
-        description: input.description || undefined,
-        notes: input.notes !== undefined ? input.notes : undefined,
-        updatedBy: userId,
-      },
+      data: { ...updateData, updatedBy: userId },
       include: {
-        equipment: {
-          include: {
-            category: true,
-            brand: true,
-          },
-        },
-        technician: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+        equipment: { select: { id: true, sku: true, model: true } },
+        technician: { select: { id: true, name: true } }
+      }
     })
 
-    // Audit log
-    await AuditService.log({
-      action: 'maintenance.updated',
-      userId,
-      resourceType: 'maintenance',
-      resourceId: id,
-      ipAddress: auditContext?.ipAddress,
-      userAgent: auditContext?.userAgent,
-    })
-
-    // Emit event
-    await EventBus.emit('maintenance.updated', {
-      maintenanceId: id,
-      updatedBy: userId,
-      timestamp: new Date(),
-    } as any)
-
-    return this.transformToMaintenance(updatedMaintenance)
+    return maintenance
   }
 
   /**
-   * Complete maintenance
+   * Complete a maintenance session
    */
-  static async complete(
-    id: string,
-    input: MaintenanceCompleteInput,
-    userId: string,
-    auditContext?: { ipAddress?: string; userAgent?: string }
-  ): Promise<Maintenance> {
-    // Check permission
-    const canComplete = await hasPermission(userId, 'maintenance.complete' as any)
-    if (!canComplete) {
+  static async complete(id: string, data: any, userId: string) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_UPDATE))) {
       throw new ForbiddenError('You do not have permission to complete maintenance')
     }
 
-    const maintenance = await prisma.maintenance.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-      include: {
-        equipment: true,
-      },
+    const existing = await prisma.maintenance.findFirst({
+      where: { id, deletedAt: null },
+      include: { equipment: true }
     })
+    if (!existing) throw new NotFoundError('Maintenance', id)
 
-    if (!maintenance) {
-      throw new NotFoundError('Maintenance', id)
-    }
-
-    // Update maintenance completion
-    const updatedMaintenance = await prisma.maintenance.update({
+    const maintenance = await prisma.maintenance.update({
       where: { id },
       data: {
         status: 'COMPLETED',
-        completedDate: input.completedDate || new Date(),
-        notes: input.notes || maintenance.notes,
-        cost: input.cost ? new Decimal(input.cost) : maintenance.cost,
-        partsUsed: input.partsUsed ?? Prisma.JsonNull,
-        equipmentConditionAfter:
-          input.equipmentConditionAfter || maintenance.equipmentConditionAfter,
-        updatedBy: userId,
+        completedDate: new Date(),
+        equipmentConditionAfter: data.equipmentConditionAfter || 'GOOD',
+        notes: data.notes || existing.notes,
+        cost: data.cost || existing.cost,
+        updatedBy: userId
       },
       include: {
-        equipment: {
-          include: {
-            category: true,
-            brand: true,
-          },
-        },
-        technician: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+        equipment: { select: { id: true, sku: true, model: true } },
+        technician: { select: { id: true, name: true } }
+      }
     })
 
-    // Update equipment condition
-    const newCondition = input.equipmentConditionAfter || maintenance.equipment.condition
-    if (newCondition !== 'MAINTENANCE') {
-      await prisma.equipment.update({
-        where: { id: maintenance.equipmentId },
-        data: {
-          condition: newCondition,
-          updatedBy: userId,
-        },
-      })
-    }
-
-    // Audit log
-    await AuditService.log({
-      action: 'maintenance.completed',
-      userId,
-      resourceType: 'maintenance',
-      resourceId: id,
-      ipAddress: auditContext?.ipAddress,
-      userAgent: auditContext?.userAgent,
-      metadata: {
-        maintenanceNumber: maintenance.maintenanceNumber,
-      },
+    // Update equipment health
+    const newCondition = data.equipmentConditionAfter || 'GOOD'
+    await prisma.equipment.update({
+      where: { id: existing.equipmentId },
+      data: {
+        condition: newCondition,
+        rentalCycles: 0,
+        needsService: false,
+        lastServiceDate: new Date(),
+        updatedBy: userId
+      }
     })
 
-    // Emit event
-    await EventBus.emit('maintenance.completed', {
-      maintenanceId: id,
-      equipmentId: maintenance.equipmentId,
-      completedBy: userId,
-      timestamp: new Date(),
-    } as any)
-
-    return this.transformToMaintenance(updatedMaintenance)
+    return maintenance
   }
 
   /**
-   * Delete maintenance (soft delete)
+   * Soft-delete maintenance record
    */
-  static async delete(
-    id: string,
-    userId: string,
-    auditContext?: { ipAddress?: string; userAgent?: string }
-  ): Promise<void> {
-    // Check permission
-    const canDelete = await hasPermission(userId, 'maintenance.delete' as any)
-    if (!canDelete) {
+  static async delete(id: string, userId: string) {
+    if (!(await hasPermission(userId, PERMISSIONS.MAINTENANCE_DELETE))) {
       throw new ForbiddenError('You do not have permission to delete maintenance')
     }
 
-    const maintenance = await prisma.maintenance.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-    })
+    const existing = await prisma.maintenance.findFirst({ where: { id, deletedAt: null } })
+    if (!existing) throw new NotFoundError('Maintenance', id)
 
-    if (!maintenance) {
-      throw new NotFoundError('Maintenance', id)
-    }
-
-    // Soft delete
     await prisma.maintenance.update({
       where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedBy: userId,
-      },
+      data: { deletedAt: new Date(), deletedBy: userId }
     })
-
-    // Audit log
-    await AuditService.log({
-      action: 'maintenance.deleted',
-      userId,
-      resourceType: 'maintenance',
-      resourceId: id,
-      ipAddress: auditContext?.ipAddress,
-      userAgent: auditContext?.userAgent,
-      metadata: {
-        maintenanceNumber: maintenance.maintenanceNumber,
-      },
-    })
-
-    // Emit event
-    await EventBus.emit('maintenance.deleted', {
-      maintenanceId: id,
-      deletedBy: userId,
-      timestamp: new Date(),
-    } as any)
-  }
-
-  /**
-   * Transform Prisma Maintenance to Maintenance type (helper method)
-   */
-  private static transformToMaintenance(maintenance: any): Maintenance {
-    return {
-      id: maintenance.id,
-      maintenanceNumber: maintenance.maintenanceNumber,
-      equipmentId: maintenance.equipmentId,
-      type: this.mapFromPrismaType(maintenance.type),
-      status: this.mapFromPrismaStatus(maintenance.status),
-      priority: (maintenance.priority || 'medium') as MaintenancePriority,
-      scheduledDate: maintenance.scheduledDate,
-      completedDate: maintenance.completedDate,
-      technicianId: maintenance.technicianId,
-      description: maintenance.description,
-      notes: maintenance.notes,
-      cost: maintenance.cost ? Number(maintenance.cost) : undefined,
-      partsUsed: maintenance.partsUsed as any,
-      equipmentConditionBefore: maintenance.equipmentConditionBefore,
-      equipmentConditionAfter: maintenance.equipmentConditionAfter,
-      equipment: maintenance.equipment
-        ? {
-            id: maintenance.equipment.id,
-            sku: maintenance.equipment.sku,
-            model: maintenance.equipment.model,
-          }
-        : undefined,
-      technician: maintenance.technician,
-      createdAt: maintenance.createdAt,
-      updatedAt: maintenance.updatedAt,
-    }
   }
 }

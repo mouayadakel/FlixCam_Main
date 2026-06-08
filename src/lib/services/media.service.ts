@@ -9,7 +9,9 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB (equipment, studio, inspection)
+/** CMS uploads (e.g. hero banners) may use larger hero assets */
+const MAX_CMS_FILE_SIZE = 30 * 1024 * 1024 // 30MB
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/jpg',
@@ -17,9 +19,31 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp',
   'image/gif',
   'image/svg+xml',
+  'image/avif',
+  'image/heic',
+  'image/bmp',
+  'image/tiff',
 ]
+
+/** Map file extension to MIME when the browser sends empty type or application/octet-stream */
+const EXT_TO_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  avif: 'image/avif',
+  heic: 'image/heic',
+  heif: 'image/heic',
+  bmp: 'image/bmp',
+  tif: 'image/tiff',
+  tiff: 'image/tiff',
+}
 const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'equipment')
 const STUDIO_UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'studios')
+const INSPECTION_UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'inspections')
+const CMS_UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'cms')
 
 export interface MediaInput {
   url: string
@@ -33,17 +57,37 @@ export interface MediaInput {
 }
 
 export class MediaService {
+  private static resolveImageMimeType(rawMime: string, filename: string): string {
+    const m = (rawMime || '').trim().toLowerCase()
+    if (m && m !== 'application/octet-stream') {
+      return m
+    }
+    const ext = (filename.split('.').pop() || '').toLowerCase()
+    return EXT_TO_MIME[ext] || m || 'application/octet-stream'
+  }
+
+  private static sanitizeFolder(folder: string) {
+    return folder
+      .toLowerCase()
+      .replace(/[^a-z0-9/_-]/g, '')
+      .replace(/\.\./g, '')
+      .replace(/^\/+|\/+$/g, '') || 'general'
+  }
+
   /**
    * Upload image file and create Media record
    */
   static async uploadImage(
     file: File | { buffer: Buffer; filename: string; mimetype: string; size: number },
-    equipmentId: string,
-    userId: string
+    id: string, // equipmentId or inspectionId
+    userId: string,
+    type: 'equipment' | 'inspection' = 'equipment'
   ) {
     // Validate file (File has size/type; buffer object has buffer.length/mimetype)
     const fileSize = 'buffer' in file ? file.buffer.length : file.size
-    const mimeType = 'mimetype' in file ? file.mimetype : file.type
+    const rawMime = 'mimetype' in file ? file.mimetype : file.type
+    const filename = 'filename' in file ? file.filename : file.name
+    const mimeType = MediaService.resolveImageMimeType(rawMime, filename)
 
     if (fileSize > MAX_FILE_SIZE) {
       throw new Error(`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`)
@@ -56,9 +100,10 @@ export class MediaService {
     }
 
     // Create upload directory if it doesn't exist
-    const equipmentDir = join(UPLOAD_DIR, equipmentId)
-    if (!existsSync(equipmentDir)) {
-      await mkdir(equipmentDir, { recursive: true })
+    const baseDir = type === 'equipment' ? UPLOAD_DIR : INSPECTION_UPLOAD_DIR
+    const targetDir = join(baseDir, id)
+    if (!existsSync(targetDir)) {
+      await mkdir(targetDir, { recursive: true })
     }
 
     // Generate unique filename
@@ -67,8 +112,8 @@ export class MediaService {
       'filename' in file
         ? file.filename.split('.').pop() || 'jpg'
         : file.name.split('.').pop() || 'jpg'
-    const filename = `${timestamp}-${Math.random().toString(36).substring(7)}.${extension}`
-    const filepath = join(equipmentDir, filename)
+    const storedName = `${timestamp}-${Math.random().toString(36).substring(7)}.${extension}`
+    const filepath = join(targetDir, storedName)
 
     // Save file
     let buffer: Buffer
@@ -82,27 +127,25 @@ export class MediaService {
     await writeFile(filepath, buffer)
 
     // Create relative URL
-    const url = `/uploads/equipment/${equipmentId}/${filename}`
-
-    // Get next sortOrder (0 for first image, max+1 for gallery)
-    const maxSortOrder = await prisma.media
-      .aggregate({
-        where: { equipmentId, type: 'image', deletedAt: null },
-        _max: { sortOrder: true },
-      })
-      .then((r) => r._max.sortOrder ?? -1)
+    const url = type === 'equipment' 
+      ? `/uploads/equipment/${id}/${storedName}`
+      : `/uploads/inspections/${id}/${storedName}`
 
     const media = await prisma.media.create({
       data: {
         url,
         type: 'image',
-        filename,
+        filename: storedName,
         mimeType,
         size: fileSize,
-        equipmentId,
+        equipmentId: type === 'equipment' ? id : undefined,
+        inspectionId: type === 'inspection' ? (id as any) : undefined,
         createdBy: userId,
-        sortOrder: maxSortOrder + 1,
-      },
+        sortOrder: type === 'equipment' ? (await prisma.media.aggregate({
+          where: { equipmentId: id, type: 'image', deletedAt: null },
+          _max: { sortOrder: true },
+        }).then(r => (r._max.sortOrder ?? -1) + 1)) : 0,
+      } as any,
     })
 
     return media
@@ -139,7 +182,9 @@ export class MediaService {
     sortOrder?: number
   ) {
     const fileSize = 'buffer' in file ? file.buffer.length : file.size
-    const mimeType = 'mimetype' in file ? file.mimetype : file.type
+    const rawMime = 'mimetype' in file ? file.mimetype : file.type
+    const originalName = 'filename' in file ? file.filename : file.name
+    const mimeType = MediaService.resolveImageMimeType(rawMime, originalName)
 
     if (fileSize > MAX_FILE_SIZE) {
       throw new Error(`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`)
@@ -161,8 +206,8 @@ export class MediaService {
       'filename' in file
         ? file.filename.split('.').pop() || 'jpg'
         : file.name.split('.').pop() || 'jpg'
-    const filename = `${timestamp}-${Math.random().toString(36).substring(7)}.${extension}`
-    const filepath = join(studioDir, filename)
+    const storedName = `${timestamp}-${Math.random().toString(36).substring(7)}.${extension}`
+    const filepath = join(studioDir, storedName)
 
     let buffer: Buffer
     if ('buffer' in file) {
@@ -173,17 +218,81 @@ export class MediaService {
     }
     await writeFile(filepath, buffer)
 
-    const url = `/uploads/studios/${studioId}/${filename}`
+    const url = `/uploads/studios/${studioId}/${storedName}`
 
     const media = await prisma.media.create({
       data: {
         url,
         type: 'image',
-        filename,
+        filename: storedName,
         mimeType,
         size: fileSize,
         studioId,
         sortOrder: sortOrder ?? 0,
+        createdBy: userId,
+      },
+    })
+
+    return media
+  }
+
+  /**
+   * Upload image for CMS assets (not tied to equipment/studio/inspection)
+   */
+  static async uploadImageForCms(
+    file: File | { buffer: Buffer; filename: string; mimetype: string; size: number },
+    folder: string,
+    userId: string
+  ) {
+    const fileSize = 'buffer' in file ? file.buffer.length : file.size
+    const rawMime = 'mimetype' in file ? file.mimetype : file.type
+    const originalName = 'filename' in file ? file.filename : file.name
+    const mimeType = MediaService.resolveImageMimeType(rawMime, originalName)
+
+    if (fileSize > MAX_CMS_FILE_SIZE) {
+      throw new Error(
+        `File size exceeds maximum allowed size of ${MAX_CMS_FILE_SIZE / 1024 / 1024}MB`
+      )
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+      throw new Error(
+        `File type ${mimeType} is not allowed. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`
+      )
+    }
+
+    const safeFolder = this.sanitizeFolder(folder)
+    const targetDir = join(CMS_UPLOAD_DIR, safeFolder)
+    if (!existsSync(targetDir)) {
+      await mkdir(targetDir, { recursive: true })
+    }
+
+    const timestamp = Date.now()
+    const extension =
+      'filename' in file
+        ? file.filename.split('.').pop() || 'jpg'
+        : file.name.split('.').pop() || 'jpg'
+    const storedName = `${timestamp}-${Math.random().toString(36).substring(7)}.${extension}`
+    const filepath = join(targetDir, storedName)
+
+    let buffer: Buffer
+    if ('buffer' in file) {
+      buffer = file.buffer
+    } else {
+      const arrayBuffer = await file.arrayBuffer()
+      buffer = Buffer.from(arrayBuffer)
+    }
+    await writeFile(filepath, buffer)
+
+    const url = `/uploads/cms/${safeFolder}/${storedName}`
+
+    const media = await prisma.media.create({
+      data: {
+        url,
+        type: 'image',
+        filename: storedName,
+        mimeType,
+        size: fileSize,
         createdBy: userId,
       },
     })

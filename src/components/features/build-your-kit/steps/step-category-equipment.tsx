@@ -20,15 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronUp, Zap, Star, Crown } from 'lucide-react'
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
 
 interface RecItem {
   equipmentId: string
@@ -50,7 +42,7 @@ interface RecItem {
 }
 
 export function StepCategoryEquipment() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const categorySteps = useKitWizardStore((s) => s.categorySteps)
   const currentCategoryIndex = useKitWizardStore((s) => s.currentCategoryIndex)
   const shootTypeData = useKitWizardStore((s) => s.shootTypeData)
@@ -384,7 +376,7 @@ export function StepCategoryEquipment() {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border-light bg-surface-light px-4 py-3">
           <span className="text-sm font-medium text-text-heading">
             {t('kit.itemsSelected').replace('{count}', String(selectedCount))} —{' '}
-            {formatSar(totalDaily)} / {t('kit.perDay')}
+            {formatSar(totalDaily, locale)} / {t('kit.perDay')}
           </span>
         </div>
       )}

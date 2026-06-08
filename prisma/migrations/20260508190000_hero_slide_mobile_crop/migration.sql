@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "HeroSlide"
+ADD COLUMN     "mobileAspectRatio" TEXT NOT NULL DEFAULT 'auto',
+ADD COLUMN     "mobileFocalX" DOUBLE PRECISION NOT NULL DEFAULT 50,
+ADD COLUMN     "mobileFocalY" DOUBLE PRECISION NOT NULL DEFAULT 50;
+

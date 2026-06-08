@@ -5,6 +5,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
+import { verifyCronSecret } from '@/lib/utils/cron-auth'
 import { prisma } from '@/lib/db/prisma'
 import { logger } from '@/lib/logger'
 import { NotificationChannel } from '@prisma/client'
@@ -13,12 +14,6 @@ import { addHours } from 'date-fns'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-function verifyCronSecret(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-  const auth = request.headers.get('authorization')
-  return auth === `Bearer ${secret}` || auth === secret
-}
 
 /**
  * GET /api/cron/return-reminders
@@ -38,7 +33,6 @@ export async function GET(request: NextRequest) {
       where: {
         endDate: { gte: windowStart, lte: windowEnd },
         status: { in: ['ACTIVE', 'CONFIRMED'] },
-        returnReminderSent: false,
         deletedAt: null,
       },
       include: { customer: { select: { id: true } } },
@@ -57,10 +51,6 @@ export async function GET(request: NextRequest) {
               message: `Your booking #${booking.bookingNumber} is due for return in ~24 hours.`,
               data: { bookingId: booking.id, bookingNumber: booking.bookingNumber },
             },
-          }),
-          prisma.booking.update({
-            where: { id: booking.id },
-            data: { returnReminderSent: true },
           }),
         ])
         processed++

@@ -158,6 +158,24 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              المساعد الذكي للموقع
+            </CardTitle>
+            <CardDescription>رسالة الترحيب، الأسئلة الشائعة، وسجل المحادثات</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/admin/settings/chatbot">إعدادات المساعد</Link>
+            </Button>
+            <Button asChild variant="ghost" className="w-full">
+              <Link href="/admin/support/conversations">سجل المحادثات</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               التحكم بالذكاء الاصطناعي
             </CardTitle>

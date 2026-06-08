@@ -8,6 +8,7 @@
 import Link from 'next/link'
 import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
+import { formatSar } from '@/lib/utils/format.utils'
 
 export interface PrebuiltKitMatch {
   id: string
@@ -20,15 +21,6 @@ export interface PrebuiltKitMatch {
   totalWithDiscount: number
   savingsPercent: number
   equipmentIds: string[]
-}
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
 }
 
 interface KitPrebuiltComparisonProps {
@@ -44,7 +36,7 @@ export function KitPrebuiltComparison({
   durationDays,
   loading = false,
 }: KitPrebuiltComparisonProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
 
   if (loading) {
     return (
@@ -75,13 +67,13 @@ export function KitPrebuiltComparison({
               <div>
                 <p className="font-medium text-text-heading">{kit.name}</p>
                 <p className="text-sm text-text-muted">
-                  {formatSar(perDay)}/day
+                  {formatSar(perDay, locale)}/day
                   {kit.savingsPercent > 0 &&
                     ` · ${t('kit.youSave').replace('{percent}', String(kit.savingsPercent))}`}
                 </p>
                 {savingsAmount > 0 && (
                   <p className="mt-0.5 text-xs text-brand-primary">
-                    {t('kit.saveAmount').replace('{amount}', formatSar(savingsAmount))}
+                    {t('kit.saveAmount').replace('{amount}', formatSar(savingsAmount, locale))}
                   </p>
                 )}
               </div>

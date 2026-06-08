@@ -10,11 +10,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useLocale } from '@/hooks/use-locale'
 import { isExternalImageUrl } from '@/lib/utils/image.utils'
+import { getSeededRandomPhotoPath } from '@/lib/utils/random-photo-fallback'
 import { PublicContainer } from '@/components/public/public-container'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Users, Clock } from 'lucide-react'
-
-const STUDIO_PLACEHOLDER = '/images/placeholder.jpg'
 
 interface StudioItem {
   id: string
@@ -48,7 +47,7 @@ export function HomeStudios() {
   if (!loading && studios.length === 0) return null
 
   return (
-    <section className="border-t border-border-light/50 bg-surface-light py-10 md:py-14">
+    <section className="border-t border-border-light/50 bg-surface-light py-0">
       <PublicContainer>
         <div className="mb-8 flex items-end justify-between">
           <div>
@@ -87,7 +86,11 @@ export function HomeStudios() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {studios.map((studio, index) => {
               const href = `/studios/${studio.slug || studio.id}`
-              const imgUrl = studio.media?.[0]?.url || STUDIO_PLACEHOLDER
+              const studioPlaceholder = getSeededRandomPhotoPath(`studio-${studio.id}`)
+              const imgUrl =
+                failedImageIds.has(studio.id) || !studio.media?.[0]?.url
+                  ? studioPlaceholder
+                  : studio.media[0].url
               return (
                 <Link
                   key={studio.id}
@@ -96,19 +99,15 @@ export function HomeStudios() {
                   style={{ animationDelay: `${0.1 * index}s` }}
                 >
                   <div className="relative aspect-[16/10] shrink-0 overflow-hidden bg-surface-light">
-                    {failedImageIds.has(studio.id) ? (
-                      <div className="absolute inset-0 bg-surface-light" aria-hidden />
-                    ) : (
-                      <Image
-                        src={imgUrl}
-                        alt={studio.name}
-                        fill
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        unoptimized={isExternalImageUrl(imgUrl)}
-                        onError={() => handleImageError(studio.id)}
-                      />
-                    )}
+                    <Image
+                      src={imgUrl}
+                      alt={studio.name}
+                      fill
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized={isExternalImageUrl(imgUrl)}
+                      onError={() => handleImageError(studio.id)}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                   </div>
                   <div className="flex flex-1 flex-col p-5">

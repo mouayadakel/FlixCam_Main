@@ -15,6 +15,7 @@ import { PricingService } from './pricing.service'
 import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hasPermission } from '@/lib/auth/permissions'
+import { invoiceNumberService } from './invoice-number.service'
 import type {
   Quote,
   QuoteStatus,
@@ -34,25 +35,7 @@ export class QuoteService {
    * Generate unique quote number
    */
   private static async generateQuoteNumber(): Promise<string> {
-    const prefix = 'QT'
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    const quoteNumber = `${prefix}-${timestamp}-${random}`
-
-    // Check uniqueness
-    const existing = await prisma.quote.findFirst({
-      where: {
-        quoteNumber,
-        deletedAt: null,
-      },
-    })
-
-    if (existing) {
-      // Retry with different random
-      return this.generateQuoteNumber()
-    }
-
-    return quoteNumber
+    return invoiceNumberService.nextQuoteNumber()
   }
 
   /**
@@ -75,6 +58,46 @@ export class QuoteService {
    */
   private static mapFromPrismaStatus(status: PrismaQuoteStatus): QuoteStatus {
     return status.toLowerCase() as QuoteStatus
+  }
+
+  private static buildEquipmentDataFromPricing(
+    pricing: Awaited<ReturnType<typeof PricingService.generateQuote>>,
+    inputEquipment: Array<{ equipmentId: string; quantity: number }>,
+    equipmentRecords: Array<{ id: string; dailyPrice: Decimal | null }>,
+    startDate: Date,
+    endDate: Date
+  ): Array<{
+    equipmentId: string
+    quantity: number
+    dailyRate: number
+    totalDays: number
+    subtotal: number
+  }> {
+    if (pricing.breakdown?.equipment?.length) {
+      return pricing.breakdown.equipment.map((line) => ({
+        equipmentId: line.equipmentId,
+        quantity: line.quantity,
+        dailyRate: line.dailyRate,
+        totalDays: line.days,
+        subtotal: line.amount,
+      }))
+    }
+
+    const days = Math.max(
+      1,
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    )
+    return inputEquipment.map((eq) => {
+      const eqData = equipmentRecords.find((e) => e.id === eq.equipmentId)
+      const dailyRate = Number(eqData?.dailyPrice || 0)
+      return {
+        equipmentId: eq.equipmentId,
+        quantity: eq.quantity,
+        dailyRate,
+        totalDays: days,
+        subtotal: dailyRate * eq.quantity * days,
+      }
+    })
   }
 
   /**
@@ -124,21 +147,14 @@ export class QuoteService {
     // Set validity period (default 30 days from now)
     const validUntil = input.validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
-    // Prepare equipment data for JSON storage
-    const equipmentData = input.equipment.map((eq) => {
-      const eqData = equipment.find((e) => e.id === eq.equipmentId)!
-      const days = Math.ceil(
-        (input.endDate.getTime() - input.startDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
-      const dailyRate = Number(eqData.dailyPrice || 0)
-      return {
-        equipmentId: eq.equipmentId,
-        quantity: eq.quantity,
-        dailyRate,
-        totalDays: days,
-        subtotal: dailyRate * eq.quantity * days,
-      }
-    })
+    // Prepare equipment data for JSON storage (use optimal rates from pricing breakdown)
+    const equipmentData = this.buildEquipmentDataFromPricing(
+      pricing,
+      input.equipment,
+      equipment,
+      input.startDate,
+      input.endDate
+    )
 
     // Create quote
     const quote = await prisma.quote.create({
@@ -491,22 +507,18 @@ export class QuoteService {
       updatedDepositAmount = pricing.depositAmount ? new Decimal(pricing.depositAmount) : null
 
       // Update equipment data
-      updatedEquipment = finalEquipment.map((eq) => {
-        const eqData =
-          equipment.find((e) => e.id === eq.equipmentId) ||
-          existingQuote.equipmentItems.find((qe) => qe.equipmentId === eq.equipmentId)?.equipment
-        const days = Math.ceil(
-          (updatedEndDate.getTime() - updatedStartDate.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        const dailyRate = eqData ? Number((eqData as any).dailyPrice || 0) : 0
-        return {
-          equipmentId: eq.equipmentId,
-          quantity: eq.quantity,
-          dailyRate,
-          totalDays: days,
-          subtotal: dailyRate * eq.quantity * days,
-        }
-      })
+      updatedEquipment = this.buildEquipmentDataFromPricing(
+        pricing,
+        finalEquipment,
+        equipment.length > 0
+          ? equipment
+          : existingQuote.equipmentItems.map((qe) => ({
+              id: qe.equipmentId,
+              dailyPrice: qe.dailyRate,
+            })),
+        updatedStartDate,
+        updatedEndDate
+      )
     }
 
     // Update quote
@@ -572,39 +584,45 @@ export class QuoteService {
 
     // Update equipment if changed
     if (input.equipment) {
-      // Delete old equipment entries
       await prisma.quoteEquipment.deleteMany({
-        where: {
-          quoteId: id,
-        },
+        where: { quoteId: id },
       })
-
-      // Create new equipment entries
-      const equipment = await prisma.equipment.findMany({
-        where: {
-          id: { in: input.equipment.map((e) => e.equipmentId) },
-          deletedAt: null,
-        },
-      })
-
-      const days = Math.ceil(
-        (updatedEndDate.getTime() - updatedStartDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
 
       await prisma.quoteEquipment.createMany({
-        data: input.equipment.map((eq) => {
-          const eqData = equipment.find((e) => e.id === eq.equipmentId)!
-          const dailyRate = Number(eqData.dailyPrice || 0)
-          return {
-            quoteId: id,
-            equipmentId: eq.equipmentId,
-            quantity: eq.quantity,
-            dailyRate: new Decimal(dailyRate),
-            totalDays: days,
-            subtotal: new Decimal(dailyRate * eq.quantity * days),
-            createdBy: userId,
-          }
-        }),
+        data: (updatedEquipment as Array<{
+          equipmentId: string
+          quantity: number
+          dailyRate: number
+          totalDays: number
+          subtotal: number
+        }>).map((eq) => ({
+          quoteId: id,
+          equipmentId: eq.equipmentId,
+          quantity: eq.quantity,
+          dailyRate: new Decimal(eq.dailyRate),
+          totalDays: eq.totalDays,
+          subtotal: new Decimal(eq.subtotal),
+          createdBy: userId,
+        })),
+      })
+    } else if (input.startDate || input.endDate) {
+      await prisma.quoteEquipment.deleteMany({ where: { quoteId: id } })
+      await prisma.quoteEquipment.createMany({
+        data: (updatedEquipment as Array<{
+          equipmentId: string
+          quantity: number
+          dailyRate: number
+          totalDays: number
+          subtotal: number
+        }>).map((eq) => ({
+          quoteId: id,
+          equipmentId: eq.equipmentId,
+          quantity: eq.quantity,
+          dailyRate: new Decimal(eq.dailyRate),
+          totalDays: eq.totalDays,
+          subtotal: new Decimal(eq.subtotal),
+          createdBy: userId,
+        })),
       })
     }
 
@@ -671,6 +689,8 @@ export class QuoteService {
     }
 
     // Create booking from quote
+    const discountAmount = Number(quote.discountAmount ?? quote.discount ?? 0)
+    const bookingSubtotalExVat = Math.max(0, Number(quote.subtotal) - discountAmount)
     const bookingInput: BookingCreateInput = {
       customerId: quote.customerId,
       startDate: quote.startDate,
@@ -682,6 +702,9 @@ export class QuoteService {
       studioId: quote.studioId || undefined,
       studioStartTime: quote.studioStartTime || undefined,
       studioEndTime: quote.studioEndTime || undefined,
+      totalAmount: bookingSubtotalExVat,
+      vatAmount: Number(quote.vatAmount),
+      depositAmount: quote.depositAmount ? Number(quote.depositAmount) : undefined,
       notes: quote.notes || undefined,
     }
 
@@ -695,6 +718,17 @@ export class QuoteService {
         bookingId: booking.id,
         convertedAt: new Date(),
         updatedBy: userId,
+      },
+    })
+
+    await prisma.ledgerEntry.create({
+      data: {
+        type: 'DEBIT',
+        amount: new Decimal(Number(quote.totalAmount)),
+        account: 'RECEIVABLE',
+        bookingId: booking.id,
+        description: `Booking created from quote ${quote.quoteNumber}`,
+        reference: quote.quoteNumber,
       },
     })
 

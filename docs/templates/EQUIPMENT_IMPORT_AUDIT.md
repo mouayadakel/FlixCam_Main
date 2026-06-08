@@ -1,43 +1,69 @@
 # Equipment Import Audit
 
-Generated: 2026-03-05T14:21:40Z
-
-**Applied:** Single-sheet merge and canonical `category_slug` from `docs/templates/GEMINI_CONVERSATION_REFERENCE.md`.
+Generated: 2026-06-04T13:24:07Z
 
 Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.).
 
 ---
 
-**Total items with issues:** 326
+## Camera : ARRI Alexa 35
 
-## cameras: sony a7siii
+- **seoTitle_zh** too short (18 < 25 chars)
+- Missing **seoDescription_ar**
+- Missing **seoDescription_zh**
+- Missing **seoKeywords_ar**
+- Missing **seoKeywords_zh**
+- Missing **shortDescription_ar**
+- Missing **shortDescription_en**
+- Missing **shortDescription_zh**
+
+## Camera : sony a7siii
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
+- **seoDescription_ar** too short (32 < 120 chars)
+- **seoDescription_en** too short (33 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (11 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (10 < 80 chars)
+- **longDescription_ar** too short (36 < 120 chars)
+- Missing **specifications_notes**
+
+## Camera : Sony A7R V (A7R5)
+
+- **seoTitle_zh** too short (20 < 25 chars)
 - Missing **seoDescription_ar**
-- Missing **seoDescription_en**
 - Missing **seoDescription_zh**
 - Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
 - Missing **shortDescription_ar**
 - Missing **shortDescription_en**
 - Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+
+## Camera : Brinno Construction Trio Pack
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoDescription_ar** too short (52 < 120 chars)
+- **seoDescription_en** too short (33 < 120 chars)
+- **seoDescription_zh** too short (23 < 120 chars)
+- **seoKeywords_ar** too short (11 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (17 < 80 chars)
+- **longDescription_ar** too short (41 < 120 chars)
 - Missing **specifications_notes**
 
-## cameras: sony a7r5
+## Camera : Gopro 13Black
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -61,11 +87,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## cameras: Brinno Construction Trio Pack
+## Camera Acc : Ikan ronin circlar handle
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -86,9 +114,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## cameras: Gopro 13Black
+## Camera Acc : teradek wireless transmeter bolt 6
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -112,12 +141,28 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Ikan ronin circlar handle
+## Camera Acc : Tilta nucleus m
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
+- **seoDescription_ar** too short (35 < 120 chars)
+- **seoDescription_en** too short (26 < 120 chars)
+- **seoDescription_zh** too short (22 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (22 < 80 chars)
+- **longDescription_ar** too short (45 < 120 chars)
+- Missing **specifications_notes**
+
+## Camera Acc : Director Cage
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -138,12 +183,12 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: teradek wireless transmeter bolt 6
+## Camera Acc : Sekonic C-800
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -162,13 +207,32 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Camera Acc : Sony  Cfexpress Reader
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoTitle_zh** too short (24 < 25 chars)
+- **seoDescription_ar** too short (48 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (29 < 120 chars)
+- **seoKeywords_ar** too short (11 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (28 < 80 chars)
+- **longDescription_ar** too short (63 < 120 chars)
 - Missing **specifications_notes**
 
-## camera-accessories: Tilta nucleus m
+## Camera Acc : Filter 82 mm PMVND  6-9 Stops
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -189,11 +253,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Director Cage
+## Camera Acc : Filter 82 mm PMVND  2-5 Stops
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -214,11 +280,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Sekonic C-800
+## Camera Acc : IR filter 82 Mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -239,11 +307,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Sony  Cfexpress Reader
+## Camera Acc : Soft Filter 82 Mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -264,9 +334,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Filter 82 mm PMVND  6-9 Stops
+## Camera Acc : Pearlescent 1/4 82 Mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -290,9 +361,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Filter 82 mm PMVND  2-5 Stops
+## Camera Acc : Pro Black almite  72 Mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -316,9 +388,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: IR filter 82 Mm
+## Camera Acc : R&M Camera Saddle
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -342,9 +415,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Soft Filter 82 Mm
+## Camera Acc : Hihat wood extention
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -368,9 +442,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Pearlescent 1/4 82 Mm
+## Camera Acc : [object Object]
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -394,9 +469,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Pro Black almite  72 Mm
+## Camera Acc : ND 0.6 Tiffen Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -420,9 +496,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: R&M Camera Saddle
+## Camera Acc : ND 1.2 Tiffen Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -446,9 +523,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Hihat wood extention
+## Camera Acc : ND 0.9 Tiffen Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -472,9 +550,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: [object Object]
+## Camera Acc : Black Prom 1/4 Tiffen Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -498,9 +577,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: ND 0.6 Tiffen Filter
+## Camera Acc : Black Prom 1/8 Tiffen Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -524,9 +604,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: ND 1.2 Tiffen Filter
+## Camera Acc : Hlywd BLK Magic Schneider Filter
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -548,11 +629,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Camera Acc : Revar Cine Rota Pola
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (40 < 120 chars)
+- **seoDescription_en** too short (21 < 120 chars)
+- **seoDescription_zh** too short (27 < 120 chars)
+- **seoKeywords_ar** too short (12 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (33 < 80 chars)
+- **longDescription_ar** too short (48 < 120 chars)
 - Missing **specifications_notes**
 
-## camera-accessories: ND 0.9 Tiffen Filter
+## Camera Acc : Tilta Matte box
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -574,11 +673,66 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Camera Acc : Metabones PL-RF mount
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (23 < 25 chars)
+- **seoDescription_ar** too short (52 < 120 chars)
+- **seoDescription_en** too short (24 < 120 chars)
+- **seoDescription_zh** too short (30 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (23 < 80 chars)
+- **longDescription_ar** too short (40 < 120 chars)
+- Missing **specifications_notes**
+
+## Camera Acc : Meike EF-RF mount
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (57 < 120 chars)
+- **seoDescription_en** too short (17 < 120 chars)
+- **seoDescription_zh** too short (29 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (22 < 80 chars)
+- **longDescription_ar** too short (52 < 120 chars)
+- Missing **specifications_notes**
+
+## Camera Acc : Nisi PL-E mount
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (23 < 25 chars)
+- **seoDescription_ar** too short (46 < 120 chars)
+- **seoDescription_en** too short (24 < 120 chars)
+- **seoDescription_zh** too short (24 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (17 < 80 chars)
+- **longDescription_ar** too short (41 < 120 chars)
 - Missing **specifications_notes**
 
-## camera-accessories: Black Prom 1/4 Tiffen Filter
+## Camera Acc : Blackmagic Convert SDI to HDMI 12G
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -602,9 +756,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Black Prom 1/8 Tiffen Filter
+## Camera Acc : Blackmagic Convert HDMI to SDI 12G
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -628,12 +783,12 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Hlywd BLK Magic Schneider Filter
+## Lenses : 30000005
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -652,11 +807,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Lenses : Dzofilm pictor 20-55 ,  50-125
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoTitle_zh** too short (24 < 25 chars)
+- **seoDescription_ar** too short (43 < 120 chars)
+- **seoDescription_en** too short (25 < 120 chars)
+- **seoDescription_zh** too short (26 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (38 < 80 chars)
+- **longDescription_ar** too short (48 < 120 chars)
 - Missing **specifications_notes**
 
-## camera-accessories: Revar Cine Rota Pola
+## Lenses : Sony E mount sigma art dg dn 24-70 mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -680,9 +853,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Tilta Matte box
+## Lenses : Luawa Z-d 12mm e mount
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -706,9 +880,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Metabones PL-RF mount
+## Lenses : Sony  E mount g master 90 micro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -732,9 +907,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Meike EF-RF mount
+## Lenses : Sony E mount sigma art dg dn 135 mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -758,9 +934,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Nisi PL-E mount
+## Lenses : Sony E mount sigma art dg dn 50 mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -784,9 +961,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Blackmagic Convert SDI to HDMI 12G
+## Lenses : Sony E mount sigma art dg dn 35mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -810,9 +988,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## camera-accessories: Blackmagic Convert HDMI to SDI 12G
+## Lenses : Sony E mount sigma art dg dn 14-24 mm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -836,9 +1015,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: ronin rs4 pro combo
+## Tripodgimbals : ronin rs4 pro combo
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -861,9 +1041,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Tilta Slider dolly
+## Tripodgimbals : Tilta Slider dolly
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -886,9 +1067,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Tilta Float
+## Tripodgimbals : Tilta Float
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -911,9 +1093,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Tilta hydra arm
+## Tripodgimbals : Tilta hydra arm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -936,9 +1119,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: FlyCam Flowline
+## Tripodgimbals : FlyCam Flowline
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -961,9 +1145,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Easyrig V5 ACE
+## Tripodgimbals : Easyrig V5 ACE
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -987,9 +1172,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Benro tripod
+## Tripodgimbals : Benro tripod
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1013,9 +1199,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Slider E-image ES120
+## Tripodgimbals : Slider E-image ES120
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1039,9 +1226,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Komodo Dolly
+## Tripodgimbals : Komodo Dolly
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1065,9 +1253,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Armour H15 Tripod
+## Tripodgimbals : Armour H15 Tripod
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1091,9 +1280,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Veo 2Pro Tripod
+## Tripodgimbals : Veo 2Pro Tripod
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1117,9 +1307,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## tripods-gimbals: Hi Hat Tripod
+## Tripodgimbals : Hi Hat Tripod
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1143,9 +1334,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case
+## Boxes: Hard case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1169,9 +1361,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case  #2
+## Boxes: Hard case  #2
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1195,9 +1388,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case  #3
+## Boxes: Hard case  #3
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1221,9 +1415,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case  #4 small
+## Boxes: Hard case  #4 small
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1247,9 +1442,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: prol Casebag #5
+## Boxes: prol Casebag #5
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1273,9 +1469,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: prol Casebag #6
+## Boxes: prol Casebag #6
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1299,9 +1496,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case #4
+## Boxes: Hard case #4
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1325,9 +1523,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case #5
+## Boxes: Hard case #5
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1351,9 +1550,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case
+## Boxes: Hard case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1377,9 +1577,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard case
+## Boxes: Hard case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1403,9 +1604,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard Case
+## Boxes: Hard Case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1429,9 +1631,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: DJI Casebag
+## Boxes: DJI Casebag
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1455,9 +1658,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Lowepro Backbag
+## Boxes: Lowepro Backbag
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1481,9 +1685,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Porta Casebag
+## Boxes: Porta Casebag
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1507,9 +1712,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Orca Bag
+## Boxes: Orca Bag
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1533,9 +1739,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard Case
+## Boxes: Hard Case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1559,9 +1766,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard Case
+## Boxes: Hard Case
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1585,9 +1793,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Hard Case with weels
+## Boxes: Hard Case with weels
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1611,9 +1820,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: GVM-50RS
+## Light: GVM-50RS
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1636,9 +1846,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: MC 12 Light kit
+## Light: MC 12 Light kit
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1661,9 +1872,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Aputure 300D
+## Light: Aputure 300D
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1686,9 +1898,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Amaran F22c
+## Light: Amaran F22c
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1711,9 +1924,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Light tube small
+## Light: Light tube small
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1736,9 +1950,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Astera titan Tibes
+## Light: Astera titan Tibes
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1761,9 +1976,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: NanLux 1200D
+## Light: NanLux 1200D
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1786,9 +2002,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Godox AD 600 pro
+## Light: Godox AD 600 pro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1811,9 +2028,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Godox ad400 pro
+## Light: Godox ad400 pro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1836,59 +2054,42 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Aputure lightstorm 600D pro
+## Light: Aputure lightstorm 600D pro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (22 < 120 chars)
+- **seoDescription_zh** too short (28 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (28 < 80 chars)
+- **longDescription_ar** too short (31 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting: Aputure lightstorm 600C pro
+## Light: Aputure lightstorm 600C pro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (22 < 120 chars)
+- **seoDescription_zh** too short (28 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (28 < 80 chars)
+- **longDescription_ar** too short (31 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting: Godox AD1200D pro
+## Light: Godox AD1200D pro
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -1911,9 +2112,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Apture CS 1500
+## Light: Apture CS 1500
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1937,9 +2139,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Nanlite tube light
+## Light: Nanlite tube light
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1963,9 +2166,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Apture Infinibar
+## Light: Apture Infinibar
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -1989,9 +2193,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Smoke Machine Hua Wen
+## Light: Smoke Machine Hua Wen
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2015,9 +2220,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting: Smoke Machine Haze 600
+## Light: Smoke Machine Haze 600
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2041,9 +2247,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Light amberila
+## Light Acc: Light amberila
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2067,9 +2274,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Beuaty dish
+## Light Acc: Beuaty dish
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2093,9 +2301,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: silver cloth 4 Feet
+## Light Acc: silver cloth 4 Feet
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2117,11 +2326,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: TRP ultrabounce  8feet
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (46 < 120 chars)
+- **seoDescription_en** too short (26 < 120 chars)
+- **seoDescription_zh** too short (28 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (23 < 80 chars)
+- **longDescription_ar** too short (59 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: TRP ultrabounce  8feet
+## Light Acc: Light Cone
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2145,12 +2372,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Light Cone
+## Light Acc: Aputure spacelight
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
+- **seoDescription_ar** too short (39 < 120 chars)
+- **seoDescription_en** too short (20 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (25 < 80 chars)
+- **longDescription_ar** too short (39 < 120 chars)
+- Missing **specifications_notes**
+
+## Light Acc: LED Fog machine 1200w
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -2171,9 +2415,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Aputure spacelight
+## Light Acc: Magic clooth 20x20
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2197,11 +2442,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: LED Fog machine 1200w
+## Light Acc: Green Chroma  x2
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -2220,11 +2467,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: White cloth 8x8
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (49 < 120 chars)
+- **seoDescription_en** too short (18 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (6 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (28 < 80 chars)
+- **longDescription_ar** too short (38 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Magic clooth 20x20
+## Light Acc: unbleashed muslin 8x8
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2248,9 +2513,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Green Chroma  x2
+## Light Acc: checker silver and gold 8x8
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2274,9 +2540,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: White cloth 8x8
+## Light Acc: Spotliht mount Apture
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2300,9 +2567,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: unbleashed muslin 8x8
+## Light Acc: Apture fresnel 2x
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2326,9 +2594,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: checker silver and gold 8x8
+## Light Acc: Apture fresnel 2x
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2352,9 +2621,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Spotliht mount Apture
+## Light Acc: Apture f10 fresnel
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2376,11 +2646,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: Phottix Raja Strip 30x140
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (45 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (32 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (25 < 80 chars)
+- **longDescription_ar** too short (37 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Apture fresnel 2x
+## Light Acc: Apture Lantern 90
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2402,11 +2690,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: Phottix Raja Strip 60x90
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (45 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (32 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (25 < 80 chars)
+- **longDescription_ar** too short (37 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Apture fresnel 2x
+## Light Acc: Selens Softbox 60cm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2430,12 +2736,31 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Apture f10 fresnel
+## Light Acc: Godox CS-85D
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (48 < 120 chars)
+- **seoDescription_en** too short (27 < 120 chars)
+- **seoDescription_zh** too short (21 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (15 < 80 chars)
+- **longDescription_ar** too short (35 < 120 chars)
+- Missing **specifications_notes**
+
+## Light Acc: Softbox Octa
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -2454,11 +2779,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: Phottix Raja Mouse 60x120
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (45 < 120 chars)
+- **seoDescription_en** too short (25 < 120 chars)
+- **seoDescription_zh** too short (32 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (32 < 80 chars)
+- **longDescription_ar** too short (48 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Phottix Raja Strip 30x140
+## Light Acc: Apture Light Dome ii
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2482,9 +2825,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Apture Lantern 90
+## Light Acc: Selens Softbox 105cm
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2508,9 +2852,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Phottix Raja Strip 60x90
+## Light Acc: Lifefoto Octa Softbox
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2532,11 +2877,29 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: Phottix Raja Strip 30x140
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (45 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (32 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (25 < 80 chars)
+- **longDescription_ar** too short (37 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Selens Softbox 60cm
+## Light Acc: 2 Strip Softbox
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2560,9 +2923,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Godox CS-85D
+## Light Acc: Betterfly 1x2m
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2584,11 +2948,84 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: R&M Air Tube 60
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (31 < 80 chars)
+- **longDescription_ar** too short (50 < 120 chars)
+- Missing **specifications_notes**
+
+## Light Acc: R&M Air Tube 120
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (31 < 80 chars)
+- **longDescription_ar** too short (50 < 120 chars)
+- Missing **specifications_notes**
+
+## Light Acc: R&M Air Tube 120/4
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (31 < 80 chars)
+- **longDescription_ar** too short (50 < 120 chars)
+- Missing **specifications_notes**
+
+## Light Acc: R&M Air Tube 120
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (31 < 80 chars)
+- **longDescription_ar** too short (50 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Softbox Octa
+## Light Acc: Gobox Softbox 70x100
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2612,9 +3049,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Phottix Raja Mouse 60x120
+## Light Acc: Apture Light Dome ii
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2636,11 +3074,30 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: R&M Air Tube 120
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (31 < 80 chars)
+- **longDescription_ar** too short (50 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Apture Light Dome ii
+## Light Acc: Circular Diffuser/reflector
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2664,9 +3121,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Selens Softbox 105cm
+## Light Acc: Cirular Chroma
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2690,9 +3148,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Lifefoto Octa Softbox
+## Light Acc: Apture fresnel 2x
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2714,11 +3173,30 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Light Acc: Impact Porta Frame Scrim Kit
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (23 < 25 chars)
+- **seoDescription_ar** too short (48 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (30 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (27 < 80 chars)
+- **longDescription_ar** too short (42 < 120 chars)
 - Missing **specifications_notes**
 
-## lighting-accessories: Phottix Raja Strip 30x140
+## Light Acc: Circular Diffuser/reflector 150x200
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2742,9 +3220,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: 2 Strip Softbox
+## Light Acc: Curved Diffuser/Reflector
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -2768,4652 +3247,59 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## lighting-accessories: Betterfly 1x2m
+## Grips: Tube holder
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 60
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120/4
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Gobox Softbox 70x100
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture Light Dome ii
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Circular Diffuser/reflector
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Cirular Chroma
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture fresnel 2x
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Impact Porta Frame Scrim Kit
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Circular Diffuser/reflector 150x200
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Curved Diffuser/Reflector
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Tube holder
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: apple Box Full
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: apple box inside only
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Pottix Q-Drop
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Weels for small stand
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Vaxis atom A5
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Atomos neon 24''
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Smallhd Ultra 7inch
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Atomos Shinobi 5inch
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Atomos Shogun 7inch
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Smallhd Ultra 5inch
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Blue shape B mount 290
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: swit b mount charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Innox V mount 135
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: swit V mount 220
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Innox V mount 200
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Innox V mount 99
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Innox IN-F970
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Sony NP-F960
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Blue shape V mount 2 output
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Newell Dual Li-ion Charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Innox Dual Li-ion Charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Blushape Dual Li-ion Charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Sony BC-QZ1 Charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Sony NP-FZ100 Battery
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Vemico NP-FZ100 Battery
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: Dual Channel Li-ion digital Charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: xlr to xlr
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: xlr to aux
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: aux to aux
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: rode link
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: sennheiser  ew 4g
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: sennheiser  mke 600
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: sennheiser  MZX 8060
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: RODE MIC
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: Saramonic  xlr9
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: Zoom F6
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: sennheiser lavalier gold
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## audio: lavalier
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## live-production: Black magic Ultimatte 12 4k
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## live-production: Black magic Atem tv  studio 4k8
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## live-production: Auto Q
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## cameras: sony a7siii
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## cameras: sony a7r5
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## cameras: Brinno Construction Trio Pack
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## cameras: Gopro 13Black
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Ikan ronin circlar handle
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: teradek wireless transmeter bolt 6
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Tilta nucleus m
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Director Cage
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Sekonic C-800
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Sony  Cfexpress Reader
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Filter 82 mm PMVND  6-9 Stops
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Filter 82 mm PMVND  2-5 Stops
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: IR filter 82 Mm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Soft Filter 82 Mm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Pearlescent 1/4 82 Mm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Pro Black almite  72 Mm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: R&M Camera Saddle
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Hihat wood extention
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: [object Object]
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: ND 0.6 Tiffen Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: ND 1.2 Tiffen Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: ND 0.9 Tiffen Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Black Prom 1/4 Tiffen Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Black Prom 1/8 Tiffen Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Hlywd BLK Magic Schneider Filter
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Revar Cine Rota Pola
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Tilta Matte box
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Metabones PL-RF mount
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Meike EF-RF mount
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Nisi PL-E mount
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Blackmagic Convert SDI to HDMI 12G
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## camera-accessories: Blackmagic Convert HDMI to SDI 12G
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: ronin rs4 pro combo
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Tilta Slider dolly
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Tilta Float
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Tilta hydra arm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: FlyCam Flowline
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Easyrig V5 ACE
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Benro tripod
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Slider E-image ES120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Komodo Dolly
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Armour H15 Tripod
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Veo 2Pro Tripod
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## tripods-gimbals: Hi Hat Tripod
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case  #2
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case  #3
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case  #4 small
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: prol Casebag #5
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: prol Casebag #6
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case #4
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case #5
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard Case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: DJI Casebag
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Lowepro Backbag
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Porta Casebag
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Orca Bag
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard Case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard Case
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Hard Case with weels
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: GVM-50RS
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: MC 12 Light kit
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Aputure 300D
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Amaran F22c
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Light tube small
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Astera titan Tibes
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: NanLux 1200D
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Godox AD 600 pro
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Godox ad400 pro
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Aputure lightstorm 600D pro
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Aputure lightstorm 600C pro
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Godox AD1200D pro
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Apture CS 1500
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Nanlite tube light
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Apture Infinibar
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Smoke Machine Hua Wen
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting: Smoke Machine Haze 600
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Light amberila
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Beuaty dish
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: silver cloth 4 Feet
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: TRP ultrabounce  8feet
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Light Cone
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Aputure spacelight
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: LED Fog machine 1200w
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Magic clooth 20x20
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Green Chroma  x2
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: White cloth 8x8
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: unbleashed muslin 8x8
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: checker silver and gold 8x8
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Spotliht mount Apture
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture fresnel 2x
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture fresnel 2x
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture f10 fresnel
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Phottix Raja Strip 30x140
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture Lantern 90
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Phottix Raja Strip 60x90
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Selens Softbox 60cm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Godox CS-85D
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Softbox Octa
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Phottix Raja Mouse 60x120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture Light Dome ii
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Selens Softbox 105cm
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Lifefoto Octa Softbox
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Phottix Raja Strip 30x140
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: 2 Strip Softbox
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Betterfly 1x2m
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 60
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120/4
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Gobox Softbox 70x100
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture Light Dome ii
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: R&M Air Tube 120
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Circular Diffuser/reflector
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Cirular Chroma
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Apture fresnel 2x
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Impact Porta Frame Scrim Kit
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Circular Diffuser/reflector 150x200
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## lighting-accessories: Curved Diffuser/Reflector
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## accessories: Tube holder
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (15 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (12 < 80 chars)
+- **longDescription_ar** too short (56 < 120 chars)
 - Missing **specifications_notes**
 
-## accessories: apple Box Full
+## Grips: apple Box Full
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (34 < 120 chars)
+- **seoDescription_en** too short (20 < 120 chars)
+- **seoDescription_zh** too short (12 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (23 < 80 chars)
+- **longDescription_ar** too short (39 < 120 chars)
 - Missing **specifications_notes**
 
-## accessories: apple box inside only
+## Grips: apple box inside only
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (34 < 120 chars)
+- **seoDescription_en** too short (20 < 120 chars)
+- **seoDescription_zh** too short (12 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (23 < 80 chars)
+- **longDescription_ar** too short (39 < 120 chars)
 - Missing **specifications_notes**
 
-## accessories: Pottix Q-Drop
+## Grips: Pottix Q-Drop
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7437,62 +3323,13 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## accessories: Weels for small stand
+## Grips: Weels for small stand
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Vaxis atom A5
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## monitors: Atomos neon 24''
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -7513,190 +3350,112 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## monitors: Smallhd Ultra 7inch
+## monitors : Vaxis atom A5
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoTitle_zh** too short (17 < 25 chars)
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (30 < 120 chars)
+- **seoDescription_zh** too short (24 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (19 < 80 chars)
+- **longDescription_ar** too short (39 < 120 chars)
 - Missing **specifications_notes**
 
-## monitors: Atomos Shinobi 5inch
+## monitors : Atomos neon 24''
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (50 < 120 chars)
+- **seoDescription_en** too short (18 < 120 chars)
+- **seoDescription_zh** too short (33 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (28 < 80 chars)
+- **longDescription_ar** too short (45 < 120 chars)
 - Missing **specifications_notes**
 
-## monitors: Atomos Shogun 7inch
+## monitors : Smallhd Ultra 7inch
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (43 < 120 chars)
+- **seoDescription_en** too short (22 < 120 chars)
+- **seoDescription_zh** too short (26 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (20 < 80 chars)
+- **longDescription_ar** too short (46 < 120 chars)
 - Missing **specifications_notes**
 
-## monitors: Smallhd Ultra 5inch
+## monitors : Atomos Shinobi 5inch
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (31 < 120 chars)
+- **seoDescription_zh** too short (24 < 120 chars)
+- **seoKeywords_ar** too short (11 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (25 < 80 chars)
+- **longDescription_ar** too short (47 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Blue shape B mount 290
+## monitors : Atomos Shogun 7inch
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
-- Missing **specifications_notes**
-
-## power: swit b mount charger
-
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (52 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (30 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (27 < 80 chars)
+- **longDescription_ar** too short (61 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Innox V mount 135
+## monitors : Smallhd Ultra 5inch
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
-- Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (21 < 25 chars)
+- **seoDescription_ar** too short (43 < 120 chars)
+- **seoDescription_en** too short (31 < 120 chars)
+- **seoDescription_zh** too short (26 < 120 chars)
+- **seoKeywords_ar** too short (14 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (20 < 80 chars)
+- **longDescription_ar** too short (49 < 120 chars)
 - Missing **specifications_notes**
 
-## power: swit V mount 220
+## Battery: Blue shape B mount 290
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7720,12 +3479,12 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Innox V mount 200
+## Battery: swit b mount charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -7746,9 +3505,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Innox V mount 99
+## Battery: Innox V mount 135
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7772,9 +3532,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Innox IN-F970
+## Battery: swit V mount 220
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7798,9 +3559,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Sony NP-F960
+## Battery: Innox V mount 200
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7824,9 +3586,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Blue shape V mount 2 output
+## Battery: Innox V mount 99
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7850,61 +3613,44 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Newell Dual Li-ion Charger
+## Battery: Innox IN-F970
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (19 < 120 chars)
+- **seoDescription_zh** too short (23 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (19 < 80 chars)
+- **longDescription_ar** too short (53 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Innox Dual Li-ion Charger
+## Battery: Sony NP-F960
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (40 < 120 chars)
+- **seoDescription_en** too short (27 < 120 chars)
+- **seoDescription_zh** too short (19 < 120 chars)
+- **seoKeywords_ar** too short (11 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (23 < 80 chars)
+- **longDescription_ar** too short (69 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Blushape Dual Li-ion Charger
+## Battery: Blue shape V mount 2 output
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -7928,61 +3674,45 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Sony BC-QZ1 Charger
+## Battery: Newell Dual Li-ion Charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoTitle_zh** too short (17 < 25 chars)
+- **seoDescription_ar** too short (44 < 120 chars)
+- **seoDescription_en** too short (21 < 120 chars)
+- **seoDescription_zh** too short (25 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (22 < 80 chars)
+- **longDescription_ar** too short (43 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Sony NP-FZ100 Battery
+## Battery: Innox Dual Li-ion Charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (46 < 120 chars)
+- **seoDescription_en** too short (27 < 120 chars)
+- **seoDescription_zh** too short (21 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (14 < 80 chars)
+- **longDescription_ar** too short (55 < 120 chars)
 - Missing **specifications_notes**
 
-## power: Vemico NP-FZ100 Battery
+## Battery: Blushape Dual Li-ion Charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -8006,140 +3736,118 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## power: Dual Channel Li-ion digital Charger
+## Battery: Sony BC-QZ1 Charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoTitle_zh** too short (22 < 25 chars)
+- **seoDescription_ar** too short (39 < 120 chars)
+- **seoDescription_en** too short (26 < 120 chars)
+- **seoDescription_zh** too short (19 < 120 chars)
+- **seoKeywords_ar** too short (16 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (17 < 80 chars)
+- **longDescription_ar** too short (46 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: xlr to xlr
+## Battery: Sony NP-FZ100 Battery
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (41 < 120 chars)
+- **seoDescription_en** too short (27 < 120 chars)
+- **seoDescription_zh** too short (20 < 120 chars)
+- **seoKeywords_ar** too short (13 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (20 < 80 chars)
+- **longDescription_ar** too short (63 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: xlr to aux
+## Battery: Vemico NP-FZ100 Battery
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (43 < 120 chars)
+- **seoDescription_en** too short (24 < 120 chars)
+- **seoDescription_zh** too short (25 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (26 < 80 chars)
+- **longDescription_ar** too short (47 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: aux to aux
+## Battery: Dual Channel Li-ion digital Charger
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoTitle_zh** too short (15 < 25 chars)
+- **seoDescription_ar** too short (50 < 120 chars)
+- **seoDescription_en** too short (28 < 120 chars)
+- **seoDescription_zh** too short (21 < 120 chars)
+- **seoKeywords_ar** too short (16 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (18 < 80 chars)
+- **longDescription_ar** too short (52 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: rode link
+## Sound: xlr to xlr
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- Missing or empty **boxContents**
+- **seoDescription_ar** too short (36 < 120 chars)
+- **seoDescription_en** too short (33 < 120 chars)
+- **seoDescription_zh** too short (14 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (16 < 80 chars)
+- **longDescription_ar** too short (41 < 120 chars)
+- Missing **specifications_notes**
+
+## Sound: xlr to aux
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- Missing or empty **boxContents**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (42 < 120 chars)
+- **seoDescription_en** too short (24 < 120 chars)
+- **seoDescription_zh** too short (24 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (21 < 80 chars)
+- **longDescription_ar** too short (49 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: sennheiser  ew 4g
+## Sound: aux to aux
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
+- Missing or empty **boxContents**
 - Missing **seoTitle_ar**
 - Missing **seoTitle_en**
 - Missing **seoTitle_zh**
@@ -8160,9 +3868,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## audio: sennheiser  mke 600
+## Sound: rode link
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -8183,11 +3892,45 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
+- Missing **specifications_notes**
+
+## Sound: sennheiser  ew 4g
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoTitle_zh** too short (24 < 25 chars)
+- **seoDescription_ar** too short (49 < 120 chars)
+- **seoDescription_en** too short (24 < 120 chars)
+- **seoDescription_zh** too short (29 < 120 chars)
+- **seoKeywords_ar** too short (9 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (29 < 80 chars)
+- **longDescription_ar** too short (40 < 120 chars)
+- Missing **specifications_notes**
+
+## Sound: sennheiser  mke 600
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoDescription_ar** too short (38 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (18 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (18 < 80 chars)
+- **longDescription_ar** too short (41 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: sennheiser  MZX 8060
+## Sound: sennheiser  MZX 8060
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -8211,9 +3954,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## audio: RODE MIC
+## Sound: RODE MIC
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -8237,9 +3981,10 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## audio: Saramonic  xlr9
+## Sound: Saramonic  xlr9
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing **seoTitle_ar**
@@ -8262,35 +4007,27 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## audio: Zoom F6
+## Sound: Zoom F6
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (42 < 120 chars)
+- **seoDescription_en** too short (26 < 120 chars)
+- **seoDescription_zh** too short (20 < 120 chars)
+- **seoKeywords_ar** too short (10 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (13 < 80 chars)
+- **longDescription_ar** too short (38 < 120 chars)
 - Missing **specifications_notes**
 
-## audio: sennheiser lavalier gold
+## Sound: sennheiser lavalier gold
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
@@ -8314,107 +4051,121 @@ Items with missing or weak content (SEO, descriptions, specs, boxContents, etc.)
 - Missing **longDescription_zh**
 - Missing **specifications_notes**
 
-## audio: lavalier
+## Sound: lavalier
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (52 < 120 chars)
+- **seoDescription_en** too short (16 < 120 chars)
+- **seoDescription_zh** too short (13 < 120 chars)
+- **seoKeywords_ar** too short (5 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (9 < 80 chars)
+- **longDescription_ar** too short (32 < 120 chars)
 - Missing **specifications_notes**
 
-## live-production: Black magic Ultimatte 12 4k
+## Live and mixing : Black magic Ultimatte 12 4k
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
 - Missing or empty **boxContents**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
-- Missing **seoDescription_ar**
-- Missing **seoDescription_en**
-- Missing **seoDescription_zh**
-- Missing **seoKeywords_ar**
+- **seoDescription_ar** too short (46 < 120 chars)
+- **seoDescription_en** too short (23 < 120 chars)
+- **seoDescription_zh** too short (33 < 120 chars)
+- **seoKeywords_ar** too short (8 < 40 chars)
 - Missing **seoKeywords_en**
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
-- Missing **shortDescription_ar**
-- Missing **shortDescription_en**
-- Missing **shortDescription_zh**
-- Missing **longDescription_ar**
-- Missing **longDescription_en**
-- Missing **longDescription_zh**
+- **description_ar** too short (30 < 80 chars)
+- **longDescription_ar** too short (37 < 120 chars)
 - Missing **specifications_notes**
 
-## live-production: Black magic Atem tv  studio 4k8
+## Live and mixing : Black magic Atem tv  studio 4k8
 
 - Missing **sku**
+- Missing **category_slug**
 - Missing **brand_slug**
 - Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
+- **seoTitle_zh** too short (23 < 25 chars)
+- **seoDescription_ar** too short (39 < 120 chars)
+- **seoDescription_en** too short (18 < 120 chars)
+- **seoDescription_zh** too short (26 < 120 chars)
+- **seoKeywords_ar** too short (7 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (41 < 80 chars)
+- **longDescription_ar** too short (39 < 120 chars)
+- Missing **specifications_notes**
+
+## Live and mixing : Auto Q
+
+- Missing **sku**
+- Missing **category_slug**
+- Missing **brand_slug**
+- Missing or empty **tags**
+- **seoTitle_zh** too short (18 < 25 chars)
+- **seoDescription_ar** too short (45 < 120 chars)
+- **seoDescription_en** too short (11 < 120 chars)
+- **seoDescription_zh** too short (11 < 120 chars)
+- **seoKeywords_ar** too short (5 < 40 chars)
+- Missing **seoKeywords_en**
+- Missing **seoKeywords_zh**
+- **description_ar** too short (16 < 80 chars)
+- **longDescription_ar** too short (41 < 120 chars)
+- Missing **specifications_notes**
+
+## FromSpec: ARRI Alexa 35 Cinema Camera
+
+- **seoTitle_zh** too short (18 < 25 chars)
 - Missing **seoDescription_ar**
-- Missing **seoDescription_en**
+- **seoDescription_en** too short (40 < 120 chars)
 - Missing **seoDescription_zh**
 - Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
+- **seoKeywords_en** too short (35 < 40 chars)
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
+- **description_ar** too short (31 < 80 chars)
+- **description_en** too short (39 < 80 chars)
+- **description_zh** too short (24 < 80 chars)
 - Missing **shortDescription_ar**
 - Missing **shortDescription_en**
 - Missing **shortDescription_zh**
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
-- Missing **specifications_notes**
+- Specs missing block: **SHORT SPECS**
+- Specs missing block: **FULL SPECS**
+- Specs missing block: **TECHNICIAN SPECS**
+- **specifications_notes** too short (31 < 200 chars)
 
-## live-production: Auto Q
+## FromSpec: Sony A7R V Mirrorless Camera
 
-- Missing **sku**
-- Missing **brand_slug**
-- Missing or empty **tags**
-- Missing **seoTitle_ar**
-- Missing **seoTitle_en**
-- Missing **seoTitle_zh**
+- **seoTitle_ar** too short (13 < 25 chars)
+- **seoTitle_en** too short (13 < 25 chars)
+- **seoTitle_zh** too short (13 < 25 chars)
 - Missing **seoDescription_ar**
-- Missing **seoDescription_en**
+- **seoDescription_en** too short (31 < 120 chars)
 - Missing **seoDescription_zh**
 - Missing **seoKeywords_ar**
-- Missing **seoKeywords_en**
+- **seoKeywords_en** too short (23 < 40 chars)
 - Missing **seoKeywords_zh**
-- Missing **description_ar**
-- Missing **description_en**
-- Missing **description_zh**
+- **description_ar** too short (30 < 80 chars)
+- **description_en** too short (49 < 80 chars)
+- **description_zh** too short (25 < 80 chars)
 - Missing **shortDescription_ar**
 - Missing **shortDescription_en**
 - Missing **shortDescription_zh**
 - Missing **longDescription_ar**
 - Missing **longDescription_en**
 - Missing **longDescription_zh**
-- Missing **specifications_notes**
+- Specs missing block: **SHORT SPECS**
+- Specs missing block: **FULL SPECS**
+- Specs missing block: **TECHNICIAN SPECS**
+- **specifications_notes** too short (25 < 200 chars)
 
 ---
 

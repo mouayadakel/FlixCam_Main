@@ -28,7 +28,7 @@ export function CompareBar() {
                   alt={item.name}
                   width={32}
                   height={32}
-                  className="rounded object-cover"
+                  className="rounded bg-white object-contain"
                   unoptimized={isExternalImageUrl(item.image)}
                 />
               ) : (

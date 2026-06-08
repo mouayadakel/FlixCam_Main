@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ChevronUp, ChevronDown, Trash2, Loader2, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { uploadMediaFile } from '@/lib/utils/media-upload.client'
 
 interface MediaItem {
   id: string
@@ -67,11 +68,7 @@ export function CmsStudioGalleryTab({ studioId, onRefresh }: GalleryTabProps) {
     if (!file) return
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('studioId', studioId)
-      const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error('Upload failed')
+      await uploadMediaFile({ file, studioId })
       toast({ title: 'تم', description: 'تم رفع الصورة' })
       onRefresh()
       const mRes = await fetch(`/api/admin/studios/${studioId}/media`)
@@ -79,8 +76,12 @@ export function CmsStudioGalleryTab({ studioId, onRefresh }: GalleryTabProps) {
         const m = await mRes.json()
         setMedia(m.data ?? [])
       }
-    } catch {
-      toast({ title: 'خطأ', description: 'فشل الرفع', variant: 'destructive' })
+    } catch (err) {
+      toast({
+        title: 'خطأ',
+        description: err instanceof Error ? err.message : 'فشل الرفع',
+        variant: 'destructive',
+      })
     } finally {
       setUploading(false)
       e.target.value = ''

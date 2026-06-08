@@ -4,7 +4,10 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
-import type { CartItemType } from '@prisma/client'
+import type { CartItemType, Prisma } from '@prisma/client'
+import { computeAddonsTotals, type PersistedCheckoutAddons } from '@/lib/pricing/checkout-addons'
+import { calculateRentalDays } from '@/lib/pricing/rental-days'
+import { isQuoteOnlyCrew } from '@/lib/utils/crew-equipment.utils'
 
 const CART_EXPIRY_HOURS = 24
 const DAYS_PER_WEEK = 7
@@ -53,7 +56,7 @@ export function calculateBestRate(
   return { effectiveTotal: Math.round(dailyTotal * 100) / 100, appliedRate: 'daily' }
 }
 
-const CART_INCLUDE = {
+const CART_INCLUDE: Prisma.CartInclude = {
   items: {
     include: {
       studio: {
@@ -86,7 +89,7 @@ const CART_INCLUDE = {
       kit: { select: { id: true, name: true, nameEn: true } },
     },
   },
-} as const
+}
 
 export interface AddCartItemInput {
   itemType: CartItemType
@@ -105,6 +108,7 @@ export interface CartWithItems {
   userId: string | null
   sessionId: string | null
   couponCode: string | null
+  addons: PersistedCheckoutAddons
   discountAmount: number
   subtotal: number
   total: number
@@ -151,14 +155,23 @@ export class CartService {
     expiresAt.setHours(expiresAt.getHours() + CART_EXPIRY_HOURS)
 
     const existing = await prisma.cart.findFirst({
-      where: userId ? { userId } : { sessionId: sessionId ?? undefined },
+      where: {
+        deletedAt: null,
+        ...(userId ? { userId } : { sessionId: sessionId ?? undefined }),
+      },
       include: CART_INCLUDE,
     })
 
     if (existing) {
       if (new Date(existing.expiresAt) < new Date()) {
-        await prisma.cartItem.deleteMany({ where: { cartId: existing.id } })
-        await prisma.cart.delete({ where: { id: existing.id } })
+        await prisma.cartItem.updateMany({
+          where: { cartId: existing.id, deletedAt: null },
+          data: { deletedAt: new Date() },
+        })
+        await prisma.cart.update({
+          where: { id: existing.id },
+          data: { deletedAt: new Date() },
+        })
       } else {
         return this.toCartWithItemsWithEnrichment(existing)
       }
@@ -190,8 +203,23 @@ export class CartService {
     if (input.itemType === 'EQUIPMENT' && input.equipmentId) {
       const eq = await prisma.equipment.findFirst({
         where: { id: input.equipmentId, deletedAt: null },
-        select: { dailyPrice: true, weeklyPrice: true, monthlyPrice: true },
+        select: {
+          dailyPrice: true,
+          weeklyPrice: true,
+          monthlyPrice: true,
+          sku: true,
+          customFields: true,
+          category: { select: { slug: true } },
+        },
       })
+      if (
+        eq &&
+        isQuoteOnlyCrew(eq.customFields, eq.sku, eq.category?.slug ?? null)
+      ) {
+        throw new Error(
+          'This crew role requires a custom quote. Please contact us via WhatsApp or the contact page.'
+        )
+      }
       dailyRate = eq?.dailyPrice ? Number(eq.dailyPrice) : 0
       weeklyRate = eq?.weeklyPrice ? Number(eq.weeklyPrice) : null
       monthlyRate = eq?.monthlyPrice ? Number(eq.monthlyPrice) : null
@@ -227,7 +255,7 @@ export class CartService {
     const startDate = input.startDate ?? null
     const endDate = input.endDate ?? null
     const msDiff = startDate && endDate ? endDate.getTime() - startDate.getTime() : 0
-    const days = startDate && endDate ? Math.max(1, Math.ceil(msDiff / (24 * 60 * 60 * 1000))) : 1
+    const days = startDate && endDate ? calculateRentalDays(startDate, endDate) : 1
     const hoursSameDay =
       startDate && endDate && msDiff > 0 && msDiff < 24 * 60 * 60 * 1000
         ? msDiff / (60 * 60 * 1000)
@@ -281,9 +309,7 @@ export class CartService {
     const startDate = data.startDate ?? item.startDate
     const endDate = data.endDate ?? item.endDate
     const days =
-      startDate && endDate
-        ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)))
-        : 1
+      startDate && endDate ? calculateRentalDays(startDate, endDate) : 1
     const dailyRate = item.dailyRate ? Number(item.dailyRate) : 0
 
     let subtotalItem: number
@@ -358,7 +384,15 @@ export class CartService {
   private static async validateCouponForCart(
     code: string,
     amount: number,
-    items: { equipmentId: string | null }[]
+    items: {
+      equipmentId: string | null
+      itemType: string
+      subtotal: any
+      dailyRate: any
+      startDate: Date | null
+      endDate: Date | null
+      quantity: number
+    }[]
   ): Promise<{ valid: boolean; discountAmount: number; error?: string }> {
     const coupon = await prisma.coupon.findFirst({
       where: { code, deletedAt: null },
@@ -386,14 +420,41 @@ export class CartService {
         return { valid: false, discountAmount: 0, error: 'Coupon not applicable to cart items' }
     }
 
+    let applicableAmount = amount
+    if ((coupon as any).canCombineWithOtherOffers === false) {
+      applicableAmount = items.reduce((sum, item) => {
+        let hasImplicitDiscount = false
+        if (item.itemType === 'KIT' || item.itemType === 'PACKAGE') {
+          hasImplicitDiscount = true
+        } else if (item.itemType === 'EQUIPMENT') {
+          const days = item.startDate && item.endDate
+            ? calculateRentalDays(item.startDate, item.endDate)
+            : 1
+          const expectedSubtotal = Number(item.dailyRate ?? 0) * item.quantity * days
+          if (Number(item.subtotal) < expectedSubtotal - 0.01) {
+            hasImplicitDiscount = true
+          }
+        }
+
+        if (!hasImplicitDiscount) {
+          return sum + Number(item.subtotal)
+        }
+        return sum
+      }, 0)
+
+      if (applicableAmount <= 0) {
+        return { valid: false, discountAmount: 0, error: 'لا ينطبق الكوبون على المنتجات المخفضة في السلة' }
+      }
+    }
+
     const isPercent = coupon.type === 'PERCENT'
     const value = isPercent
       ? Number(coupon.discountPercentage ?? 0)
       : Number(coupon.discountValue ?? 0)
-    let discountAmount = isPercent ? (amount * value) / 100 : value
+    let discountAmount = isPercent ? (applicableAmount * value) / 100 : value
     const maxDiscount = coupon.maximumDiscount ? Number(coupon.maximumDiscount) : null
     if (maxDiscount != null && discountAmount > maxDiscount) discountAmount = maxDiscount
-    if (discountAmount > amount) discountAmount = amount
+    if (discountAmount > applicableAmount) discountAmount = applicableAmount
 
     return { valid: true, discountAmount }
   }
@@ -422,42 +483,62 @@ export class CartService {
     })
     if (!cart) throw new Error('Cart not found')
 
-    const equipmentIds = [
-      ...new Set(
-        cart.items
-          .filter((i) => i.itemType === 'EQUIPMENT' && i.equipmentId)
-          .map((i) => i.equipmentId!)
-      ),
-    ]
-    const equipmentMap = new Map<string, { quantityTotal: number }>()
-    if (equipmentIds.length > 0) {
-      const equipment = await prisma.equipment.findMany({
-        where: { id: { in: equipmentIds } },
-        select: { id: true, quantityTotal: true },
-      })
-      equipment.forEach((e) => equipmentMap.set(e.id, { quantityTotal: e.quantityTotal }))
-    }
-
     const now = new Date()
     for (const item of cart.items) {
       let available = true
-      if (item.itemType === 'EQUIPMENT' && item.equipmentId && item.startDate && item.endDate) {
-        const booked = await prisma.bookingEquipment.aggregate({
-          where: {
-            equipmentId: item.equipmentId,
-            booking: {
-              status: { in: ['CONFIRMED', 'ACTIVE'] },
-              deletedAt: null,
-              startDate: { lt: item.endDate! },
-              endDate: { gt: item.startDate! },
-            },
-          },
-          _sum: { quantity: true },
+      if (!item.startDate || !item.endDate) {
+        // Items without dates are assumed available for now
+      } else if (item.itemType === 'EQUIPMENT' && item.equipmentId) {
+        const eq = await prisma.equipment.findUnique({
+          where: { id: item.equipmentId },
+          select: { quantityTotal: true },
         })
-        const eq = equipmentMap.get(item.equipmentId)
-        const bookedQty = booked._sum.quantity ?? 0
-        available = eq ? eq.quantityTotal - bookedQty >= item.quantity : false
+        if (!eq) {
+          available = false
+        } else {
+          const booked = await prisma.bookingEquipment.aggregate({
+            where: {
+              equipmentId: item.equipmentId,
+              booking: {
+                status: { in: ['CONFIRMED', 'ACTIVE'] },
+                deletedAt: null,
+                startDate: { lt: item.endDate },
+                endDate: { gt: item.startDate },
+              },
+            },
+            _sum: { quantity: true },
+          })
+          const bookedQty = booked._sum.quantity ?? 0
+          available = eq.quantityTotal - bookedQty >= item.quantity
+        }
+      } else if ((item.itemType === 'KIT' || item.itemType === 'PACKAGE') && (item.kitId || item.packageId)) {
+        const kitId = item.kitId ?? item.packageId
+        const kitItems = await prisma.kitEquipment.findMany({
+          where: { kitId: kitId! },
+          include: { equipment: { select: { id: true, quantityTotal: true } } },
+        })
+        
+        for (const ki of kitItems) {
+          const booked = await prisma.bookingEquipment.aggregate({
+            where: {
+              equipmentId: ki.equipmentId,
+              booking: {
+                status: { in: ['CONFIRMED', 'ACTIVE'] },
+                deletedAt: null,
+                startDate: { lt: item.endDate! },
+                endDate: { gt: item.startDate! },
+              },
+            },
+            _sum: { quantity: true },
+          })
+          const bookedQty = booked._sum.quantity ?? 0
+          if (ki.equipment.quantityTotal - bookedQty < ki.quantity * item.quantity) {
+            available = false
+            break
+          }
+        }
       }
+
       await prisma.cartItem.update({
         where: { id: item.id },
         data: { isAvailable: available, lastCheckedAt: now },
@@ -500,6 +581,28 @@ export class CartService {
     return this.recalculateCart(userCart.id)
   }
 
+  /**
+   * Recompute `cart.subtotal` / `cart.total` from line items (same rules as internal recalculate).
+   * Call immediately before checkout payment so Moyasar never reads a stale `cart.total`.
+   */
+  static async refreshTotalsFromLineItems(cartId: string): Promise<CartWithItems> {
+    return this.recalculateCart(cartId)
+  }
+
+  /**
+   * Persist checkout add-ons on the cart (technician, insurance, accessories, delivery fee),
+   * then recalculate totals so payment uses authoritative server totals.
+   */
+  static async setAddons(cartId: string, addons: unknown): Promise<CartWithItems> {
+    await prisma.cart.update({
+      where: { id: cartId },
+      data: {
+        addons: JSON.parse(JSON.stringify(addons ?? {})),
+      },
+    })
+    return this.recalculateCart(cartId)
+  }
+
   private static async recalculateCart(cartId: string): Promise<CartWithItems> {
     const cart = await prisma.cart.findUnique({
       where: { id: cartId },
@@ -507,7 +610,9 @@ export class CartService {
     })
     if (!cart) throw new Error('Cart not found')
 
-    const subtotal = cart.items.reduce((s, i) => s + Number(i.subtotal), 0)
+    const itemsSubtotal = cart.items.reduce((s, i) => s + Number(i.subtotal), 0)
+    const addonsSubtotal = computeAddonsTotals(cart.addons, itemsSubtotal).addonsSubtotalSar
+    const subtotal = itemsSubtotal + addonsSubtotal
     const discount = cart.discountAmount ? Number(cart.discountAmount) : 0
     const total = Math.max(0, subtotal - discount)
 
@@ -531,6 +636,7 @@ export class CartService {
     userId: string | null
     sessionId: string | null
     couponCode: string | null
+    addons?: unknown
     discountAmount: unknown
     subtotal: unknown
     total: unknown
@@ -569,6 +675,7 @@ export class CartService {
       userId: cart.userId,
       sessionId: cart.sessionId,
       couponCode: cart.couponCode,
+      addons: (cart.addons as PersistedCheckoutAddons | undefined) ?? {},
       discountAmount: cart.discountAmount ? Number(cart.discountAmount) : 0,
       subtotal: Number(cart.subtotal),
       total: Number(cart.total),
@@ -577,12 +684,7 @@ export class CartService {
         const equipment = i.equipment
         const kit = i.kit
         const days =
-          i.startDate && i.endDate
-            ? Math.max(
-                1,
-                Math.ceil((i.endDate.getTime() - i.startDate.getTime()) / (24 * 60 * 60 * 1000))
-              )
-            : 1
+          i.startDate && i.endDate ? calculateRentalDays(i.startDate, i.endDate) : 1
         return {
           id: i.id,
           itemType: i.itemType,

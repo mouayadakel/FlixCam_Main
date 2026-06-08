@@ -4,8 +4,9 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import Cropper, { type Area } from 'react-easy-crop'
 import {
   Dialog,
   DialogContent,
@@ -25,14 +26,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import type { CreateSlideInput } from '@/lib/validators/hero-banner.validator'
+import { uploadMediaFile } from '@/lib/utils/media-upload.client'
+
+/** Client-side max before upload; server CMS limit matches (see MediaService MAX_CMS_FILE_SIZE). */
+const HERO_IMAGE_MAX_BYTES = 30 * 1024 * 1024
+/** Compress rasters down to this before POST so the body stays under the 30MB CMS cap. */
+const HERO_IMAGE_COMPRESS_TARGET_BYTES = 28 * 1024 * 1024
 
 export interface HeroSlideForEdit {
   id: string
   imageUrl: string
   mobileImageUrl: string | null
+  mobileAspectRatio: string
+  mobileFocalX: number
+  mobileFocalY: number
+  desktopAspectRatio: string
+  desktopFocalX: number
+  desktopFocalY: number
   videoUrl: string | null
   titleAr: string
   titleEn: string
@@ -64,6 +78,12 @@ export interface HeroSlideForEdit {
 const defaultForm: CreateSlideInput = {
   imageUrl: '',
   mobileImageUrl: '',
+  mobileAspectRatio: 'auto',
+  mobileFocalX: 50,
+  mobileFocalY: 50,
+  desktopAspectRatio: '16/9',
+  desktopFocalX: 50,
+  desktopFocalY: 50,
   videoUrl: '',
   titleAr: '',
   titleEn: '',
@@ -107,7 +127,38 @@ export function SlideFormDialog({
 }) {
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState<null | 'desktop' | 'mobile'>(null)
+  const desktopImageInputRef = useRef<HTMLInputElement>(null)
+  const mobileImageInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState<CreateSlideInput>(defaultForm)
+  const [cropperOpen, setCropperOpen] = useState(false)
+  const [cropperTarget, setCropperTarget] = useState<'mobile' | 'desktop'>('mobile')
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null)
+
+  type SlideAspectRatio = NonNullable<CreateSlideInput['mobileAspectRatio']>
+
+  const aspectRatioToClass = (
+    ratio: SlideAspectRatio | string | undefined,
+    target: 'mobile' | 'desktop' = 'mobile'
+  ) => {
+    switch (ratio) {
+      case '1/1':
+        return 'aspect-square'
+      case '4/5':
+        return 'aspect-[4/5]'
+      case '3/4':
+        return 'aspect-[3/4]'
+      case '9/16':
+        return 'aspect-[9/16]'
+      case '16/9':
+        return 'aspect-video'
+      case 'auto':
+      default:
+        return target === 'desktop' ? 'aspect-video' : 'aspect-[4/3]'
+    }
+  }
 
   const isEdit = Boolean(slide?.id)
 
@@ -116,6 +167,12 @@ export function SlideFormDialog({
       setForm({
         imageUrl: slide.imageUrl,
         mobileImageUrl: slide.mobileImageUrl ?? '',
+        mobileAspectRatio: (slide.mobileAspectRatio ?? 'auto') as CreateSlideInput['mobileAspectRatio'],
+        mobileFocalX: slide.mobileFocalX ?? 50,
+        mobileFocalY: slide.mobileFocalY ?? 50,
+        desktopAspectRatio: (slide.desktopAspectRatio ?? '16/9') as CreateSlideInput['desktopAspectRatio'],
+        desktopFocalX: slide.desktopFocalX ?? 50,
+        desktopFocalY: slide.desktopFocalY ?? 50,
         videoUrl: slide.videoUrl ?? '',
         titleAr: slide.titleAr,
         titleEn: slide.titleEn,
@@ -148,8 +205,121 @@ export function SlideFormDialog({
     }
   }, [slide, open])
 
+  const mobilePreviewAspectClass = aspectRatioToClass(form.mobileAspectRatio, 'mobile')
+  const desktopPreviewAspectClass = aspectRatioToClass(form.desktopAspectRatio, 'desktop')
+
+  const cropperImageUrl =
+    cropperTarget === 'desktop'
+      ? (form.imageUrl || '').trim()
+      : (form.mobileImageUrl || form.imageUrl || '').trim()
+  const mobileFocalX = form.mobileFocalX ?? 50
+  const mobileFocalY = form.mobileFocalY ?? 50
+  const desktopFocalX = form.desktopFocalX ?? 50
+  const desktopFocalY = form.desktopFocalY ?? 50
+
   const update = (patch: Partial<CreateSlideInput>) => {
     setForm((f) => ({ ...f, ...patch }))
+  }
+
+  async function handleHeroImageFile(
+    file: File | undefined,
+    field: 'imageUrl' | 'mobileImageUrl'
+  ) {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'خطأ',
+        description: 'اختر ملف صورة فقط (PNG، JPEG، WebP، …)',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (file.size > HERO_IMAGE_MAX_BYTES) {
+      toast({
+        title: 'خطأ',
+        description: 'الحد الأقصى لحجم الصورة 30 ميغابايت',
+        variant: 'destructive',
+      })
+      return
+    }
+    setUploadingImage(field === 'imageUrl' ? 'desktop' : 'mobile')
+    try {
+      const media = await uploadMediaFile({
+        file,
+        cmsFolder: `hero-banners/${bannerId}`,
+        compressTargetBytes: HERO_IMAGE_COMPRESS_TARGET_BYTES,
+      })
+      update({ [field]: media.url })
+      toast({ title: 'تم', description: 'تم رفع الصورة' })
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل رفع الصورة',
+        variant: 'destructive',
+      })
+    } finally {
+      setUploadingImage(null)
+      if (field === 'imageUrl' && desktopImageInputRef.current) {
+        desktopImageInputRef.current.value = ''
+      }
+      if (field === 'mobileImageUrl' && mobileImageInputRef.current) {
+        mobileImageInputRef.current.value = ''
+      }
+    }
+  }
+
+  const aspectToNumber = (ratio: SlideAspectRatio | undefined, target: 'mobile' | 'desktop'): number => {
+    switch (ratio) {
+      case '1/1':
+        return 1
+      case '4/5':
+        return 4 / 5
+      case '3/4':
+        return 3 / 4
+      case '9/16':
+        return 9 / 16
+      case '16/9':
+        return 16 / 9
+      case 'auto':
+      default:
+        return target === 'desktop' ? 16 / 9 : 4 / 5
+    }
+  }
+
+  const openCropper = (target: 'mobile' | 'desktop') => {
+    setCropperTarget(target)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedArea(null)
+    setCropperOpen(true)
+  }
+
+  const onCropComplete = (_croppedAreaPixels: Area, croppedAreaPercentages: Area) => {
+    setCroppedArea(croppedAreaPercentages)
+  }
+
+  const applyCropToFocalPoint = () => {
+    if (!croppedArea) return
+    const centerX = croppedArea.x + croppedArea.width / 2
+    const centerY = croppedArea.y + croppedArea.height / 2
+    const focal = {
+      x: Math.max(0, Math.min(100, centerX)),
+      y: Math.max(0, Math.min(100, centerY)),
+    }
+    if (cropperTarget === 'desktop') {
+      update({
+        desktopFocalX: focal.x,
+        desktopFocalY: focal.y,
+      })
+      toast({ title: 'تم', description: 'تم حفظ القص للديسكتوب' })
+    } else {
+      update({
+        mobileFocalX: focal.x,
+        mobileFocalY: focal.y,
+      })
+      toast({ title: 'تم', description: 'تم حفظ القص للموبايل' })
+    }
+    setCropperOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -237,6 +407,7 @@ export function SlideFormDialog({
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, 672px"
+                style={{ objectPosition: `${desktopFocalX}% ${desktopFocalY}%` }}
               />
               <div
                 className="hero-slide-overlay absolute inset-0 bg-black transition-opacity"
@@ -276,21 +447,251 @@ export function SlideFormDialog({
           <TabsContent value="media" className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>رابط الصورة (مطلوب)</Label>
-              <Input
-                value={form.imageUrl}
-                onChange={(e) => update({ imageUrl: e.target.value })}
-                placeholder="https://..."
-                dir="ltr"
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  className="min-w-0 flex-1"
+                  value={form.imageUrl}
+                  onChange={(e) => update({ imageUrl: e.target.value })}
+                  placeholder="https://... أو ارفع صورة"
+                  dir={EMBED_LTR}
+                  disabled={uploadingImage === 'desktop'}
+                />
+                <input
+                  ref={desktopImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleHeroImageFile(e.target.files?.[0], 'imageUrl')}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 gap-2"
+                  disabled={uploadingImage !== null}
+                  onClick={() => desktopImageInputRef.current?.click()}
+                >
+                  {uploadingImage === 'desktop' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  رفع صورة
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">الحد الأقصى للرفع: 30 م.ب (صور فقط)</p>
+            </div>
+            <div className="space-y-3 rounded-lg border p-4">
+              <Label className="text-base font-medium">قص ومحاذاة الديسكتوب</Label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>نسبة أبعاد الديسكتوب (للـ crop)</Label>
+                  <Select
+                    value={form.desktopAspectRatio}
+                    onValueChange={(v) =>
+                      update({
+                        desktopAspectRatio: v as CreateSlideInput['desktopAspectRatio'],
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="16/9">16:9 (Hero)</SelectItem>
+                      <SelectItem value="1/1">1:1 (Square)</SelectItem>
+                      <SelectItem value="4/5">4:5</SelectItem>
+                      <SelectItem value="3/4">3:4</SelectItem>
+                      <SelectItem value="9/16">9:16</SelectItem>
+                      <SelectItem value="auto">Auto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>معاينة Crop للديسكتوب</Label>
+                  <div className="overflow-hidden rounded-lg border bg-muted/20 p-2">
+                    <div className={`relative w-full ${desktopPreviewAspectClass}`}>
+                      <Image
+                        src={form.imageUrl as string}
+                        alt="Desktop preview"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 480px"
+                        style={{ objectPosition: `${desktopFocalX}% ${desktopFocalY}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!form.imageUrl?.trim()}
+                  onClick={() => openCropper('desktop')}
+                >
+                  قص صورة الديسكتوب (Drag + Zoom)
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  يُطبق على عرض الموقع في الشاشات الكبيرة (md+).
+                </div>
+              </div>
+              <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+                <Label>Crop focal point (الديسكتوب)</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="hero-slide-desktop-focal-x" className="text-sm text-muted-foreground">
+                    أفقي: {Math.round(desktopFocalX)}%
+                  </Label>
+                  <input
+                    id="hero-slide-desktop-focal-x"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={desktopFocalX}
+                    onChange={(e) => update({ desktopFocalX: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hero-slide-desktop-focal-y" className="text-sm text-muted-foreground">
+                    عمودي: {Math.round(desktopFocalY)}%
+                  </Label>
+                  <input
+                    id="hero-slide-desktop-focal-y"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={desktopFocalY}
+                    onChange={(e) => update({ desktopFocalY: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>صورة الموبايل (اختياري)</Label>
-              <Input
-                value={form.mobileImageUrl ?? ''}
-                onChange={(e) => update({ mobileImageUrl: e.target.value })}
-                placeholder="https://..."
-                dir="ltr"
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  className="min-w-0 flex-1"
+                  value={form.mobileImageUrl ?? ''}
+                  onChange={(e) => update({ mobileImageUrl: e.target.value })}
+                  placeholder="https://... أو ارفع صورة"
+                  dir={EMBED_LTR}
+                  disabled={uploadingImage === 'mobile'}
+                />
+                <input
+                  ref={mobileImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleHeroImageFile(e.target.files?.[0], 'mobileImageUrl')}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 gap-2"
+                  disabled={uploadingImage !== null}
+                  onClick={() => mobileImageInputRef.current?.click()}
+                >
+                  {uploadingImage === 'mobile' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  رفع صورة
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">الحد الأقصى للرفع: 30 م.ب (صور فقط)</p>
+            </div>
+            <div className="space-y-3 rounded-lg border p-4">
+              <Label className="text-base font-medium">قص ومحاذاة الموبايل</Label>
+              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>نسبة أبعاد الموبايل (للـ crop)</Label>
+                <Select
+                  value={form.mobileAspectRatio}
+                  onValueChange={(v) =>
+                    update({
+                      mobileAspectRatio: v as CreateSlideInput['mobileAspectRatio'],
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto</SelectItem>
+                    <SelectItem value="1/1">1:1 (Square)</SelectItem>
+                    <SelectItem value="4/5">4:5</SelectItem>
+                    <SelectItem value="3/4">3:4</SelectItem>
+                    <SelectItem value="9/16">9:16 (Story)</SelectItem>
+                    <SelectItem value="16/9">16:9</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>معاينة Crop للموبايل</Label>
+                <div className="overflow-hidden rounded-lg border bg-muted/20 p-2">
+                  <div className={`relative w-full ${mobilePreviewAspectClass}`}>
+                    <Image
+                      src={(form.mobileImageUrl || form.imageUrl) as string}
+                      alt="Mobile preview"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 480px"
+                      style={{ objectPosition: `${mobileFocalX}% ${mobileFocalY}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!(form.mobileImageUrl || form.imageUrl)?.trim()}
+                onClick={() => openCropper('mobile')}
+              >
+                قص صورة الموبايل (Drag + Zoom)
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                يتم حفظ القص كـ focal point (ويُطبق على الموبايل في الموقع).
+              </div>
+            </div>
+            <div className="space-y-3 rounded-lg border p-4">
+              <Label>Crop focal point (الموبايل)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="hero-slide-mobile-focal-x" className="text-sm text-muted-foreground">
+                  أفقي: {Math.round(mobileFocalX)}%
+                </Label>
+                <input
+                  id="hero-slide-mobile-focal-x"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={mobileFocalX}
+                  onChange={(e) => update({ mobileFocalX: parseFloat(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hero-slide-mobile-focal-y" className="text-sm text-muted-foreground">
+                  عمودي: {Math.round(mobileFocalY)}%
+                </Label>
+                <input
+                  id="hero-slide-mobile-focal-y"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={mobileFocalY}
+                  onChange={(e) => update({ mobileFocalY: parseFloat(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+            </div>
             </div>
             <div className="space-y-2">
               <Label>رابط فيديو خلفية (اختياري)</Label>
@@ -298,7 +699,7 @@ export function SlideFormDialog({
                 value={form.videoUrl ?? ''}
                 onChange={(e) => update({ videoUrl: e.target.value })}
                 placeholder="https://..."
-                dir="ltr"
+                dir={EMBED_LTR}
               />
             </div>
           </TabsContent>
@@ -380,7 +781,7 @@ export function SlideFormDialog({
                   value={form.ctaUrl ?? ''}
                   onChange={(e) => update({ ctaUrl: e.target.value })}
                   placeholder="رابط /equipment"
-                  dir="ltr"
+                  dir={EMBED_LTR}
                 />
               </div>
               <div className="flex gap-2">
@@ -419,7 +820,7 @@ export function SlideFormDialog({
                   value={form.cta2Url ?? ''}
                   onChange={(e) => update({ cta2Url: e.target.value })}
                   placeholder="رابط"
-                  dir="ltr"
+                  dir={EMBED_LTR}
                 />
               </div>
               <Input
@@ -503,6 +904,63 @@ export function SlideFormDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={cropperOpen} onOpenChange={setCropperOpen}>
+        <DialogContent className="max-w-3xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>
+              {cropperTarget === 'desktop' ? 'قص صورة الديسكتوب' : 'قص صورة الموبايل'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!cropperImageUrl ? (
+            <div className="text-sm text-muted-foreground">أضف رابط صورة أولاً.</div>
+          ) : (
+            <div className="space-y-4">
+              <div className="relative h-[420px] w-full overflow-hidden rounded-lg border bg-black">
+                <Cropper
+                  image={cropperImageUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={aspectToNumber(
+                    cropperTarget === 'desktop' ? form.desktopAspectRatio : form.mobileAspectRatio,
+                    cropperTarget
+                  )}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                  cropShape="rect"
+                  showGrid
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hero-slide-mobile-zoom" className="text-sm text-muted-foreground">
+                  Zoom: {zoom.toFixed(2)}
+                </Label>
+                <input
+                  id="hero-slide-mobile-zoom"
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.01"
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCropperOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={applyCropToFocalPoint} disabled={!croppedArea}>
+              حفظ القص
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }

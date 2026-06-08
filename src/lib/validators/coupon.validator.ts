@@ -24,9 +24,9 @@ export const createCouponSchema = z
       .max(50, 'رمز الكوبون طويل جداً'),
     type: couponTypeSchema,
     value: z.number().min(0, 'القيمة يجب أن تكون أكبر من أو تساوي 0'),
-    minPurchaseAmount: z.number().min(0).optional(),
-    maxDiscountAmount: z.number().min(0).optional(),
-    usageLimit: z.number().int().min(1).optional(),
+    minPurchaseAmount: z.number().min(0, 'الحد الأدنى للشراء يجب أن يكون 0 أو أكثر').optional(),
+    maxDiscountAmount: z.number().min(0, 'الحد الأقصى للخصم يجب أن يكون 0 أو أكثر').optional(),
+    usageLimit: z.number().int('حد الاستخدام يجب أن يكون رقماً صحيحاً').min(1, 'حد الاستخدام يجب أن يكون 1 أو أكثر').optional(),
     validFrom: z.coerce.date({
       errorMap: () => ({ message: 'تاريخ البداية مطلوب' }),
     }),
@@ -35,6 +35,7 @@ export const createCouponSchema = z
     }),
     applicableTo: z.array(z.string()).optional(),
     description: z.string().optional(),
+    canCombineWithOtherOffers: z.boolean().default(true),
   })
   .refine(
     (data) => {
@@ -65,6 +66,7 @@ export const updateCouponSchema = z.object({
   validUntil: z.coerce.date().optional(),
   applicableTo: z.array(z.string()).optional(),
   description: z.string().optional(),
+  canCombineWithOtherOffers: z.boolean().optional(),
 })
 
 export const validateCouponSchema = z.object({

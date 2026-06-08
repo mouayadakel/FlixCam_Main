@@ -1,0 +1,62 @@
+# FlixCam VPS cron — install as /etc/cron.d/flixcam
+# Requires: /etc/flixcam.cron.env with CRON_SECRET and optional APP_URL
+#
+#   sudo ./scripts/install-vps-cron.sh
+#
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+INVOKE=/home/flixcam.rent/scripts/cron-invoke.sh
+
+# ── Tier 1: Critical ───────────────────────────────────────────────────────
+* * * * * root $INVOKE /api/cron/run/payment-retry
+* * * * * root $INVOKE /api/cron/run/notification-queue
+* * * * * root $INVOKE /api/cron/run/session-cleanup
+*/5 * * * * root $INVOKE /api/cron/run/rental-status-updates
+*/5 * * * * root $INVOKE /api/cron/run/inventory-sync
+*/5 * * * * root $INVOKE /api/cron/run/redis-cleanup
+*/15 * * * * root $INVOKE /api/cron/moyasar-webhooks
+
+# ── Reminders (single consolidated WhatsApp path + hourly legacy in-app) ───
+0 * * * * root $INVOKE /api/cron/reminders
+0 * * * * root $INVOKE /api/cron/run/late-return-detection
+0 * * * * root $INVOKE /api/cron/run/auto-extend-offers
+0 * * * * root $INVOKE /api/cron/run/order-notifications
+
+# ── Every 6 hours ──────────────────────────────────────────────────────────
+0 */6 * * * root $INVOKE /api/cron/abandoned-carts
+
+# ── Daily ──────────────────────────────────────────────────────────────────
+0 0 * * * root $INVOKE /api/cron/waitlist-expiry
+0 1 * * * root $INVOKE /api/cron/run/payment-reconciliation
+0 2 * * * root $INVOKE /api/cron/cleanup-pending-users
+0 2 * * * root $INVOKE /api/cron/backfill
+0 3 * * * root /home/flixcam.rent/scripts/run-backup-cron.sh >> /var/log/flixcam-backup.log 2>&1
+0 4 * * * root $INVOKE /api/cron/run/daily-revenue-report
+0 4 * * * root $INVOKE /api/cron/run/equipment-utilization
+0 4 * * * root $INVOKE /api/cron/run/user-activity-summary
+0 5 * * * root $INVOKE /api/cron/run/email-digest
+0 5 * * * root $INVOKE /api/cron/run/team-notifications
+0 6 * * * root $INVOKE /api/cron/run/wallet-settlements
+0 7 * * * root $INVOKE /api/cron/run/sms-otp-cleanup
+0 8 * * * root $INVOKE /api/cron/run/sitemap-rebuild
+0 8 * * * root $INVOKE /api/cron/run/schema-refresh
+0 8 * * * root $INVOKE /api/cron/run/product-feeds
+0 9 * * * root $INVOKE /api/cron/invoice-overdue
+0 10 * * * root $INVOKE /api/cron/run/equipment-specs-validation
+0 11 * * * root $INVOKE /api/cron/run/ticket-escalation
+0 12 * * * root $INVOKE /api/cron/run/seasonal-promos
+0 13 * * * root $INVOKE /api/cron/run/ga4-sync
+0 14 * * * root $INVOKE /api/cron/publish-scheduled-blog
+*/15 * * * * root $INVOKE /api/cron/run/health-check
+
+# ── Weekly (Sunday) ────────────────────────────────────────────────────────
+0 3 * * 0 root $INVOKE /api/cron/run/database-maintenance
+0 4 * * 0 root $INVOKE /api/cron/run/pdpl-archive
+0 5 * * 0 root $INVOKE /api/cron/run/security-scan
+
+# ── Monthly (1st) ──────────────────────────────────────────────────────────
+0 6 1 * * root $INVOKE /api/cron/run/monthly-invoices
+0 7 1 * * root $INVOKE /api/cron/run/credential-rotation-check
+
+# ── PM2 health watchdog (restart; set WATCHDOG_AUTO_DEPLOY=true for rebuild) ─
+*/5 * * * * root /home/flixcam.rent/scripts/health-watchdog.sh >> /var/log/flixcam-watchdog.log 2>&1

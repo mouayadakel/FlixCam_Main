@@ -14,12 +14,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
-import { BookingStatus } from '@prisma/client'
 import { ArrowRight, Package, FileText, Receipt, Calendar } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { BookingActions } from '@/components/features/portal/booking-actions'
 import { BookingTimeline } from '@/components/features/portal/booking-timeline'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import { BookingStatusBadge, PaymentStatusBadge } from '@/components/shared/domain-status-badges'
 
 const CANCELLATION_HOURS_BEFORE_START = 48
 
@@ -29,6 +30,7 @@ export default async function PortalBookingDetailPage({
   params: Promise<{ id: string }>
 }) {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/bookings')
@@ -85,31 +87,11 @@ export default async function PortalBookingDetailPage({
 
   const cancelNotAllowedMessage =
     booking.status === 'CONFIRMED' && !canCancel
-      ? t('ar', 'portal.cancelNotAllowed').replace(
+      ? t(locale, 'portal.cancelNotAllowed').replace(
           '{hours}',
           String(CANCELLATION_HOURS_BEFORE_START)
         )
       : undefined
-
-  function getStatusBadge(status: BookingStatus) {
-    const statusConfig: Record<
-      BookingStatus,
-      { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-    > = {
-      DRAFT: { label: t('ar', 'portal.statusDraft'), variant: 'outline' },
-      RISK_CHECK: { label: t('ar', 'portal.statusRiskCheck'), variant: 'outline' },
-      PAYMENT_PENDING: { label: t('ar', 'portal.statusPaymentPending'), variant: 'secondary' },
-      CONFIRMED: { label: t('ar', 'portal.statusConfirmed'), variant: 'default' },
-      ACTIVE: { label: t('ar', 'portal.statusActive'), variant: 'default' },
-      RETURNED: { label: t('ar', 'portal.statusReturned'), variant: 'secondary' },
-      CLOSED: { label: t('ar', 'portal.statusClosed'), variant: 'outline' },
-      CANCELLED: { label: t('ar', 'portal.statusCancelled'), variant: 'destructive' },
-    }
-
-    const config = statusConfig[status] || { label: status, variant: 'outline' }
-
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
 
   return (
     <div className="space-y-6">
@@ -120,19 +102,19 @@ export default async function PortalBookingDetailPage({
             className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowRight className="h-4 w-4" />
-            {t('ar', 'portal.backToBookings')}
+            {t(locale, 'portal.backToBookings')}
           </Link>
           <h1 className="text-3xl font-bold">
-            {t('ar', 'portal.booking')} #{booking.bookingNumber}
+            {t(locale, 'portal.booking')} #{booking.bookingNumber}
           </h1>
         </div>
-        {getStatusBadge(booking.status)}
+        <BookingStatusBadge status={booking.status} />
       </div>
 
       {/* Booking Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.bookingStages')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.bookingStages')}</CardTitle>
         </CardHeader>
         <CardContent>
           <BookingTimeline
@@ -155,27 +137,27 @@ export default async function PortalBookingDetailPage({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              {t('ar', 'portal.bookingInfo')}
+              {t(locale, 'portal.bookingInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="text-sm text-muted-foreground">{t('ar', 'portal.startDate')}</div>
+              <div className="text-sm text-muted-foreground">{t(locale, 'portal.startDate')}</div>
               <div className="font-medium">{formatDate(booking.startDate)}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">{t('ar', 'portal.endDate')}</div>
+              <div className="text-sm text-muted-foreground">{t(locale, 'portal.endDate')}</div>
               <div className="font-medium">{formatDate(booking.endDate)}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">{t('ar', 'portal.totalAmount')}</div>
+              <div className="text-sm text-muted-foreground">{t(locale, 'portal.totalAmount')}</div>
               <div className="text-lg font-medium">
                 {formatCurrency(booking.totalAmount.toNumber())}
               </div>
             </div>
             {booking.depositAmount && (
               <div>
-                <div className="text-sm text-muted-foreground">{t('ar', 'portal.deposit')}</div>
+                <div className="text-sm text-muted-foreground">{t(locale, 'portal.deposit')}</div>
                 <div className="font-medium">
                   {formatCurrency(booking.depositAmount.toNumber())}
                 </div>
@@ -184,7 +166,7 @@ export default async function PortalBookingDetailPage({
             {'actualReturnDate' in booking && booking.actualReturnDate && (
               <div>
                 <div className="text-sm text-muted-foreground">
-                  {t('ar', 'portal.actualReturnDate')}
+                  {t(locale, 'portal.actualReturnDate')}
                 </div>
                 <div className="font-medium">{formatDate(booking.actualReturnDate)}</div>
               </div>
@@ -193,7 +175,7 @@ export default async function PortalBookingDetailPage({
               booking.lateFeeAmount &&
               Number(booking.lateFeeAmount) > 0 && (
                 <div>
-                  <div className="text-sm text-muted-foreground">{t('ar', 'portal.lateFee')}</div>
+                  <div className="text-sm text-muted-foreground">{t(locale, 'portal.lateFee')}</div>
                   <div className="font-medium text-amber-600">
                     {formatCurrency(Number(booking.lateFeeAmount))}
                   </div>
@@ -206,12 +188,12 @@ export default async function PortalBookingDetailPage({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              {t('ar', 'portal.equipment')}
+              {t(locale, 'portal.equipment')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {booking.equipment.length === 0 ? (
-              <p className="text-muted-foreground">{t('ar', 'portal.noEquipment')}</p>
+              <p className="text-muted-foreground">{t(locale, 'portal.noEquipment')}</p>
             ) : (
               <div className="space-y-3">
                 {booking.equipment.map((item) => (
@@ -231,7 +213,7 @@ export default async function PortalBookingDetailPage({
                       )}
                     </div>
                     <Badge variant="outline">
-                      {t('ar', 'portal.quantity').replace('{count}', String(item.quantity))}
+                      {t(locale, 'portal.quantity').replace('{count}', String(item.quantity))}
                     </Badge>
                   </div>
                 ))}
@@ -244,7 +226,7 @@ export default async function PortalBookingDetailPage({
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.quickActions')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.quickActions')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -267,20 +249,22 @@ export default async function PortalBookingDetailPage({
               <Link href={`/portal/contracts/${booking.contracts[0].id}`}>
                 <Button variant="outline" className="w-full justify-start">
                   <FileText className="ms-2 h-4 w-4" />
-                  {t('ar', 'portal.viewContract')}
+                  {t(locale, 'portal.viewContract')}
                 </Button>
               </Link>
             )}
             {booking.status === 'PAYMENT_PENDING' && (
-              <Button variant="default" className="w-full justify-start">
-                <Receipt className="ms-2 h-4 w-4" />
-                {t('ar', 'portal.payNow')}
-              </Button>
+              <Link href={`/checkout/moyasar/${booking.id}`}>
+                <Button variant="default" className="w-full justify-start">
+                  <Receipt className="ms-2 h-4 w-4" />
+                  {t(locale, 'portal.payNow')}
+                </Button>
+              </Link>
             )}
             <Link href="/portal/invoices">
               <Button variant="outline" className="w-full justify-start">
                 <Receipt className="ms-2 h-4 w-4" />
-                {t('ar', 'portal.invoicesSection')}
+                {t(locale, 'portal.invoicesSection')}
               </Button>
             </Link>
           </div>
@@ -291,7 +275,7 @@ export default async function PortalBookingDetailPage({
       {booking.payments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('ar', 'portal.paymentHistory')}</CardTitle>
+            <CardTitle>{t(locale, 'portal.paymentHistory')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -305,20 +289,11 @@ export default async function PortalBookingDetailPage({
                     <div className="text-sm text-muted-foreground">
                       {formatDate(payment.createdAt)}
                     </div>
+                    <div className="text-sm text-muted-foreground">
+                      {(payment.gateway || 'UNKNOWN').toUpperCase()} · {payment.externalId || payment.id}
+                    </div>
                   </div>
-                  <Badge variant={payment.status === 'SUCCESS' ? 'default' : 'secondary'}>
-                    {payment.status === 'SUCCESS'
-                      ? t('ar', 'portal.paymentPaid')
-                      : payment.status === 'PENDING'
-                        ? t('ar', 'portal.paymentPending')
-                        : payment.status === 'PROCESSING'
-                          ? t('ar', 'portal.paymentProcessing')
-                          : payment.status === 'FAILED'
-                            ? t('ar', 'portal.paymentFailed')
-                            : payment.status === 'REFUNDED'
-                              ? t('ar', 'portal.paymentRefunded')
-                              : payment.status}
-                  </Badge>
+                  <PaymentStatusBadge status={payment.status} />
                 </div>
               ))}
             </div>

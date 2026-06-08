@@ -4,8 +4,8 @@
  * @module app/api/cron/backfill
  */
 
-import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyCronSecret } from '@/lib/utils/cron-auth'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -15,18 +15,7 @@ export const maxDuration = 60
  * Header: Authorization: Bearer <CRON_SECRET> or x-cron-secret: <CRON_SECRET>
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = request.headers.get('x-cron-secret')
-  const provided =
-    cronSecret ?? (authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null)
-
-  if (!secret || !provided) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const secretBuf = Buffer.from(secret, 'utf8')
-  const providedBuf = Buffer.from(provided, 'utf8')
-  if (secretBuf.length !== providedBuf.length || !crypto.timingSafeEqual(secretBuf, providedBuf)) {
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

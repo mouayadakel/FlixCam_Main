@@ -5,6 +5,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
+import { verifyCronSecret } from '@/lib/utils/cron-auth'
 import { prisma } from '@/lib/db/prisma'
 import { logger } from '@/lib/logger'
 import { NotificationChannel } from '@prisma/client'
@@ -12,12 +13,6 @@ import { NotificationChannel } from '@prisma/client'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-function verifyCronSecret(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-  const auth = request.headers.get('authorization')
-  return auth === `Bearer ${secret}` || auth === secret
-}
 
 /**
  * GET /api/cron/waitlist-expiry

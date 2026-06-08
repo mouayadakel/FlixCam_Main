@@ -501,10 +501,30 @@ export default function EquipmentDetailPage({ params }: { params: Promise<{ id: 
                 <p className="text-lg">{equipment.warehouseLocation}</p>
               </div>
             )}
-            {equipment.barcode && (
+            {(equipment.barcode || equipment.sku) && (
               <div>
-                <p className="text-sm text-neutral-600">الباركود</p>
-                <p className="font-mono text-lg">{equipment.barcode}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm text-neutral-600">الباركود</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const code = equipment.barcode || equipment.sku
+                      const popup = window.open('', '_blank', 'width=400,height=300')
+                      if (!popup) return
+                      popup.document.write(
+                        `<html><head><title>${equipment.sku}</title></head><body style="font-family:monospace;text-align:center;padding:24px"><h2>${equipment.sku}</h2><p style="font-size:28px;letter-spacing:3px">${code}</p></body></html>`
+                      )
+                      popup.document.close()
+                      popup.focus()
+                      popup.print()
+                    }}
+                  >
+                    طباعة ملصق
+                  </Button>
+                </div>
+                <p className="font-mono text-lg">{equipment.barcode || equipment.sku}</p>
               </div>
             )}
           </CardContent>

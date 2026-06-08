@@ -6,6 +6,10 @@
 export const LOCALES = ['ar', 'en', 'zh', 'fr'] as const
 export type Locale = (typeof LOCALES)[number]
 
+/** Locales enabled for public launch (ar + en). */
+export const LAUNCH_LOCALES = ['ar', 'en'] as const
+export type LaunchLocale = (typeof LAUNCH_LOCALES)[number]
+
 export const DEFAULT_LOCALE: Locale = 'ar'
 
 /** Locales that use RTL (right-to-left) direction */

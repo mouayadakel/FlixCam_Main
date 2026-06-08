@@ -130,6 +130,8 @@ interface Booking {
   vatAmount: number | string
   notes: string | null
   studioId?: string | null
+  studioStartTime?: Date | string | null
+  studioEndTime?: Date | string | null
   delivery_required?: boolean
   createdAt: Date | string
   updatedAt: Date | string
@@ -168,6 +170,29 @@ interface Booking {
     id: string
     status: string
   }>
+  // Receiver & Identity fields
+  receiverName?: string | null
+  receiverPhone?: string | null
+  receiverIdNumber?: string | null
+  receiverIdPhotoUrl?: string | null
+  fulfillmentMethod?: string | null
+  deliveryAddress?: string | null
+  deliveryLat?: number | null
+  deliveryLng?: number | null
+  preferredTimeSlot?: string | null
+  emergencyContactName?: string | null
+  emergencyContactPhone?: string | null
+  emergencyContactRelation?: string | null
+  checkoutFormData?: any
+  deposit?: {
+    id: string
+    status: string
+    amount: number | string
+    collectedAt?: Date | string | null
+    returnedAt?: Date | string | null
+    deductionAmt?: number | string | null
+    deductionNote?: string | null
+  } | null
 }
 
 export default function BookingDetailPage() {
@@ -352,6 +377,7 @@ export default function BookingDetailPage() {
       <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">ملخص</TabsTrigger>
+          <TabsTrigger value="receiver">الهوية والتنفيذ</TabsTrigger>
           <TabsTrigger value="equipment">المعدات</TabsTrigger>
           <TabsTrigger value="schedule">الجدول الزمني</TabsTrigger>
           <TabsTrigger value="payments">الدفعات</TabsTrigger>
@@ -443,6 +469,87 @@ export default function BookingDetailPage() {
                   <span className="text-muted-foreground">العهدة (مبلغ محجوز)</span>
                   <span>{formatAmount(booking.depositAmount)}</span>
                 </div>
+                {booking.deposit && (
+                  <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">حالة العهدة</span>
+                      <Badge variant="outline">{booking.deposit.status}</Badge>
+                    </div>
+                    {booking.deposit.collectedAt && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">تاريخ التحصيل</span>
+                        <span>{formatDate(booking.deposit.collectedAt)}</span>
+                      </div>
+                    )}
+                    {booking.deposit.returnedAt && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">تاريخ الإرجاع</span>
+                        <span>{formatDate(booking.deposit.returnedAt)}</span>
+                      </div>
+                    )}
+                    {(booking.deposit.status === 'COLLECTED' ||
+                      booking.deposit.status === 'PARTIALLY_RETURNED') && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(
+                                `/api/bookings/${booking.id}/deposit/release`,
+                                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+                              )
+                              const payload = await res.json().catch(() => ({}))
+                              if (!res.ok) throw new Error(payload.error || 'Failed')
+                              toast({ title: 'تم', description: 'تم إطلاق العهدة' })
+                              window.location.reload()
+                            } catch (e) {
+                              toast({
+                                title: 'خطأ',
+                                description: e instanceof Error ? e.message : 'فشل إطلاق العهدة',
+                                variant: 'destructive',
+                              })
+                            }
+                          }}
+                        >
+                          إطلاق العهدة
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          onClick={async () => {
+                            const reason = window.prompt('سبب مصادرة العهدة:')
+                            if (!reason?.trim()) return
+                            try {
+                              const res = await fetch(
+                                `/api/bookings/${booking.id}/deposit/forfeit`,
+                                {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ reason: reason.trim() }),
+                                }
+                              )
+                              const payload = await res.json().catch(() => ({}))
+                              if (!res.ok) throw new Error(payload.error || 'Failed')
+                              toast({ title: 'تم', description: 'تمت مصادرة العهدة' })
+                              window.location.reload()
+                            } catch (e) {
+                              toast({
+                                title: 'خطأ',
+                                description: e instanceof Error ? e.message : 'فشل مصادرة العهدة',
+                                variant: 'destructive',
+                              })
+                            }
+                          }}
+                        >
+                          مصادرة العهدة
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -456,6 +563,133 @@ export default function BookingDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm">{booking.notes}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Receiver & Identity Tab */}
+        <TabsContent value="receiver" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  تفاصيل المستلم والهوية
+                </CardTitle>
+                <CardDescription>المعلومات التي تم إدخالها عند إتمام الحجز</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">اسم المستلم</div>
+                      <div className="font-medium">{booking.receiverName || 'غير محدد'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">رقم الهاتف</div>
+                      <div className="font-medium" dir="ltr">
+                        {booking.receiverPhone || 'غير محدد'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">رقم الهوية</div>
+                      <div className="font-medium">{booking.receiverIdNumber || 'غير محدد'}</div>
+                    </div>
+                    {booking.preferredTimeSlot && (
+                      <div>
+                        <div className="text-sm text-muted-foreground">وقت الوصول المفضل</div>
+                        <div className="font-medium">{booking.preferredTimeSlot}</div>
+                      </div>
+                    )}
+                  </div>
+                  {booking.receiverIdPhotoUrl && (
+                    <div>
+                      <div className="mb-2 text-sm text-muted-foreground">صورة الهوية</div>
+                      <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                        <img
+                          src={booking.receiverIdPhotoUrl}
+                          alt="ID Photo"
+                          className="h-full w-full cursor-pointer object-contain"
+                          onClick={() => window.open(booking.receiverIdPhotoUrl!, '_blank')}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  طريقة الاستلام والتوصيل
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">طريقة التنفيذ</div>
+                  <Badge variant="outline" className="mt-1">
+                    {booking.fulfillmentMethod === 'DELIVERY' ? 'توصيل' : 'استلام من الفرع'}
+                  </Badge>
+                </div>
+                {booking.deliveryAddress && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">عنوان التوصيل</div>
+                    <div className="font-medium">{booking.deliveryAddress}</div>
+                  </div>
+                )}
+                {booking.preferredTimeSlot && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">وقت التوصيل / الوصول المفضل</div>
+                    <div className="font-medium">{booking.preferredTimeSlot}</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  جهة اتصال الطوارئ
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {booking.emergencyContactName ? (
+                  <>
+                    <div>
+                      <div className="text-sm text-muted-foreground">الاسم</div>
+                      <div className="font-medium">{booking.emergencyContactName}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">رقم الهاتف</div>
+                      <div className="font-medium" dir="ltr">
+                        {booking.emergencyContactPhone}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">العلاقة</div>
+                      <div className="font-medium">{booking.emergencyContactRelation}</div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">لا توجد معلومات اتصال للطوارئ</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {booking.checkoutFormData && (
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>بيانات النموذج الخام (Raw Form Data)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <pre className="overflow-auto rounded-md bg-muted p-4 text-xs italic">
+                    {JSON.stringify(booking.checkoutFormData, null, 2)}
+                  </pre>
                 </CardContent>
               </Card>
             )}
@@ -665,6 +899,28 @@ export default function BookingDetailPage() {
                       </div>
                     </div>
                     <Badge variant="outline">استوديو</Badge>
+                  </div>
+                )}
+                {booking.studioStartTime && (
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <div className="font-medium">وقت بداية الاستوديو (الوصول)</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(booking.studioStartTime).toLocaleString('ar-SA')}
+                      </div>
+                    </div>
+                    <Badge variant="outline">وقت الوصول</Badge>
+                  </div>
+                )}
+                {booking.studioEndTime && (
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <div className="font-medium">وقت نهاية الاستوديو (المغادرة)</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(booking.studioEndTime).toLocaleString('ar-SA')}
+                      </div>
+                    </div>
+                    <Badge variant="outline">وقت المغادرة</Badge>
                   </div>
                 )}
               </div>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Copy } from 'lucide-react'
 
-type Locale = 'ar' | 'en' | 'zh'
+type Locale = 'ar' | 'en' | 'zh' | 'fr'
 
 interface TranslationData {
   name?: string
@@ -28,6 +28,7 @@ const LOCALE_LABELS: Record<Locale, string> = {
   ar: 'العربية',
   en: 'English',
   zh: '中文',
+  fr: 'Français',
 }
 
 function calculateCompletion(data: TranslationData): number {
@@ -53,7 +54,7 @@ export function TranslationTabSwitcher({
   onCopyLocale,
   className,
 }: TranslationTabSwitcherProps) {
-  const locales: Locale[] = ['ar', 'en', 'zh']
+  const locales: Locale[] = ['ar', 'en', 'zh', 'fr']
 
   return (
     <div className={cn('space-y-3', className)}>

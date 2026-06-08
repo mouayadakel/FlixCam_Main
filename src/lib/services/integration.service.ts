@@ -8,7 +8,7 @@ import { AuditService } from './audit.service'
 import { IntegrationConfigService } from './integration-config.service'
 
 export interface IntegrationConfig {
-  type: 'payments' | 'email' | 'whatsapp' | 'analytics' | 'webhooks'
+  type: 'payments' | 'email' | 'whatsapp' | 'analytics' | 'webhooks' | 'daftra'
   enabled: boolean
   configured: boolean
   config: Record<string, any>
@@ -118,6 +118,12 @@ export class IntegrationService {
             success: true,
             message: 'Webhook endpoint ready',
           }
+        case 'daftra':
+          const { DaftraService } = await import('./daftra.service')
+          return DaftraService.testConnection(
+            config.config.apiKey,
+            config.config.subdomain
+          )
         default:
           return {
             success: false,
@@ -142,6 +148,7 @@ export class IntegrationService {
       'whatsapp',
       'analytics',
       'webhooks',
+      'daftra',
     ]
     return Promise.all(types.map((type) => this.getConfig(type)))
   }

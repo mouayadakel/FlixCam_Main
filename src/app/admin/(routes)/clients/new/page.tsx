@@ -142,7 +142,7 @@ export default function NewClientPage() {
                   {...register('email')}
                   placeholder="email@example.com"
                   className={errors.email ? 'border-destructive' : ''}
-                  dir="ltr"
+                  dir="rtl"
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
@@ -153,7 +153,7 @@ export default function NewClientPage() {
                   id="phone"
                   {...register('phone')}
                   placeholder="+966 5XX XXX XXXX"
-                  dir="ltr"
+                  dir="rtl"
                 />
               </div>
 
@@ -224,7 +224,7 @@ export default function NewClientPage() {
                   id="nationalId"
                   {...register('nationalId')}
                   placeholder="10 أرقام"
-                  dir="ltr"
+                  dir="rtl"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export default function NewClientPage() {
                       id="taxNumber"
                       {...register('taxNumber')}
                       placeholder="15 رقم"
-                      dir="ltr"
+                      dir="rtl"
                     />
                   </div>
                 </>

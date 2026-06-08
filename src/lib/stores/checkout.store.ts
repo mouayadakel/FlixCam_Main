@@ -51,7 +51,7 @@ export interface CheckoutAddons {
 /** 1 = Receiver & Fulfillment, 2 = Add-ons, 3 = Review & Pay */
 export type CheckoutStepIndex = 1 | 2 | 3
 
-interface CheckoutState {
+export interface CheckoutState {
   details: CheckoutDetails | null
   setDetails: (details: CheckoutDetails) => void
   clearDetails: () => void
@@ -71,6 +71,12 @@ interface CheckoutState {
   /** Dynamic CMS form field values (keyed by fieldKey) */
   formValues: Record<string, unknown>
   setFormValues: (values: Record<string, unknown>) => void
+  /** FIX-060: explicit opt-in for order confirmation SMS */
+  smsConfirmationOptIn: boolean
+  setSmsConfirmationOptIn: (value: boolean) => void
+  /** Explicit opt-in for order updates via WhatsApp */
+  whatsappConfirmationOptIn: boolean
+  setWhatsappConfirmationOptIn: (value: boolean) => void
   clearHold: () => void
   clearCheckout: () => void
 }
@@ -106,6 +112,10 @@ export const useCheckoutStore = create<CheckoutState>()(
       setHold: (holdId, holdExpiresAt) => set({ holdId, holdExpiresAt }),
       formValues: {},
       setFormValues: (formValues) => set({ formValues }),
+      smsConfirmationOptIn: false,
+      setSmsConfirmationOptIn: (smsConfirmationOptIn) => set({ smsConfirmationOptIn }),
+      whatsappConfirmationOptIn: false,
+      setWhatsappConfirmationOptIn: (whatsappConfirmationOptIn) => set({ whatsappConfirmationOptIn }),
       clearHold: () => set({ holdId: null, holdExpiresAt: null }),
       clearCheckout: () =>
         set({
@@ -118,6 +128,8 @@ export const useCheckoutStore = create<CheckoutState>()(
           holdId: null,
           holdExpiresAt: null,
           formValues: {},
+          smsConfirmationOptIn: false,
+          whatsappConfirmationOptIn: false,
         }),
     }),
     {
@@ -131,6 +143,8 @@ export const useCheckoutStore = create<CheckoutState>()(
         holdId: s.holdId,
         holdExpiresAt: s.holdExpiresAt,
         formValues: s.formValues,
+        smsConfirmationOptIn: s.smsConfirmationOptIn,
+        whatsappConfirmationOptIn: s.whatsappConfirmationOptIn,
       }),
     }
   )

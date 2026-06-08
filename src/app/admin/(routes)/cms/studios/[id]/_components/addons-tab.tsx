@@ -297,7 +297,7 @@ export function CmsStudioAddonsTab({ studioId, onRefresh }: AddonsTabProps) {
                   value={form.iconName}
                   onChange={(e) => setForm((f) => ({ ...f, iconName: e.target.value }))}
                   placeholder="مثال: Camera, Lightbulb, Mic"
-                  dir="ltr"
+                  dir="rtl"
                 />
                 <p className="text-xs text-muted-foreground">
                   اسم الأيقونة من مكتبة Lucide —{' '}

@@ -23,6 +23,8 @@ import { mapColumns, saveMappingHistory, type ColumnMapping } from './column-map
 import { lookupDeepSpecs } from './specs-db.service'
 import { getRowNameValue } from './import-validation.service'
 import { ValidationError } from '@/lib/errors'
+import { resolveTemplateName } from '@/lib/ai/spec-templates'
+import { normalizeImportedSpecifications } from '@/lib/utils/specifications-import.utils'
 
 type RowPayload = {
   sheetName: string
@@ -79,15 +81,6 @@ function arr(val: any): string[] {
     .filter(Boolean)
 }
 
-function normalizeSpecs(input: unknown): Record<string, unknown> {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) return {}
-  const obj = input as Record<string, unknown>
-  const entries = Object.entries(obj)
-    .map(([k, v]) => [String(k).trim(), v] as const)
-    .filter(([k, v]) => k.length > 0 && v != null && String(v).trim() !== '')
-  return Object.fromEntries(entries)
-}
-
 function slugify(name: string) {
   return name
     .toLowerCase()
@@ -109,97 +102,12 @@ async function ensureBrand(brandName: string | null) {
     })
     return brand.id
   } catch (err: unknown) {
-    const brand = await prisma.brand.findFirst({ where: { slug } })
+    const brand =
+      (await prisma.brand.findUnique({ where: { name } })) ??
+      (await prisma.brand.findFirst({ where: { slug } }))
     if (brand) return brand.id
     throw err
   }
-}
-
-/**
- * Parses a flat text blob (e.g. from Excel notes) into a StructuredSpecifications object 
- * if it contains recognizable section headers like "1. SHORT SPECS".
- */
-function parseStructuredTextToSpecs(text: string): Record<string, unknown> | null {
-  if (!text || typeof text !== 'string') return null;
-
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-  const hasShortSpecs = lines.some(l => l.toUpperCase().includes('1. SHORT SPECS') || l.toUpperCase().includes('SHORT SPECS'));
-  const hasFullSpecs = lines.some(l => l.toUpperCase().includes('2. FULL SPECS') || l.toUpperCase().includes('FULL SPECS'));
-
-  if (!hasShortSpecs && !hasFullSpecs) return null;
-
-  const groups: any[] = [];
-  let currentGroupName = '';
-  let currentGroupSpecs: any[] = [];
-  let priority = 1;
-
-  const pushGroup = () => {
-    if (currentGroupName && currentGroupSpecs.length > 0) {
-      let icon = 'star';
-      if (currentGroupName.toUpperCase().includes('FULL')) icon = 'info';
-      if (currentGroupName.toUpperCase().includes('TECHNICIAN')) icon = 'zap';
-
-      groups.push({
-        label: currentGroupName,
-        icon,
-        priority: priority++,
-        specs: currentGroupSpecs
-      });
-    }
-  };
-
-  for (const line of lines) {
-    if (/^\d+\.\s+[A-Z\s]+$/.test(line) || line.toUpperCase() === '1. SHORT SPECS' || line.toUpperCase() === '2. FULL SPECS' || line.toUpperCase() === '3. TECHNICIAN SPECS') {
-      pushGroup();
-      currentGroupName = line.replace(/^\d+\.\s+/, '').trim();
-      currentGroupName = currentGroupName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      currentGroupSpecs = [];
-      continue;
-    }
-
-    if (!currentGroupName) continue;
-
-    if (line.startsWith('-')) {
-      const itemText = line.substring(1).trim();
-      if (itemText) {
-        currentGroupSpecs.push({
-          key: `feature_${currentGroupSpecs.length + 1}`,
-          label: 'Feature',
-          value: itemText,
-          type: 'text',
-        });
-      }
-    } else if (line.includes(':')) {
-      const idx = line.indexOf(':');
-      const keyStr = line.substring(0, idx).trim();
-      const valStr = line.substring(idx + 1).trim();
-      if (keyStr && valStr) {
-        let labelStr = keyStr.replace(/_/g, ' ');
-        // capitalize
-        labelStr = labelStr.replace(/\b\w/g, l => l.toUpperCase());
-        currentGroupSpecs.push({
-          key: keyStr.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-          label: labelStr,
-          value: valStr,
-          type: 'text',
-        });
-      }
-    } else {
-      currentGroupSpecs.push({
-        key: `note_${currentGroupSpecs.length + 1}`,
-        label: 'Note',
-        value: line,
-        type: 'text',
-      });
-    }
-  }
-
-  pushGroup();
-
-  if (groups.length === 0) return null;
-
-  return { groups };
 }
 
 /**
@@ -267,6 +175,9 @@ interface EquipmentExtraFields {
   quantityAvailable?: number
   warehouseLocation?: string
   featured?: boolean
+  specSource?: string
+  specConfidence?: number
+  specsRawNotesBackup?: string
 }
 
 const BATCH_SIZE = 100
@@ -349,7 +260,11 @@ export async function processImportJob(
     const batch = batches[batchIndex]
     let batchSuccess = 0
     let batchErrors = 0
+    let batchSkipped = 0
     const batchProductIds: string[] = []
+
+    const SKIP_DUP_MSG =
+      'Duplicate barcode — row skipped to preserve existing product data'
 
     for (const row of batch) {
       const payload = row.payload as unknown as RowPayload
@@ -480,41 +395,66 @@ export async function processImportJob(
         }
         usedSkusInJob.add(sku)
 
-        // Specs: curated DB lookup first, then Excel data, then AI suggestion
+        // Specs: curated DB lookup first, then Excel data/notes, then AI suggestion
         let specifications: Record<string, any> | null = null
+        let specSource: string | null = null
+        let specConfidence: number | null = null
+        let specsRawNotesBackup: string | null = null
+
+        const categoryForSpecs = await prisma.category.findUnique({
+          where: { id: payload.categoryId },
+          select: { name: true, slug: true },
+        })
+        const categoryHint = resolveTemplateName(
+          String(
+            categoryForSpecs?.slug ??
+              categoryForSpecs?.name ??
+              categorySlugFromExcel ??
+              subCategoryFromExcel ??
+              'equipment'
+          )
+        ).toLowerCase()
+
         const curatedMatch = lookupDeepSpecs(name, brandName)
         if (curatedMatch && curatedMatch.confidence >= 75) {
-          specifications = curatedMatch.specs
-          console.info(
-            `[Import] Curated specs match for "${name}" → ${curatedMatch.matchedModel} (${curatedMatch.confidence}%)`
-          )
+          console.info(`[Import] Curated specs match for "${name}" → ${curatedMatch.matchedModel} (${curatedMatch.confidence}%)`)
         }
 
         const specsRaw = resolveField(r, 'specifications', columnMappings)
-        if (specsRaw && !specifications) {
-          try {
-            const parsed = typeof specsRaw === 'string' ? JSON.parse(specsRaw) : specsRaw
-            specifications = normalizeSpecs(parsed)
-          } catch {
-            // Plain text (e.g. specifications_notes) — store as notes so row still imports
-            const rawStr = typeof specsRaw === 'string' ? specsRaw : String(specsRaw)
-            if (rawStr.trim()) {
-              const structured = parseStructuredTextToSpecs(rawStr)
-              if (structured) {
-                specifications = structured
-              } else {
-                specifications = { notes: rawStr.trim() }
-              }
-            }
-          }
+        const specsRawNotes = resolveField(r, 'specifications_raw_notes', columnMappings)
+
+        const normalizedFromImport = normalizeImportedSpecifications({
+          specsRaw,
+          specsRawNotes,
+          suggestionSpecs: suggestion?.specifications,
+          categoryHint,
+        })
+
+        if (curatedMatch && curatedMatch.confidence >= 75) {
+          const curatedNormalized = normalizeImportedSpecifications({
+            specsRaw: curatedMatch.specs,
+            suggestionSpecs: normalizedFromImport.structured ?? undefined,
+            categoryHint,
+          })
+          specifications = (curatedNormalized.structured as Record<string, any> | null) ?? null
+          specSource = `curated_${curatedNormalized.source}`
+          specConfidence = Math.max(curatedMatch.confidence, curatedNormalized.confidence)
+          specsRawNotesBackup =
+            normalizedFromImport.rawNotesBackup ??
+            (typeof specsRawNotes === 'string' ? specsRawNotes : null)
+        } else {
+          specifications = (normalizedFromImport.structured as Record<string, any> | null) ?? null
+          specSource = normalizedFromImport.source
+          specConfidence = normalizedFromImport.confidence
+          specsRawNotesBackup =
+            normalizedFromImport.rawNotesBackup ??
+            (typeof specsRawNotes === 'string' ? specsRawNotes : null)
         }
-        if (suggestion?.specifications && typeof suggestion.specifications === 'object') {
-          const merged = { ...(specifications ?? {}) }
-          const normalizedSuggestion = normalizeSpecs(suggestion.specifications)
-          for (const [k, v] of Object.entries(normalizedSuggestion)) {
-            if (merged[k] == null || String(merged[k]).trim() === '') merged[k] = v
-          }
-          specifications = normalizeSpecs(merged)
+
+        if (!specifications && (specsRaw || specsRawNotes)) {
+          console.warn(
+            `[Import] Row ${row.rowNumber}: specs input present but could not form structured groups`
+          )
         }
 
         // Translations
@@ -701,40 +641,9 @@ export async function processImportJob(
           createdBy: job.createdBy || 'system',
         })
 
-        const updatedBy = job.createdBy || 'system'
-        const baseUpdatePayload = {
-          status,
-          brandId,
-          categoryId,
-          subCategoryId: payload.subCategoryId || subCategoryFromExcel || null,
-          priceDaily,
-          priceWeekly,
-          priceMonthly,
-          depositAmount: deposit,
-          quantity,
-          bufferTime: bufferTimeInHours,
-          boxContents: boxContentsValue,
-          featuredImage: featuredImageSafe,
-          galleryImages,
-          videoUrl,
-          relatedProducts: relatedProducts.length ? relatedProducts : null,
-          tags: effectiveTags,
-          translations: translations.map((t) => ({
-            locale: t.locale,
-            name: t.name,
-            shortDescription: t.shortDescription ?? '',
-            longDescription: t.longDescription ?? '',
-            specifications: specifications ?? undefined,
-            seoTitle: t.seoTitle ?? '',
-            seoDescription: t.seoDescription ?? '',
-            seoKeywords: t.seoKeywords ?? '',
-          })),
-          updatedBy,
-        }
-
         let product: { id: string }
 
-        // Root fix: if barcode already exists, update the existing product instead of failing
+        // Duplicate barcode: skip row so Excel cannot overwrite rich CMS / AI-filled product data
         const barcodeRaw =
           barcodeValue != null && barcodeValue !== ''
             ? typeof barcodeValue === 'number'
@@ -758,29 +667,13 @@ export async function processImportJob(
               where: { id: existingItem.parentProductId },
               select: { id: true, deletedAt: true },
             })
-            if (parentProduct?.deletedAt) {
-              await prisma.product.update({
-                where: { id: parentProduct.id },
-                data: { deletedAt: null, deletedBy: null },
-              })
-              console.info(
-                `[Import] Row ${row.rowNumber}: restored soft-deleted product ${parentProduct.id}`
-              )
-            }
-            product = await ProductCatalogService.update(existingItem.parentProductId, baseUpdatePayload)
-            if (existingItem.deletedAt) {
-              await prisma.inventoryItem.update({
-                where: { id: existingItem.id },
-                data: { deletedAt: null, deletedBy: null },
-              })
-            }
-            batchProductIds.push(product.id)
-            await ImportService.markRow(jobId, row.rowNumber, ImportRowStatus.SUCCESS, {
-              productId: product.id,
+            await ImportService.markRow(jobId, row.rowNumber, ImportRowStatus.SKIPPED, {
+              productId: parentProduct?.id ?? existingItem.parentProductId,
+              error: SKIP_DUP_MSG,
             })
-            batchSuccess++
+            batchSkipped++
             console.info(
-              `[Import] Row ${row.rowNumber}: barcode "${barcodeTrimmed}" exists → updated product ${product.id}`
+              `[Import] Row ${row.rowNumber}: barcode "${barcodeTrimmed}" already assigned → skipped (product ${existingItem.parentProductId})`
             )
             continue
           }
@@ -821,28 +714,17 @@ export async function processImportJob(
                 where: { id: existingItem.parentProductId },
                 select: { id: true, deletedAt: true },
               })
-              if (parentProd?.deletedAt) {
-                await prisma.product.update({
-                  where: { id: parentProd.id },
-                  data: { deletedAt: null, deletedBy: null },
-                })
-              }
-              product = await ProductCatalogService.update(
-                existingItem.parentProductId,
-                baseUpdatePayload
-              )
-              if (existingItem.deletedAt) {
-                await prisma.inventoryItem.update({
-                  where: { id: existingItem.id },
-                  data: { deletedAt: null, deletedBy: null },
-                })
-              }
+              await ImportService.markRow(jobId, row.rowNumber, ImportRowStatus.SKIPPED, {
+                productId: parentProd?.id ?? existingItem.parentProductId,
+                error: SKIP_DUP_MSG,
+              })
+              batchSkipped++
               console.info(
-                `[Import] Row ${row.rowNumber}: caught "Barcode already exists" → updated product ${product.id}`
+                `[Import] Row ${row.rowNumber}: caught "Barcode already exists" → skipped (product ${existingItem.parentProductId})`
               )
-            } else {
-              throw createErr
+              continue
             }
+            throw createErr
           } else {
             throw createErr
           }
@@ -858,6 +740,9 @@ export async function processImportJob(
           quantityAvailable,
           ...(warehouseLocation && { warehouseLocation }),
           featured: isFeatured,
+          ...(specSource != null && { specSource }),
+          ...(specConfidence != null && { specConfidence }),
+          ...(specsRawNotesBackup ? { specsRawNotesBackup } : {}),
         })
 
         // Queue AI fill for this product; fallback to direct sync if queue unavailable
@@ -907,6 +792,14 @@ export async function processImportJob(
           select: { id: true },
         })
         if (equip) {
+          const existingEquip = await prisma.equipment.findUnique({
+            where: { id: equip.id },
+            select: { customFields: true },
+          })
+          const existingCustomFields =
+            existingEquip?.customFields && typeof existingEquip.customFields === 'object'
+              ? (existingEquip.customFields as Record<string, unknown>)
+              : {}
           await prisma.equipment.update({
             where: { id: equip.id },
             data: {
@@ -917,6 +810,16 @@ export async function processImportJob(
               ...(extras.quantityAvailable != null && { quantityAvailable: extras.quantityAvailable }),
               ...(extras.warehouseLocation != null && { warehouseLocation: extras.warehouseLocation }),
               ...(extras.featured != null && { featured: extras.featured }),
+              ...(extras.specSource != null && { specSource: extras.specSource }),
+              ...(extras.specConfidence != null && { specConfidence: extras.specConfidence }),
+              ...(extras.specsRawNotesBackup
+                ? {
+                    customFields: {
+                      ...existingCustomFields,
+                      specificationsRawNotes: extras.specsRawNotesBackup,
+                    } as object,
+                  }
+                : {}),
             },
           })
         }
@@ -928,7 +831,7 @@ export async function processImportJob(
       }
     }
 
-    await ImportService.bumpProgress(jobId, batch.length, batchSuccess, batchErrors)
+    await ImportService.bumpProgress(jobId, batch.length, batchSuccess, batchErrors, batchSkipped)
   }
 
   const successfulProducts = await prisma.importJobRow.findMany({

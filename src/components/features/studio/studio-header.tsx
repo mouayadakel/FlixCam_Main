@@ -10,12 +10,15 @@ import { Badge } from '@/components/ui/badge'
 import { useLocale } from '@/hooks/use-locale'
 import { Maximize2, Building2, Sparkles, CalendarDays, Share2 } from 'lucide-react'
 import type { StudioPublicData } from '@/lib/types/studio.types'
+import { UniversalShareBar } from '@/components/shared/share-bar'
 
 interface StudioHeaderProps {
   studio: StudioPublicData
+  sharePageUrl: string
+  shareImageUrl?: string
 }
 
-export function StudioHeader({ studio }: StudioHeaderProps) {
+export function StudioHeader({ studio, sharePageUrl, shareImageUrl }: StudioHeaderProps) {
   const { t } = useLocale()
   const isAvailableNow = studio.availabilityConfidence === 'available_now'
 
@@ -59,11 +62,19 @@ export function StudioHeader({ studio }: StudioHeaderProps) {
         <button
           type="button"
           onClick={handleShare}
-          className="shrink-0 rounded-xl border border-border-light/60 p-2.5 text-text-muted transition-colors hover:bg-surface-light hover:text-text-heading"
+          className="shrink-0 rounded-xl border border-border-light/60 p-2.5 text-text-muted transition-colors hover:bg-surface-light hover:text-text-heading lg:hidden"
           aria-label="Share"
         >
           <Share2 className="h-4 w-4" />
         </button>
+      </div>
+      <div className="hidden lg:block">
+        <UniversalShareBar
+          url={sharePageUrl}
+          title={studio.name}
+          imageUrl={shareImageUrl}
+          className="pt-2"
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">

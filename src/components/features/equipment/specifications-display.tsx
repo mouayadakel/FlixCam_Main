@@ -46,13 +46,22 @@ const RESERVED_FLAT_KEYS = ['mode', 'html', 'highlights', 'quickSpecs', 'groups'
 const FLAT_TABLE_COLLAPSE_AFTER = 6
 
 /** Safely coerce spec value to display string (avoids "[object Object]" for objects/arrays). */
-function specValueToString(value: unknown): string {
-  if (value == null) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  if (Array.isArray(value)) return value.map((v) => specValueToString(v)).join(', ')
-  if (typeof value === 'object') return JSON.stringify(value).slice(0, 200)
-  return String(value)
+function specValueToString(v: unknown): string {
+  if (v == null) return ''
+  if (typeof v === 'string') return v.trim()
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (Array.isArray(v)) return v.map((item) => specValueToString(item)).join(', ')
+  if (typeof v === 'object') {
+    const obj = v as Record<string, unknown>
+    if (typeof obj.value === 'string') return obj.value.trim()
+    if (typeof obj.label === 'string' && typeof obj.value === 'string') return `${obj.label}: ${obj.value}`
+    try {
+      return JSON.stringify(v).slice(0, 500)
+    } catch {
+      return 'Error: Unstringifiable value'
+    }
+  }
+  return String(v)
 }
 
 // ============================================================================
@@ -140,7 +149,9 @@ export function QuickSpecPills({ specs }: { specs: QuickSpec[] }) {
 // ============================================================================
 
 function BooleanSpec({ value }: { value: string }) {
-  const isTrue = value.toLowerCase() === 'yes' || value.toLowerCase() === 'true'
+  const normalized = value.trim().toLowerCase()
+  const trueValues = new Set(['yes', 'true', '1', 'on', 'enabled', 'y', 'نعم', 'صح'])
+  const isTrue = trueValues.has(normalized)
   return (
     <div className="flex items-center gap-2">
       {isTrue ? (
@@ -225,7 +236,7 @@ function SpecRow({ spec, locale, index }: { spec: SpecItem; locale: 'en' | 'ar';
   return (
     <div
       className={cn(
-        'flex items-center gap-4 px-5 py-3.5 text-sm transition-colors hover:bg-surface-light/30',
+        'flex min-w-0 items-center gap-4 px-5 py-3.5 text-sm transition-colors hover:bg-surface-light/30',
         spec.highlight && 'border-s-2 border-s-brand-primary/40 bg-brand-primary/[0.03]',
         !spec.highlight && index % 2 !== 0 && 'bg-surface-light/20'
       )}
@@ -241,7 +252,7 @@ function SpecRow({ spec, locale, index }: { spec: SpecItem; locale: 'en' | 'ar';
         ) : (
           <span
             className={cn(
-              'truncate text-text-body',
+              'min-w-0 break-words text-text-body',
               spec.highlight && 'font-semibold text-text-heading'
             )}
           >
@@ -361,11 +372,14 @@ function GroupedSpecsMobile({
                         {locale === 'ar' && spec.labelAr ? spec.labelAr : spec.label}
                       </span>
                       {spec.type === 'boolean' ? (
-                        <BooleanSpec value={spec.value} />
+                        <BooleanSpec value={specValueToString(spec.value)} />
                       ) : spec.type === 'range' ? (
-                        <RangeSpec value={spec.value} rangePercent={spec.rangePercent} />
+                        <RangeSpec
+                          value={specValueToString(spec.value)}
+                          rangePercent={spec.rangePercent}
+                        />
                       ) : spec.type === 'colorTemp' ? (
-                        <ColorTempSpec value={spec.value} />
+                        <ColorTempSpec value={specValueToString(spec.value)} />
                       ) : (
                         <span
                           className={cn(
@@ -373,7 +387,7 @@ function GroupedSpecsMobile({
                             spec.highlight && 'font-semibold text-text-heading'
                           )}
                         >
-                          {spec.value}
+                            {specValueToString(spec.value)}
                         </span>
                       )}
                     </div>
@@ -413,11 +427,14 @@ function GroupedSpecsMobile({
                           {locale === 'ar' && spec.labelAr ? spec.labelAr : spec.label}
                         </span>
                         {spec.type === 'boolean' ? (
-                          <BooleanSpec value={spec.value} />
+                          <BooleanSpec value={specValueToString(spec.value)} />
                         ) : spec.type === 'range' ? (
-                          <RangeSpec value={spec.value} rangePercent={spec.rangePercent} />
+                          <RangeSpec
+                            value={specValueToString(spec.value)}
+                            rangePercent={spec.rangePercent}
+                          />
                         ) : spec.type === 'colorTemp' ? (
-                          <ColorTempSpec value={spec.value} />
+                          <ColorTempSpec value={specValueToString(spec.value)} />
                         ) : (
                           <span
                             className={cn(
@@ -425,7 +442,7 @@ function GroupedSpecsMobile({
                               spec.highlight && 'font-semibold text-text-heading'
                             )}
                           >
-                            {spec.value}
+                            {specValueToString(spec.value)}
                           </span>
                         )}
                       </div>
@@ -468,14 +485,13 @@ function GroupedSpecsMobile({
  * line breaks and basic section formatting. Used when specs are stored as
  * { notes: "..." } instead of structured key/value pairs.
  */
-function NotesBlock({ text }: { text: string }) {
+export function NotesBlock({ text }: { text: string }) {
   if (!text || typeof text !== 'string') return null
   const trimmed = text.trim()
   if (!trimmed) return null
 
   // Split into sections by common patterns: "1. SHORT SPECS", "2. FULL SPECS", "3. TECHNICIAN SPECS"
   // or numbered lines like "1. ", "2. "
-  const sectionPattern = /^(\d+\.\s+[A-Z\s]+$|^[A-Z][A-Z\s\-]+$)/m
   const lines = trimmed.split(/\r?\n/)
   const sections: { title?: string; content: string[] }[] = []
   let current: { title?: string; content: string[] } = { content: [] }
@@ -579,10 +595,10 @@ function FlatSpecsTable({
                   idx % 2 === 0 ? 'bg-white' : 'bg-surface-light/30'
                 )}
               >
-                <td className="whitespace-nowrap px-5 py-3.5 font-medium capitalize text-text-heading">
+                <td className="max-w-[40%] break-words px-5 py-3.5 font-medium capitalize text-text-heading">
                   {key.replace(/([A-Z])/g, ' $1').trim()}
                 </td>
-                <td className="px-5 py-3.5 text-text-body">{String(value ?? '—')}</td>
+                <td className="break-words px-5 py-3.5 text-text-body">{specValueToString(value) || '—'}</td>
               </tr>
             ))}
           </tbody>

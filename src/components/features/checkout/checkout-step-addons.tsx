@@ -4,6 +4,7 @@
 
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,14 +12,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCheckoutStore } from '@/lib/stores/checkout.store'
 import { Plus, Minus } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const TECHNICIAN_HOURLY_RATE = 150
 const INSURANCE_PERCENT = 5
-const DEFAULT_ACCESSORIES: { id: string; name: string; price: number }[] = [
-  { id: 'battery', name: 'Extra battery', price: 25 },
-  { id: 'memory-card', name: 'Memory card 64GB', price: 80 },
-  { id: 'bag', name: 'Equipment bag', price: 120 },
-]
+
+interface AccessoryItem {
+  id: string
+  name: string
+  price: number
+}
 
 interface CheckoutStepAddonsProps {
   onBack?: () => void
@@ -29,13 +32,28 @@ export function CheckoutStepAddons({ onBack, onSuccess }: CheckoutStepAddonsProp
   const { t } = useLocale()
   const addons = useCheckoutStore((s) => s.addons)
   const setAddons = useCheckoutStore((s) => s.setAddons)
+  const [accessories, setAccessories] = useState<AccessoryItem[]>([])
+  const [loadingCatalog, setLoadingCatalog] = useState(true)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch('/api/public/checkout/accessories')
+      .then((res) => (res.ok ? res.json() : { items: [] }))
+      .then((data) => setAccessories(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setAccessories([]))
+      .finally(() => setLoadingCatalog(false))
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    await fetch('/api/cart/addons', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(addons),
+    })
     onSuccess()
   }
 
-  const addAccessory = (item: { id: string; name: string; price: number }) => {
+  const addAccessory = (item: AccessoryItem) => {
     const existing = addons.accessories ?? []
     const found = existing.find((a) => a.id === item.id)
     if (found) {
@@ -84,7 +102,7 @@ export function CheckoutStepAddons({ onBack, onSuccess }: CheckoutStepAddonsProp
                 setAddons({
                   ...addons,
                   technician: v === true,
-                  technicianHours: v === true ? addons.technicianHours ?? 1 : undefined,
+                  technicianHours: v === true ? (addons.technicianHours ?? 1) : undefined,
                 })
               }
             />
@@ -136,53 +154,59 @@ export function CheckoutStepAddons({ onBack, onSuccess }: CheckoutStepAddonsProp
 
         <div className="space-y-2">
           <Label className="font-medium">{t('checkout.accessories')}</Label>
-          <div className="space-y-2">
-            {DEFAULT_ACCESSORIES.map((item) => {
-              const inCart = addons.accessories?.find((a) => a.id === item.id)
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <span className="text-sm">
-                    {item.name} – {item.price} SAR
-                  </span>
-                  {inCart ? (
-                    <div className="flex items-center gap-2">
+          {loadingCatalog ? (
+            <Skeleton className="h-24 w-full" />
+          ) : accessories.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('checkout.noAccessories')}</p>
+          ) : (
+            <div className="space-y-2">
+              {accessories.map((item) => {
+                const inCart = addons.accessories?.find((a) => a.id === item.id)
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-md border p-3"
+                  >
+                    <span className="text-sm">
+                      {item.name} – {item.price} SAR
+                    </span>
+                    {inCart ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => removeAccessory(item.id)}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-6 text-center text-sm">{inCart.quantity}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => addAccessory(item)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => removeAccessory(item.id)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-6 text-center text-sm">{inCart.quantity}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
+                        size="sm"
                         onClick={() => addAccessory(item)}
                       >
-                        <Plus className="h-4 w-4" />
+                        {t('checkout.add')}
                       </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addAccessory(item)}
-                    >
-                      {t('checkout.add')}
-                    </Button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="fixed bottom-0 start-0 end-0 z-20 flex gap-3 border-t bg-background p-4 lg:static lg:border-0 lg:p-0">

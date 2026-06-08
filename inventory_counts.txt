@@ -1,0 +1,17 @@
+Workbook: /home/flixcam.rent/Flixcam_invetory.updated.xlsx
+Total equipment items (all sheets): 257
+Equipment without photos (no featuredImageUrl AND no galleryImageUrls): 257
+
+By sheet totals:
+- Camera: 6 (no photos: 6)
+- Camera Acc: 35 (no photos: 35)
+- Lenses: 9 (no photos: 9)
+- Tripodgimbals: 21 (no photos: 21)
+- Boxes: 25 (no photos: 25)
+- Light: 18 (no photos: 18)
+- Light Acc: 58 (no photos: 58)
+- Grips: 31 (no photos: 31)
+- Monitors: 7 (no photos: 7)
+- Battery: 28 (no photos: 28)
+- Sound: 16 (no photos: 16)
+- Live and Mixing: 3 (no photos: 3)

@@ -16,7 +16,10 @@ jest.mock('@/lib/db/prisma', () => ({
     $transaction: jest.fn(),
   },
 }))
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: jest.fn().mockResolvedValue(true) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: jest.fn().mockResolvedValue(true),
+}))
 jest.mock('@/lib/auth/auth-helpers', () => ({ hashPassword: jest.fn().mockResolvedValue('hashed') }))
 jest.mock('@/lib/services/audit.service', () => ({ AuditService: { log: jest.fn().mockResolvedValue(undefined) } }))
 

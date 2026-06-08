@@ -1,21 +1,29 @@
 /**
- * Floating WhatsApp CTA button (Phase 1.5).
+ * Floating WhatsApp CTA — uses optional message override from equipment/studio pages.
  */
 
 'use client'
 
 import Link from 'next/link'
 import { getWhatsAppUrl } from '@/lib/utils/whatsapp-context'
+import { useWhatsAppPrefillStore } from '@/lib/stores/whatsapp-prefill.store'
 
-const WHATSAPP_URL = getWhatsAppUrl({ message: 'مرحباً، أود الاستفسار عن الخدمات' })
+const DEFAULT_MSG =
+  process.env.NEXT_PUBLIC_WHATSAPP_FLOAT_MESSAGE_EN ||
+  "Hello FlixCam, I'm interested in renting equipment"
 
 export function WhatsAppCta() {
+  const override = useWhatsAppPrefillStore((s) => s.messageOverride)
+  const href = getWhatsAppUrl({
+    message: override ?? DEFAULT_MSG,
+  })
+
   return (
     <Link
-      href={WHATSAPP_URL}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 end-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand-secondary-accent text-white shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-secondary-accent focus:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100"
+      className="animate-pulse fixed bottom-24 lg:bottom-6 end-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand-secondary-accent text-white shadow-lg transition-transform hover:scale-110 hover:animate-none focus:outline-none focus:ring-2 focus:ring-brand-secondary-accent focus:ring-offset-2 motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:scale-100"
       aria-label="Contact us on WhatsApp"
     >
       <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>

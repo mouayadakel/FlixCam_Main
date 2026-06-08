@@ -39,7 +39,7 @@ export function TablePagination({
   onPageSizeChange,
   pageSizeOptions = DEFAULT_PAGE_SIZES,
   itemLabel = '',
-  dir = 'ltr',
+  dir = 'rtl',
 }: TablePaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1

@@ -19,6 +19,7 @@ import {
   TERMS_BODY_AR,
   TERMS_BODY_EN,
 } from '../scripts/data/terms-policy-body'
+import { seedPaymentReceivedMessaging } from './seed-payment-received-notifications'
 
 const prisma = new PrismaClient()
 
@@ -88,6 +89,73 @@ const CATEGORIES = [
     slug: 'live-mixing',
     description: 'Video switchers, keyers, teleprompters, and live production',
   },
+  {
+    name: 'Crew',
+    slug: 'crew',
+    description: 'Professional film crew — DOP, camera, grip, lighting, and sound',
+    nameAr: 'طاقم عمل',
+  },
+]
+
+const CREW_SUBCATEGORIES = [
+  {
+    name: 'Director of Photography',
+    slug: 'crew-dop',
+    description: 'Cinematography and lighting direction',
+    nameAr: 'مدير تصوير',
+  },
+  {
+    name: 'Camera Operator',
+    slug: 'crew-camera-operator',
+    description: 'Camera operation for film and video',
+    nameAr: 'مشغل كاميرا',
+  },
+  {
+    name: 'Focus Puller (1st AC)',
+    slug: 'crew-focus-puller',
+    description: '1st assistant camera / focus pulling',
+    nameAr: 'مساعد كاميرا أول',
+  },
+  {
+    name: '2nd AC',
+    slug: 'crew-2nd-ac',
+    description: '2nd assistant camera',
+    nameAr: 'مساعد كاميرا ثاني',
+  },
+  { name: 'DIT', slug: 'crew-dit', description: 'Digital imaging technician', nameAr: 'فني صورة رقمية' },
+  { name: 'Gaffer', slug: 'crew-gaffer', description: 'Chief lighting technician', nameAr: 'رئيس إضاءة' },
+  {
+    name: 'Best Boy Electric',
+    slug: 'crew-best-boy-electric',
+    description: 'Assistant to the gaffer',
+    nameAr: 'مساعد رئيس إضاءة',
+  },
+  { name: 'Key Grip', slug: 'crew-key-grip', description: 'Head of grip department', nameAr: 'رئيس جريب' },
+  { name: 'Grip', slug: 'crew-grip', description: 'Grip department crew', nameAr: 'جريب' },
+  {
+    name: 'Production Sound Mixer',
+    slug: 'crew-sound-mixer',
+    description: 'Production sound mixing',
+    nameAr: 'مهندس صوت',
+  },
+  {
+    name: 'Boom Operator',
+    slug: 'crew-boom-operator',
+    description: 'Boom microphone operation',
+    nameAr: 'مشغل بوم',
+  },
+  {
+    name: 'Dolly Grip',
+    slug: 'crew-dolly-grip',
+    description: 'Dolly and track operation',
+    nameAr: 'جريب دولي',
+  },
+  {
+    name: 'Script Supervisor',
+    slug: 'crew-script-supervisor',
+    description: 'Continuity and script supervision',
+    nameAr: 'مشرف سيناريو',
+  },
 ]
 
 // ============================================
@@ -152,13 +220,818 @@ const BRANDS = [
   { name: 'Generic', slug: 'generic', description: 'Generic cinema accessories and cables' },
 ]
 
+type EquipmentSeedFixture = {
+  sku: string
+  slug: string
+  model: string
+  categorySlug: string
+  brandSlug: string
+  dailyPrice: number
+  weeklyPrice: number
+  monthlyPrice: number
+  purchasePrice: number
+  quantityTotal: number
+  quantityAvailable: number
+  featured: boolean
+  budgetTier: BudgetTier
+  specifications: Record<string, string>
+  media: {
+    url: string
+    filename: string
+    altText: string
+  }[]
+  /** Crew / extended fixtures */
+  subCategorySlug?: string
+  nameAr?: string
+  nameEn?: string
+  relatedEquipmentSkus?: string[]
+  itemType?: 'crew' | 'equipment'
+  descriptionEn?: string
+  bookingMode?: 'cart' | 'quote'
+  crewProfile?: {
+    nameEn: string
+    nameAr: string
+    bioEn: string
+    bioAr: string
+    experienceYears: number
+    specialties: string[]
+    photoUrl?: string
+  }
+}
+
+const BASELINE_EQUIPMENT_FIXTURES: EquipmentSeedFixture[] = [
+  {
+    sku: 'CAM-A7S3',
+    slug: 'sony-a7siii-body',
+    model: 'Sony A7S III Body',
+    categorySlug: 'cameras',
+    brandSlug: 'sony',
+    dailyPrice: 420,
+    weeklyPrice: 2520,
+    monthlyPrice: 8400,
+    purchasePrice: 12999,
+    quantityTotal: 4,
+    quantityAvailable: 4,
+    featured: true,
+    budgetTier: BudgetTier.ESSENTIAL,
+    specifications: { sensor: 'Full Frame', maxVideo: '4K 120fps', mount: 'Sony E' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-cam-a7s3-hero.jpg',
+        altText: 'Sony A7S III cinema camera body',
+      },
+    ],
+  },
+  {
+    sku: 'CAM-A7R5',
+    slug: 'sony-a7rv-body',
+    model: 'Sony A7R V Body',
+    categorySlug: 'cameras',
+    brandSlug: 'sony',
+    dailyPrice: 460,
+    weeklyPrice: 2760,
+    monthlyPrice: 9200,
+    purchasePrice: 14299,
+    quantityTotal: 3,
+    quantityAvailable: 3,
+    featured: true,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { sensor: 'Full Frame 61MP', maxVideo: '8K 24fps', mount: 'Sony E' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-cam-a7r5-hero.jpg',
+        altText: 'Sony A7R V camera body',
+      },
+    ],
+  },
+  {
+    sku: 'LENS-SIGMA-2470',
+    slug: 'sigma-24-70-f2-8-art',
+    model: 'Sigma 24-70mm f/2.8 Art',
+    categorySlug: 'lenses',
+    brandSlug: 'sigma',
+    dailyPrice: 220,
+    weeklyPrice: 1320,
+    monthlyPrice: 4400,
+    purchasePrice: 4199,
+    quantityTotal: 6,
+    quantityAvailable: 6,
+    featured: true,
+    budgetTier: BudgetTier.ESSENTIAL,
+    specifications: { focalLength: '24-70mm', aperture: 'f/2.8', mount: 'Sony E' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1616423640778-28d1b53229bd?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-lens-sigma-2470-hero.jpg',
+        altText: 'Sigma 24-70 Art zoom lens',
+      },
+    ],
+  },
+  {
+    sku: 'LENS-ARRI-UP',
+    slug: 'arri-ultra-prime-32mm',
+    model: 'ARRI Ultra Prime 32mm T1.9',
+    categorySlug: 'lenses',
+    brandSlug: 'arri',
+    dailyPrice: 510,
+    weeklyPrice: 3060,
+    monthlyPrice: 10200,
+    purchasePrice: 33500,
+    quantityTotal: 2,
+    quantityAvailable: 2,
+    featured: true,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { focalLength: '32mm', aperture: 'T1.9', mount: 'PL' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1516724562728-afc824a36e84?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-lens-arri-up-hero.jpg',
+        altText: 'ARRI Ultra Prime cinema lens',
+      },
+    ],
+  },
+  {
+    sku: 'SND-RODE-MIC',
+    slug: 'rode-videomic-ntg',
+    model: 'Rode VideoMic NTG',
+    categorySlug: 'audio',
+    brandSlug: 'rode',
+    dailyPrice: 85,
+    weeklyPrice: 510,
+    monthlyPrice: 1700,
+    purchasePrice: 999,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.ESSENTIAL,
+    specifications: { type: 'Shotgun', connector: '3.5mm', power: 'USB-C or battery' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1520170350707-b2da59970118?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-snd-rode-mic-hero.jpg',
+        altText: 'Rode on-camera shotgun microphone',
+      },
+    ],
+  },
+  {
+    sku: 'SND-SENN-EW4G',
+    slug: 'sennheiser-ew-g4-kit',
+    model: 'Sennheiser EW G4 Wireless Kit',
+    categorySlug: 'audio',
+    brandSlug: 'sennheiser',
+    dailyPrice: 180,
+    weeklyPrice: 1080,
+    monthlyPrice: 3600,
+    purchasePrice: 3100,
+    quantityTotal: 5,
+    quantityAvailable: 5,
+    featured: true,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    specifications: { type: 'Wireless Lavalier', channels: '2', range: 'up to 100m' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-snd-senn-ew4g-hero.jpg',
+        altText: 'Sennheiser EW G4 wireless lavalier set',
+      },
+    ],
+  },
+  {
+    sku: 'SND-ZOOM-F6',
+    slug: 'zoom-f6-recorder',
+    model: 'Zoom F6 Field Recorder',
+    categorySlug: 'audio',
+    brandSlug: 'zoom',
+    dailyPrice: 170,
+    weeklyPrice: 1020,
+    monthlyPrice: 3400,
+    purchasePrice: 2699,
+    quantityTotal: 4,
+    quantityAvailable: 4,
+    featured: false,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { channels: '6', recording: '32-bit float', inputs: 'XLR' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1598653222000-6b7b7a552625?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-snd-zoom-f6-hero.jpg',
+        altText: 'Zoom F6 professional field recorder',
+      },
+    ],
+  },
+  {
+    sku: 'ACC-NUCLEUS-M',
+    slug: 'tilta-nucleus-m',
+    model: 'Tilta Nucleus-M Follow Focus',
+    categorySlug: 'camera-accessories',
+    brandSlug: 'tilta',
+    dailyPrice: 150,
+    weeklyPrice: 900,
+    monthlyPrice: 3000,
+    purchasePrice: 2299,
+    quantityTotal: 4,
+    quantityAvailable: 4,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    specifications: { type: 'Wireless Follow Focus', motors: '2', control: 'Hand Unit' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1495793714970-821eac984329?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-acc-nucleus-m-hero.jpg',
+        altText: 'Tilta Nucleus-M wireless follow focus',
+      },
+    ],
+  },
+  {
+    sku: 'ACC-TERADEK-B6',
+    slug: 'teradek-bolt-6',
+    model: 'Teradek Bolt 6 Wireless TX/RX',
+    categorySlug: 'camera-accessories',
+    brandSlug: 'teradek',
+    dailyPrice: 260,
+    weeklyPrice: 1560,
+    monthlyPrice: 5200,
+    purchasePrice: 8999,
+    quantityTotal: 3,
+    quantityAvailable: 3,
+    featured: false,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { range: '750 ft', resolution: '4K', latency: 'sub 1ms' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-acc-teradek-b6-hero.jpg',
+        altText: 'Teradek Bolt 6 wireless video transmission kit',
+      },
+    ],
+  },
+  {
+    sku: 'LGT-APT-300D',
+    slug: 'aputure-300d-mark-ii',
+    model: 'Aputure Light Storm 300d II',
+    categorySlug: 'lighting',
+    brandSlug: 'aputure',
+    dailyPrice: 190,
+    weeklyPrice: 1140,
+    monthlyPrice: 3800,
+    purchasePrice: 4499,
+    quantityTotal: 5,
+    quantityAvailable: 5,
+    featured: true,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    specifications: { power: '350W', cct: '5600K', mount: 'Bowens' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1516035609412-8a2d3d2f0b7a?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-lgt-apt-300d-hero.jpg',
+        altText: 'Aputure 300d II LED light',
+      },
+    ],
+  },
+  {
+    sku: 'LGT-APT-600C',
+    slug: 'aputure-600c-pro',
+    model: 'Aputure LS 600c Pro',
+    categorySlug: 'lighting',
+    brandSlug: 'aputure',
+    dailyPrice: 290,
+    weeklyPrice: 1740,
+    monthlyPrice: 5800,
+    purchasePrice: 8999,
+    quantityTotal: 3,
+    quantityAvailable: 3,
+    featured: true,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { power: '720W', cct: '2300K-10000K', cri: '95+' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-lgt-apt-600c-hero.jpg',
+        altText: 'Aputure LS 600c Pro RGBWW light',
+      },
+    ],
+  },
+  {
+    sku: 'LGT-ASTERA-8P',
+    slug: 'astera-titan-tube-8',
+    model: 'Astera Titan Tube 8-Light Kit',
+    categorySlug: 'lighting',
+    brandSlug: 'astera',
+    dailyPrice: 320,
+    weeklyPrice: 1920,
+    monthlyPrice: 6400,
+    purchasePrice: 12600,
+    quantityTotal: 2,
+    quantityAvailable: 2,
+    featured: false,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { type: 'RGB Tube Kit', tubes: '8', wireless: 'CRMX + App' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-lgt-astera-8p-hero.jpg',
+        altText: 'Astera Titan Tube eight-light kit',
+      },
+    ],
+  },
+  {
+    sku: 'STAB-RS4-PRO',
+    slug: 'dji-rs4-pro-gimbal',
+    model: 'DJI RS 4 Pro Gimbal',
+    categorySlug: 'tripods-gimbals',
+    brandSlug: 'dji',
+    dailyPrice: 210,
+    weeklyPrice: 1260,
+    monthlyPrice: 4200,
+    purchasePrice: 3899,
+    quantityTotal: 4,
+    quantityAvailable: 4,
+    featured: true,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    specifications: { payload: '4.5kg', axisLocks: 'Auto', stabilization: '3-axis' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1495707902641-75cac588d2e9?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-stab-rs4-pro-hero.jpg',
+        altText: 'DJI RS 4 Pro camera gimbal',
+      },
+    ],
+  },
+  {
+    sku: 'STAB-EASYRIG',
+    slug: 'easyrig-cinema-3',
+    model: 'Easyrig Cinema 3 Support',
+    categorySlug: 'tripods-gimbals',
+    brandSlug: 'easyrig',
+    dailyPrice: 240,
+    weeklyPrice: 1440,
+    monthlyPrice: 4800,
+    purchasePrice: 6999,
+    quantityTotal: 3,
+    quantityAvailable: 3,
+    featured: false,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { payload: '5-17kg', style: 'Body Support', quickRelease: 'Yes' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-stab-easyrig-hero.jpg',
+        altText: 'Easyrig body support for handheld cinema camera',
+      },
+    ],
+  },
+  {
+    sku: 'MON-ATOMOS-24',
+    slug: 'atomos-sumo-24',
+    model: 'Atomos Sumo 24 Monitor Recorder',
+    categorySlug: 'monitors',
+    brandSlug: 'atomos',
+    dailyPrice: 280,
+    weeklyPrice: 1680,
+    monthlyPrice: 5600,
+    purchasePrice: 9450,
+    quantityTotal: 2,
+    quantityAvailable: 2,
+    featured: false,
+    budgetTier: BudgetTier.PREMIUM,
+    specifications: { size: '24 inch', recording: 'ProRes RAW', brightness: '1200 nits' },
+    media: [
+      {
+        url: 'https://images.unsplash.com/photo-1527443195645-1133f7f28990?w=1400&h=900&fit=crop&q=80',
+        filename: 'seed-mon-atomos-24-hero.jpg',
+        altText: 'Atomos Sumo 24 inch production monitor recorder',
+      },
+    ],
+  },
+]
+
+const CREW_MEDIA = {
+  url: 'https://images.unsplash.com/photo-1485846234544-a62644f84728?w=1400&h=900&fit=crop&q=80',
+  filename: 'seed-crew-role-hero.jpg',
+  altText: 'Film production crew on set',
+}
+
+function defaultCrewProfile(
+  nameEn: string,
+  nameAr: string,
+  bioEn: string,
+  bioAr: string,
+  experienceYears: number,
+  specialties: string[]
+) {
+  return {
+    nameEn,
+    nameAr,
+    bioEn,
+    bioAr,
+    experienceYears,
+    specialties,
+    photoUrl: CREW_MEDIA.url,
+  }
+}
+
+const CREW_EQUIPMENT_FIXTURES: EquipmentSeedFixture[] = [
+  {
+    sku: 'CREW-DOP',
+    slug: 'director-of-photography-day-rate',
+    model: 'Director of Photography',
+    nameAr: 'مدير تصوير وإضاءة',
+    nameEn: 'Director of Photography',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-dop',
+    brandSlug: 'generic',
+    dailyPrice: 5000,
+    weeklyPrice: 25000,
+    monthlyPrice: 75000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: true,
+    budgetTier: BudgetTier.PREMIUM,
+    itemType: 'crew',
+    bookingMode: 'quote',
+    crewProfile: defaultCrewProfile(
+      'Senior Director of Photography',
+      'مدير تصوير أول',
+      'Experienced DOP for commercial, documentary, and narrative work across Saudi Arabia. Lighting and camera direction for full-scale productions.',
+      'مدير تصوير ذو خبرة في الإعلانات والأفلام الوثائقية والدراما في المملكة. إشراف على الإضاءة والكاميرا للإنتاج الكامل.',
+      12,
+      ['Cinema', 'Commercial', 'Documentary']
+    ),
+    relatedEquipmentSkus: ['CAM-A7S3', 'LENS-ARRI-UP', 'LGT-APT-600C', 'LGT-APT-300D'],
+    specifications: {
+      role: 'Director of Photography',
+      department: 'Camera',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    descriptionEn:
+      'Day rate for an experienced DOP. Camera, lenses, and lighting gear rented separately.',
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-SOUND-MIX',
+    slug: 'production-sound-mixer-day-rate',
+    model: 'Production Sound Mixer',
+    nameAr: 'مهندس صوت',
+    nameEn: 'Production Sound Mixer',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-sound-mixer',
+    brandSlug: 'generic',
+    dailyPrice: 2000,
+    weeklyPrice: 10000,
+    monthlyPrice: 30000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: true,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['SND-SENN-EW4G', 'SND-ZOOM-F6', 'SND-RODE-MIC'],
+    specifications: {
+      role: 'Production Sound Mixer',
+      department: 'Sound',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    descriptionEn: 'Day rate for production sound mixing. Wireless kits and recorders rented separately.',
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-CAM-OP',
+    slug: 'camera-operator-day-rate',
+    model: 'Camera Operator',
+    nameAr: 'مشغل كاميرا',
+    nameEn: 'Camera Operator',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-camera-operator',
+    brandSlug: 'generic',
+    dailyPrice: 1800,
+    weeklyPrice: 9000,
+    monthlyPrice: 27000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    bookingMode: 'quote',
+    crewProfile: defaultCrewProfile(
+      'Senior Camera Operator',
+      'مشغل كاميرا أول',
+      'Handheld and tripod operation for broadcast, commercial, and film. Works with cinema cameras and gimbal support.',
+      'تشغيل كاميرا يدوي وعلى الحامل للبث والإعلانات والأفلام. خبرة مع كاميرات السينما والجيمبال.',
+      10,
+      ['Handheld', 'Commercial', 'Live events']
+    ),
+    relatedEquipmentSkus: ['CAM-A7S3', 'STAB-RS4-PRO', 'STAB-EASYRIG'],
+    specifications: {
+      role: 'Camera Operator',
+      department: 'Camera',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-1ST-AC',
+    slug: 'focus-puller-day-rate',
+    model: 'Focus Puller (1st AC)',
+    nameAr: 'مساعد كاميرا أول',
+    nameEn: 'Focus Puller (1st AC)',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-focus-puller',
+    brandSlug: 'generic',
+    dailyPrice: 1500,
+    weeklyPrice: 7500,
+    monthlyPrice: 22500,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['CAM-A7S3', 'ACC-NUCLEUS-M', 'ACC-TERADEK-B6'],
+    specifications: {
+      role: '1st AC / Focus Puller',
+      department: 'Camera',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-2ND-AC',
+    slug: 'second-ac-day-rate',
+    model: '2nd AC',
+    nameAr: 'مساعد كاميرا ثاني',
+    nameEn: '2nd AC',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-2nd-ac',
+    brandSlug: 'generic',
+    dailyPrice: 1000,
+    weeklyPrice: 5000,
+    monthlyPrice: 15000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.ESSENTIAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['CAM-A7S3', 'ACC-NUCLEUS-M'],
+    specifications: {
+      role: '2nd AC',
+      department: 'Camera',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-DIT',
+    slug: 'dit-day-rate',
+    model: 'DIT',
+    nameAr: 'فني صورة رقمية',
+    nameEn: 'DIT',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-dit',
+    brandSlug: 'generic',
+    dailyPrice: 1500,
+    weeklyPrice: 7500,
+    monthlyPrice: 22500,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['MON-ATOMOS-24', 'ACC-TERADEK-B6'],
+    specifications: {
+      role: 'DIT',
+      department: 'Camera',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-GAFFER',
+    slug: 'gaffer-day-rate',
+    model: 'Gaffer',
+    nameAr: 'رئيس إضاءة',
+    nameEn: 'Gaffer',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-gaffer',
+    brandSlug: 'generic',
+    dailyPrice: 1800,
+    weeklyPrice: 9000,
+    monthlyPrice: 27000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['LGT-APT-600C', 'LGT-APT-300D', 'LGT-ASTERA-8P'],
+    specifications: {
+      role: 'Gaffer',
+      department: 'Lighting',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-BBE',
+    slug: 'best-boy-electric-day-rate',
+    model: 'Best Boy Electric',
+    nameAr: 'مساعد رئيس إضاءة',
+    nameEn: 'Best Boy Electric',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-best-boy-electric',
+    brandSlug: 'generic',
+    dailyPrice: 1200,
+    weeklyPrice: 6000,
+    monthlyPrice: 18000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.ESSENTIAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['LGT-APT-300D', 'LGT-APT-600C'],
+    specifications: {
+      role: 'Best Boy Electric',
+      department: 'Lighting',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-KEY-GRIP',
+    slug: 'key-grip-day-rate',
+    model: 'Key Grip',
+    nameAr: 'رئيس جريب',
+    nameEn: 'Key Grip',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-key-grip',
+    brandSlug: 'generic',
+    dailyPrice: 1500,
+    weeklyPrice: 7500,
+    monthlyPrice: 22500,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['LGT-APT-600C', 'STAB-EASYRIG'],
+    specifications: {
+      role: 'Key Grip',
+      department: 'Grip',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-GRIP',
+    slug: 'grip-day-rate',
+    model: 'Grip',
+    nameAr: 'جريب',
+    nameEn: 'Grip',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-grip',
+    brandSlug: 'generic',
+    dailyPrice: 1000,
+    weeklyPrice: 5000,
+    monthlyPrice: 15000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.ESSENTIAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['STAB-RS4-PRO', 'LGT-APT-300D'],
+    specifications: {
+      role: 'Grip',
+      department: 'Grip',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-BOOM',
+    slug: 'boom-operator-day-rate',
+    model: 'Boom Operator',
+    nameAr: 'مشغل بوم',
+    nameEn: 'Boom Operator',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-boom-operator',
+    brandSlug: 'generic',
+    dailyPrice: 1200,
+    weeklyPrice: 6000,
+    monthlyPrice: 18000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.ESSENTIAL,
+    itemType: 'crew',
+    relatedEquipmentSkus: ['SND-RODE-MIC', 'SND-SENN-EW4G'],
+    specifications: {
+      role: 'Boom Operator',
+      department: 'Sound',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-DOLLY',
+    slug: 'dolly-grip-day-rate',
+    model: 'Dolly Grip',
+    nameAr: 'جريب دولي',
+    nameEn: 'Dolly Grip',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-dolly-grip',
+    brandSlug: 'generic',
+    dailyPrice: 1200,
+    weeklyPrice: 6000,
+    monthlyPrice: 18000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    bookingMode: 'cart',
+    crewProfile: defaultCrewProfile(
+      'Dolly Grip',
+      'جريب دولي',
+      'Dolly, track, and slider operation for narrative and commercial shoots.',
+      'تشغيل الدولي والقضبان والسلايدر للمشاريع السينمائية والإعلانية.',
+      7,
+      ['Dolly', 'Track', 'Grip']
+    ),
+    relatedEquipmentSkus: ['STAB-RS4-PRO', 'STAB-EASYRIG'],
+    specifications: {
+      role: 'Dolly Grip',
+      department: 'Grip',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+  {
+    sku: 'CREW-SCRIPT',
+    slug: 'script-supervisor-day-rate',
+    model: 'Script Supervisor',
+    nameAr: 'مشرف سيناريو',
+    nameEn: 'Script Supervisor',
+    categorySlug: 'crew',
+    subCategorySlug: 'crew-script-supervisor',
+    brandSlug: 'generic',
+    dailyPrice: 1400,
+    weeklyPrice: 7000,
+    monthlyPrice: 21000,
+    purchasePrice: 0,
+    quantityTotal: 10,
+    quantityAvailable: 10,
+    featured: false,
+    budgetTier: BudgetTier.PROFESSIONAL,
+    itemType: 'crew',
+    bookingMode: 'cart',
+    crewProfile: defaultCrewProfile(
+      'Script Supervisor',
+      'مشرف سيناريو',
+      'Continuity, lined scripts, and on-set notes for film and TV productions.',
+      'متابعة الاستمرارية والسيناريو المخطط وملاحظات الموقع للأفلام والمسلسلات.',
+      9,
+      ['Continuity', 'Script', 'Narrative']
+    ),
+    relatedEquipmentSkus: ['CAM-A7S3', 'MON-ATOMOS-24'],
+    specifications: {
+      role: 'Script Supervisor',
+      department: 'Production',
+      dayLength: '10 hours',
+      includesKit: 'false',
+    },
+    media: [CREW_MEDIA],
+  },
+]
+
 // ============================================
 // MAIN SEED FUNCTION
 // ============================================
 
 async function main() {
   console.log('🌱 Starting comprehensive database seed...')
-  console.log('📦 Equipment seeding disabled (no equipment items).')
+  console.log('📦 Seeding deterministic baseline equipment catalog.')
 
   // Admin credentials: admin@flixcam.rent / admin123 (bcrypt 10 rounds; login compares with bcrypt.compare)
   const adminPasswordHash = await bcrypt.hash('admin123', 10)
@@ -248,9 +1121,14 @@ async function main() {
   // 4. Create ALL Categories (12 categories matching Excel sheets)
   const createdCategories: Record<string, { id: string; name: string; slug: string }> = {}
   for (const cat of CATEGORIES) {
+    const nameAr = 'nameAr' in cat ? (cat as { nameAr?: string }).nameAr : undefined
     const category = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { name: cat.name, description: cat.description },
+      update: {
+        name: cat.name,
+        description: cat.description,
+        ...(nameAr != null ? { nameAr } : {}),
+      },
       create: { ...cat, createdBy: admin.id },
     })
     createdCategories[cat.slug] = category
@@ -290,6 +1168,33 @@ async function main() {
     console.log(`✅ Created ${LIGHTING_SUBCATEGORIES.length} Lighting subcategories`)
   }
 
+  const createdCrewSubcategories: Record<string, { id: string }> = {}
+  const crewParent = createdCategories['crew']
+  if (crewParent) {
+    for (const sub of CREW_SUBCATEGORIES) {
+      const row = await prisma.category.upsert({
+        where: { slug: sub.slug },
+        update: {
+          name: sub.name,
+          description: sub.description ?? null,
+          nameAr: sub.nameAr ?? null,
+          parentId: crewParent.id,
+          updatedBy: admin.id,
+        },
+        create: {
+          name: sub.name,
+          slug: sub.slug,
+          description: sub.description ?? null,
+          nameAr: sub.nameAr ?? null,
+          parentId: crewParent.id,
+          createdBy: admin.id,
+        },
+      })
+      createdCrewSubcategories[sub.slug] = row
+    }
+    console.log(`✅ Created ${CREW_SUBCATEGORIES.length} Crew subcategories`)
+  }
+
   // 5. Create ALL Brands (39 brands covering all manufacturers in inventory)
   const createdBrands: Record<string, { id: string; name: string; slug: string }> = {}
   for (const brand of BRANDS) {
@@ -302,10 +1207,259 @@ async function main() {
   }
   console.log(`✅ Created ${BRANDS.length} brands`)
 
-  // 6. Equipment seeding disabled (no equipment items)
-  const createdCount = 0
-  const featuredCount = 0
-  console.log('✅ Equipment seeding skipped (cleared)')
+  // 6. Seed deterministic baseline equipment (idempotent for fresh environments)
+  const totalSeededEquipment = BASELINE_EQUIPMENT_FIXTURES.length
+  const totalSeededMedia = BASELINE_EQUIPMENT_FIXTURES.reduce(
+    (sum, fixture) => sum + fixture.media.length,
+    0
+  )
+  let createdCount = 0
+  let featuredCount = 0
+  const seededSkus: string[] = []
+  const equipmentIdBySku: Record<string, string> = {}
+
+  for (const fixture of BASELINE_EQUIPMENT_FIXTURES) {
+    const category = createdCategories[fixture.categorySlug]
+    const brand = createdBrands[fixture.brandSlug]
+    if (!category) {
+      throw new Error(`Missing category for seed fixture ${fixture.sku}: ${fixture.categorySlug}`)
+    }
+    if (!brand) {
+      throw new Error(`Missing brand for seed fixture ${fixture.sku}: ${fixture.brandSlug}`)
+    }
+
+    const existing = await prisma.equipment.findUnique({
+      where: { sku: fixture.sku },
+      select: { id: true },
+    })
+
+    const equipment = await prisma.equipment.upsert({
+      where: { sku: fixture.sku },
+      update: {
+        slug: fixture.slug,
+        model: fixture.model,
+        categoryId: category.id,
+        brandId: brand.id,
+        quantityTotal: fixture.quantityTotal,
+        quantityAvailable: fixture.quantityAvailable,
+        dailyPrice: fixture.dailyPrice,
+        weeklyPrice: fixture.weeklyPrice,
+        monthlyPrice: fixture.monthlyPrice,
+        purchasePrice: fixture.purchasePrice,
+        isActive: true,
+        featured: fixture.featured,
+        budgetTier: fixture.budgetTier,
+        specifications: fixture.specifications as object,
+        updatedBy: admin.id,
+      },
+      create: {
+        sku: fixture.sku,
+        slug: fixture.slug,
+        model: fixture.model,
+        categoryId: category.id,
+        brandId: brand.id,
+        quantityTotal: fixture.quantityTotal,
+        quantityAvailable: fixture.quantityAvailable,
+        dailyPrice: fixture.dailyPrice,
+        weeklyPrice: fixture.weeklyPrice,
+        monthlyPrice: fixture.monthlyPrice,
+        purchasePrice: fixture.purchasePrice,
+        isActive: true,
+        featured: fixture.featured,
+        budgetTier: fixture.budgetTier,
+        specifications: fixture.specifications as object,
+        createdBy: admin.id,
+      },
+      select: { id: true },
+    })
+
+    if (!existing) createdCount++
+    if (fixture.featured) featuredCount++
+    seededSkus.push(fixture.sku)
+    equipmentIdBySku[fixture.sku] = equipment.id
+
+    for (let i = 0; i < fixture.media.length; i++) {
+      const mediaFixture = fixture.media[i]
+      const existingMedia = await prisma.media.findFirst({
+        where: {
+          equipmentId: equipment.id,
+          filename: mediaFixture.filename,
+          deletedAt: null,
+        },
+        select: { id: true },
+      })
+
+      if (existingMedia) {
+        await prisma.media.update({
+          where: { id: existingMedia.id },
+          data: {
+            url: mediaFixture.url,
+            type: 'image',
+            mimeType: 'image/jpeg',
+            altText: mediaFixture.altText,
+            sortOrder: i,
+            updatedBy: admin.id,
+          },
+        })
+      } else {
+        await prisma.media.create({
+          data: {
+            equipmentId: equipment.id,
+            url: mediaFixture.url,
+            type: 'image',
+            filename: mediaFixture.filename,
+            mimeType: 'image/jpeg',
+            altText: mediaFixture.altText,
+            sortOrder: i,
+            createdBy: admin.id,
+          },
+        })
+      }
+    }
+  }
+  console.log(
+    `✅ Baseline equipment ensured (${totalSeededEquipment} fixtures, ${createdCount} newly created, ${featuredCount} featured)`
+  )
+
+  let crewCreatedCount = 0
+  for (const fixture of CREW_EQUIPMENT_FIXTURES) {
+    const category = createdCategories[fixture.categorySlug]
+    const brand = createdBrands[fixture.brandSlug]
+    if (!category) {
+      throw new Error(`Missing category for crew fixture ${fixture.sku}: ${fixture.categorySlug}`)
+    }
+    if (!brand) {
+      throw new Error(`Missing brand for crew fixture ${fixture.sku}: ${fixture.brandSlug}`)
+    }
+
+    const subCategory = fixture.subCategorySlug
+      ? createdCrewSubcategories[fixture.subCategorySlug]
+      : undefined
+    const relatedEquipmentIds = (fixture.relatedEquipmentSkus ?? [])
+      .map((sku) => equipmentIdBySku[sku])
+      .filter((id): id is string => Boolean(id))
+
+    const quoteOnlySkus = new Set(['CREW-DOP', 'CREW-CAM-OP'])
+    const bookingMode =
+      fixture.bookingMode ?? (quoteOnlySkus.has(fixture.sku) ? 'quote' : 'cart')
+    const crewProfile =
+      fixture.crewProfile ??
+      defaultCrewProfile(
+        fixture.nameEn ?? fixture.model,
+        fixture.nameAr ?? fixture.model,
+        fixture.descriptionEn ??
+          `Professional ${fixture.model} day rate for film and video production.`,
+        `تأجير يومي لـ ${fixture.nameAr ?? fixture.model} لإنتاج الأفلام والفيديو.`,
+        8,
+        [fixture.specifications.role ?? fixture.model]
+      )
+
+    const customFields: Record<string, unknown> = {
+      itemType: fixture.itemType ?? 'crew',
+      bookingMode,
+      crewProfile,
+      ...(subCategory ? { subCategoryId: subCategory.id } : {}),
+      ...(fixture.nameAr ? { nameAr: fixture.nameAr } : {}),
+      ...(relatedEquipmentIds.length > 0 ? { relatedEquipmentIds } : {}),
+    }
+
+    const existing = await prisma.equipment.findUnique({
+      where: { sku: fixture.sku },
+      select: { id: true },
+    })
+
+    const equipment = await prisma.equipment.upsert({
+      where: { sku: fixture.sku },
+      update: {
+        slug: fixture.slug,
+        model: fixture.model,
+        nameEn: fixture.nameEn ?? fixture.model,
+        descriptionEn: fixture.descriptionEn ?? null,
+        categoryId: category.id,
+        brandId: brand.id,
+        quantityTotal: fixture.quantityTotal,
+        quantityAvailable: fixture.quantityAvailable,
+        dailyPrice: fixture.dailyPrice,
+        weeklyPrice: fixture.weeklyPrice,
+        monthlyPrice: fixture.monthlyPrice,
+        purchasePrice: fixture.purchasePrice,
+        isActive: true,
+        featured: fixture.featured,
+        budgetTier: fixture.budgetTier,
+        specifications: fixture.specifications as object,
+        customFields: customFields as object,
+        updatedBy: admin.id,
+      },
+      create: {
+        sku: fixture.sku,
+        slug: fixture.slug,
+        model: fixture.model,
+        nameEn: fixture.nameEn ?? fixture.model,
+        descriptionEn: fixture.descriptionEn ?? null,
+        categoryId: category.id,
+        brandId: brand.id,
+        quantityTotal: fixture.quantityTotal,
+        quantityAvailable: fixture.quantityAvailable,
+        dailyPrice: fixture.dailyPrice,
+        weeklyPrice: fixture.weeklyPrice,
+        monthlyPrice: fixture.monthlyPrice,
+        purchasePrice: fixture.purchasePrice,
+        isActive: true,
+        featured: fixture.featured,
+        budgetTier: fixture.budgetTier,
+        specifications: fixture.specifications as object,
+        customFields: customFields as object,
+        createdBy: admin.id,
+      },
+      select: { id: true },
+    })
+
+    if (!existing) crewCreatedCount++
+    equipmentIdBySku[fixture.sku] = equipment.id
+    seededSkus.push(fixture.sku)
+
+    for (let i = 0; i < fixture.media.length; i++) {
+      const mediaFixture = fixture.media[i]
+      const existingMedia = await prisma.media.findFirst({
+        where: {
+          equipmentId: equipment.id,
+          filename: mediaFixture.filename,
+          deletedAt: null,
+        },
+        select: { id: true },
+      })
+
+      if (existingMedia) {
+        await prisma.media.update({
+          where: { id: existingMedia.id },
+          data: {
+            url: mediaFixture.url,
+            type: 'image',
+            mimeType: 'image/jpeg',
+            altText: mediaFixture.altText,
+            sortOrder: i,
+            updatedBy: admin.id,
+          },
+        })
+      } else {
+        await prisma.media.create({
+          data: {
+            equipmentId: equipment.id,
+            url: mediaFixture.url,
+            type: 'image',
+            filename: mediaFixture.filename,
+            mimeType: 'image/jpeg',
+            altText: mediaFixture.altText,
+            sortOrder: i,
+            createdBy: admin.id,
+          },
+        })
+      }
+    }
+  }
+  console.log(
+    `✅ Crew equipment ensured (${CREW_EQUIPMENT_FIXTURES.length} fixtures, ${crewCreatedCount} newly created)`
+  )
 
   // 7. Shoot Types (Smart Kit Builder)
   const shootTypeDefs = [
@@ -315,7 +1469,7 @@ async function main() {
       description: 'Full-day coverage: ceremony, reception, details.',
       icon: 'Heart',
       sortOrder: 0,
-      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip'],
+      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip', 'crew'],
     },
     {
       name: 'Commercial / Advertising',
@@ -323,7 +1477,7 @@ async function main() {
       description: 'High-end spots and product shots.',
       icon: 'Tv',
       sortOrder: 1,
-      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip'],
+      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip', 'crew'],
     },
     {
       name: 'Product Photography',
@@ -355,7 +1509,7 @@ async function main() {
       description: 'Run-and-gun and sit-down interviews.',
       icon: 'Film',
       sortOrder: 5,
-      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip'],
+      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip', 'crew'],
     },
     {
       name: 'Music Video',
@@ -363,7 +1517,7 @@ async function main() {
       description: 'Performance and narrative music videos.',
       icon: 'Music',
       sortOrder: 6,
-      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip'],
+      categorySlugs: ['cameras', 'lenses', 'lighting', 'audio', 'grip', 'crew'],
     },
     {
       name: 'Short Film / Narrative',
@@ -460,16 +1614,19 @@ async function main() {
 
     // Create category flows
     for (let i = 0; i < def.categorySlugs.length; i++) {
-      const cat = createdCategories[def.categorySlugs[i]]
+      const slug = def.categorySlugs[i]
+      const cat = createdCategories[slug]
       if (!cat) continue
+      const isCrewStep = slug === 'crew'
+      const isRequired = isCrewStep ? false : i < 2
       await prisma.shootTypeCategoryFlow.upsert({
         where: { shootTypeId_categoryId: { shootTypeId: st.id, categoryId: cat.id } },
-        update: { sortOrder: i, isRequired: i < 2, stepTitle: `Choose ${cat.name}` },
+        update: { sortOrder: i, isRequired, stepTitle: `Choose ${cat.name}` },
         create: {
           shootTypeId: st.id,
           categoryId: cat.id,
           sortOrder: i,
-          isRequired: i < 2,
+          isRequired,
           minRecommended: i === 0 ? 1 : null,
           stepTitle: `Choose ${cat.name}`,
         },
@@ -490,6 +1647,8 @@ async function main() {
           'LGT-APT-300D',
           'SND-SENN-EW4G',
           'STAB-RS4-PRO',
+          'CREW-1ST-AC',
+          'CREW-SOUND-MIX',
         ],
         tier: BudgetTier.PROFESSIONAL,
       },
@@ -503,6 +1662,8 @@ async function main() {
           'SND-ZOOM-F6',
           'STAB-EASYRIG',
           'MON-ATOMOS-24',
+          'CREW-DOP',
+          'CREW-CAM-OP',
         ],
         tier: BudgetTier.PREMIUM,
       },
@@ -510,7 +1671,7 @@ async function main() {
   }
 
   const allEquipmentDb = await prisma.equipment.findMany({
-    where: { sku: { in: [] } },
+    where: { sku: { in: seededSkus } },
     select: { id: true, sku: true },
   })
   const equipBySku = Object.fromEntries(allEquipmentDb.map((e) => [e.sku, e]))
@@ -664,6 +1825,34 @@ async function main() {
       name: 'enable_home_kit_teaser',
       description: 'Show "Build Your Kit" teaser banner on the homepage',
       enabled: false,
+      scope: FeatureFlagScope.UI,
+      requiresApproval: false,
+    },
+    {
+      name: 'enable_home_categories_section',
+      description: 'Show categories cards section on homepage',
+      enabled: true,
+      scope: FeatureFlagScope.UI,
+      requiresApproval: false,
+    },
+    {
+      name: 'enable_home_new_arrivals_section',
+      description: 'Show new arrivals section on homepage',
+      enabled: true,
+      scope: FeatureFlagScope.UI,
+      requiresApproval: false,
+    },
+    {
+      name: 'enable_home_top_brands_section',
+      description: 'Show top brands section on homepage',
+      enabled: true,
+      scope: FeatureFlagScope.UI,
+      requiresApproval: false,
+    },
+    {
+      name: 'enable_home_how_it_works_block',
+      description: 'Show How It Works block inside trust section on homepage',
+      enabled: true,
       scope: FeatureFlagScope.UI,
       requiresApproval: false,
     },
@@ -1010,15 +2199,53 @@ async function main() {
       metaDescription: 'استوديو تصوير سينمائي 200 م² في الرياض. إضاءة، صوت، شاشة خضراء. احجز الآن.',
       images: [0, 1, 2, 3, 4, 5],
       packages: [
-        { name: 'نصف يوم (4 ساعات)', nameAr: 'نصف يوم (4 ساعات)', price: 3000, hours: 4, order: 0 },
         {
-          name: 'يوم كامل (8 ساعات)',
-          nameAr: 'يوم كامل (8 ساعات)',
-          price: 5500,
+          name: 'إعلان ولقطات بطل — 4 ساعات',
+          nameAr: 'إعلان ولقطات بطل — 4 ساعات',
+          descriptionAr:
+            'مثالي للإعلانات القصيرة، المقابلات، وتصوير المنتج. وقت مرن لإعداد إضاءة أساسية.',
+          price: 3200,
+          hours: 4,
+          order: 0,
+          recommended: true,
+          badgeText: 'الأكثر طلباً',
+        },
+        {
+          name: 'يوم إنتاج سينمائي — 8 ساعات',
+          nameAr: 'يوم إنتاج سينمائي — 8 ساعات',
+          descriptionAr:
+            'يوم كامل للمشاهد المعقدة، حركة كاميرا، وعدة إعدادات إضاءة في نفس المساحة.',
+          price: 5800,
           hours: 8,
           order: 1,
         },
-        { name: 'باقة أسبوعية', nameAr: 'باقة أسبوعية', price: 28000, hours: 40, order: 2 },
+        {
+          name: 'بث مباشر وبودكاست — 6 ساعات',
+          nameAr: 'بث مباشر وبودكاست — 6 ساعات',
+          descriptionAr:
+            'كتلة للبث الحي والتسجيل متعدد الكاميرات وللجلسات الحوارية الطويلة.',
+          price: 4200,
+          hours: 6,
+          order: 2,
+        },
+        {
+          name: 'أزياء وتصوير منتج — 8 ساعات',
+          nameAr: 'أزياء وتصوير منتج — 8 ساعات',
+          descriptionAr:
+            'جلسات أزياء، لوكات متعددة، وبورتريه إعلاني ضمن يوم واحد.',
+          price: 5200,
+          hours: 8,
+          order: 3,
+        },
+        {
+          name: 'أسبوع إنتاج — 40 ساعة',
+          nameAr: 'أسبوع إنتاج — 40 ساعة',
+          descriptionAr: 'لمشاريع متعددة الأيام، مسلسل قصير، أو حملة تصوير كاملة.',
+          price: 28000,
+          hours: 40,
+          order: 4,
+          badgeText: 'قيمة أسبوعية',
+        },
       ],
       addons: [
         { name: 'فني إضاءة', description: 'فني متخصص للإضاءة', price: 200 },
@@ -1257,14 +2484,34 @@ async function main() {
       })
     }
 
-    for (const pkg of packages) {
+    for (const pkg of packages as Array<{
+      name: string
+      nameAr?: string
+      description?: string
+      descriptionAr?: string
+      includes?: string
+      badgeText?: string
+      recommended?: boolean
+      originalPrice?: number
+      discountPercent?: number
+      price: number
+      hours?: number
+      order: number
+    }>) {
       await prisma.studioPackage.create({
         data: {
           studioId: studio.id,
           name: pkg.name,
-          nameAr: pkg.nameAr,
+          nameAr: pkg.nameAr ?? pkg.name,
+          description: pkg.description ?? null,
+          descriptionAr: pkg.descriptionAr ?? null,
+          includes: pkg.includes ?? null,
+          badgeText: pkg.badgeText ?? null,
+          recommended: pkg.recommended ?? false,
+          originalPrice: pkg.originalPrice != null ? pkg.originalPrice : null,
+          discountPercent: pkg.discountPercent ?? null,
           price: pkg.price,
-          hours: pkg.hours,
+          hours: pkg.hours ?? null,
           order: pkg.order,
           isActive: true,
           createdBy: admin.id,
@@ -1648,13 +2895,18 @@ async function main() {
   await seedCheckoutForm()
   console.log('✅ Checkout form sections seeded (or already exist)')
 
+  const messagingDefaults = await seedPaymentReceivedMessaging(prisma, { createdBy: admin.id })
+  console.log(
+    `✅ Payment received messaging defaults ensured (${messagingDefaults.templates} templates, ${messagingDefaults.rules} rules, ${messagingDefaults.recipients} recipients)`
+  )
+
   // Summary
   console.log('\n🎉 Comprehensive database seed completed!')
   console.log(`📊 Summary:`)
   console.log(`   - ${CATEGORIES.length} categories`)
   console.log(`   - ${BRANDS.length} brands`)
-  console.log(`   - ${createdCount} equipment items (${featuredCount} featured)`)
-  console.log(`   - ${createdCount} media records (real product images)`)
+  console.log(`   - ${totalSeededEquipment} baseline equipment fixtures (${createdCount} newly created)`)
+  console.log(`   - ${totalSeededMedia} baseline media fixtures`)
   console.log(`   - ${studiosCreated} studios (with packages, add-ons, FAQs, images)`)
   console.log(`   - ${createdShootTypes.length} shoot types`)
   console.log(`   - ${featureFlags.length} feature flags`)

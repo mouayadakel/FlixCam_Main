@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { BookingService } from '@/lib/services/booking.service'
+import { resolveAuthoritativeBookingPaymentTotals } from '@/lib/services/booking-payment-totals.service'
 import { updateBookingSchema, stateTransitionSchema } from '@/lib/validators/booking.validator'
 import { BookingStatus } from '@prisma/client'
 
@@ -22,7 +23,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const { id } = await params
     const booking = await BookingService.getById(id, session.user.id)
-    return NextResponse.json(booking)
+    const b = booking as {
+      id: string
+      bookingNumber: string
+      cartId?: string | null
+      totalAmount: unknown
+      vatAmount?: unknown
+    }
+    const { subtotalExVatSar, vatSar, paymentSummary } =
+      await resolveAuthoritativeBookingPaymentTotals({
+        bookingId: b.id,
+        bookingNumber: b.bookingNumber,
+        cartId: b.cartId,
+        storedSubtotalExVat: b.totalAmount,
+        storedVat: b.vatAmount,
+        updatedBy: session.user.id,
+      })
+    return NextResponse.json({
+      ...booking,
+      totalAmount: subtotalExVatSar,
+      vatAmount: vatSar,
+      paymentSummary,
+    })
   } catch (error) {
     console.error('Error fetching booking:', error)
     return NextResponse.json(
@@ -88,7 +110,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 /**
  * DELETE /api/bookings/[id] - Cancel booking
  */
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {

@@ -97,7 +97,29 @@ export async function hasPermission(userId: string, permission: string): Promise
   return legacyPermissions.hasPermission(userId, permission)
 }
 
+/**
+ * Match legacy `permissions.isSuperAdmin`: full access for platform ADMIN or RBAC super_admin.
+ * RBAC `hasPermissionNew` must apply the same rule so admins are not blocked when DB roles omit a key.
+ */
+async function isSuperAdminUser(userId: string): Promise<boolean> {
+  const [user, assigned] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+    prisma.assignedUserRole.findFirst({
+      where: {
+        userId,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        role: { name: 'super_admin' },
+      },
+    }),
+  ])
+  return !!assigned || user?.role === 'ADMIN'
+}
+
 async function hasPermissionNew(userId: string, required: string): Promise<boolean> {
+  if (await isSuperAdminUser(userId)) {
+    return true
+  }
+
   const granted = await getEffectivePermissions(userId)
 
   for (const g of granted) {

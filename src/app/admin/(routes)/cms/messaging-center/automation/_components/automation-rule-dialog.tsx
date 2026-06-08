@@ -45,6 +45,7 @@ interface RuleFormData {
   triggerDelay: number
   channels: string[]
   templateId: string
+  specificRecipients: string[]
   sendWindowStart: string
   sendWindowEnd: string
   recipientType: string
@@ -63,6 +64,7 @@ const DEFAULT_FORM: RuleFormData = {
   triggerDelay: 0,
   channels: [],
   templateId: '',
+  specificRecipients: [],
   sendWindowStart: '',
   sendWindowEnd: '',
   recipientType: 'CUSTOMER',
@@ -83,6 +85,7 @@ export function AutomationRuleDialog({
   const { toast } = useToast()
   const [form, setForm] = useState<RuleFormData>(DEFAULT_FORM)
   const [templates, setTemplates] = useState<{ id: string; name: string; trigger: string }[]>([])
+  const [recipients, setRecipients] = useState<{ id: string; name: string; role: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingTemplates, setLoadingTemplates] = useState(false)
 
@@ -91,12 +94,18 @@ export function AutomationRuleDialog({
   useEffect(() => {
     if (open) {
       setLoadingTemplates(true)
-      fetch('/api/notification-templates')
-        .then((r) => r.json())
-        .then((data) => {
-          setTemplates(data.templates ?? [])
-        })
-        .finally(() => setLoadingTemplates(false))
+      Promise.all([
+        fetch('/api/notification-templates')
+          .then((r) => r.json())
+          .then((data) => {
+            setTemplates(data.templates ?? [])
+          }),
+        fetch('/api/admin/messaging/recipients')
+          .then((r) => r.json())
+          .then((data) => {
+            setRecipients(data.recipients ?? [])
+          }),
+      ]).finally(() => setLoadingTemplates(false))
     }
   }, [open])
 
@@ -116,6 +125,7 @@ export function AutomationRuleDialog({
               triggerDelay: r.triggerDelay ?? r.delayMinutes ?? 0,
               channels: Array.isArray(r.channels) ? r.channels : [],
               templateId: r.templateId ?? '',
+              specificRecipients: Array.isArray(r.specificRecipients) ? r.specificRecipients : [],
               sendWindowStart: sw?.start ?? '',
               sendWindowEnd: sw?.end ?? '',
               recipientType: r.recipientType ?? 'CUSTOMER',
@@ -170,6 +180,10 @@ export function AutomationRuleDialog({
       triggerDelay: form.triggerDelay,
       channels: form.channels,
       templateId: form.templateId || null,
+      specificRecipients:
+        form.recipientType === 'CUSTOMER' || form.specificRecipients.length === 0
+          ? null
+          : form.specificRecipients,
       sendWindow:
         form.sendWindowStart && form.sendWindowEnd
           ? { start: form.sendWindowStart, end: form.sendWindowEnd }
@@ -218,6 +232,20 @@ export function AutomationRuleDialog({
   const filteredTemplates = form.trigger
     ? templates.filter((t) => t.trigger === form.trigger)
     : templates
+
+  const selectedRecipientsLabel =
+    form.specificRecipients.length > 0
+      ? `${form.specificRecipients.length} مستلم محدد`
+      : 'جميع المستلمين المطابقين'
+
+  const toggleRecipient = (recipientId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      specificRecipients: prev.specificRecipients.includes(recipientId)
+        ? prev.specificRecipients.filter((id) => id !== recipientId)
+        : [...prev.specificRecipients, recipientId],
+    }))
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -335,6 +363,9 @@ export function AutomationRuleDialog({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                إذا كنت تريد نصاً مختلفاً لكل قناة، أنشئ قاعدة منفصلة لكل قناة.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -376,6 +407,36 @@ export function AutomationRuleDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            {form.recipientType !== 'CUSTOMER' ? (
+              <div className="space-y-2">
+                <Label>مستلمون محددون (اختياري)</Label>
+                <div className="rounded-md border p-3">
+                  <div className="mb-2 text-xs text-muted-foreground">
+                    {form.recipientType === 'ALL'
+                      ? 'العميل يبقى تلقائياً، وهنا تحدد المستلمين الداخليين فقط.'
+                      : 'إذا تركتها فارغة سيتم استخدام جميع المستلمين المطابقين لهذا النوع.'}
+                  </div>
+                  <div className="mb-3 text-sm text-muted-foreground">{selectedRecipientsLabel}</div>
+                  <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+                    {recipients.map((recipient) => (
+                      <button
+                        key={recipient.id}
+                        type="button"
+                        onClick={() => toggleRecipient(recipient.id)}
+                        className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                          form.specificRecipients.includes(recipient.id)
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-input hover:bg-muted'
+                        }`}
+                      >
+                        {recipient.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             <div className="space-y-2">
               <Label>الأولوية (0-100)</Label>

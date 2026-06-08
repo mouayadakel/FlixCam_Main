@@ -122,7 +122,7 @@ export function DeliveryScheduleTab() {
     const id = delivery.bookingId ?? delivery.id
     setUpdatingId(delivery.id)
     try {
-      const res = await fetch(`/api/delivery/${id}/status`, {
+      const res = await fetch(`/api/delivery/booking/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, deliveryId: delivery.id }),

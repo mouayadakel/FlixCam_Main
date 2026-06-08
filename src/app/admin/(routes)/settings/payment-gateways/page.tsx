@@ -132,18 +132,37 @@ export default function PaymentGatewaysPage() {
   const handleCheck = async (slug: string) => {
     try {
       setTesting((p) => ({ ...p, [slug]: true }))
-      const credentials = formValues[slug]
+      const raw = formValues[slug] || {}
+      const hasTypedCredentials = Object.values(raw).some(
+        (v) => v != null && String(v).trim() !== ''
+      )
       const res = await fetch(`/api/admin/settings/payment-gateways/${slug}/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials ? { credentials } : {}),
+        body: JSON.stringify(hasTypedCredentials ? { credentials: raw } : {}),
+        cache: 'no-store',
+        credentials: 'include',
       })
-      const data = await res.json()
-      setTestResults((p) => ({ ...p, [slug]: { ok: data.ok, message: data.message || '' } }))
-      if (data.ok) {
-        toast({ title: 'Connection OK', description: data.message })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        message?: string
+        error?: string
+        warning?: string
+      }
+      const messageText =
+        data.message ||
+        data.error ||
+        (res.ok ? '' : res.status === 401 || res.status === 403
+          ? 'Not allowed (sign in or ask for settings access).'
+          : `Request failed (HTTP ${res.status})`)
+      setTestResults((p) => ({ ...p, [slug]: { ok: Boolean(data.ok) && res.ok, message: messageText } }))
+      if (data.ok && res.ok) {
+        toast({ title: 'Connection OK', description: data.message || 'OK' })
+        if (data.warning) {
+          toast({ title: 'Warning', description: data.warning, variant: 'default' })
+        }
       } else {
-        toast({ title: 'Connection failed', description: data.message, variant: 'destructive' })
+        toast({ title: 'Connection failed', description: messageText, variant: 'destructive' })
       }
       await fetchGateways()
     } catch (e) {

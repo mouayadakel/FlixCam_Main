@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface SEOSectionProps {
-  locale: 'ar' | 'en' | 'zh'
+  locale: 'ar' | 'en' | 'zh' | 'fr'
   value: {
     seoTitle?: string
     seoDescription?: string
@@ -28,10 +28,11 @@ interface SEOSectionProps {
   className?: string
 }
 
-const localeLabels: Record<'ar' | 'en' | 'zh', string> = {
+const localeLabels: Record<'ar' | 'en' | 'zh' | 'fr', string> = {
   ar: 'العربية',
   en: 'English',
   zh: '中文',
+  fr: 'Français',
 }
 
 export function SEOSection({
@@ -49,7 +50,9 @@ export function SEOSection({
     const newValue: typeof value = {}
 
     if (name && !value.seoTitle) {
-      newValue.seoTitle = `Rent ${name} in Riyadh | FlixCam.rent`
+      newValue.seoTitle = locale === 'ar' 
+        ? `تأجير ${name} في الرياض | فليكس كام`
+        : `Rent ${name} in Riyadh | FlixCam.rent`
     }
 
     if (shortDescription && !value.seoDescription) {
@@ -57,7 +60,9 @@ export function SEOSection({
     }
 
     if (name && !value.seoKeywords) {
-      const keywords = [name, 'rental', 'Riyadh', 'cinema equipment']
+      const keywords = locale === 'ar'
+        ? [name, 'تأجير معدات تصوير', 'الرياض', 'كاميرات', 'إضاءة']
+        : [name, 'camera rental', 'Riyadh', 'cinema equipment', 'production']
       newValue.seoKeywords = keywords.join(', ')
     }
 

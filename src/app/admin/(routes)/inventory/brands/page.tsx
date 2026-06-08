@@ -7,7 +7,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Plus, Edit, Trash2, Search, Tag, RefreshCw, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -56,13 +57,51 @@ interface Brand {
   _count?: {
     products: number
   }
+  equipmentCount?: number
   createdAt: string
+}
+
+type TopBrandsHomepageSettings = {
+  maxItems: number
+  hideWithoutLogo: boolean
+}
+
+const BRAND_DOMAIN_MAP: Record<string, string> = {
+  sony: 'sony.com',
+  canon: 'canon.com',
+  arri: 'arri.com',
+  red: 'red.com',
+  blackmagic: 'blackmagicdesign.com',
+  dji: 'dji.com',
+  tilta: 'tilta.com',
+  godox: 'godox.com',
+  aputure: 'aputure.com',
+  sennheiser: 'sennheiser.com',
+  rode: 'rode.com',
+  saramonic: 'saramonic.com',
+  sigma: 'sigma-global.com',
+  dzofilm: 'dzofilm.com',
+  nanlux: 'nanlux.com',
+  phottix: 'phottix.com',
+  zoom: 'zoomcorp.com',
+}
+
+function getMappedBrandLogo(brand: Pick<Brand, 'name' | 'slug'>): string | null {
+  const slugKey = (brand.slug ?? '').toLowerCase()
+  const nameKey = brand.name.toLowerCase().replace(/\s+/g, '')
+  const domain = BRAND_DOMAIN_MAP[slugKey] ?? BRAND_DOMAIN_MAP[nameKey]
+  return domain ? `https://logo.clearbit.com/${domain}` : null
 }
 
 export default function BrandsPage() {
   const { toast } = useToast()
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
+  const [homepageViewMode, setHomepageViewMode] = useState(true)
+  const [homepageSettings, setHomepageSettings] = useState<TopBrandsHomepageSettings>({
+    maxItems: 12,
+    hideWithoutLogo: false,
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -80,10 +119,29 @@ export default function BrandsPage() {
   const loadBrands = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/brands')
+      const response = await fetch(homepageViewMode ? '/api/public/brands' : '/api/brands?view=raw')
       if (!response.ok) throw new Error('فشل تحميل العلامات التجارية')
       const data = await response.json()
-      setBrands(data.brands || data.data || [])
+      const source = Array.isArray(data?.brands) ? data.brands : Array.isArray(data?.data) ? data.data : []
+      const mapped: Brand[] = source.map((brand: Record<string, unknown>) => ({
+        id: String(brand.id ?? ''),
+        name: String(brand.name ?? ''),
+        slug: String(brand.slug ?? ''),
+        logoUrl:
+          typeof brand.logoUrl === 'string'
+            ? brand.logoUrl
+            : typeof brand.logo === 'string'
+              ? brand.logo
+              : null,
+        website: typeof brand.website === 'string' ? brand.website : null,
+        description: typeof brand.description === 'string' ? brand.description : null,
+        isActive: typeof brand.isActive === 'boolean' ? brand.isActive : true,
+        _count: { products: Number(brand?._count && (brand._count as { products?: number }).products) || 0 },
+        equipmentCount: Number(brand.equipmentCount) || Number(brand?._count && (brand._count as { products?: number }).products) || 0,
+        createdAt:
+          typeof brand.createdAt === 'string' ? brand.createdAt : new Date().toISOString(),
+      }))
+      setBrands(mapped)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -93,11 +151,35 @@ export default function BrandsPage() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [homepageViewMode, toast])
+
+  const loadHomepageSettings = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/website-pages/home-sections')
+      if (!response.ok) return
+      const data = await response.json()
+      const sections = Array.isArray(data?.sections) ? data.sections : []
+      const topBrands = sections.find((s: Record<string, unknown>) => s.key === 'top_brands')
+      const settings =
+        topBrands && typeof topBrands.settings === 'object'
+          ? (topBrands.settings as { maxItems?: number; hideWithoutLogo?: boolean })
+          : {}
+      setHomepageSettings({
+        maxItems: Number(settings.maxItems) > 0 ? Number(settings.maxItems) : 12,
+        hideWithoutLogo: Boolean(settings.hideWithoutLogo),
+      })
+    } catch {
+      setHomepageSettings({ maxItems: 12, hideWithoutLogo: false })
+    }
+  }, [])
 
   useEffect(() => {
     loadBrands()
   }, [loadBrands])
+
+  useEffect(() => {
+    loadHomepageSettings()
+  }, [loadHomepageSettings])
 
   const handleCreate = async () => {
     if (!formData.name.trim()) {
@@ -218,7 +300,15 @@ export default function BrandsPage() {
     setSelectedBrand(null)
   }
 
-  const filteredBrands = brands.filter(
+  const homepageVisibleBrands = useMemo(() => {
+    let list = brands
+    if (homepageSettings.hideWithoutLogo) {
+      list = list.filter((brand) => Boolean(brand.logoUrl || getMappedBrandLogo(brand)))
+    }
+    return list.slice(0, homepageSettings.maxItems)
+  }, [brands, homepageSettings.hideWithoutLogo, homepageSettings.maxItems])
+
+  const filteredBrands = (homepageViewMode ? homepageVisibleBrands : brands).filter(
     (b) =>
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.slug.toLowerCase().includes(searchQuery.toLowerCase())
@@ -232,8 +322,25 @@ export default function BrandsPage() {
             <Tag className="h-8 w-8" />
             العلامات التجارية
           </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {homepageViewMode
+              ? `وضع عرض الصفحة الرئيسية: مطابق للصفحة العامة (حد أقصى ${homepageSettings.maxItems}، ${
+                  homepageSettings.hideWithoutLogo ? 'إخفاء بدون شعار: نعم' : 'إخفاء بدون شعار: لا'
+                })`
+              : 'وضع العرض الخام: ترتيب إداري أبجدي'}
+          </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+            <Label htmlFor="brands-view-mode" className="text-xs">
+              عرض الصفحة الرئيسية
+            </Label>
+            <Switch
+              id="brands-view-mode"
+              checked={homepageViewMode}
+              onCheckedChange={setHomepageViewMode}
+            />
+          </div>
           <Button variant="outline" onClick={loadBrands}>
             <RefreshCw className="ms-2 h-4 w-4" />
             تحديث
@@ -338,7 +445,7 @@ export default function BrandsPage() {
                   <TableHead>الشعار</TableHead>
                   <TableHead>الاسم</TableHead>
                   <TableHead>الرابط</TableHead>
-                  <TableHead>المنتجات</TableHead>
+                  <TableHead>المعدات</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>الإجراءات</TableHead>
                 </TableRow>
@@ -380,7 +487,7 @@ export default function BrandsPage() {
                       </TableCell>
                       <TableCell className="font-medium">{brand.name}</TableCell>
                       <TableCell className="font-mono text-sm">{brand.slug}</TableCell>
-                      <TableCell>{brand._count?.products || 0}</TableCell>
+                      <TableCell>{(brand.equipmentCount ?? brand._count?.products) || 0}</TableCell>
                       <TableCell>
                         <Badge
                           className={
@@ -479,9 +586,10 @@ export default function BrandsPage() {
             <AlertDialogTitle>حذف العلامة التجارية</AlertDialogTitle>
             <AlertDialogDescription>
               هل أنت متأكد من حذف العلامة التجارية &quot;{selectedBrand?.name}&quot;؟
-              {(selectedBrand?._count?.products || 0) > 0 && (
+              {((selectedBrand?.equipmentCount ?? selectedBrand?._count?.products) || 0) > 0 && (
                 <span className="mt-2 block text-destructive">
-                  تحذير: هذه العلامة مرتبطة بـ {selectedBrand?._count?.products} منتج
+                  تحذير: هذه العلامة مرتبطة بـ{' '}
+                  {(selectedBrand?.equipmentCount ?? selectedBrand?._count?.products) || 0} معدة
                 </span>
               )}
             </AlertDialogDescription>

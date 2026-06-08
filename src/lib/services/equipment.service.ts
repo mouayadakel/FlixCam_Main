@@ -8,9 +8,14 @@ import { prisma } from '@/lib/db/prisma'
 import type { Equipment, EquipmentCondition, Prisma } from '@prisma/client'
 import { TranslationService } from './translation.service'
 import { MediaService } from './media.service'
+import { isStructuredSpecifications } from '@/lib/types/specifications.types'
+import { generateSlug, ensureUniqueEquipmentSlug } from '@/lib/utils/slug.utils'
+import { convertFlatToStructured } from '@/lib/utils/specifications.utils'
+import { resolveTemplateName } from '@/lib/ai/spec-templates'
+import { syncEquipmentToProduct } from '@/lib/services/product-equipment-sync.service'
 
 export interface EquipmentTranslationInput {
-  locale: 'ar' | 'en' | 'zh'
+  locale: 'ar' | 'en' | 'zh' | 'fr'
   name?: string
   description?: string
   shortDescription?: string
@@ -24,15 +29,15 @@ export type VendorSubmissionStatus = 'pending_review' | 'approved' | 'rejected'
 
 export interface CreateEquipmentInput {
   sku?: string
-  model: string
-  categoryId: string
+  model?: string | null
+  categoryId?: string
   subCategoryId?: string
   brandId?: string
   vendorId?: string
   condition?: EquipmentCondition
   quantityTotal?: number
   quantityAvailable?: number
-  dailyPrice: number
+  dailyPrice?: number
   weeklyPrice?: number
   monthlyPrice?: number
   /** سعر الشراء — internal only, for tracking and سند الأمر */
@@ -61,6 +66,17 @@ export interface CreateEquipmentInput {
   specConfidence?: number
   specLastInferredAt?: Date
   specSource?: 'import' | 'ai-infer' | 'url-extract' | 'manual' | 'migration'
+  itemType?: 'crew' | 'equipment'
+  bookingMode?: 'cart' | 'quote'
+  crewProfile?: {
+    nameEn?: string
+    nameAr?: string
+    bioEn?: string
+    bioAr?: string
+    experienceYears?: number
+    specialties?: string[]
+    photoUrl?: string
+  }
 }
 
 export interface UpdateEquipmentInput extends Partial<CreateEquipmentInput> {
@@ -80,7 +96,53 @@ export interface EquipmentFilters {
   take?: number
 }
 
+function specificationsJsonEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+}
+
+export function assessSpecsReadiness(
+  specifications: unknown
+): { ready: boolean; warnings: string[] } {
+  const warnings: string[] = []
+  if (!specifications || typeof specifications !== 'object') {
+    warnings.push('Specifications are missing')
+    return { ready: false, warnings }
+  }
+
+  if (isStructuredSpecifications(specifications)) {
+    const groups = specifications.groups ?? []
+    const specCount = groups.reduce((sum, group) => sum + (group.specs?.length ?? 0), 0)
+    if (groups.length === 0) warnings.push('Specifications have no groups')
+    if (specCount === 0) warnings.push('Specification groups contain no items')
+    return { ready: warnings.length === 0, warnings }
+  }
+
+  warnings.push('Specifications are not in structured groups format')
+  return { ready: false, warnings }
+}
+
 export class EquipmentService {
+  private static async normalizeSpecificationsForStorage(input: {
+    specifications?: unknown
+    categoryId: string
+  }): Promise<Record<string, unknown> | undefined> {
+    const specs = input.specifications
+    if (!specs || typeof specs !== 'object') return undefined
+    if (isStructuredSpecifications(specs)) {
+      return JSON.parse(JSON.stringify(specs)) as Record<string, unknown>
+    }
+
+    // Flat → Structured for long-term storage
+    const category = await prisma.category.findFirst({
+      where: { id: input.categoryId, deletedAt: null },
+      select: { name: true, slug: true },
+    })
+    const categoryHint = resolveTemplateName(category?.slug || category?.name || 'Equipment')
+      .toLowerCase()
+    const structured = convertFlatToStructured(specs as Record<string, unknown>, categoryHint)
+    return JSON.parse(JSON.stringify(structured)) as Record<string, unknown>
+  }
+
   /**
    * Get equipment list with filters
    */
@@ -247,6 +309,7 @@ export class EquipmentService {
     const customFields = equipment.customFields as Record<string, unknown> | null
     const relatedEquipmentIds = (customFields?.relatedEquipmentIds as string[]) || []
     const boxContents = (customFields?.boxContents as string) || undefined
+    const tags = (customFields?.tags as string) || undefined
     const bufferTime = (customFields?.bufferTime as number) || undefined
     const bufferTimeUnit = (customFields?.bufferTimeUnit as 'hours' | 'days') || undefined
 
@@ -282,6 +345,7 @@ export class EquipmentService {
       relatedEquipmentIds,
       relatedEquipment,
       boxContents,
+      tags,
       bufferTime,
       bufferTimeUnit,
     }
@@ -291,6 +355,40 @@ export class EquipmentService {
    * Create new equipment
    */
   static async createEquipment(input: CreateEquipmentInput) {
+    let categoryId =
+      typeof input.categoryId === 'string' && input.categoryId.trim() !== ''
+        ? input.categoryId.trim()
+        : ''
+    if (!categoryId) {
+      const fallback = await prisma.category.findFirst({
+        where: { deletedAt: null },
+        orderBy: { name: 'asc' },
+        select: { id: true },
+      })
+      if (!fallback) {
+        throw new Error('Cannot save equipment: no categories exist. Create a category first.')
+      }
+      categoryId = fallback.id
+    }
+
+    const hasImage =
+      Boolean(input.featuredImageUrl?.trim()) ||
+      Boolean((input.galleryImageUrls || []).some((u) => u && String(u).trim()))
+
+    const userWantedFeatured = input.featured === true
+    const userWantedActive = input.isActive !== false
+
+    let featured = input.featured ?? false
+    let isActive = input.isActive !== undefined ? input.isActive : true
+    if (!hasImage) {
+      if (featured) featured = false
+      if (isActive) isActive = false
+    }
+    const publishFlagsAdjustedForMedia = !hasImage && (userWantedActive || userWantedFeatured)
+
+    const modelForDb = input.model?.trim() ? input.model.trim() : null
+    const dailyPrice = input.dailyPrice ?? 0
+
     // Auto-generate SKU if not provided (DB requires unique non-null sku)
     const sku =
       input.sku?.trim() ||
@@ -334,6 +432,16 @@ export class EquipmentService {
       customFields.subCategoryId = input.subCategoryId
     }
 
+    if (input.itemType) {
+      customFields.itemType = input.itemType
+    }
+    if (input.bookingMode) {
+      customFields.bookingMode = input.bookingMode
+    }
+    if (input.crewProfile) {
+      customFields.crewProfile = input.crewProfile
+    }
+
     if (input.bufferTime !== undefined) {
       customFields.bufferTime = input.bufferTime
       customFields.bufferTimeUnit = input.bufferTimeUnit || 'hours'
@@ -345,33 +453,54 @@ export class EquipmentService {
       customFields.vendorSubmissionStatus = 'pending_review'
     }
 
+    const specsReadiness = assessSpecsReadiness(input.specifications)
+    const publishSpecsWarnings =
+      (isActive || featured) && !specsReadiness.ready ? specsReadiness.warnings : []
+
+    const normalizedSpecifications = await this.normalizeSpecificationsForStorage({
+      specifications: input.specifications,
+      categoryId,
+    })
+
     // Create equipment in transaction
     const equipment = await prisma.$transaction(async (tx) => {
+      // Find English name for slug, fallback to model
+      const enTranslation = input.translations?.find((t) => t.locale === 'en' && t.name)
+      const slugBase = enTranslation?.name || input.model || ''
+      
+      // Generate unique slug
+      const baseSlug = generateSlug(slugBase)
+      const slug = await ensureUniqueEquipmentSlug(tx, baseSlug)
+
       // Create equipment record
       const newEquipment = await tx.equipment.create({
         data: {
           sku,
-          model: input.model,
-          categoryId: input.categoryId,
+          model: modelForDb,
+          slug,
+          categoryId,
           brandId: input.brandId,
           vendorId: input.vendorId ?? null,
           condition: input.condition || 'GOOD',
           quantityTotal: input.quantityTotal || 1,
           quantityAvailable: input.quantityAvailable ?? input.quantityTotal ?? 1,
-          dailyPrice: input.dailyPrice,
+          dailyPrice,
           weeklyPrice: input.weeklyPrice,
           monthlyPrice: input.monthlyPrice,
           purchasePrice: input.purchasePrice,
-          featured: input.featured || false,
-          isActive: input.isActive !== undefined ? input.isActive : true,
+          featured,
+          isActive,
           requiresAssistant: input.requiresAssistant ?? false,
           warehouseLocation: input.warehouseLocation,
           barcode: input.barcode,
-          specifications: input.specifications
-            ? JSON.parse(JSON.stringify(input.specifications))
-            : null,
+          specifications:
+            normalizedSpecifications != null
+              ? (normalizedSpecifications as Prisma.InputJsonValue)
+              : undefined,
           customFields:
-            Object.keys(customFields).length > 0 ? JSON.parse(JSON.stringify(customFields)) : null,
+            Object.keys(customFields).length > 0
+              ? (JSON.parse(JSON.stringify(customFields)) as Prisma.InputJsonValue)
+              : undefined,
           createdBy: input.createdBy,
           specConfidence: input.specConfidence,
           specLastInferredAt: input.specLastInferredAt,
@@ -383,15 +512,17 @@ export class EquipmentService {
         },
       })
 
-      // Save translations
+      // Save translations (skip when nothing to persist — avoids empty delete/create cycles)
       if (input.translations && input.translations.length > 0) {
         const translationInputs = TranslationService.formatTranslationsForSave(input.translations)
-        await TranslationService.saveTranslations(
-          'equipment',
-          newEquipment.id,
-          translationInputs,
-          input.createdBy
-        )
+        if (translationInputs.length > 0) {
+          await TranslationService.saveTranslations(
+            'equipment',
+            newEquipment.id,
+            translationInputs,
+            input.createdBy
+          )
+        }
       }
 
       // Create media records with explicit sortOrder (primary=0, gallery=1,2,3...)
@@ -433,8 +564,34 @@ export class EquipmentService {
       return newEquipment
     })
 
+    // Option A: Equipment is source-of-truth; keep Product/ProductTranslation in sync.
+    let syncToProduct: { ok: true } | { ok: false; message: string } = { ok: true }
+    try {
+      await syncEquipmentToProduct(equipment.id)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Product sync failed'
+      syncToProduct = { ok: false, message }
+      console.warn('[EquipmentService] syncEquipmentToProduct failed after create', e)
+    }
+
     // Fetch complete equipment with relations
-    return await this.getEquipmentById(equipment.id)
+    const createdEquipment = await this.getEquipmentById(equipment.id)
+    const warnings: Record<string, unknown> = {}
+    if (publishFlagsAdjustedForMedia) {
+      warnings.publishState =
+        'تم الحفظ كمسودة (غير نشطة) وليست مميزة حتى تضيف صورة مميزة أو صوراً في المعرض.'
+    }
+    if (publishSpecsWarnings.length > 0) {
+      warnings.specifications = publishSpecsWarnings
+    }
+    if (!syncToProduct.ok) {
+      warnings.syncToProduct = syncToProduct
+    }
+    if (Object.keys(warnings).length === 0) return createdEquipment
+    return {
+      ...createdEquipment,
+      warnings,
+    }
   }
 
   /**
@@ -448,6 +605,7 @@ export class EquipmentService {
       videoUrl?: string
       relatedEquipmentIds?: string[]
       boxContents?: string
+      tags?: string
       bufferTime?: number
       bufferTimeUnit?: 'hours' | 'days'
       vendorSubmissionStatus?: VendorSubmissionStatus
@@ -462,6 +620,7 @@ export class EquipmentService {
       videoUrl,
       relatedEquipmentIds,
       boxContents,
+      tags,
       bufferTime,
       bufferTimeUnit,
       vendorSubmissionStatus,
@@ -485,6 +644,9 @@ export class EquipmentService {
     // Active or featured equipment must have at least one valid image for public display
     const targetIsActive = data.isActive ?? existing.isActive
     const targetFeatured = data.featured ?? existing.featured
+    const specsReadiness = assessSpecsReadiness(data.specifications ?? existing.specifications)
+    const publishSpecsWarnings =
+      (targetIsActive || targetFeatured) && !specsReadiness.ready ? specsReadiness.warnings : []
     if (targetIsActive || targetFeatured) {
       const willHaveNewImages =
         (featuredImageUrl != null && featuredImageUrl.trim() !== '') ||
@@ -535,6 +697,14 @@ export class EquipmentService {
       customFields.boxContents = boxContents
     }
 
+    if (tags !== undefined) {
+      if (tags.trim() === '') {
+        delete customFields.tags
+      } else {
+        customFields.tags = tags
+      }
+    }
+
     if (bufferTime !== undefined) {
       customFields.bufferTime = bufferTime
       customFields.bufferTimeUnit = bufferTimeUnit || 'hours'
@@ -554,17 +724,56 @@ export class EquipmentService {
       customFields.requiresDeposit = requiresDeposit
     }
 
+    if (data.subCategoryId !== undefined) {
+      customFields.subCategoryId = data.subCategoryId
+    }
+    if (data.itemType !== undefined) {
+      customFields.itemType = data.itemType
+    }
+    if (data.bookingMode !== undefined) {
+      customFields.bookingMode = data.bookingMode
+    }
+    if (data.crewProfile !== undefined) {
+      customFields.crewProfile = data.crewProfile
+    }
+
+    const specificationsWasProvided = Object.prototype.hasOwnProperty.call(data, 'specifications')
+    const normalizedSpecifications = specificationsWasProvided
+      ? await this.normalizeSpecificationsForStorage({
+          specifications: data.specifications,
+          categoryId: data.categoryId ?? existing.categoryId,
+        })
+      : undefined
+
     // Update in transaction
     await prisma.$transaction(async (tx) => {
+      // Regenerate slug only when the English name or model actually changes, or slug is missing
+      let newSlug = undefined
+
+      const enTranslation = translations?.find((t) => t.locale === 'en' && t.name)
+      const newNameBase = enTranslation?.name || data.model
+
+      const hasModelChanged = data.model && data.model !== existing.model
+      // Only treat name as changed if EN name is different from what's already stored
+      const hasNameChanged =
+        enTranslation &&
+        typeof enTranslation.name === 'string' &&
+        enTranslation.name.trim() !== '' &&
+        enTranslation.name.trim() !== (existing.model ?? '').trim()
+
+      if (hasModelChanged || hasNameChanged || !existing.slug) {
+        const baseSlug = generateSlug(newNameBase || existing.model || 'equipment')
+        newSlug = await ensureUniqueEquipmentSlug(tx, baseSlug, id)
+      }
+
       // Update equipment record
       const { specConfidence, specLastInferredAt, specSource, ...restData } = data
       await tx.equipment.update({
         where: { id },
         data: {
           ...restData,
-          specifications: data.specifications
-            ? JSON.parse(JSON.stringify(data.specifications))
-            : undefined,
+          ...(newSlug && { slug: newSlug }),
+          ...(specificationsWasProvided && { specifications: normalizedSpecifications ?? undefined }),
           customFields:
             Object.keys(customFields).length > 0
               ? JSON.parse(JSON.stringify(customFields))
@@ -574,7 +783,8 @@ export class EquipmentService {
           ...(specConfidence != null && { specConfidence }),
           ...(specLastInferredAt != null && { specLastInferredAt }),
           ...(specSource != null && { specSource }),
-        },
+          // Prisma rejects undefined fields in spread — strip via cast for optional relation ids
+        } as Prisma.EquipmentUpdateInput,
       })
 
       // Update translations
@@ -624,20 +834,42 @@ export class EquipmentService {
         }
       }
 
-      if (galleryImageUrls !== undefined && galleryImageUrls.length > 0) {
-        const maxSortOrder = await tx.media
-          .aggregate({
-            where: {
-              equipmentId: id,
-              type: 'image',
-              deletedAt: null,
-            },
-            _max: { sortOrder: true },
-          })
-          .then((r) => r._max.sortOrder ?? -1)
+      if (galleryImageUrls !== undefined) {
+        // Gallery payload is treated as source-of-truth:
+        // replace previous gallery images instead of appending to avoid duplicates.
+        const currentPrimary = await tx.media.findFirst({
+          where: {
+            equipmentId: id,
+            type: 'image',
+            deletedAt: null,
+          },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        })
+
+        await tx.media.updateMany({
+          where: {
+            equipmentId: id,
+            type: 'image',
+            deletedAt: null,
+            ...(currentPrimary ? { id: { not: currentPrimary.id } } : {}),
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedBy: updatedBy,
+          },
+        })
+
+        const primaryUrl = currentPrimary?.url ?? null
+        const normalizedGallery = Array.from(
+          new Set(
+            galleryImageUrls
+              .map((url) => url.trim())
+              .filter((url) => url.length > 0 && url !== primaryUrl)
+          )
+        )
 
         await Promise.all(
-          galleryImageUrls.map((url, i) =>
+          normalizedGallery.map((url, i) =>
             tx.media.create({
               data: {
                 url,
@@ -646,7 +878,7 @@ export class EquipmentService {
                 mimeType: 'image/jpeg',
                 equipmentId: id,
                 createdBy: updatedBy,
-                sortOrder: maxSortOrder + 1 + i,
+                sortOrder: i + 1,
               },
             })
           )
@@ -683,8 +915,44 @@ export class EquipmentService {
       }
     })
 
+    // Option A: sync Product/ProductTranslation only when normalized specs differ from stored.
+    let syncToProduct: { ok: true } | { ok: false; message: string } = { ok: true }
+    if (specificationsWasProvided) {
+      const specsChanged = !specificationsJsonEqual(
+        normalizedSpecifications ?? null,
+        existing.specifications ?? null
+      )
+      if (specsChanged) {
+        try {
+          await syncEquipmentToProduct(id, { forceSpecOverride: true })
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Product sync failed'
+          syncToProduct = { ok: false, message }
+          console.warn('[EquipmentService] syncEquipmentToProduct failed after update', e)
+        }
+      }
+    }
+
+    if (data.quantityAvailable !== undefined) {
+      void import('./low-stock-alert.service')
+        .then(({ LowStockAlertService }) => LowStockAlertService.checkEquipment(id))
+        .catch(() => undefined)
+    }
+
     // Return updated equipment with all relations
-    return await this.getEquipmentById(id)
+    const updatedEquipment = await this.getEquipmentById(id)
+    const warnings: Record<string, unknown> = {}
+    if (publishSpecsWarnings.length > 0) {
+      warnings.specifications = publishSpecsWarnings
+    }
+    if (!syncToProduct.ok) {
+      warnings.syncToProduct = syncToProduct
+    }
+    if (Object.keys(warnings).length === 0) return updatedEquipment
+    return {
+      ...updatedEquipment,
+      warnings,
+    }
   }
 
   /**
@@ -859,12 +1127,12 @@ export class EquipmentService {
     })
 
     const totalRented = overlappingBookings.reduce((sum, be) => sum + be.quantity, 0)
-    const available = equipment.quantityAvailable - totalRented
+    const available = equipment.quantityTotal - totalRented
 
     return {
       available: available > 0,
       totalQuantity: equipment.quantityTotal,
-      availableQuantity: equipment.quantityAvailable,
+      availableQuantity: available,
       rentedQuantity: totalRented,
       maintenanceConflicts: [],
       overlappingBookings: overlappingBookings.map((be) => ({

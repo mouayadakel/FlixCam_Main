@@ -68,8 +68,14 @@ describe('middleware', () => {
     expect(res.status).toBe(200)
   })
 
-  it('allows /api/public/faq without session', async () => {
-    const req = createRequest('/api/public/faq')
+  it('allows /api/cron without session (handler verifies CRON_SECRET)', async () => {
+    const req = createRequest('/api/cron/booking-reminders')
+    const res = await middleware(req)
+    expect(res.status).toBe(200)
+  })
+
+  it('allows /api/revalidate-blog without session', async () => {
+    const req = createRequest('/api/revalidate-blog')
     const res = await middleware(req)
     expect(res.status).toBe(200)
   })
@@ -87,5 +93,48 @@ describe('middleware', () => {
     expect(res.status).toBe(307)
     expect(res.headers.get('location')).toContain('/login')
     expect(res.headers.get('location')).toContain('callbackUrl')
+  })
+
+  it('allows /admin route for user with assigned admin role', async () => {
+    mockGetToken.mockResolvedValue({
+      id: 'user_1',
+      email: 'ahmed@example.com',
+      role: 'DATA_ENTRY',
+      assignedRoles: ['admin'],
+    })
+
+    const req = createRequest('/admin/users')
+    const res = await middleware(req)
+
+    expect(res.status).toBe(200)
+  })
+
+  it('allows /admin route for user with assigned data_entry staff role', async () => {
+    mockGetToken.mockResolvedValue({
+      id: 'user_1',
+      email: 'ahmed@example.com',
+      role: 'DATA_ENTRY',
+      assignedRoles: ['data_entry'],
+    })
+
+    const req = createRequest('/admin/inventory/equipment')
+    const res = await middleware(req)
+
+    expect(res.status).toBe(200)
+  })
+
+  it('redirects data entry user to portal when no admin role is assigned', async () => {
+    mockGetToken.mockResolvedValue({
+      id: 'user_1',
+      email: 'ahmed@example.com',
+      role: 'DATA_ENTRY',
+      assignedRoles: [],
+    })
+
+    const req = createRequest('/admin/users')
+    const res = await middleware(req)
+
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toContain('/portal/dashboard')
   })
 })

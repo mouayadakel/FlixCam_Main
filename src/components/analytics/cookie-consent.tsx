@@ -7,8 +7,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { FLIXCAM_COOKIE_CONSENT_STORAGE_KEY } from '@/lib/analytics/consent-storage'
 
-const CONSENT_KEY = 'flixcam_cookie_consent'
+const CONSENT_KEY = FLIXCAM_COOKIE_CONSENT_STORAGE_KEY
 
 export function CookieConsentBanner() {
   const [mounted, setMounted] = useState(false)

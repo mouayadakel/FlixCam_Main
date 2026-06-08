@@ -30,6 +30,9 @@ jest.mock('@/lib/cache', () => ({
   cacheSet: jest.fn().mockResolvedValue(undefined),
   cacheDelete: jest.fn().mockResolvedValue(undefined),
 }))
+jest.mock('next/cache', () => ({
+  revalidateTag: jest.fn(),
+}))
 jest.mock('@/lib/services/audit.service', () => ({ AuditService: { log: jest.fn().mockResolvedValue(undefined) } }))
 
 const mockBannerFindFirst = prisma.heroBanner.findFirst as jest.Mock
@@ -44,6 +47,12 @@ const baseSlide = {
   id: 's1',
   imageUrl: 'https://example.com/img.jpg',
   mobileImageUrl: null,
+  mobileAspectRatio: 'auto',
+  mobileFocalX: 50,
+  mobileFocalY: 50,
+  desktopAspectRatio: '16/9',
+  desktopFocalX: 50,
+  desktopFocalY: 50,
   videoUrl: null,
   titleAr: 'عربي',
   titleEn: 'English',

@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, ClipboardCheck, RefreshCw } from 'lucide-react'
+import { Loader2, ClipboardCheck, RefreshCw, FileDown } from 'lucide-react'
 
 // Types matching API response
 interface EquipmentAuditItem {
@@ -46,6 +46,8 @@ interface EquipmentAuditItem {
   hasImages: boolean
   imageCount: number
   issues: string[]
+  validityIssues?: string[]
+  qualityIssues?: string[]
   editUrl: string
 }
 
@@ -75,7 +77,11 @@ function filterByTab(equipment: EquipmentAuditItem[], tab: TabValue): EquipmentA
     case 'empty':
       return equipment.filter((i) => i.specsFormat === 'empty')
     case 'invalid':
-      return equipment.filter((i) => i.status === 'invalid' && i.specsFormat !== 'empty')
+      return equipment.filter(
+        (i) =>
+          i.specsFormat !== 'empty' &&
+          (i.status === 'invalid' || (i.validityIssues?.length ?? 0) > 0)
+      )
     default:
       return equipment
   }
@@ -141,6 +147,33 @@ export function SpecificationsAuditDialog() {
       else next.delete(id)
       return next
     })
+  }
+
+  const handleDownloadCsv = async () => {
+    try {
+      const res = await fetch('/api/admin/equipment/audit-specifications?format=csv')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'فشل التصدير')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `equipment-spec-audit-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast({
+        title: 'تم التصدير',
+        description: 'تم تنزيل ملف CSV',
+      })
+    } catch (e) {
+      toast({
+        title: 'خطأ',
+        description: e instanceof Error ? e.message : 'فشل التصدير',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleConvertClick = async () => {
@@ -295,6 +328,17 @@ export function SpecificationsAuditDialog() {
                     <TabsTrigger value="all">الكل</TabsTrigger>
                   </TabsList>
                   <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadCsv}
+                      disabled={loading}
+                      aria-label="تصدير CSV"
+                    >
+                      <FileDown className="ms-1 h-4 w-4" />
+                      تصدير CSV
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"

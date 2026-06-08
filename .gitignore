@@ -37,6 +37,15 @@ docs/PRODUCTION_ENV_TEMPLATE.md
 .env.production.local
 .env.staging
 .env*.local
+# Any other dotenv-style file (keep .env.example tracked, see negation below)
+*.env
+!.env.example
+
+# Backups & dumps (may contain secrets — never commit)
+backups/
+*.bak
+*.sql.bak
+*.dump
 
 # Vercel
 .vercel
@@ -73,8 +82,16 @@ temp/
 # Local file storage (uploads)
 storage/
 uploads/
+public/photos/
 app/storage/uploads/*
 !app/storage/uploads/.gitkeep
+
+# VPS mail / panel / scratch (not application source)
+.spamassassin/
+.usermin/
+Maildir/
+scratch/
+homes/
 
 # Sentry
 .sentryclirc
@@ -106,3 +123,6 @@ awstats/
 
 # VPS deployment directory (production build + runtime, not source)
 public_html/FlixCam_Main/FlixCam_Main/
+
+# Excel merge AI checkpoint (merge-new-stock-into-flixcam.cjs)
+scripts/.cache/

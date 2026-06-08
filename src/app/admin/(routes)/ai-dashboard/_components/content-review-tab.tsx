@@ -99,7 +99,7 @@ function DraftPreview({ draft }: { draft: DraftItem }) {
                 <InlineConfidenceBadge value={confidence.shortDescription} />
               )}
             </div>
-            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">
+            <p className="rounded bg-muted/50 p-2 text-xs" dir="rtl">
               {genEn.shortDescription}
             </p>
           </div>
@@ -110,7 +110,7 @@ function DraftPreview({ draft }: { draft: DraftItem }) {
               <span className="font-medium text-muted-foreground">عنوان SEO</span>
               {confidence?.seoTitle && <InlineConfidenceBadge value={confidence.seoTitle} />}
             </div>
-            <p className="rounded bg-muted/50 p-2 text-xs" dir="ltr">
+            <p className="rounded bg-muted/50 p-2 text-xs" dir="rtl">
               {seo.metaTitle}
             </p>
           </div>
@@ -134,7 +134,7 @@ function DraftPreview({ draft }: { draft: DraftItem }) {
         {data.boxContents != null && String(data.boxContents).trim() !== '' && (
           <div>
             <span className="font-medium text-muted-foreground">محتويات الصندوق</span>
-            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="ltr">
+            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="rtl">
               {String(data.boxContents)}
             </p>
           </div>
@@ -142,7 +142,7 @@ function DraftPreview({ draft }: { draft: DraftItem }) {
         {data.tags != null && String(data.tags).trim() !== '' && (
           <div>
             <span className="font-medium text-muted-foreground">الوسوم</span>
-            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="ltr">
+            <p className="mt-1 rounded bg-muted/50 p-2 text-xs" dir="rtl">
               {String(data.tags)}
             </p>
           </div>

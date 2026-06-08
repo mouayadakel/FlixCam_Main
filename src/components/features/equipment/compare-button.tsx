@@ -1,6 +1,7 @@
 'use client'
 
 import { useCompareStore } from '@/lib/stores/compare-store'
+import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { GitCompare, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ interface CompareButtonProps {
 }
 
 export function CompareButton({ equipment, className }: CompareButtonProps) {
+  const { t } = useLocale()
   const { addItem, removeItem, hasItem, isFull } = useCompareStore()
   const added = hasItem(equipment.id)
 
@@ -50,7 +52,7 @@ export function CompareButton({ equipment, className }: CompareButtonProps) {
       className={cn('gap-1.5 text-xs', className)}
     >
       {added ? <X className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
-      {added ? 'إزالة' : 'مقارنة'}
+      {added ? t('equipment.removeCompare') : t('equipment.compare')}
     </Button>
   )
 }

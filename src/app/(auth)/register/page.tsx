@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Languages } from 'lucide-react'
 import { useLocale } from '@/hooks/use-locale'
 import { RegisterForm, OtpForm } from '@/components/auth/forms'
+import { getDashboardPath } from '@/lib/auth/dashboard-routing'
 
 function isSameOrigin(url: string): boolean {
   if (typeof window === 'undefined') return false
@@ -44,15 +45,8 @@ export default function RegisterPage() {
       return
     }
     const role = session?.user?.role as string | undefined
-    if (role === 'CUSTOMER' || role === 'DATA_ENTRY') {
-      router.push('/portal/dashboard')
-      return
-    }
-    if (role === 'VENDOR') {
-      router.push('/vendor/dashboard')
-      return
-    }
-    router.push('/admin/dashboard')
+    const assignedRoles = session?.user?.assignedRoles as string[] | undefined
+    router.push(getDashboardPath(role, assignedRoles))
   }
 
   const toggleLanguage = () => {

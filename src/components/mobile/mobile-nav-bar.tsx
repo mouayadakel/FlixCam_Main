@@ -37,7 +37,7 @@ function MobileNavBar() {
         'pb-[env(safe-area-inset-bottom)]'
       )}
     >
-      <div className={cn('flex h-16 items-center justify-around', 'rtl:flex-row-reverse')}>
+      <div className={cn('flex h-16 items-center justify-around')}>
         {NAV_ITEMS.map(({ href, label, icon: Icon, showBadge }) => {
           const p = pathname ?? ''
           const isActive = href === '/' ? p === '/' : p === href || p.startsWith(href + '/')

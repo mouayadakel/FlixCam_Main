@@ -69,12 +69,27 @@ jest.mock('../invoice.service', () => ({
   InvoiceService: { autoGenerateForBooking: jest.fn().mockResolvedValue(undefined) },
 }))
 
+jest.mock('../order-notification.service', () => ({
+  OrderNotificationService: {
+    notifyAdminNewOrder: jest.fn().mockResolvedValue(undefined),
+    notifyStatusChanged: jest.fn().mockResolvedValue(undefined),
+    notifyCancelled: jest.fn().mockResolvedValue(undefined),
+  },
+}))
+
 jest.mock('../payout.service', () => ({
   PayoutService: { createVendorPayoutsForBooking: jest.fn().mockResolvedValue(undefined) },
 }))
 
+jest.mock('../deposit.service', () => ({
+  DepositService: {
+    ensureForBooking: jest.fn().mockResolvedValue(undefined),
+    tryAutoReleaseOnReturn: jest.fn().mockResolvedValue(undefined),
+  },
+}))
+
 jest.mock('@/lib/logger', () => ({
-  logger: { error: jest.fn() },
+  logger: { error: jest.fn(), warn: jest.fn() },
 }))
 
 const { prisma } = require('@/lib/db/prisma')
@@ -104,8 +119,43 @@ const mockPricingRuleUpdate = prisma.pricingRule.update as jest.Mock
 const mockTransaction = prisma.$transaction as jest.Mock
 
 describe('BookingService', () => {
-  const futureStart = new Date('2026-06-01')
-  const futureEnd = new Date('2026-06-05')
+  const futureStart = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 14)
+    d.setHours(12, 0, 0, 0)
+    return d
+  })()
+  const futureEnd = (() => {
+    const d = new Date(futureStart)
+    d.setDate(d.getDate() + 4)
+    return d
+  })()
+  const studioDayStart = (hour: number) => {
+    const d = new Date(futureStart)
+    d.setHours(hour, 0, 0, 0)
+    return d
+  }
+  const futureExtendedEnd = (() => {
+    const d = new Date(futureStart)
+    d.setDate(d.getDate() + 9)
+    return d
+  })()
+  const pastEndDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    d.setHours(12, 0, 0, 0)
+    return d
+  })()
+  const returnBeforeEnd = (() => {
+    const d = new Date(pastEndDate)
+    d.setDate(d.getDate() - 1)
+    return d
+  })()
+  const lateReturnDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 2)
+    return d
+  })()
   const staffUser = { id: 'u1', role: 'ADMIN' }
   const clientUser = { id: 'c1', role: 'DATA_ENTRY' }
 
@@ -436,8 +486,8 @@ describe('BookingService', () => {
             startDate: futureStart,
             endDate: futureEnd,
             studioId: 's1',
-            studioStartTime: new Date('2026-06-01T10:00:00'),
-            studioEndTime: new Date('2026-06-01T09:00:00'),
+            studioStartTime: studioDayStart(10),
+            studioEndTime: studioDayStart(9),
             equipment: [],
           },
           'u1'
@@ -457,8 +507,8 @@ describe('BookingService', () => {
             startDate: futureStart,
             endDate: futureEnd,
             studioId: 's1',
-            studioStartTime: new Date('2026-06-01T10:00:00'),
-            studioEndTime: new Date('2026-06-01T18:00:00'),
+            studioStartTime: studioDayStart(10),
+            studioEndTime: studioDayStart(18),
             equipment: [{ equipmentId: 'e1', quantity: 1 }],
           },
           'u1'
@@ -489,8 +539,8 @@ describe('BookingService', () => {
           endDate: futureEnd,
           equipment: [],
           studioId: 's1',
-          studioStartTime: new Date('2026-06-01T10:00:00'),
-          studioEndTime: new Date('2026-06-01T18:00:00'),
+          studioStartTime: studioDayStart(10),
+          studioEndTime: studioDayStart(18),
         },
         'u1'
       )
@@ -527,8 +577,8 @@ describe('BookingService', () => {
           startDate: futureStart,
           endDate: futureEnd,
           studioId: 's1',
-          studioStartTime: new Date('2026-06-01T10:00:00'),
-          studioEndTime: new Date('2026-06-01T18:00:00'),
+          studioStartTime: studioDayStart(10),
+          studioEndTime: studioDayStart(18),
           equipment: [],
         },
         'u1'
@@ -1111,8 +1161,8 @@ describe('BookingService', () => {
       const updated = {
         id: 'bk1',
         status: BookingStatus.CONFIRMED,
-        startDate: new Date('2026-06-01'),
-        endDate: new Date('2026-06-05'),
+        startDate: futureStart,
+        endDate: futureEnd,
       }
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
@@ -1149,8 +1199,8 @@ describe('BookingService', () => {
       const updated = {
         id: 'bk1',
         status: BookingStatus.CONFIRMED,
-        startDate: new Date('2026-06-01'),
-        endDate: new Date('2026-06-10'),
+        startDate: futureStart,
+        endDate: futureExtendedEnd,
       }
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
@@ -1246,8 +1296,8 @@ describe('BookingService', () => {
       mockBookingFindMany.mockResolvedValue([])
       mockBookingCount.mockResolvedValue(0)
       await BookingService.list('u1', {
-        startDate: new Date('2026-06-01'),
-        endDate: new Date('2026-06-10'),
+        startDate: futureStart,
+        endDate: futureExtendedEnd,
       })
       expect(mockBookingFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1382,7 +1432,7 @@ describe('BookingService', () => {
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
         status: BookingStatus.ACTIVE,
-        endDate: new Date('2026-06-05'),
+        endDate: pastEndDate,
         deletedAt: null,
         equipment: [
           {
@@ -1409,7 +1459,7 @@ describe('BookingService', () => {
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
         status: BookingStatus.ACTIVE,
-        endDate: new Date('2026-06-05'),
+        endDate: pastEndDate,
         deletedAt: null,
         equipment: [
           {
@@ -1427,7 +1477,7 @@ describe('BookingService', () => {
         quantityAvailable: 4,
       })
       prismaTx.equipment.update.mockResolvedValue({})
-      await BookingService.markReturned('bk1', 'u1', new Date('2026-06-04'))
+      await BookingService.markReturned('bk1', 'u1', returnBeforeEnd)
       const logCall = (AuditService.log as jest.Mock).mock.calls.find(
         (c: unknown[]) => (c[0] as { action?: string })?.action === 'booking.mark_returned'
       )
@@ -1444,7 +1494,7 @@ describe('BookingService', () => {
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
         status: BookingStatus.ACTIVE,
-        endDate: new Date('2026-06-05'),
+        endDate: pastEndDate,
         deletedAt: null,
         equipment: [
           {
@@ -1465,7 +1515,7 @@ describe('BookingService', () => {
       const result = await BookingService.markReturned(
         'bk1',
         'u1',
-        new Date('2026-06-07')
+        lateReturnDate
       )
       expect(result).toBeDefined()
       const updateCall = prismaTx.booking.update.mock.calls[0]
@@ -1481,7 +1531,7 @@ describe('BookingService', () => {
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
         status: BookingStatus.ACTIVE,
-        endDate: new Date('2026-06-05'),
+        endDate: pastEndDate,
         deletedAt: null,
         equipment: [
           {
@@ -1502,7 +1552,7 @@ describe('BookingService', () => {
       const result = await BookingService.markReturned(
         'bk1',
         'u1',
-        new Date('2026-06-07')
+        lateReturnDate
       )
       expect(result).toBeDefined()
       const updateCall = prismaTx.booking.update.mock.calls[0]
@@ -1516,7 +1566,7 @@ describe('BookingService', () => {
       mockBookingFindFirst.mockResolvedValue({
         id: 'bk1',
         status: BookingStatus.ACTIVE,
-        endDate: new Date('2026-06-05'),
+        endDate: pastEndDate,
         deletedAt: null,
         equipment: [
           {
@@ -1537,7 +1587,7 @@ describe('BookingService', () => {
       await BookingService.markReturned(
         'bk1',
         'u1',
-        new Date('2026-06-07'),
+        lateReturnDate,
         { ipAddress: '1.2.3.4', userAgent: 'Chrome/120' }
       )
       expect(AuditService.log).toHaveBeenCalledWith(

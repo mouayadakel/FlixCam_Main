@@ -10,7 +10,9 @@ import { MessageLogStatus, NotificationChannel } from '@prisma/client'
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID
 const authToken = process.env.TWILIO_AUTH_TOKEN
-const fromNumber = process.env.TWILIO_PHONE_NUMBER
+// SMS sender must be a Twilio-owned SMS-capable number.
+// Fallback to TWILIO_PHONE_NUMBER for backward compatibility.
+const fromNumber = process.env.TWILIO_SMS_PHONE_NUMBER || process.env.TWILIO_PHONE_NUMBER
 
 const twilioClient =
   accountSid && authToken ? Twilio(accountSid, authToken) : null

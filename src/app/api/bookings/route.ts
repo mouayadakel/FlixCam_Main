@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         studioStartTime: validated.studioStartTime,
         studioEndTime: validated.studioEndTime,
         notes: validated.notes,
+        sessionId: body.sessionId,
       },
       session.user.id,
       { ipAddress, userAgent }

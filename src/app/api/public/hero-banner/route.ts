@@ -1,10 +1,10 @@
 /**
- * GET /api/public/hero-banner - Active hero banner and slides for a page (no auth). Cached.
+ * GET /api/public/hero-banner - Active hero banner and slides for a page (no auth).
+ * Caching is handled inside HeroBannerService (Redis); do not duplicate keys here.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitByTier } from '@/lib/utils/rate-limit'
-import { cacheGet, cacheSet } from '@/lib/cache'
 import { HeroBannerService } from '@/lib/services/hero-banner.service'
 
 export const dynamic = 'force-dynamic'
@@ -18,14 +18,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const page = searchParams.get('page') ?? 'home'
 
-  const cacheKey = `hero-banner:${page}`
-  const cached = await cacheGet<{
-    data: Awaited<ReturnType<typeof HeroBannerService.getActiveBannerByPage>>
-  }>('websiteContent', cacheKey)
-  if (cached) return NextResponse.json(cached)
-
   const banner = await HeroBannerService.getActiveBannerByPage(page)
-  const result = { data: banner }
-  await cacheSet('websiteContent', cacheKey, result)
-  return NextResponse.json(result)
+  return NextResponse.json({ data: banner })
 }

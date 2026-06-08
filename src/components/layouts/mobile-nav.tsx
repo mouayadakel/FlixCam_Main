@@ -21,7 +21,7 @@ export function MobileNav() {
 
     // Dispatch event to toggle sidebar
     const toggleSidebar = () => {
-      window.dispatchEvent(new CustomEvent('toggle-sidebar'))
+      window.dispatchEvent(new CustomEvent('admin-sidebar-toggle'))
     }
 
     // Store toggle function globally for header button
@@ -38,7 +38,7 @@ export function MobileNav() {
       size="icon"
       className="h-11 w-11 lg:hidden"
       onClick={() => {
-        window.dispatchEvent(new CustomEvent('toggle-sidebar'))
+        window.dispatchEvent(new CustomEvent('admin-sidebar-toggle'))
       }}
       aria-label="فتح القائمة"
     >

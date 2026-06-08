@@ -16,7 +16,10 @@ export async function GET() {
     const canRead = await hasPermission(session.user.id, 'settings.read' as never)
     if (!canRead) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const zones = await prisma.deliveryZone.findMany({ orderBy: { name: 'asc' } })
+    const zones = await prisma.deliveryZone.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    })
     const data = zones.map((z) => ({
       id: z.id,
       name: z.name,

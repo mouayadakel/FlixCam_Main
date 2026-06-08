@@ -1,9 +1,9 @@
 /**
  * Payment method icons for footer (Visa, Mastercard, Mada, Cash).
- * Simple SVG representations for display only.
+ * Uses local SVG assets for consistent colored brand rendering.
  */
 
-import { Banknote } from 'lucide-react'
+import Image from 'next/image'
 
 interface PaymentIconProps {
   className?: string
@@ -13,62 +13,45 @@ interface PaymentIconProps {
 
 const defaultSize = 32
 
-export function VisaIcon({ className, size = defaultSize, title = 'Visa' }: PaymentIconProps) {
+function PaymentLogo({
+  className,
+  size = defaultSize, // visual height in px
+  title,
+  src,
+}: PaymentIconProps & { src: string }) {
+  const style = {
+    height: `${size}px`,
+    width: 'auto',
+  }
+
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 36 24"
-      width={size}
-      height={size * (24 / 36)}
+    <Image
+      src={src}
+      alt={title ?? ''}
+      width={72}
+      height={28}
       className={className}
       aria-hidden
-      role="img"
-    >
-      <title>{title}</title>
-      <rect width="36" height="24" rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.85" />
-      <rect x="6" y="10" width="12" height="2" rx="1" fill="currentColor" opacity="0.85" />
-    </svg>
+      style={style}
+      unoptimized
+    />
   )
+}
+
+export function VisaIcon({ className, size = defaultSize, title = 'Visa' }: PaymentIconProps) {
+  return <PaymentLogo src="/payment-logos/visa.svg" className={className} size={size} title={title} />
 }
 
 export function MastercardIcon({ className, size = defaultSize, title = 'Mastercard' }: PaymentIconProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      className={className}
-      aria-hidden
-      role="img"
-    >
-      <title>{title}</title>
-      <circle cx="9" cy="12" r="6" fill="currentColor" opacity="0.7" />
-      <circle cx="15" cy="12" r="6" fill="currentColor" opacity="0.5" />
-    </svg>
-  )
+  return <PaymentLogo src="/payment-logos/mastercard.svg" className={className} size={size} title={title} />
 }
 
 export function MadaIcon({ className, size = defaultSize, title = 'Mada' }: PaymentIconProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 36 24"
-      width={size}
-      height={size * (24 / 36)}
-      className={className}
-      aria-hidden
-      role="img"
-    >
-      <title>{title}</title>
-      <rect width="36" height="24" rx="3" fill="currentColor" opacity="0.88" />
-      <rect x="6" y="8" width="24" height="3" rx="1" fill="white" opacity="0.9" />
-    </svg>
-  )
+  return <PaymentLogo src="/payment-logos/mada.svg" className={className} size={size} title={title} />
 }
 
 function CashIcon({ className, size = defaultSize, title = 'Cash' }: PaymentIconProps) {
-  return <Banknote className={className} size={size} aria-hidden role="img" aria-label={title} />
+  return <PaymentLogo src="/payment-logos/cash.svg" className={className} size={size} title={title} />
 }
 
 const PAYMENT_ICONS: Record<string, React.ComponentType<PaymentIconProps>> = {

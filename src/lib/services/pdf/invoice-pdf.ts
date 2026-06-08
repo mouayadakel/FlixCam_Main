@@ -10,10 +10,7 @@ import { toDataURL } from 'qrcode'
 import type { Invoice, InvoiceItem } from '@/lib/types/invoice.types'
 import { theme } from '@/config/theme'
 
-const VAT_RATE = 0.15
-const COMPANY_NAME = theme.brandName
-const COMPANY_VAT = ''
-const COMPANY_ADDRESS = ''
+const DEFAULT_COMPANY_NAME = theme.brandName
 const PRIMARY_ACCENT = theme.invoiceSettings.primaryAccent
 const TEXT_CHARCOAL = theme.colors.textOnLight
 const SHOW_TAGLINE = theme.invoiceSettings.showTagline
@@ -24,10 +21,26 @@ function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(n.slice(0, 2), 16), parseInt(n.slice(2, 4), 16), parseInt(n.slice(4, 6), 16)]
 }
 
+/** Mirror X coordinate for RTL layout (right-aligned content block). */
+function blockX(isRtl: boolean, pageWidth: number, margin: number, blockWidth: number): number {
+  return isRtl ? pageWidth - margin - blockWidth : margin
+}
+
+export interface InvoicePdfCompanyInfo {
+  name?: string
+  vatNumber?: string
+  crNumber?: string
+  address?: string
+  phone?: string
+  email?: string
+}
+
 export interface InvoicePdfOptions {
   locale?: 'ar' | 'en'
   includeZatcaQr?: boolean
   qrPayload?: string
+  logoDataUrl?: string
+  company?: InvoicePdfCompanyInfo
 }
 
 /**
@@ -58,8 +71,13 @@ export async function generateInvoicePdf(
   invoice: Invoice,
   options: InvoicePdfOptions = {}
 ): Promise<Buffer> {
-  const { locale = 'en', includeZatcaQr = false, qrPayload } = options
+  const { locale = 'en', includeZatcaQr = false, qrPayload, logoDataUrl, company } = options
   const isRtl = locale === 'ar'
+  const resolvedLocale = isRtl ? 'ar' : locale
+  const companyName = company?.name?.trim() || DEFAULT_COMPANY_NAME
+  const companyVat = company?.vatNumber?.trim() || ''
+  const companyCr = company?.crNumber?.trim() || ''
+  const companyAddress = company?.address?.trim() || 'Saudi Arabia'
 
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -71,27 +89,51 @@ export async function generateInvoicePdf(
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 20
   let y = 20
+  const taxableAmount = Math.max(0, invoice.subtotal - (invoice.discount ?? 0))
+  const effectiveVatRate = taxableAmount > 0 ? invoice.vatAmount / taxableAmount : 0
+  const vatLabel = `${Math.round(effectiveVatRate * 10000) / 100}%`
   const [rCharcoal, gCharcoal, bCharcoal] = hexToRgb(TEXT_CHARCOAL)
   const [rGreen, gGreen, bGreen] = hexToRgb(PRIMARY_ACCENT)
 
   doc.setTextColor(rCharcoal, gCharcoal, bCharcoal)
 
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, 'PNG', margin, y - 4, 28, 14)
+      y += 16
+    } catch {
+      // Skip logo if image data is invalid
+    }
+  }
+
   // Header - Company (light mode: white bg implied, charcoal text)
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
-  doc.text(COMPANY_NAME, margin, y)
+  doc.text(companyName, blockX(isRtl, pageWidth, margin, 80), y)
   y += 6
   if (SHOW_TAGLINE && TAGLINE) {
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.text(TAGLINE, margin, y)
+    doc.text(TAGLINE, blockX(isRtl, pageWidth, margin, 80), y)
     y += 6
   }
   doc.setFontSize(10)
-  doc.text(COMPANY_ADDRESS || 'Saudi Arabia', margin, y)
-  if (COMPANY_VAT) {
+  doc.text(companyAddress, blockX(isRtl, pageWidth, margin, 80), y)
+  if (companyVat) {
     y += 5
-    doc.text(`VAT: ${COMPANY_VAT}`, margin, y)
+    doc.text(
+      locale === 'ar' ? `الرقم الضريبي: ${companyVat}` : `VAT: ${companyVat}`,
+      blockX(isRtl, pageWidth, margin, 80),
+      y
+    )
+  }
+  if (companyCr) {
+    y += 5
+    doc.text(
+      locale === 'ar' ? `السجل التجاري: ${companyCr}` : `CR: ${companyCr}`,
+      blockX(isRtl, pageWidth, margin, 80),
+      y
+    )
   }
   y += 8
 
@@ -104,28 +146,38 @@ export async function generateInvoicePdf(
   // Title
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text(locale === 'ar' ? 'فاتورة' : 'INVOICE', margin, y)
+  doc.text(locale === 'ar' ? 'فاتورة' : 'INVOICE', blockX(isRtl, pageWidth, margin, 40), y)
   y += 10
 
   // Invoice number & dates
   doc.setFontSize(10)
+  const metaX = blockX(isRtl, pageWidth, margin, 60)
   doc.text(
     `${locale === 'ar' ? 'رقم الفاتورة' : 'Invoice No'}: ${invoice.invoiceNumber}`,
-    margin,
+    blockX(isRtl, pageWidth, margin, 80),
     y
   )
   doc.text(
-    `${locale === 'ar' ? 'تاريخ الإصدار' : 'Issue Date'}: ${formatDate(invoice.issueDate, locale)}`,
-    pageWidth - margin - 60,
+    `${locale === 'ar' ? 'تاريخ الإصدار' : 'Issue Date'}: ${formatDate(invoice.issueDate, resolvedLocale)}`,
+    metaX,
     y
   )
   y += 6
   doc.text(
-    `${locale === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}: ${formatDate(invoice.dueDate, locale)}`,
-    pageWidth - margin - 60,
+    `${locale === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}: ${formatDate(invoice.dueDate, resolvedLocale)}`,
+    metaX,
     y
   )
-  y += 10
+  y += 6
+  if (invoice.paymentMethod) {
+    doc.text(
+      `${locale === 'ar' ? 'طريقة الدفع' : 'Payment method'}: ${invoice.paymentMethod}`,
+      metaX,
+      y
+    )
+    y += 6
+  }
+  y += 4
 
   // Customer (Bill To) – name, email, optional company, tax ID, billing address
   if (invoice.customer) {
@@ -198,47 +250,48 @@ export async function generateInvoicePdf(
     }
     doc.text(item.description.substring(0, hasDays ? 36 : 40), colX + 2, y)
     colX += colWidths[hasDays ? 2 : 1]
-    doc.text(formatAmount(item.unitPrice ?? 0, locale), colX + 2, y)
+    doc.text(formatAmount(item.unitPrice ?? 0, resolvedLocale), colX + 2, y)
     colX += colWidths[hasDays ? 3 : 2]
-    doc.text(formatAmount(item.total ?? 0, locale), colX + 2, y)
+    doc.text(formatAmount(item.total ?? 0, resolvedLocale), colX + 2, y)
     colX += colWidths[hasDays ? 4 : 3]
-    const vatAmount = item.vatAmount ?? (item.total ?? 0) * VAT_RATE
-    doc.text(formatAmount(vatAmount, locale), colX + 2, y)
+    const vatAmount = item.vatAmount ?? (item.total ?? 0) * effectiveVatRate
+    doc.text(formatAmount(vatAmount, resolvedLocale), colX + 2, y)
     colX += colWidths[hasDays ? 5 : 4]
-    doc.text(formatAmount((item.total ?? 0) + vatAmount, locale), colX + 2, y)
+    doc.text(formatAmount((item.total ?? 0) + vatAmount, resolvedLocale), colX + 2, y)
     y += 6
   }
 
   y += 8
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(rCharcoal, gCharcoal, bCharcoal)
+  const totalsX = blockX(isRtl, pageWidth, margin, 50)
   doc.text(
-    `${locale === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}: ${formatAmount(invoice.subtotal, locale)}`,
-    pageWidth - margin - 50,
+    `${locale === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}: ${formatAmount(invoice.subtotal, resolvedLocale)}`,
+    totalsX,
     y
   )
   y += 6
   if (invoice.discount && invoice.discount > 0) {
     doc.text(
-      `${locale === 'ar' ? 'الخصم' : 'Discount'}: ${formatAmount(invoice.discount, locale)}`,
-      pageWidth - margin - 50,
+      `${locale === 'ar' ? 'الخصم' : 'Discount'}: ${formatAmount(invoice.discount, resolvedLocale)}`,
+      totalsX,
       y
     )
     y += 6
   }
   doc.text(
-    `${locale === 'ar' ? 'ضريبة القيمة المضافة' : 'VAT (15%)'}: ${formatAmount(invoice.vatAmount, locale)}`,
-    pageWidth - margin - 50,
+    `${locale === 'ar' ? 'ضريبة القيمة المضافة' : `VAT (${vatLabel})`}: ${formatAmount(invoice.vatAmount, resolvedLocale)}`,
+    totalsX,
     y
   )
   y += 6
   doc.setDrawColor(rGreen, gGreen, bGreen)
   doc.setLineWidth(0.4)
-  doc.line(pageWidth - margin - 50, y - 2, pageWidth - margin, y - 2)
+  doc.line(totalsX, y - 2, pageWidth - margin, y - 2)
   doc.setTextColor(rGreen, gGreen, bGreen)
   doc.text(
-    `${locale === 'ar' ? 'الإجمالي' : 'Total'}: ${formatAmount(invoice.totalAmount, locale)}`,
-    pageWidth - margin - 50,
+    `${locale === 'ar' ? 'الإجمالي' : 'Total'}: ${formatAmount(invoice.totalAmount, resolvedLocale)}`,
+    totalsX,
     y
   )
   doc.setTextColor(rCharcoal, gCharcoal, bCharcoal)
@@ -265,3 +318,8 @@ export async function generateInvoicePdf(
   const pdfOutput = doc.output('arraybuffer')
   return Buffer.from(pdfOutput)
 }
+
+
+
+
+

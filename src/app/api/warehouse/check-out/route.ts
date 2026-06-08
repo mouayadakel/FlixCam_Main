@@ -12,6 +12,7 @@ import { WarehouseService } from '@/lib/services/warehouse.service'
 import { WarehousePolicy } from '@/lib/policies/warehouse.policy'
 import { checkOutSchema } from '@/lib/validators/warehouse.validator'
 import { ValidationError, ForbiddenError } from '@/lib/errors'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,7 +63,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    console.error('Check-out error:', error)
+    logger.error('Check-out error', {
+      err: error instanceof Error ? error.message : String(error),
+    })
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }

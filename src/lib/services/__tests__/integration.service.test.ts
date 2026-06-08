@@ -157,8 +157,15 @@ describe('IntegrationService', () => {
         Promise.resolve({ type, enabled: true, config: { key: 'x' } })
       )
       const result = await IntegrationService.getAll()
-      expect(result).toHaveLength(5)
-      expect(result.map((r) => r.type)).toEqual(['payments', 'email', 'whatsapp', 'analytics', 'webhooks'])
+      expect(result).toHaveLength(6)
+      expect(result.map((r) => r.type)).toEqual([
+        'payments',
+        'email',
+        'whatsapp',
+        'analytics',
+        'webhooks',
+        'daftra',
+      ])
     })
   })
 })

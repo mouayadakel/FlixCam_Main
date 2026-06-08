@@ -1,5 +1,5 @@
 /**
- * Wallet API – mapped to Payment model (credits = successful payments, debits = refunds).
+ * Wallet API – ledger-backed running balance.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const payments = await prisma.payment.findMany({
-    where: { deletedAt: null },
+  const entries = await prisma.ledgerEntry.findMany({
     include: {
       booking: {
         select: {
@@ -37,45 +36,33 @@ export async function GET(request: NextRequest) {
           customer: { select: { id: true, name: true, email: true } },
         },
       },
+      payment: { select: { externalId: true, gateway: true } },
     },
-    orderBy: { createdAt: 'desc' },
-    take: 500,
+    orderBy: { createdAt: 'asc' },
   })
 
-  const rows: WalletRow[] = []
-  for (const p of payments) {
-    const amount = Number(p.amount)
-    const refund = Number(p.refundAmount ?? 0)
-    const customerName = p.booking.customer?.name ?? p.booking.customer?.email ?? p.bookingId
-    if (p.status === 'SUCCESS' && amount > 0) {
-      rows.push({
-        id: p.id,
-        user: customerName,
-        type: 'credit',
-        amount,
-        balance: 0,
-        note: `Booking ${p.booking.bookingNumber}`,
-        createdAt: p.createdAt.toISOString(),
-      })
-    }
-    if (refund > 0) {
-      rows.push({
-        id: `${p.id}-refund`,
-        user: customerName,
-        type: 'debit',
-        amount: refund,
-        balance: 0,
-        note: p.refundReason ?? `Refund – Booking ${p.booking.bookingNumber}`,
-        createdAt: p.updatedAt.toISOString(),
-      })
-    }
-  }
-  rows.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   let runningBalance = 0
-  for (const r of rows) {
-    runningBalance = r.type === 'credit' ? runningBalance + r.amount : runningBalance - r.amount
-    r.balance = runningBalance
-  }
+  const rows: WalletRow[] = entries.map((entry) => {
+    const amount = Number(entry.amount)
+    runningBalance =
+      entry.type === 'CREDIT' ? runningBalance + amount : runningBalance - amount
+    const customerName =
+      entry.booking?.customer?.name ??
+      entry.booking?.customer?.email ??
+      entry.booking?.bookingNumber ??
+      entry.reference ??
+      entry.id
+
+    return {
+      id: entry.id,
+      user: customerName,
+      type: entry.type === 'CREDIT' ? 'credit' : 'debit',
+      amount,
+      balance: runningBalance,
+      note: entry.description,
+      createdAt: entry.createdAt.toISOString(),
+    }
+  })
   rows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   const { searchParams } = new URL(request.url)

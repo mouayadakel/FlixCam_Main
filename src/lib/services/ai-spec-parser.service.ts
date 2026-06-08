@@ -59,7 +59,10 @@ export async function inferMissingSpecs(product: ProductForSpecInference | null)
 
   const missingKeys = expected.filter((k) => {
     const v = existingSpecs[k] ?? existingSpecs[resolveSpecKey(k)]
-    return v == null || (typeof v === 'string' && (v as string).trim() === '')
+    if (v == null) return true
+    const str = String(v).trim()
+    // Treat corrupted [object Object] and empty values as missing
+    return str === '' || str.includes('[object Object]') || str === 'undefined' || str === 'null'
   })
 
   if (missingKeys.length === 0) {
@@ -145,14 +148,20 @@ Every spec value MUST follow these professional formatting standards:
     ✗ "13+ stops"
 
 12. LIGHT OUTPUT — Include distance and beam angle context:
-    ✓ "56,200 lux @ 1m (spot, 10° beam) / 4,800 lux @ 1m (flood, 60° beam)"
-    ✗ "56200 lux"
+    ✓ "12,000 Lux @ 1m (5600K, Reflector) / 45,000 Lux @ 0.5m (Hyper-Reflector)"
+    ✗ "12000 lux"
+
+11. PROFESSIONAL TONE — Use industry-standard terminology:
+    ✓ "Parfocal design" / "Dual Native ISO" / "Global Shutter" / "Timecode Jam-sync"
+    ✗ "Good lens" / "High quality" / "Fast sync"
+
+12. HIGHLIGHT CONTEXT — For key specs, provide a "Highlight-ready" value that includes the most impressive technical detail.
+    Example: for 'sensor', instead of just 'Full Frame', use 'Full Frame (35.9 × 23.9 mm) with 15+ stops dynamic range'.
 
 13. BATTERY — Include capacity, runtime, and compatibility:
     ✓ "Sony NP-F970 compatible / 98 Wh capacity / approx. 3.5 hrs continuous recording"
     ✗ "NP-F970"
 
-14. COLOR SCIENCE — Include standards and accuracy metrics:
     ✓ "Rec. 709 / DCI-P3 (98% coverage) / Rec. 2020 (76% coverage) / ACES AP0/AP1 supported"
     ✗ "DCI-P3"
 

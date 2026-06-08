@@ -28,6 +28,8 @@ import {
   ShieldCheck,
   ShieldX,
   ExternalLink,
+  Ban,
+  ShieldOff,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -54,7 +56,21 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
+import { AdminBookingStatusChip } from '@/components/shared/admin-booking-status-chip'
 
 interface Client {
   id: string
@@ -67,10 +83,14 @@ interface Client {
   city?: string | null
   nationalId?: string | null
   companyName?: string | null
+  creditLimit?: number | null
   taxNumber?: string | null
   notes?: string | null
   segmentName?: string | null
   verificationStatus?: string | null
+  isBlacklisted?: boolean
+  blacklistReason?: string | null
+  blacklistedAt?: string | null
   createdAt: string
   updatedAt: string
   _count?: {
@@ -125,17 +145,6 @@ const STATUS_CONFIG = {
   inactive: { label: 'غير نشط', color: 'bg-gray-100 text-gray-800' },
 }
 
-const BOOKING_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  DRAFT: { label: 'مسودة', color: 'bg-gray-100 text-gray-800' },
-  RISK_CHECK: { label: 'فحص المخاطر', color: 'bg-yellow-100 text-yellow-800' },
-  PAYMENT_PENDING: { label: 'انتظار الدفع', color: 'bg-orange-100 text-orange-800' },
-  CONFIRMED: { label: 'مؤكد', color: 'bg-blue-100 text-blue-800' },
-  ACTIVE: { label: 'نشط', color: 'bg-green-100 text-green-800' },
-  RETURNED: { label: 'مرتجع', color: 'bg-purple-100 text-purple-800' },
-  CLOSED: { label: 'مغلق', color: 'bg-gray-100 text-gray-800' },
-  CANCELLED: { label: 'ملغي', color: 'bg-red-100 text-red-800' },
-}
-
 export default function ClientDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -146,6 +155,11 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [verificationLoading, setVerificationLoading] = useState(false)
+  const [blacklistReason, setBlacklistReason] = useState('')
+  const [blacklistOpen, setBlacklistOpen] = useState(false)
+  const [blacklistLoading, setBlacklistLoading] = useState(false)
+  const [creditLimitInput, setCreditLimitInput] = useState('')
+  const [creditLimitSaving, setCreditLimitSaving] = useState(false)
 
   const loadClient = useCallback(async () => {
     setLoading(true)
@@ -156,6 +170,10 @@ export default function ClientDetailPage() {
       }
       const data = await response.json()
       setClient(data.data || data)
+      const c = data.data || data
+      setCreditLimitInput(
+        c.creditLimit != null && c.creditLimit !== '' ? String(c.creditLimit) : ''
+      )
 
       // Calculate stats
       const bookings = data.data?.bookings || data.bookings || []
@@ -311,6 +329,88 @@ export default function ClientDetailPage() {
     }
   }
 
+  const handleBlacklist = async () => {
+    if (!params?.id || !blacklistReason.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال سبب الحظر',
+        variant: 'destructive',
+      })
+      return
+    }
+    setBlacklistLoading(true)
+    try {
+      const response = await fetch(`/api/clients/${params.id}/blacklist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: blacklistReason.trim() }),
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error((err as { error?: string }).error ?? 'فشل حظر العميل')
+      }
+      toast({ title: 'تم الحظر', description: 'تم إضافة العميل إلى القائمة السوداء' })
+      setBlacklistOpen(false)
+      setBlacklistReason('')
+      loadClient()
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'فشل حظر العميل',
+        variant: 'destructive',
+      })
+    } finally {
+      setBlacklistLoading(false)
+    }
+  }
+
+  const handleUnblacklist = async () => {
+    if (!params?.id) return
+    setBlacklistLoading(true)
+    try {
+      const response = await fetch(`/api/clients/${params.id}/blacklist`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('فشل إلغاء الحظر')
+      }
+      toast({ title: 'تم إلغاء الحظر', description: 'يمكن للعميل إنشاء حجوزات مجدداً' })
+      loadClient()
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'فشل إلغاء الحظر',
+        variant: 'destructive',
+      })
+    } finally {
+      setBlacklistLoading(false)
+    }
+  }
+
+  const handleSaveCreditLimit = async () => {
+    if (!params?.id) return
+    setCreditLimitSaving(true)
+    try {
+      const value = creditLimitInput.trim() === '' ? null : Number(creditLimitInput)
+      const response = await fetch(`/api/clients/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creditLimit: value }),
+      })
+      if (!response.ok) throw new Error('فشل تحديث حد الائتمان')
+      toast({ title: 'تم الحفظ', description: 'تم تحديث حد الائتمان' })
+      loadClient()
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'فشل الحفظ',
+        variant: 'destructive',
+      })
+    } finally {
+      setCreditLimitSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6" dir="rtl">
@@ -350,6 +450,12 @@ export default function ClientDetailPage() {
           </h1>
           <div className="mt-2 flex items-center gap-2">
             <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
+            {client.isBlacklisted && (
+              <Badge variant="destructive" className="gap-1">
+                <Ban className="h-3 w-3" />
+                محظور
+              </Badge>
+            )}
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">عميل منذ {formatDate(client.createdAt)}</span>
           </div>
@@ -367,6 +473,69 @@ export default function ClientDetailPage() {
               تعديل
             </Link>
           </Button>
+          {client.isBlacklisted ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={blacklistLoading}>
+                  <ShieldOff className="ms-2 h-4 w-4" />
+                  إلغاء الحظر
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>إلغاء حظر العميل؟</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    سيتمكن العميل من إنشاء حجوزات جديدة بعد إلغاء الحظر.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void handleUnblacklist()}>
+                    تأكيد
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Dialog open={blacklistOpen} onOpenChange={setBlacklistOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Ban className="ms-2 h-4 w-4" />
+                  حظر
+                </Button>
+              </DialogTrigger>
+              <DialogContent dir="rtl">
+                <DialogHeader>
+                  <DialogTitle>حظر العميل</DialogTitle>
+                  <DialogDescription>
+                    لن يتمكن العميل من إنشاء حجوزات جديدة. يرجى ذكر السبب.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Label htmlFor="blacklist-reason">سبب الحظر</Label>
+                  <Textarea
+                    id="blacklist-reason"
+                    value={blacklistReason}
+                    onChange={(e) => setBlacklistReason(e.target.value)}
+                    placeholder="مثال: تأخير متكرر في الإرجاع"
+                    rows={3}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setBlacklistOpen(false)}>
+                    إلغاء
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={blacklistLoading || !blacklistReason.trim()}
+                    onClick={() => void handleBlacklist()}
+                  >
+                    تأكيد الحظر
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" disabled={deleting}>
@@ -477,7 +646,7 @@ export default function ClientDetailPage() {
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">الهاتف</p>
-                      <p className="font-medium" dir="ltr">
+                      <p className="font-medium" dir={EMBED_LTR}>
                         {client.phone}
                       </p>
                     </div>
@@ -502,6 +671,30 @@ export default function ClientDetailPage() {
                 <CardTitle>معلومات إضافية</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">حد الائتمان (SAR)</p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={creditLimitInput}
+                      onChange={(e) => setCreditLimitInput(e.target.value)}
+                      placeholder="بدون حد"
+                      dir={EMBED_LTR}
+                    />
+                    <Button
+                      variant="outline"
+                      disabled={creditLimitSaving}
+                      onClick={() => void handleSaveCreditLimit()}
+                    >
+                      حفظ
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    يمنع الحجوزات الجديدة إذا تجاوزت التعرضات المستحقة هذا الحد.
+                  </p>
+                </div>
                 {client.nationalId && (
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
@@ -582,15 +775,11 @@ export default function ClientDetailPage() {
                   </TableHeader>
                   <TableBody>
                     {client.bookings.map((booking) => {
-                      const statusConf = BOOKING_STATUS_CONFIG[booking.status] || {
-                        label: booking.status,
-                        color: 'bg-gray-100',
-                      }
                       return (
                         <TableRow key={booking.id}>
                           <TableCell className="font-mono">{booking.bookingNumber}</TableCell>
                           <TableCell>
-                            <Badge className={statusConf.color}>{statusConf.label}</Badge>
+                            <AdminBookingStatusChip status={booking.status} />
                           </TableCell>
                           <TableCell>{formatDate(booking.startDate)}</TableCell>
                           <TableCell>{formatDate(booking.endDate)}</TableCell>

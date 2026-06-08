@@ -48,6 +48,8 @@ export interface Invoice {
   items: InvoiceItem[]
   notes?: string | null
   paymentTerms?: string | null
+  paymentMethod?: string | null
+  depositAmount?: number
   customer?: {
     id: string
     name: string | null

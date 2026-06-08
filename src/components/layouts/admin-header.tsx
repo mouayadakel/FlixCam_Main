@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { MobileNav } from './mobile-nav'
+import { useAdminLive } from '@/lib/hooks/use-admin-live'
+import { PushNotificationSetup } from '@/components/pwa/push-notification-setup'
 
 /** Loaded with ssr: false to avoid Radix-generated ID hydration mismatch. */
 const AdminHeaderUserMenu = dynamic(
@@ -38,7 +40,7 @@ export function AdminHeader() {
   useEffect(() => {
     async function fetchCount() {
       try {
-        const res = await fetch('/api/notifications?countOnly=true')
+        const res = await fetch('/api/notifications?countOnly=true&scope=orders')
         if (res.ok) {
           const data = await res.json()
           setNotificationsCount(data.unreadCount ?? 0)
@@ -47,8 +49,27 @@ export function AdminHeader() {
         // Silently ignore - user may not be logged in yet
       }
     }
+
     fetchCount()
+
+    const timer = window.setInterval(fetchCount, 30000)
+    return () => window.clearInterval(timer)
   }, [])
+
+  useAdminLive((event) => {
+    if (event.startsWith('booking.') || event.startsWith('payment.')) {
+      fetch('/api/notifications?countOnly=true&scope=orders')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setNotificationsCount(data.unreadCount ?? 0)
+          }
+        })
+        .catch(() => {
+          // Ignore transient refresh errors
+        })
+    }
+  })
 
   return (
     <header
@@ -76,9 +97,10 @@ export function AdminHeader() {
 
       {/* Right Side - Language, Notifications & User Menu */}
       <div className="flex items-center gap-2">
+        <PushNotificationSetup />
         <LanguageSwitcher />
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative" asChild aria-label="الإشعارات">
+        <Button variant="ghost" size="icon" className="relative" asChild aria-label="تنبيهات الطلبات">
           <Link href="/admin/notifications" aria-label="الإشعارات">
             <Bell className="h-5 w-5" />
             {notificationsCount > 0 && (

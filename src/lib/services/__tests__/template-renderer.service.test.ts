@@ -11,11 +11,11 @@ import { prisma } from '@/lib/db/prisma'
 
 jest.mock('@/lib/db/prisma', () => ({
   prisma: {
-    notificationTemplate: { findUnique: jest.fn() },
+    notificationTemplate: { findFirst: jest.fn(), findUnique: jest.fn() },
   },
 }))
 
-const mockFindUnique = prisma.notificationTemplate.findUnique as jest.Mock
+const mockFindFirst = prisma.notificationTemplate.findFirst as jest.Mock
 
 // Fixed date for deterministic assertions (2026-03-02 12:00:00 UTC)
 const FIXED_DATE = new Date('2026-03-02T12:00:00.000Z')
@@ -27,13 +27,13 @@ describe('template-renderer.service', () => {
 
   describe('renderTemplate', () => {
     it('returns null when template not found', async () => {
-      mockFindUnique.mockResolvedValue(null)
+      mockFindFirst.mockResolvedValue(null)
       const result = await renderTemplate('unknown', 'en', {})
       expect(result).toBeNull()
     })
 
     it('returns rendered subject and body when template exists', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: 'en',
         subject: 'Welcome {{name}}',
@@ -49,7 +49,7 @@ describe('template-renderer.service', () => {
     })
 
     it('returns bodyHtml null when template has no bodyHtml', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'sms-only',
         language: 'en',
         subject: 'Alert',
@@ -65,7 +65,7 @@ describe('template-renderer.service', () => {
     })
 
     it('returns bodyHtml null when template bodyHtml is empty string', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'text-only',
         language: 'en',
         subject: null,
@@ -79,7 +79,7 @@ describe('template-renderer.service', () => {
     })
 
     it('uses language from template when provided', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: 'ar',
         subject: 'مرحبا',
@@ -97,18 +97,19 @@ describe('template-renderer.service', () => {
     })
 
     it('uses slug_language composite key with language fallback to en', async () => {
-      mockFindUnique.mockResolvedValue(null)
+      mockFindFirst.mockResolvedValue(null)
       await renderTemplate('test', '', {})
-      expect(mockFindUnique).toHaveBeenCalledWith({
+      expect(mockFindFirst).toHaveBeenCalledWith({
         where: {
-          slug_language: { slug: 'test', language: 'en' },
+          slug: 'test',
+          language: 'en',
           isActive: true,
         },
       })
     })
 
     it('uses template language when template found with empty language param', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: '',
         subject: 'Hi',
@@ -121,7 +122,7 @@ describe('template-renderer.service', () => {
     })
 
     it('returns subject null when template has no subject', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'no-subject',
         language: 'en',
         subject: null,
@@ -137,7 +138,7 @@ describe('template-renderer.service', () => {
 
   describe('renderTemplateBody', () => {
     it('returns bodyText when template exists', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: 'en',
         subject: 'Hi',
@@ -150,7 +151,7 @@ describe('template-renderer.service', () => {
     })
 
     it('returns null when template not found', async () => {
-      mockFindUnique.mockResolvedValue(null)
+      mockFindFirst.mockResolvedValue(null)
       const result = await renderTemplateBody('missing', 'en', {})
       expect(result).toBeNull()
     })
@@ -233,7 +234,7 @@ describe('template-renderer.service', () => {
 
   describe('TemplateRendererService', () => {
     it('render delegates to renderTemplate', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: 'en',
         subject: 'Hi',
@@ -249,7 +250,7 @@ describe('template-renderer.service', () => {
     })
 
     it('renderBody delegates to renderTemplateBody', async () => {
-      mockFindUnique.mockResolvedValue({
+      mockFindFirst.mockResolvedValue({
         slug: 'welcome',
         language: 'en',
         subject: 'Hi',

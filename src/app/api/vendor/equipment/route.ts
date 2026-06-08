@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
   const equipment = await EquipmentService.createEquipment({
     ...data,
     dailyPrice: 0,
-    isActive: false,
+    isActive: true,
     vendorId: vendor.id,
     vendorSubmissionStatus: 'pending_review',
     createdBy: session.user.id,

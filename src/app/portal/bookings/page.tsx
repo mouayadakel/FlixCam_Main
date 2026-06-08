@@ -11,11 +11,18 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { BookingStatus } from '@prisma/client'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import { PortalInvoiceDownloadButton } from '@/components/features/portal/portal-invoice-download-button'
+import { BookingStatusBadge } from '@/components/shared/domain-status-badges'
+import {
+  BOOKING_STATUS_LABELS,
+  PORTAL_BOOKING_FILTER_STATUSES,
+  getStatusLabel,
+} from '@/lib/constants/status-labels'
 
 export default async function PortalBookingsPage({
   searchParams,
@@ -23,6 +30,7 @@ export default async function PortalBookingsPage({
   searchParams: Promise<{ status?: string; search?: string }>
 }) {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/bookings')
@@ -60,43 +68,29 @@ export default async function PortalBookingsPage({
           },
         },
       },
+      invoices: {
+        where: { deletedAt: null },
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
     },
     orderBy: {
       createdAt: 'desc',
     },
   })
 
-  function getStatusBadge(status: BookingStatus) {
-    const statusConfig: Record<
-      BookingStatus,
-      { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-    > = {
-      DRAFT: { label: t('ar', 'portal.statusDraft'), variant: 'outline' },
-      RISK_CHECK: { label: t('ar', 'portal.statusRiskCheck'), variant: 'outline' },
-      PAYMENT_PENDING: { label: t('ar', 'portal.statusPaymentPending'), variant: 'secondary' },
-      CONFIRMED: { label: t('ar', 'portal.statusConfirmed'), variant: 'default' },
-      ACTIVE: { label: t('ar', 'portal.statusActive'), variant: 'default' },
-      RETURNED: { label: t('ar', 'portal.statusReturned'), variant: 'secondary' },
-      CLOSED: { label: t('ar', 'portal.statusClosed'), variant: 'outline' },
-      CANCELLED: { label: t('ar', 'portal.statusCancelled'), variant: 'destructive' },
-    }
-
-    const config = statusConfig[status] || { label: status, variant: 'outline' }
-
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'portal.myBookings')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('ar', 'portal.myBookingsDesc')}</p>
+        <h1 className="text-3xl font-bold">{t(locale, 'portal.myBookings')}</h1>
+        <p className="mt-2 text-muted-foreground">{t(locale, 'portal.myBookingsDesc')}</p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.searchAndFilter')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.searchAndFilter')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form method="get" className="flex flex-wrap items-center gap-4">
@@ -104,7 +98,7 @@ export default async function PortalBookingsPage({
               <input
                 type="text"
                 name="search"
-                placeholder={t('ar', 'portal.searchByBookingNumber')}
+                placeholder={t(locale, 'portal.searchByBookingNumber')}
                 defaultValue={searchQuery || ''}
                 className="w-full rounded-lg border px-4 py-2"
               />
@@ -114,15 +108,14 @@ export default async function PortalBookingsPage({
               defaultValue={statusFilter || 'all'}
               className="rounded-lg border px-4 py-2"
             >
-              <option value="all">{t('ar', 'portal.allStatuses')}</option>
-              <option value="DRAFT">{t('ar', 'portal.statusDraft')}</option>
-              <option value="CONFIRMED">{t('ar', 'portal.statusConfirmed')}</option>
-              <option value="ACTIVE">{t('ar', 'portal.statusActive')}</option>
-              <option value="RETURNED">{t('ar', 'portal.statusReturned')}</option>
-              <option value="CLOSED">{t('ar', 'portal.statusClosed')}</option>
-              <option value="CANCELLED">{t('ar', 'portal.statusCancelled')}</option>
+              <option value="all">{t(locale, 'portal.allStatuses')}</option>
+              {PORTAL_BOOKING_FILTER_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {getStatusLabel(BOOKING_STATUS_LABELS, status, 'ar')}
+                </option>
+              ))}
             </select>
-            <Button type="submit">{t('ar', 'portal.filter')}</Button>
+            <Button type="submit">{t(locale, 'portal.filter')}</Button>
           </form>
         </CardContent>
       </Card>
@@ -130,12 +123,12 @@ export default async function PortalBookingsPage({
       {/* Bookings List */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'portal.bookingsList')}</CardTitle>
+          <CardTitle>{t(locale, 'portal.bookingsList')}</CardTitle>
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground">{t('ar', 'portal.noBookings')}</p>
+              <p className="text-muted-foreground">{t(locale, 'portal.noBookings')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -147,31 +140,32 @@ export default async function PortalBookingsPage({
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
                       <span className="text-lg font-medium">
-                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
+                        {t(locale, 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
                       </span>
-                      {getStatusBadge(booking.status)}
+                      <BookingStatusBadge status={booking.status} />
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.dates')}:</span>{' '}
-                        {t('ar', 'portal.fromTo')
+                        <span className="font-medium">{t(locale, 'portal.dates')}:</span>{' '}
+                        {t(locale, 'portal.fromTo')
                           .replace('{from}', formatDate(booking.startDate))
                           .replace('{to}', formatDate(booking.endDate))}
                       </div>
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.amount')}:</span>{' '}
+                        <span className="font-medium">{t(locale, 'portal.amount')}:</span>{' '}
                         {formatCurrency(booking.totalAmount.toNumber())}
                       </div>
                       <div>
-                        <span className="font-medium">{t('ar', 'portal.equipmentCount')}:</span>{' '}
-                        {booking.equipment.length} {t('ar', 'portal.itemUnit')}
+                        <span className="font-medium">{t(locale, 'portal.equipmentCount')}:</span>{' '}
+                        {booking.equipment.length} {t(locale, 'portal.itemUnit')}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PortalInvoiceDownloadButton booking={booking} />
                     <Link href={`/portal/bookings/${booking.id}`}>
                       <Button variant="outline" size="sm">
-                        {t('ar', 'portal.viewDetails')}
+                        {t(locale, 'portal.viewDetails')}
                       </Button>
                     </Link>
                   </div>

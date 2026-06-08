@@ -8,7 +8,9 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { PortalProfileForm } from '@/components/features/portal/portal-profile-form'
+import { PortalGdprPanel } from '@/components/features/portal/portal-gdpr-panel'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 import { ChevronLeft } from 'lucide-react'
 
 export default async function PortalProfilePage({
@@ -17,6 +19,7 @@ export default async function PortalProfilePage({
   searchParams?: Promise<{ complete?: string; returnTo?: string }>
 }) {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/profile')
@@ -41,7 +44,7 @@ export default async function PortalProfilePage({
           <li className="flex items-center gap-1.5">
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
             <span className="text-foreground font-medium" aria-current="page">
-              {t('ar', 'portal.profile')}
+              {t(locale, 'portal.profile')}
             </span>
           </li>
         </ol>
@@ -49,20 +52,20 @@ export default async function PortalProfilePage({
 
       <div>
         <h1 className="font-header-nav text-section-title text-foreground">
-          {t('ar', 'portal.profile')}
+          {t(locale, 'portal.profile')}
         </h1>
         <p className="mt-2 text-body-main text-muted-foreground">
-          {t('ar', 'portal.profileDesc')}
+          {t(locale, 'portal.profileDesc')}
         </p>
       </div>
 
       <Card className="rounded-public-card border-border bg-card shadow-card transition-shadow hover:shadow-card-hover">
         <CardHeader className="p-6">
           <CardTitle className="text-card-title text-foreground">
-            {t('ar', 'portal.personalInfo')}
+            {t(locale, 'portal.personalInfo')}
           </CardTitle>
           <CardDescription className="text-body-main text-muted-foreground">
-            {t('ar', 'portal.personalInfoDesc')}
+            {t(locale, 'portal.personalInfoDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 pt-0">
@@ -73,16 +76,28 @@ export default async function PortalProfilePage({
       <Card className="rounded-public-card border-border bg-card shadow-card transition-shadow hover:shadow-card-hover">
         <CardHeader className="p-6">
           <CardTitle className="text-card-title text-foreground">
-            {t('ar', 'portal.twoFA')}
+            {t(locale, 'portal.twoFA')}
           </CardTitle>
           <CardDescription className="text-body-main text-muted-foreground">
-            {t('ar', 'portal.twoFADesc')}
+            {t(locale, 'portal.twoFADesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <p className="text-body-main text-muted-foreground">
-            {t('ar', 'portal.twoFAComingSoon')}
+            {t(locale, 'portal.twoFAComingSoon')}
           </p>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-public-card border-border bg-card shadow-card transition-shadow hover:shadow-card-hover">
+        <CardHeader className="p-6">
+          <CardTitle className="text-card-title text-foreground">البيانات والخصوصية</CardTitle>
+          <CardDescription className="text-body-main text-muted-foreground">
+            تصدير بياناتك أو طلب حذف الحساب وفق GDPR
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <PortalGdprPanel />
         </CardContent>
       </Card>
     </div>

@@ -9,7 +9,7 @@ import { hasPermission } from '@/lib/auth/permissions'
 import { AuditService } from './audit.service'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { hashPassword } from '@/lib/auth/auth-helpers'
-import { UserRole, VendorStatus } from '@prisma/client'
+import { UserRole, VendorStatus, UserStatus } from '@prisma/client'
 import type { Decimal } from '@prisma/client/runtime/library'
 
 export interface CreateVendorInput {
@@ -95,7 +95,7 @@ export class VendorService {
           name: input.name ?? input.companyName,
           phone: input.phone ?? null,
           role: UserRole.VENDOR,
-          status: 'active',
+          status: UserStatus.ACTIVE,
           createdBy: adminUserId,
         },
       })
@@ -194,7 +194,7 @@ export class VendorService {
 
     await prisma.user.update({
       where: { id: vendor.userId },
-      data: { status: 'suspended', updatedAt: new Date(), updatedBy: adminUserId },
+      data: { status: UserStatus.LOCKED, updatedAt: new Date(), updatedBy: adminUserId },
     })
 
     await AuditService.log({
@@ -233,7 +233,7 @@ export class VendorService {
 
     await prisma.user.update({
       where: { id: vendor.userId },
-      data: { status: 'active', updatedAt: new Date(), updatedBy: adminUserId },
+      data: { status: UserStatus.ACTIVE, updatedAt: new Date(), updatedBy: adminUserId },
     })
 
     await AuditService.log({

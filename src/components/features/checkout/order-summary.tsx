@@ -8,9 +8,9 @@
 import { useLocale } from '@/hooks/use-locale'
 import { useCartStore } from '@/lib/stores/cart.store'
 import { cn } from '@/lib/utils'
+import { formatSar } from '@/lib/utils/format.utils'
 import { DepositInsuranceSummary } from './deposit-insurance-summary'
-
-const VAT_RATE = 0.15
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 export interface OrderSummaryProps {
   /** Optional: when the price hold expires (ISO string) to show "held for X:XX" */
@@ -18,15 +18,6 @@ export interface OrderSummaryProps {
   /** Optional: deposit amount to display (from PricingService.calculateDeposit) */
   depositAmount?: number | null
   className?: string
-}
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
 }
 
 function formatDate(s: string | null): string {
@@ -43,13 +34,14 @@ function formatDate(s: string | null): string {
 }
 
 export function OrderSummary({ holdExpiresAt, depositAmount, className }: OrderSummaryProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const items = useCartStore((s) => s.items)
   const subtotal = useCartStore((s) => s.subtotal)
   const discountAmount = useCartStore((s) => s.discountAmount)
   const total = useCartStore((s) => s.total)
 
-  const vatAmount = Math.round((subtotal - discountAmount) * VAT_RATE * 100) / 100
+  const vatAmount = Math.round((subtotal - discountAmount) * vatRate * 100) / 100
   const deposit = depositAmount ?? 0
   const totalWithVat = subtotal - discountAmount + vatAmount
   const totalWithDeposit = totalWithVat + deposit
@@ -84,7 +76,7 @@ export function OrderSummary({ holdExpiresAt, depositAmount, className }: OrderS
                 </span>
               )}
             </span>
-            <span className="font-medium">{formatSar(item.subtotal)}</span>
+            <span className="font-medium">{formatSar(item.subtotal, locale)}</span>
           </li>
         ))}
       </ul>
@@ -92,27 +84,27 @@ export function OrderSummary({ holdExpiresAt, depositAmount, className }: OrderS
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between">
           <dt className="text-text-muted">{t('checkout.subtotal')}</dt>
-          <dd>{formatSar(subtotal)}</dd>
+          <dd>{formatSar(subtotal, locale)}</dd>
         </div>
         {discountAmount > 0 && (
           <div className="flex justify-between text-green-600">
             <dt>{t('checkout.discount')}</dt>
-            <dd>-{formatSar(discountAmount)}</dd>
+            <dd>-{formatSar(discountAmount, locale)}</dd>
           </div>
         )}
         <div className="flex justify-between">
           <dt className="text-text-muted">{t('checkout.vat')}</dt>
-          <dd>{formatSar(vatAmount)}</dd>
+          <dd>{formatSar(vatAmount, locale)}</dd>
         </div>
         {deposit > 0 && (
           <div className="flex justify-between">
             <dt className="text-text-muted">{t('checkout.deposit')}</dt>
-            <dd>{formatSar(deposit)}</dd>
+            <dd>{formatSar(deposit, locale)}</dd>
           </div>
         )}
         <div className="flex justify-between border-t border-border-light pt-2 font-semibold">
           <dt>{t('checkout.total')}</dt>
-          <dd>{formatSar(deposit > 0 ? totalWithDeposit : totalWithVat)}</dd>
+          <dd>{formatSar(deposit > 0 ? totalWithDeposit : totalWithVat, locale)}</dd>
         </div>
       </dl>
 

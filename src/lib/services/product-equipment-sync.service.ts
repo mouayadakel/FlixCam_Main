@@ -13,7 +13,8 @@ import { cacheDelete } from '@/lib/cache'
 import { ProductStatus, ProductType, TranslationLocale } from '@prisma/client'
 import { NotFoundError } from '@/lib/errors'
 import { getRedisClient } from '@/lib/queue/redis.client'
-import { isPlaceholderUrl } from './product-photo.service'
+import { getSyncReadyImageUrls, isPlaceholderUrl } from './product-photo.service'
+import { generateSlug, ensureUniqueEquipmentSlug } from '@/lib/utils/slug.utils'
 
 const EQUIPMENT_ENTITY_TYPE = 'equipment'
 const LOCALE_TO_LANG: Record<TranslationLocale, string> = {
@@ -22,17 +23,11 @@ const LOCALE_TO_LANG: Record<TranslationLocale, string> = {
   zh: 'zh',
 }
 
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 120)
-}
+/**
+ * Sync a Product to Equipment: create or update Equipment, Media, and Translation records.
+ * Called after Product create/update (import, AI backfill).
+ */
 
-const MAX_SLUG_ATTEMPTS = 100
 const SYNC_TRANSACTION_TIMEOUT_MS = 30000
 const SYNC_TRANSACTION_MAX_WAIT_MS = 10000
 
@@ -58,35 +53,6 @@ async function invalidateEquipmentCaches(equipmentId: string): Promise<void> {
   }
 }
 
-async function ensureUniqueSlug(
-  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  baseSlug: string,
-  excludeId?: string
-): Promise<string> {
-  let slug = baseSlug
-  let attempt = 0
-  while (attempt < MAX_SLUG_ATTEMPTS) {
-    try {
-      const where: Record<string, unknown> = { slug, deletedAt: null }
-      if (excludeId) where.id = { not: excludeId }
-      const existing = await tx.equipment.findFirst({
-        where: where as NonNullable<Parameters<typeof tx.equipment.findFirst>[0]>['where'],
-        select: { id: true },
-      })
-      if (!existing) return slug
-    } catch {
-      return slug
-    }
-    attempt++
-    slug = `${baseSlug}-${attempt}`
-  }
-  return `${baseSlug}-${Date.now()}`
-}
-
-/**
- * Sync a Product to Equipment: create or update Equipment, Media, and Translation records.
- * Called after Product create/update (import, AI backfill).
- */
 export async function syncProductToEquipment(productId: string): Promise<void> {
   const product = await prisma.product.findFirst({
     where: { id: productId, deletedAt: null },
@@ -109,7 +75,10 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
     ? (product.galleryImages as string[])
     : []
   const rawImageUrls = [product.featuredImage, ...galleryUrls].filter(Boolean)
-  const imageUrls = rawImageUrls.filter((url) => !isPlaceholderUrl(url))
+  let imageUrls = rawImageUrls.filter((url) => !isPlaceholderUrl(url))
+  if (imageUrls.length === 0) {
+    imageUrls = await getSyncReadyImageUrls(productId)
+  }
 
   await prisma.$transaction(
     async (tx) => {
@@ -132,7 +101,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
       }
 
       const baseSlug = generateSlug(model)
-      const slug = await ensureUniqueSlug(tx, baseSlug, existing?.id)
+      const slug = await ensureUniqueEquipmentSlug(tx, baseSlug, existing?.id)
 
       const specsValue =
         specifications != null ? (JSON.parse(JSON.stringify(specifications)) as object) : undefined
@@ -152,8 +121,9 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
       const zhTranslation = product.translations.find((t) => t.locale === 'zh')
       const arTranslation = product.translations.find((t) => t.locale === 'ar')
 
-      // Active equipment must have at least one valid image for public display
-      const hasValidImage = imageUrls.length > 0
+      // Default synced equipment to active unless product is intentionally hidden/archived.
+      const shouldBeActive =
+        product.status !== ProductStatus.HIDDEN && product.status !== ProductStatus.ARCHIVED
       const equipmentUpdateData: Record<string, unknown> = {
         sku,
         ...(barcode != null && { barcode }),
@@ -174,7 +144,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
         specifications: specsValue,
         specSource: specsValue ? 'import' : undefined,
         customFields: customFieldsValue,
-        isActive: hasValidImage,
+        isActive: shouldBeActive,
         updatedAt: new Date(),
         ...(existing?.deletedAt && { deletedAt: null, deletedBy: null }),
       }
@@ -202,7 +172,7 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
         monthlyPrice: product.priceMonthly ?? null,
         quantityTotal: product.quantity ?? 1,
         quantityAvailable: product.quantity ?? 1,
-        isActive: hasValidImage,
+        isActive: shouldBeActive,
         specifications: specsValue ?? null,
         specSource: specsValue ? 'import' : null,
         customFields: customFieldsValue ?? null,
@@ -226,36 +196,41 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
 
       const equipmentId = upsertedEquipment.id
 
-      // Media: ensure we have one Media per image URL; avoid duplicates by url+equipmentId
-      // First, delete any existing media that is NOT in our new imageUrls list
-      await tx.media.deleteMany({
-        where:
-          imageUrls.length > 0
-            ? {
-                equipmentId,
-                url: { notIn: imageUrls },
-              }
-            : { equipmentId },
+      // Media: Equipment.media is master. Never overwrite when Equipment already has images.
+      const existingImageCount = await tx.media.count({
+        where: { equipmentId, deletedAt: null, type: 'image' },
       })
+      const preserveExistingMedia = existingImageCount > 0
 
-      // Now insert the new ones
-      for (let i = 0; i < imageUrls.length; i++) {
-        const url = imageUrls[i]
-        const existingMedia = await tx.media.findFirst({
-          where: { equipmentId, url },
+      if (!preserveExistingMedia) {
+        await tx.media.deleteMany({
+          where:
+            imageUrls.length > 0
+              ? {
+                  equipmentId,
+                  url: { notIn: imageUrls },
+                }
+              : { equipmentId },
         })
-        if (!existingMedia) {
-          await tx.media.create({
-            data: {
-              url,
-              type: 'image',
-              filename: url.split('/').pop() ?? `image-${i}.jpg`,
-              mimeType: 'image/jpeg',
-              equipmentId,
-              imageSource: 'import',
-              sortOrder: i,
-            },
+
+        for (let i = 0; i < imageUrls.length; i++) {
+          const url = imageUrls[i]
+          const existingMedia = await tx.media.findFirst({
+            where: { equipmentId, url },
           })
+          if (!existingMedia) {
+            await tx.media.create({
+              data: {
+                url,
+                type: 'image',
+                filename: url.split('/').pop() ?? `image-${i}.jpg`,
+                mimeType: 'image/jpeg',
+                equipmentId,
+                imageSource: 'import',
+                sortOrder: i,
+              },
+            })
+          }
         }
       }
 
@@ -310,14 +285,13 @@ export async function syncProductToEquipment(productId: string): Promise<void> {
  * Sync an Equipment to Product: create or update Product and ProductTranslation.
  * Used for seed and when Equipment is created/updated manually (e.g. admin form).
  */
-export async function syncEquipmentToProduct(equipmentId: string): Promise<void> {
+export async function syncEquipmentToProduct(equipmentId: string, options?: { forceSpecOverride?: boolean }): Promise<void> {
   const equipment = await prisma.equipment.findFirst({
     where: { id: equipmentId, deletedAt: null },
     include: {
       media: {
         where: { deletedAt: null, type: 'image' },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-        take: 4,
       },
       brand: true,
       category: true,
@@ -330,7 +304,7 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
     throw new Error('Equipment must have a brand to sync to Product')
   }
 
-  const featuredImage = equipment.media[0]?.url ?? 'https://placehold.co/400x300?text=Equipment'
+  const featuredImage = equipment.media[0]?.url ?? '/images/equipment-placeholder.svg'
   const galleryUrls = equipment.media.map((m) => m.url)
   // Only use real gallery images — no padding with duplicates
   const galleryImages: string[] = [...galleryUrls]
@@ -424,12 +398,11 @@ export async function syncEquipmentToProduct(equipmentId: string): Promise<void>
       const resolvedSeoKeywords =
         existingPT?.seoKeywords || existing?.get('seo_keywords') || fallbackSeoKeywords
 
-      // Preserve specs from existing ProductTranslation
-      const resolvedSpecs =
-        existingPT?.specifications ??
-        (equipment.specifications
-          ? JSON.parse(JSON.stringify(equipment.specifications))
-          : undefined)
+      // Preserve specs from existing ProductTranslation unless forceSpecOverride is true
+      const resolvedSpecs = options?.forceSpecOverride
+        ? (equipment.specifications ? JSON.parse(JSON.stringify(equipment.specifications)) : undefined)
+        : (existingPT?.specifications ??
+          (equipment.specifications ? JSON.parse(JSON.stringify(equipment.specifications)) : undefined))
 
       await tx.productTranslation.upsert({
         where: {

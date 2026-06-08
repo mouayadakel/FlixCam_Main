@@ -10,6 +10,7 @@ import { replacePlaceholders } from '@/lib/utils/letter-template.utils'
 import { Decimal } from '@prisma/client/runtime/library'
 import type { CreateBookingPromissoryNoteInput } from '@/lib/validators/promissory-note.validator'
 import { generatePromissoryNotePdf } from './pdf/promissory-note-pdf'
+import { DepositService } from './deposit.service'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -84,8 +85,8 @@ export async function createBookingPromissoryNote(
     const name = (eq?.nameEn || eq?.model || 'معدة') as string
     const purchasePrice = eq?.purchasePrice != null ? Number(eq.purchasePrice) : null
     const dailyPrice = eq?.dailyPrice != null ? Number(eq.dailyPrice) : 0
-    const value = purchasePrice ?? dailyPrice * FALLBACK_PURCHASE_MULTIPLIER
-    const lineTotal = value * be.quantity
+    const value = Math.round((purchasePrice ?? dailyPrice * FALLBACK_PURCHASE_MULTIPLIER) * 100) / 100
+    const lineTotal = Math.round(value * be.quantity * 100) / 100
     totalPurchaseValue += lineTotal
     equipmentItems.push({
       name,
@@ -95,15 +96,16 @@ export async function createBookingPromissoryNote(
   }
 
   if (equipmentItems.length === 0) {
-    totalPurchaseValue = Number(booking.totalAmount) * 10
+    const fallbackVal = Math.round(Number(booking.totalAmount) * 10 * 100) / 100
+    totalPurchaseValue = fallbackVal
     equipmentItems.push({
       name: 'حجز',
-      purchaseValue: Number(booking.totalAmount),
+      purchaseValue: Math.round(Number(booking.totalAmount) * 100) / 100,
       quantity: 1,
     })
   }
 
-  const amountSar = Number(totalPurchaseValue)
+  const amountSar = Math.round(totalPurchaseValue * 100) / 100
   const amountInWords = amountToArabicWords(amountSar)
   const expectedReturn = booking.endDate
   const dueDate = new Date(expectedReturn)
@@ -162,6 +164,12 @@ export async function createBookingPromissoryNote(
     where: { id: note.id },
     data: { pdfGenerated: true, pdfUrl: filePath, pdfGeneratedAt: new Date() },
   })
+
+  const bookingDeposit = Number(booking.depositAmount ?? 0)
+  if (bookingDeposit > 0) {
+    await DepositService.ensureForBooking(booking.id, bookingDeposit)
+    await DepositService.markCollected(booking.id, note.noteNumber, userId)
+  }
 
   return { id: note.id, noteNumber: note.noteNumber, pdfUrl }
 }
@@ -314,15 +322,16 @@ export async function createPromissoryNoteManually(
       const name = (eq?.nameEn || eq?.model || 'معدة') as string
       const purchasePrice = eq?.purchasePrice != null ? Number(eq.purchasePrice) : null
       const dailyPrice = eq?.dailyPrice != null ? Number(eq.dailyPrice) : 0
-      const value = purchasePrice ?? (dailyPrice as number) * FALLBACK_PURCHASE_MULTIPLIER
-      totalPurchaseValue += value * be.quantity
+      const value = Math.round((purchasePrice ?? (dailyPrice as number) * FALLBACK_PURCHASE_MULTIPLIER) * 100) / 100
+      totalPurchaseValue += Math.round(value * be.quantity * 100) / 100
       equipmentItems.push({ name, purchaseValue: value, quantity: be.quantity })
     }
     if (equipmentItems.length === 0) {
-      totalPurchaseValue = Number(booking.totalAmount) * 10
-      equipmentItems.push({ name: 'حجز', purchaseValue: Number(booking.totalAmount), quantity: 1 })
+      const fallbackVal = Math.round(Number(booking.totalAmount) * 10 * 100) / 100
+      totalPurchaseValue = fallbackVal
+      equipmentItems.push({ name: 'حجز', purchaseValue: Math.round(Number(booking.totalAmount) * 100) / 100, quantity: 1 })
     }
-    amountSar = totalPurchaseValue
+    amountSar = Math.round(totalPurchaseValue * 100) / 100
     expectedReturn = booking.endDate
     dueDate = new Date(expectedReturn)
     dueDate.setDate(dueDate.getDate() + 30)

@@ -5,6 +5,9 @@ import { prisma } from '@/lib/db/prisma'
 import * as bcrypt from 'bcryptjs'
 import { checkRateLimitUpstash } from '@/lib/utils/rate-limit-upstash'
 import { cacheSet, cacheGet, cacheDelete } from '@/lib/cache'
+import { EmailService } from '@/lib/services/email.service'
+import { EventBus } from '@/lib/events/event-bus'
+import { logger } from '@/lib/logger'
 
 function logDbError(context: string, error: unknown): void {
   const err = error instanceof Error ? error : new Error(String(error))
@@ -102,7 +105,7 @@ export async function POST(request: NextRequest) {
     if (err?.code === 'P2002') {
       await cacheDelete('registration', registrationToken)
       return NextResponse.json(
-        { error: err.meta?.target?.[0] === 'phone' ? 'This phone number is already registered.' : 'This email is already registered.' },
+        { error: (err.meta?.target as string[])?.[0] === 'phone' ? 'This phone number is already registered.' : 'This email is already registered.' },
         { status: 409 }
       )
     }
@@ -118,6 +121,23 @@ export async function POST(request: NextRequest) {
   }
 
   await cacheDelete('registration', registrationToken)
+
+  await EventBus.emit('user.registered', {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    timestamp: new Date(),
+  })
+
+  // Send welcome email (non-blocking)
+  EmailService.sendWelcomeCustomerEmail({
+    to: user.email,
+    customerName: user.name,
+  }).catch((error) => {
+    logger.error('[AUTH][verify-phone] Failed to send welcome email', {
+      err: error instanceof Error ? error.message : String(error),
+    })
+  })
 
   const oneTimeToken = randomBytes(32).toString('hex')
   await cacheSet('authToken', oneTimeToken, user.id)

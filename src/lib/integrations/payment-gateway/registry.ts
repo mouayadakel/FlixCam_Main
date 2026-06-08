@@ -7,6 +7,9 @@
 import type { GatewayDefinition, GatewaySlug, PaymentGatewayAdapter } from './types'
 import { createTapAdapter, testTapConnection } from '@/lib/integrations/tap/adapter'
 import { createMoyasarAdapter, testMoyasarConnection } from '@/lib/integrations/moyasar/adapter'
+import { createMyFatoorahAdapter, testMyFatoorahConnection } from '@/lib/integrations/myfatoorah/adapter'
+import { createTamaraAdapter, testTamaraConnection } from '@/lib/integrations/tamara/adapter'
+import { createTabbyAdapter, testTabbyConnection } from '@/lib/integrations/tabby/adapter'
 
 const notImplemented = (slug: string) =>
   Promise.resolve({
@@ -39,22 +42,22 @@ const gatewayDefinitions: GatewayDefinition[] = [
     slug: 'myfatoorah',
     name: 'MyFatoorah',
     credentialKeys: ['apiKey', 'webhookSecret'],
-    createAdapter: () => stubAdapter,
-    testConnection: (c) => notImplemented('myfatoorah'),
+    createAdapter: createMyFatoorahAdapter,
+    testConnection: testMyFatoorahConnection,
   },
   {
     slug: 'tamara',
     name: 'Tamara',
     credentialKeys: ['apiToken', 'notificationToken', 'publicKey'],
-    createAdapter: () => stubAdapter,
-    testConnection: (c) => notImplemented('tamara'),
+    createAdapter: createTamaraAdapter,
+    testConnection: testTamaraConnection,
   },
   {
     slug: 'tabby',
     name: 'Tabby',
     credentialKeys: ['secretKey', 'publicKey'],
-    createAdapter: () => stubAdapter,
-    testConnection: (c) => notImplemented('tabby'),
+    createAdapter: createTabbyAdapter,
+    testConnection: testTabbyConnection,
   },
   {
     slug: 'paytabs',
@@ -83,11 +86,17 @@ const bySlug = new Map<GatewaySlug, GatewayDefinition>(
   gatewayDefinitions.map((d) => [d.slug, d])
 )
 
+const implementedGatewaySlugs = new Set<GatewaySlug>(['tap', 'moyasar', 'myfatoorah', 'tamara', 'tabby'])
+
 /**
  * Get all supported gateway definitions (for admin list).
  */
 export function getSupportedGateways(): GatewayDefinition[] {
   return [...gatewayDefinitions]
+}
+
+export function isImplementedGatewaySlug(slug: string): slug is GatewaySlug {
+  return implementedGatewaySlugs.has(slug as GatewaySlug)
 }
 
 /**
@@ -100,6 +109,11 @@ export function getAdapter(
   const def = bySlug.get(slug)
   if (!def) {
     return stubAdapter
+  }
+  if (!isImplementedGatewaySlug(slug)) {
+    throw new Error(
+      `Gateway ${slug} is not implemented for checkout yet. Implemented gateways: tap, moyasar.`
+    )
   }
   return def.createAdapter(config)
 }

@@ -121,7 +121,10 @@ export async function DELETE(
     if (!canWrite) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { id } = await params
-    await prisma.branch.delete({ where: { id } })
+    await prisma.branch.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedBy: session.user.id },
+    })
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('Branch delete error:', e)

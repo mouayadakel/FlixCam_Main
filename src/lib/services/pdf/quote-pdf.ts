@@ -48,6 +48,9 @@ export function generateQuotePdf(quote: Quote, options: QuotePdfOptions = {}): B
   const margin = 20
   let y = 20
   const pageWidth = doc.internal.pageSize.getWidth()
+  const taxableAmount = Math.max(0, quote.subtotal - (quote.discount ?? 0))
+  const effectiveVatRate = taxableAmount > 0 ? quote.vatAmount / taxableAmount : 0
+  const vatLabel = `${Math.round(effectiveVatRate * 10000) / 100}%`
   const [rCharcoal, gCharcoal, bCharcoal] = hexToRgb(theme.colors.textOnLight)
   const [rGreen, gGreen, bGreen] = hexToRgb(theme.invoiceSettings.primaryAccent)
 
@@ -148,7 +151,7 @@ export function generateQuotePdf(quote: Quote, options: QuotePdfOptions = {}): B
     y += 6
   }
   doc.text(
-    `${locale === 'ar' ? 'ض.ق.م (15%)' : 'VAT (15%)'}: ${formatAmount(quote.vatAmount, locale)}`,
+    `${locale === 'ar' ? `ض.ق.م (${vatLabel})` : `VAT (${vatLabel})`}: ${formatAmount(quote.vatAmount, locale)}`,
     pageWidth - margin - 50,
     y
   )

@@ -8,10 +8,18 @@ import { Suspense } from 'react'
 import { StudioService } from '@/lib/services/studio.service'
 import { FeatureFlagService } from '@/lib/services/feature-flag.service'
 import { StudioDetail } from '@/components/features/studio/studio-detail'
+import { buildPublicMetadata } from '@/lib/seo/build-metadata'
+import { generateAlternatesMetadata } from '@/lib/seo/hreflang'
+import { buildBreadcrumbListSchema, buildFAQPageSchema, buildServiceSchema } from '@/lib/seo/schemas'
 import { StudioBreadcrumb } from '@/components/features/studio/studio-breadcrumb'
 import type { StudioPublicData } from '@/lib/types/studio.types'
 
-const BASE_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://flixcam.rent'
+const BASE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXTAUTH_URL ||
+  process.env.APP_URL ||
+  'https://flixcam.rent'
+).replace(/\/$/, '')
 
 export async function generateMetadata({
   params,
@@ -24,23 +32,14 @@ export async function generateMetadata({
   const title = (raw.metaTitle as string) || raw.name
   const description = (raw.metaDescription as string) || raw.description || undefined
   const imageUrl = raw.media?.[0]?.url
-  return {
+  const defaultOg = process.env.NEXT_PUBLIC_OG_IMAGE_DEFAULT || `${BASE_URL}/opengraph-image`
+  return buildPublicMetadata({
     title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url: `${BASE_URL}/studios/${slug}`,
-      ...(imageUrl && { images: [{ url: imageUrl, width: 1200, height: 630, alt: title }] }),
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      ...(imageUrl && { images: [imageUrl] }),
-    },
-  }
+    description: description || `${title} — FlixCam.rent`,
+    path: `/studios/${slug}`,
+    image: imageUrl || defaultOg,
+    alternates: generateAlternatesMetadata(`/studios/${slug}`),
+  })
 }
 
 function toStudioPublicData(
@@ -144,7 +143,7 @@ function toStudioPublicData(
   }
 }
 
-function buildJsonLd(studio: StudioPublicData) {
+function studioLocalBusinessLd(studio: StudioPublicData): object {
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -161,16 +160,6 @@ function buildJsonLd(studio: StudioPublicData) {
       },
     }),
     priceRange: `${studio.hourlyRate} SAR/hr`,
-    ...(studio.faqs.length > 0 && {
-      mainEntity: studio.faqs.map((f) => ({
-        '@type': 'Question',
-        name: f.questionAr,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: f.answerAr,
-        },
-      })),
-    }),
   }
 }
 
@@ -182,18 +171,44 @@ export default async function StudioDetailPage({ params }: { params: Promise<{ s
   const studio = toStudioPublicData(raw)
   if (!studio) notFound()
 
-  const jsonLd = buildJsonLd(studio)
+  const img = studio.media[0]?.url
+  const serviceLd = buildServiceSchema({
+    name: studio.name,
+    description: studio.description || studio.name,
+    imageUrl: img,
+    slug: studio.slug,
+    price: studio.hourlyRate,
+    currency: 'SAR',
+  })
+  const crumbs = buildBreadcrumbListSchema([
+    { name: 'FlixCam', url: BASE_URL },
+    { name: 'Studios', url: `${BASE_URL}/studios` },
+    { name: studio.name, url: `${BASE_URL}/studios/${studio.slug}` },
+  ])
+  const faqLd =
+    studio.faqs.length > 0
+      ? buildFAQPageSchema(
+          studio.faqs.map((f) => ({
+            question: f.questionAr || f.questionEn || '',
+            answer: f.answerAr || f.answerEn || '',
+          }))
+        )
+      : null
+  const lbLd = studioLocalBusinessLd(studio)
+  const sharePageUrl = `${BASE_URL}/studios/${studio.slug}`
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(lbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
+      {faqLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      )}
       <main className="mx-auto w-full max-w-public-container px-4 py-8 sm:px-6 md:py-12 lg:px-8">
         <Suspense fallback={<StudioDetailFallback />}>
           <StudioBreadcrumb studioName={studio.name} />
-          <StudioDetail studio={studio} />
+          <StudioDetail studio={studio} sharePageUrl={sharePageUrl} shareImageUrl={img} />
         </Suspense>
       </main>
     </>

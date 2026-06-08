@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Check, Minus, Plus } from 'lucide-react'
+import { formatSar } from '@/lib/utils/format.utils'
 
 const EQUIPMENT_PLACEHOLDER = '/images/equipment-placeholder.svg'
 
@@ -39,15 +40,6 @@ interface KitEquipmentCardProps {
   durationDays?: number
 }
 
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
 function interpolate(raw: string, payload: Record<string, string | number>): string {
   return Object.entries(payload).reduce(
     (acc, [k, v]) => acc.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)),
@@ -64,7 +56,7 @@ export function KitEquipmentCard({
   aiRecommended = false,
   durationDays = 1,
 }: KitEquipmentCardProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const isSelected = selectedQty > 0
   const label = item.model ?? item.sku ?? item.id
   const available = item.quantityAvailable ?? 1
@@ -147,10 +139,10 @@ export function KitEquipmentCard({
           {savePercent > 0 ? (
             <>
               <span className="text-sm text-text-muted line-through">
-                {formatSar(item.dailyPrice)}
+                {formatSar(item.dailyPrice, locale)}
               </span>
               <span className="text-price-tag text-brand-primary">
-                {formatSar(effectiveDaily)}/ {t('kit.perDay')}
+                {formatSar(effectiveDaily, locale)}/ {t('kit.perDay')}
               </span>
               <span className="rounded bg-green-600 px-1.5 py-0.5 text-xs font-medium text-white">
                 {interpolate(t('kit.savePercent'), { percent: savePercent })}
@@ -159,7 +151,7 @@ export function KitEquipmentCard({
           ) : (
             <>
               <span className="text-price-tag text-brand-primary">
-                {item.dailyPrice > 0 ? formatSar(item.dailyPrice) : '—'}
+                {item.dailyPrice > 0 ? formatSar(item.dailyPrice, locale) : '—'}
               </span>
               {item.dailyPrice > 0 && (
                 <span className="text-sm text-text-muted">/ {t('kit.perDay')}</span>

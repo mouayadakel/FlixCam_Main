@@ -10,9 +10,12 @@ import { Button } from '@/components/ui/button'
 import { VendorSidebar } from '@/components/layouts/vendor-sidebar'
 import { LogOut } from 'lucide-react'
 import { prisma } from '@/lib/db/prisma'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import { t } from '@/lib/i18n/translate'
 
 export default async function VendorLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
+  const { locale, dir } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/vendor/dashboard')
@@ -31,7 +34,7 @@ export default async function VendorLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="flex min-h-screen bg-surface-light" dir="rtl">
+    <div className="flex min-h-screen bg-surface-light" dir={dir}>
       <VendorSidebar />
       <div className="flex flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border-light bg-white px-6">
@@ -51,7 +54,7 @@ export default async function VendorLayout({ children }: { children: React.React
             >
               <Button type="submit" variant="ghost" size="sm">
                 <LogOut className="ms-2 h-4 w-4" />
-                تسجيل الخروج
+                {t(locale, 'nav.signOut')}
               </Button>
             </form>
           </div>

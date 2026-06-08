@@ -12,9 +12,11 @@ import { prisma } from '@/lib/db/prisma'
 import { formatDate, formatCurrency } from '@/lib/utils/format.utils'
 import { FileText, Receipt, Download } from 'lucide-react'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 export default async function PortalDocumentsPage() {
   const session = await auth()
+  const { locale } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/documents')
@@ -50,7 +52,7 @@ export default async function PortalDocumentsPage() {
 
   const invoiceItems = bookingsWithPayments.map((b) => ({
     id: b.id,
-    label: t('ar', 'portal.bookingInvoiceHash').replace('{number}', b.bookingNumber),
+    label: t(locale, 'portal.bookingInvoiceHash').replace('{number}', b.bookingNumber),
     bookingNumber: b.bookingNumber,
     totalAmount: b.totalAmount,
     createdAt: b.createdAt,
@@ -61,22 +63,22 @@ export default async function PortalDocumentsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'portal.documents')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('ar', 'portal.documentsDesc')}</p>
+        <h1 className="text-3xl font-bold">{t(locale, 'portal.documents')}</h1>
+        <p className="mt-2 text-muted-foreground">{t(locale, 'portal.documentsDesc')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {t('ar', 'portal.contractsSection')}
+            {t(locale, 'portal.contractsSection')}
           </CardTitle>
-          <CardDescription>{t('ar', 'portal.contractsSectionDesc')}</CardDescription>
+          <CardDescription>{t(locale, 'portal.contractsSectionDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
             <p className="py-6 text-center text-muted-foreground">
-              {t('ar', 'portal.noContracts')}
+              {t(locale, 'portal.noContracts')}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -87,19 +89,19 @@ export default async function PortalDocumentsPage() {
                 >
                   <div>
                     <span className="font-medium">
-                      {t('ar', 'portal.bookingContractHash').replace(
+                      {t(locale, 'portal.bookingContractHash').replace(
                         '{number}',
                         c.booking.bookingNumber
                       )}
                     </span>
                     <span className="me-2 text-sm text-muted-foreground">
                       — {formatDate(c.createdAt)}
-                      {c.signedAt && ` · ${t('ar', 'portal.signed')} ${formatDate(c.signedAt)}`}
+                      {c.signedAt && ` · ${t(locale, 'portal.signed')} ${formatDate(c.signedAt)}`}
                     </span>
                   </div>
                   <Link href={`/portal/contracts/${c.id}`}>
                     <Button variant="outline" size="sm">
-                      {c.signedAt ? t('ar', 'portal.view') : t('ar', 'portal.sign')}
+                      {c.signedAt ? t(locale, 'portal.view') : t(locale, 'portal.sign')}
                     </Button>
                   </Link>
                 </li>
@@ -109,7 +111,7 @@ export default async function PortalDocumentsPage() {
           <div className="mt-4">
             <Link href="/portal/contracts">
               <Button variant="secondary" size="sm">
-                {t('ar', 'portal.viewAllContracts')}
+                {t(locale, 'portal.viewAllContracts')}
               </Button>
             </Link>
           </div>
@@ -120,13 +122,13 @@ export default async function PortalDocumentsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" />
-            {t('ar', 'portal.invoicesSection')}
+            {t(locale, 'portal.invoicesSection')}
           </CardTitle>
-          <CardDescription>{t('ar', 'portal.invoicesSectionDesc')}</CardDescription>
+          <CardDescription>{t(locale, 'portal.invoicesSectionDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {invoiceItems.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">{t('ar', 'portal.noInvoices')}</p>
+            <p className="py-6 text-center text-muted-foreground">{t(locale, 'portal.noInvoices')}</p>
           ) : (
             <ul className="space-y-3">
               {invoiceItems.map((inv) => {
@@ -143,13 +145,13 @@ export default async function PortalDocumentsPage() {
                       <span className="font-medium">{inv.label}</span>
                       <span className="me-2 text-sm text-muted-foreground">
                         — {formatCurrency(inv.totalAmount.toNumber())}
-                        {isPaid ? ` · ${t('ar', 'portal.paid')}` : ''}
+                        {isPaid ? ` · ${t(locale, 'portal.paid')}` : ''}
                       </span>
                     </div>
                     <div className="flex gap-2">
                       <Link href={`/portal/invoices/${inv.id}`}>
                         <Button variant="outline" size="sm">
-                          {t('ar', 'portal.view')}
+                          {t(locale, 'portal.view')}
                         </Button>
                       </Link>
                       <Button variant="outline" size="sm">
@@ -165,7 +167,7 @@ export default async function PortalDocumentsPage() {
           <div className="mt-4">
             <Link href="/portal/invoices">
               <Button variant="secondary" size="sm">
-                {t('ar', 'portal.viewAllInvoices')}
+                {t(locale, 'portal.viewAllInvoices')}
               </Button>
             </Link>
           </div>

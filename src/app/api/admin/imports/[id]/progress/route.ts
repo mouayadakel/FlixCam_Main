@@ -47,10 +47,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // (avoids showing 0 success when the worker updated rows but aggregates lag)
     const totalRows = job.totalRows
     const processedRows = job.rows.filter(
-      (r) => r.status === 'SUCCESS' || r.status === 'ERROR'
+      (r) =>
+        r.status === 'SUCCESS' || r.status === 'ERROR' || r.status === 'SKIPPED'
     ).length
     const successRows = job.rows.filter((r) => r.status === 'SUCCESS').length
     const errorRows = job.rows.filter((r) => r.status === 'ERROR').length
+    const skippedRows = job.rows.filter((r) => r.status === 'SKIPPED').length
 
     // AI processing progress
     const aiJob = job.aiProcessingJobs[0]
@@ -89,6 +91,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           processed: processedRows,
           success: successRows,
           errors: errorRows,
+          skipped: skippedRows,
           percentage: totalRows > 0 ? Math.round((processedRows / totalRows) * 100) : 0,
         },
         ai: aiProgress,

@@ -30,33 +30,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Booking ID required' }, { status: 400 })
     }
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      select: {
-        id: true,
-        customerId: true,
-        contractHtml: true,
-        contractSignedAt: true,
-        bookingNumber: true,
+    const contract = await prisma.contract.findFirst({
+      where: { bookingId },
+      include: {
+        booking: { select: { bookingNumber: true, customerId: true } },
       },
     })
 
-    if (!booking) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    if (!contract || !contract.booking) {
+      return NextResponse.json({ error: 'Contract or Booking not found' }, { status: 404 })
     }
 
-    if (booking.customerId !== session.user.id) {
+    if (contract.booking.customerId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!booking.contractHtml) {
+    if (!contract.contractContent) {
       return NextResponse.json(
-        { error: 'No contract available for this booking' },
+        { error: 'No contract content available for this booking' },
         { status: 400 }
       )
     }
 
-    if (booking.contractSignedAt) {
+    if (contract.signedAt) {
       return NextResponse.json(
         { error: 'Contract has already been signed' },
         { status: 409 }
@@ -69,11 +65,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       'unknown'
 
     await prisma.$transaction([
-      prisma.booking.update({
-        where: { id: bookingId },
+      prisma.contract.update({
+        where: { id: contract.id },
         data: {
-          contractSignedAt: new Date(),
-          contractSignedIp: clientIp,
+          signedAt: new Date(),
+          signedBy: session.user.id,
+          signatureData: { ip: clientIp },
         },
       }),
       prisma.auditLog.create({
@@ -85,7 +82,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           ipAddress: clientIp,
           userAgent: request.headers.get('user-agent') || undefined,
           metadata: {
-            bookingNumber: booking.bookingNumber,
+            bookingNumber: contract.booking.bookingNumber,
           },
         },
       }),

@@ -12,6 +12,8 @@ import type { Quote } from '@/lib/types/quote.types'
 import { generateInvoicePdf } from './pdf/invoice-pdf'
 import { generateContractPdf } from './pdf/contract-pdf'
 import { generateQuotePdf } from './pdf/quote-pdf'
+import { prisma } from '@/lib/db/prisma'
+import { generateZATCAQR } from '@/lib/zatca/qr'
 import {
   exportReportAsPdf,
   exportReportAsExcel,
@@ -49,10 +51,74 @@ export class PdfService {
    * Generate invoice PDF
    */
   static async generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer> {
+    let qrPayload = input.qrPayload
+    const company = await prisma.companySettings.findFirst({
+      select: {
+        nameEn: true,
+        nameAr: true,
+        vatNumber: true,
+        crNumber: true,
+        address: true,
+        city: true,
+        country: true,
+        phone: true,
+        email: true,
+        logoUrl: true,
+      },
+    })
+    if ((input.includeZatcaQr ?? false) && !qrPayload) {
+      if (company?.vatNumber) {
+        qrPayload = generateZATCAQR({
+          sellerName: company.nameAr || company.nameEn,
+          vatNumber: company.vatNumber,
+          invoiceDate: input.invoice.issueDate,
+          totalWithVAT: input.invoice.totalAmount,
+          vatAmount: input.invoice.vatAmount,
+        })
+      }
+    }
+
+    let logoDataUrl: string | undefined
+    const logoUrl = company?.logoUrl?.trim()
+    if (logoUrl) {
+      try {
+        const resolved =
+          logoUrl.startsWith('http://') || logoUrl.startsWith('https://')
+            ? logoUrl
+            : `${process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000'}${logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`}`
+        const response = await fetch(resolved)
+        if (response.ok) {
+          const buffer = Buffer.from(await response.arrayBuffer())
+          const contentType = response.headers.get('content-type') || 'image/png'
+          logoDataUrl = `data:${contentType};base64,${buffer.toString('base64')}`
+        }
+      } catch {
+        logoDataUrl = undefined
+      }
+    }
+
+    const locale = input.locale ?? 'en'
+    const companyAddress = [company?.address, company?.city, company?.country]
+      .filter(Boolean)
+      .join(', ')
+    const companyName =
+      locale === 'ar'
+        ? company?.nameAr || company?.nameEn
+        : company?.nameEn || company?.nameAr
+
     return generateInvoicePdf(input.invoice, {
-      locale: input.locale ?? 'en',
+      locale,
       includeZatcaQr: input.includeZatcaQr ?? false,
-      qrPayload: input.qrPayload,
+      qrPayload,
+      logoDataUrl,
+      company: {
+        name: companyName ?? undefined,
+        vatNumber: company?.vatNumber ?? undefined,
+        crNumber: company?.crNumber ?? undefined,
+        address: companyAddress || undefined,
+        phone: company?.phone ?? undefined,
+        email: company?.email ?? undefined,
+      },
     })
   }
 

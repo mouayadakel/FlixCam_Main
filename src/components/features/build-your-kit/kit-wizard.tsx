@@ -24,18 +24,13 @@ import { StepCategoryEquipment } from './steps/step-category-equipment'
 import { StepDuration } from './steps/step-duration'
 import { StepSummary } from './steps/step-summary'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
+import { logger } from '@/lib/logger'
 
 export function KitWizard() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const phase = useKitWizardStore((s) => s.phase)
   const setPhase = useKitWizardStore((s) => s.setPhase)
   const step = useKitWizardStore((s) => s.step)
@@ -63,7 +58,7 @@ export function KitWizard() {
   const isFirstCategory = currentCategoryIndex <= 0
 
   const totalAmount = getKitWizardTotalAmount({ selectedEquipment, durationDays })
-  const vatAmount = Math.round(totalAmount * 0.15 * 100) / 100
+  const vatAmount = Math.round(totalAmount * vatRate * 100) / 100
   const totalWithVat = totalAmount + vatAmount
   const selectedCount = getKitWizardSelectedCount({ selectedEquipment })
   const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
@@ -80,17 +75,20 @@ export function KitWizard() {
     }
   }, [phase, categorySteps, currentCategoryStep])
 
-  const goNext = () => {
+  const goNext = async () => {
     if (phase === 'shoot-type') {
       if (!canNextShootType) return
       if (shootTypeSlug) {
-        fetch(`/api/public/shoot-types/${shootTypeSlug}`)
-          .then((res) => res.json())
-          .then((data) => {
-            setShootTypeData(data)
-            setPhase('budget')
+        try {
+          const res = await fetch(`/api/public/shoot-types/${shootTypeSlug}`)
+          const data = await res.json()
+          setShootTypeData(data)
+          setPhase('budget')
+        } catch (err) {
+          logger.error('[kit-wizard] fetch shoot-type failed', {
+            err: err instanceof Error ? err.message : String(err),
           })
-          .catch((err) => console.error('[kit-wizard] fetch shoot-type failed', err))
+        }
       } else setPhase('budget')
       return
     }
@@ -216,7 +214,7 @@ export function KitWizard() {
           <div className="fixed bottom-0 end-0 start-0 z-40 flex items-center justify-between gap-4 border-t border-border-light bg-white/95 p-4 shadow-card-elevated backdrop-blur-sm lg:hidden">
             <div>
               <p className="text-sm font-medium text-text-heading">
-                {totalUnits} {t('kit.items')} · {formatSar(totalWithVat)}
+                {totalUnits} {t('kit.items')} · {formatSar(totalWithVat, locale)}
               </p>
               <p className="text-xs text-text-muted">
                 {t('kit.duration')}: {durationDays}{' '}

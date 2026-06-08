@@ -1,14 +1,18 @@
 /**
  * Async Notification Queue Service – decouples notification sending from request handlers.
- * Uses an in-process queue with configurable batch processing.
- * For production scale, swap the in-memory queue for Redis/BullMQ.
+ * Uses BullMQ when Redis is available; falls back to in-process queue.
  */
 
 import { prisma } from '@/lib/db/prisma'
+import {
+  addNotificationJob,
+  isBullMqNotificationsEnabled,
+} from '@/lib/queue/notification.queue'
 import { NotificationChannel as PrismaChannel } from '@prisma/client'
 import { EmailService } from '@/lib/services/email.service'
 import { SmsService } from '@/lib/services/sms.service'
 import { WhatsAppService } from '@/lib/services/whatsapp.service'
+import { PushService } from '@/lib/services/push.service'
 
 export type NotificationChannel = 'email' | 'sms' | 'whatsapp' | 'push'
 export type NotificationPriority = 'high' | 'normal' | 'low'
@@ -78,19 +82,41 @@ export function enqueueNotification(params: {
     recipientUserId: params.recipientUserId,
   }
 
-  // Insert by priority: high first
+  if (isBullMqNotificationsEnabled()) {
+    const delay = params.scheduledAt
+      ? Math.max(0, params.scheduledAt.getTime() - Date.now())
+      : undefined
+    void addNotificationJob(
+      {
+        id: notification.id,
+        channel: notification.channel,
+        recipient: notification.recipient,
+        subject: notification.subject,
+        body: notification.body,
+        templateId: notification.templateId,
+        templateData: notification.templateData,
+        priority: notification.priority,
+        recipientUserId: notification.recipientUserId,
+      },
+      { delay }
+    ).catch((err) => {
+      console.error('[NotificationQueue] BullMQ enqueue failed, using memory fallback', err)
+      pushToMemoryQueue(notification)
+    })
+    return id
+  }
+
+  pushToMemoryQueue(notification)
+  return id
+}
+
+function pushToMemoryQueue(notification: QueuedNotification) {
   if (notification.priority === 'high') {
     queue.unshift(notification)
   } else {
     queue.push(notification)
   }
-
-  // Trigger processing if not already running
-  if (!processing) {
-    scheduleProcessing()
-  }
-
-  return id
+  if (!processing) scheduleProcessing()
 }
 
 /**
@@ -98,6 +124,7 @@ export function enqueueNotification(params: {
  */
 export function getQueueStats() {
   return {
+    mode: isBullMqNotificationsEnabled() ? 'bullmq' : 'memory',
     pending: queue.length,
     highPriority: queue.filter((n) => n.priority === 'high').length,
     normalPriority: queue.filter((n) => n.priority === 'normal').length,
@@ -107,6 +134,57 @@ export function getQueueStats() {
 
 function scheduleProcessing() {
   setTimeout(processQueue, PROCESS_INTERVAL_MS)
+}
+
+/**
+ * Process up to `limit` queued notifications (for cron / worker batch drain).
+ */
+export async function processNotificationQueueBatch(limit = 50): Promise<number> {
+  if (queue.length === 0) return 0
+
+  let processed = 0
+  const now = new Date()
+
+  while (processed < limit && queue.length > 0) {
+    const batch = queue.filter((n) => !n.scheduledAt || n.scheduledAt <= now).slice(0, BATCH_SIZE)
+    if (batch.length === 0) break
+
+    for (const notification of batch) {
+      if (processed >= limit) break
+      try {
+        await sendNotification(notification)
+        const idx = queue.indexOf(notification)
+        if (idx !== -1) queue.splice(idx, 1)
+        processed++
+      } catch (error) {
+        notification.attempts++
+        notification.lastError = error instanceof Error ? error.message : 'Unknown error'
+        if (notification.attempts >= MAX_RETRIES) {
+          const idx = queue.indexOf(notification)
+          if (idx !== -1) queue.splice(idx, 1)
+          try {
+            await prisma.auditLog.create({
+              data: {
+                action: 'NOTIFICATION_FAILED',
+                resourceType: 'Notification',
+                resourceId: notification.id,
+                metadata: {
+                  channel: notification.channel,
+                  recipient: notification.recipient,
+                  error: notification.lastError,
+                  attempts: notification.attempts,
+                },
+              },
+            })
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+  }
+
+  return processed
 }
 
 async function processQueue() {
@@ -164,6 +242,22 @@ async function processQueue() {
   }
 }
 
+/** Send one notification (used by in-memory processor and BullMQ worker). */
+export async function sendQueuedNotification(
+  notification: Pick<
+    QueuedNotification,
+    | 'channel'
+    | 'recipient'
+    | 'subject'
+    | 'body'
+    | 'templateId'
+    | 'templateData'
+    | 'recipientUserId'
+  >
+): Promise<void> {
+  await sendNotification(notification as QueuedNotification)
+}
+
 async function sendNotification(notification: QueuedNotification): Promise<void> {
   const enabled = await isChannelEnabled(notification.channel)
   if (!enabled) return
@@ -194,7 +288,16 @@ async function sendNotification(notification: QueuedNotification): Promise<void>
       })
       break
     case 'push':
-      // Push not implemented
+      if (notification.recipientUserId) {
+        await PushService.sendToUser(
+          notification.recipientUserId,
+          notification.subject ?? 'FlixCam Notification',
+          notification.body,
+          notification.templateData as Record<string, string>
+        )
+      } else {
+        throw new Error('recipientUserId is required for push notifications')
+      }
       break
     default:
       throw new Error(`Unsupported channel: ${notification.channel}`)

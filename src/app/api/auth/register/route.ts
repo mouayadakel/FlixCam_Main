@@ -26,12 +26,6 @@ function logDbError(context: string, error: unknown): void {
 
 export async function POST(request: NextRequest) {
   try {
-    const bodyForLog = await request.clone().json().catch(() => 'unreadable')
-    console.log('[AUTH][register] Request received', {
-      body: bodyForLog,
-      timestamp: new Date().toISOString(),
-    })
-
     const rate = await checkRateLimitUpstash(request, 'auth')
     if (!rate.allowed) {
       console.log('[AUTH][register] Response sent', { status: 429 })

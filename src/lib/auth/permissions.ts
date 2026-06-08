@@ -368,6 +368,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.VENDOR_TOGGLE_VISIBILITY,
     PERMISSIONS.IMPORT_CREATE,
     PERMISSIONS.IMPORT_READ,
+    PERMISSIONS.CMS_STUDIO_READ,
+    PERMISSIONS.CMS_STUDIO_UPDATE,
   ],
   sales_manager: [
     PERMISSIONS.BOOKING_CREATE,
@@ -605,6 +607,56 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
 }
 
+const LEGACY_ROLE_MAPPING: Record<string, string> = {
+  ADMIN: 'admin',
+  VENDOR: 'vendor',
+  CUSTOMER: 'client',
+  WAREHOUSE_MANAGER: 'warehouse',
+  TECHNICIAN: 'technician',
+  SALES_MANAGER: 'sales_manager',
+  ACCOUNTANT: 'accountant',
+  CUSTOMER_SERVICE: 'customer_service',
+  MARKETING_MANAGER: 'marketing_manager',
+  DATA_ENTRY: 'client',
+  RISK_MANAGER: 'risk_manager',
+  APPROVAL_AGENT: 'approval_agent',
+  AUDITOR: 'auditor',
+  AI_OPERATOR: 'ai_operator',
+}
+
+function getLegacyRolePermissions(role?: string | null): string[] {
+  if (!role) {
+    return []
+  }
+
+  const roleName = LEGACY_ROLE_MAPPING[role] || role.toLowerCase()
+  return ROLE_PERMISSIONS[roleName] || []
+}
+
+async function getAssignedRolePermissions(userId: string): Promise<string[]> {
+  const assignedRoles = await prisma.assignedUserRole.findMany({
+    where: {
+      userId,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    include: {
+      role: {
+        include: {
+          rolePermissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return assignedRoles.flatMap((assignment) =>
+    assignment.role.rolePermissions.map((rolePermission) => rolePermission.permission.name)
+  )
+}
+
 /**
  * Super admin has all permissions. Check DB so server-side matches API/frontend.
  */
@@ -635,14 +687,20 @@ export async function hasPermission(userId: string, permission: string): Promise
   try {
     if (await isSuperAdmin(userId)) return true
 
-    // Check database for explicit permission (exact or wildcard)
-    const userPermissions = await prisma.userPermission.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-      },
-      include: { permission: true },
-    })
+    const [userPermissions, assignedRolePermissions, user] = await Promise.all([
+      prisma.userPermission.findMany({
+        where: {
+          userId,
+          deletedAt: null,
+        },
+        include: { permission: true },
+      }),
+      getAssignedRolePermissions(userId),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      }),
+    ])
 
     for (const up of userPermissions) {
       if (matchesPermission(up.permission.name, permission)) {
@@ -650,37 +708,17 @@ export async function hasPermission(userId: string, permission: string): Promise
       }
     }
 
-    // Fall back to role-based permissions
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
+    for (const granted of assignedRolePermissions) {
+      if (matchesPermission(granted, permission)) {
+        return true
+      }
+    }
 
     if (!user || !user.role) {
       return false
     }
 
-    const roleMapping: Record<string, string> = {
-      ADMIN: 'admin',
-      VENDOR: 'vendor',
-      CUSTOMER: 'client',
-      WAREHOUSE_MANAGER: 'warehouse',
-      TECHNICIAN: 'technician',
-      SALES_MANAGER: 'sales_manager',
-      ACCOUNTANT: 'accountant',
-      CUSTOMER_SERVICE: 'customer_service',
-      MARKETING_MANAGER: 'marketing_manager',
-      DATA_ENTRY: 'client',
-      RISK_MANAGER: 'risk_manager',
-      APPROVAL_AGENT: 'approval_agent',
-      AUDITOR: 'auditor',
-      AI_OPERATOR: 'ai_operator',
-    }
-
-    const roleName = roleMapping[user.role] || user.role.toLowerCase()
-    const rolePermissions = ROLE_PERMISSIONS[roleName] || []
-
-    for (const granted of rolePermissions) {
+    for (const granted of getLegacyRolePermissions(user.role)) {
       if (matchesPermission(granted, permission)) {
         return true
       }
@@ -703,43 +741,31 @@ export async function getUserPermissions(userId: string): Promise<string[]> {
     return getEffectivePermissions(userId)
   }
   try {
-    const userPermissions = await prisma.userPermission.findMany({
-      where: { userId, deletedAt: null },
-      include: { permission: true },
-    })
+    const [userPermissions, assignedRolePermissions, user] = await Promise.all([
+      prisma.userPermission.findMany({
+        where: { userId, deletedAt: null },
+        include: { permission: true },
+      }),
+      getAssignedRolePermissions(userId),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      }),
+    ])
 
     const explicitPermissions = userPermissions.map((up) => up.permission.name)
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
-
     if (!user || !user.role) {
-      return [...new Set(explicitPermissions)]
+      return [...new Set([...explicitPermissions, ...assignedRolePermissions])]
     }
 
-    const roleMapping: Record<string, string> = {
-      ADMIN: 'admin',
-      VENDOR: 'vendor',
-      CUSTOMER: 'client',
-      WAREHOUSE_MANAGER: 'warehouse',
-      TECHNICIAN: 'technician',
-      SALES_MANAGER: 'sales_manager',
-      ACCOUNTANT: 'accountant',
-      CUSTOMER_SERVICE: 'customer_service',
-      MARKETING_MANAGER: 'marketing_manager',
-      DATA_ENTRY: 'client',
-      RISK_MANAGER: 'risk_manager',
-      APPROVAL_AGENT: 'approval_agent',
-      AUDITOR: 'auditor',
-      AI_OPERATOR: 'ai_operator',
-    }
-
-    const roleName = roleMapping[user.role] || user.role.toLowerCase()
-    const rolePermissions = ROLE_PERMISSIONS[roleName] || []
-
-    const allPermissions = [...new Set([...explicitPermissions, ...rolePermissions])]
+    const allPermissions = [
+      ...new Set([
+        ...explicitPermissions,
+        ...assignedRolePermissions,
+        ...getLegacyRolePermissions(user.role),
+      ]),
+    ]
     return allPermissions
   } catch (error) {
     console.error('Error getting user permissions:', error)

@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { Mail, ArrowRight } from 'lucide-react'
 import { trackBlogEvent } from '@/lib/analytics'
+import { trackMetaEvent, MetaPixelEvents } from '@/lib/analytics/meta-pixel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -50,13 +51,18 @@ export function BlogNewsletterCta({ locale }: BlogNewsletterCtaProps) {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          source: 'blog',
+          language: locale === 'ar' ? 'ar' : 'en',
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || t.error)
       setSuccess(true)
       setEmail('')
       trackBlogEvent('blog_newsletter_signup', { source: 'blog_post' })
+      trackMetaEvent(MetaPixelEvents.COMPLETE_REGISTRATION, { status: true, content_name: 'newsletter' })
     } catch (err) {
       setError(err instanceof Error ? err.message : t.error)
     } finally {

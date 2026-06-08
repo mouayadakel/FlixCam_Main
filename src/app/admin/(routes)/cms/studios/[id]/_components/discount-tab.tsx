@@ -100,7 +100,7 @@ export function CmsStudioDiscountTab({ studio, onSave, onDirtyChange, saving }: 
                 value={form.discountPercent}
                 onChange={(e) => handleChange('discountPercent', e.target.value)}
                 placeholder="مثال: 15"
-                dir="ltr"
+                dir="rtl"
               />
               <p className="text-xs text-muted-foreground">أدخل رقم بين 0 و 100</p>
             </div>

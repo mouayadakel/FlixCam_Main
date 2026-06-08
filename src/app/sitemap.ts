@@ -178,5 +178,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If DB unavailable, skip dynamic routes
   }
 
-  return [...staticRoutes, ...equipmentRoutes, ...studioRoutes, ...packageRoutes]
+  let blogRoutes: MetadataRoute.Sitemap = []
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { status: 'PUBLISHED', deletedAt: null },
+      select: { slug: true, updatedAt: true },
+    })
+    blogRoutes = posts.map((p) => ({
+      url: `${BASE}/blog/${p.slug}`,
+      lastModified: p.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.75,
+      alternates: generateAlternates(`/blog/${p.slug}`),
+    }))
+  } catch {
+    /* skip */
+  }
+
+  let categoryRoutes: MetadataRoute.Sitemap = []
+  try {
+    const categories = await prisma.category.findMany({
+      where: { deletedAt: null },
+      select: { slug: true, updatedAt: true },
+    })
+    categoryRoutes = categories
+      .filter((c) => c.slug)
+      .map((item) => ({
+        url: `${BASE}/equipment/${item.slug}`,
+        lastModified: item.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+        alternates: generateAlternates(`/equipment/${item.slug}`),
+      }))
+  } catch {
+    /* skip */
+  }
+
+  return [
+    ...staticRoutes,
+    ...equipmentRoutes,
+    ...studioRoutes,
+    ...packageRoutes,
+    ...blogRoutes,
+    ...categoryRoutes,
+  ]
 }

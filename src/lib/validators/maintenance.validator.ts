@@ -73,6 +73,8 @@ export const maintenanceFilterSchema = z.object({
   technicianId: z.string().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
 })
 
 export type CreateMaintenanceInput = z.infer<typeof createMaintenanceSchema>

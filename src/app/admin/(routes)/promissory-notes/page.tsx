@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { TablePagination } from '@/components/tables/table-pagination'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatSar } from '@/lib/utils/format.utils'
 
 interface PromissoryNoteRow {
   id: string
@@ -55,15 +56,6 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 
   CANCELLED: 'destructive',
 }
 
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('ar-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
 function formatDate(d: string | null): string {
   if (!d) return '—'
   try {
@@ -78,7 +70,7 @@ function formatDate(d: string | null): string {
 }
 
 export default function PromissoryNotesPage() {
-  const { t, dir } = useLocale()
+  const { t, dir, locale } = useLocale()
   const { toast } = useToast()
   const [notes, setNotes] = useState<PromissoryNoteRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -198,7 +190,7 @@ export default function PromissoryNotesPage() {
                     <TableRow key={n.id}>
                       <TableCell className="font-medium">{n.noteNumber}</TableCell>
                       <TableCell>{n.debtorName}</TableCell>
-                      <TableCell>{formatSar(n.amountSar)}</TableCell>
+                      <TableCell>{formatSar(n.amountSar, locale)}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANTS[n.status] ?? 'outline'}>
                           {STATUS_KEYS[n.status] ? t(`promissoryNote.admin.${STATUS_KEYS[n.status]}`) : n.status}

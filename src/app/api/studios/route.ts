@@ -10,7 +10,8 @@ import { prisma } from '@/lib/db/prisma'
 import type { Prisma } from '@prisma/client'
 import { createStudioSchema } from '@/lib/validators/studio.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError } from '@/lib/errors'
+import { UnauthorizedError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 
 function slugify(name: string): string {
   return name
@@ -60,6 +61,8 @@ export async function GET(request: NextRequest) {
           description: true,
           capacity: true,
           hourlyRate: true,
+          areaSqm: true,
+          studioType: true,
           setupBuffer: true,
           cleaningBuffer: true,
           resetTime: true,
@@ -81,6 +84,8 @@ export async function GET(request: NextRequest) {
       description: s.description ?? null,
       capacity: s.capacity ?? null,
       hourlyRate: Number(s.hourlyRate),
+      areaSqm: s.areaSqm ?? null,
+      studioType: s.studioType ?? null,
       setupBuffer: s.setupBuffer,
       cleaningBuffer: s.cleaningBuffer,
       resetTime: s.resetTime,
@@ -101,8 +106,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new UnauthorizedError()
+    }
+    if (!(await hasPermission(session.user.id, PERMISSIONS.STUDIO_CREATE))) {
+      throw new ForbiddenError('You do not have permission to create studios')
     }
 
     const body = await request.json()

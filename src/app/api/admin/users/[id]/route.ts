@@ -11,7 +11,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { rateLimitAPI } from '@/lib/utils/rate-limit'
 import { AuditService } from '@/lib/services/audit.service'
 import { z } from 'zod'
-import { UserStatus } from '@prisma/client'
+import { UserStatus, UserRole } from '@prisma/client'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -117,10 +117,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
   } catch (error: any) {
     console.error('Error fetching user:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -178,7 +175,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id: userId },
       data: {
         ...(validatedData.name !== undefined && { name: validatedData.name }),
-        ...(validatedData.role !== undefined && { role: validatedData.role as UserStatus }),
+        ...(validatedData.role !== undefined && { role: validatedData.role as UserRole }),
         ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
         ...(validatedData.twoFactorEnabled !== undefined && {
           twoFactorEnabled: validatedData.twoFactorEnabled,
@@ -215,17 +212,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Validation error' }, { status: 400 })
     }
 
     console.error('Error updating user:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -296,9 +287,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     })
   } catch (error: any) {
     console.error('Error deleting user:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

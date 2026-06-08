@@ -31,9 +31,22 @@ export class InvoicePolicy {
   }
 
   /**
-   * Check if user can view invoices
+   * Check if user can view invoices (staff with invoice.read, or invoice customer).
    */
   static async canView(userId: string, invoiceId?: string): Promise<PolicyResult> {
+    if (invoiceId) {
+      const inv = await prisma.invoice.findFirst({
+        where: { id: invoiceId, deletedAt: null },
+        select: { customerId: true },
+      })
+      if (!inv) {
+        return { allowed: false, reason: 'الفاتورة غير موجودة' }
+      }
+      if (inv.customerId === userId) {
+        return { allowed: true }
+      }
+    }
+
     const hasPermission = await this.hasInvoicePermission(userId, 'view')
     if (!hasPermission) {
       return {
@@ -57,9 +70,22 @@ export class InvoicePolicy {
       }
     }
 
-    // Check if invoice is in editable state
-    // Note: In production, check Invoice model
-    // For now, we'll allow updates for draft invoices only (would need invoice lookup)
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, deletedAt: null },
+      select: { status: true, lockedAt: true },
+    })
+
+    if (!invoice) {
+      return { allowed: false, reason: 'الفاتورة غير موجودة' }
+    }
+
+    if (invoice.lockedAt || invoice.status === 'PAID') {
+      return { allowed: false, reason: 'لا يمكن تعديل فاتورة مدفوعة أو مقفلة' }
+    }
+
+    if (invoice.status === 'PARTIALLY_PAID') {
+      return { allowed: false, reason: 'لا يمكن تعديل مبالغ فاتورة مدفوعة جزئياً' }
+    }
 
     return { allowed: true }
   }
@@ -89,6 +115,19 @@ export class InvoicePolicy {
         allowed: false,
         reason: 'ليس لديك صلاحية لحذف الفواتير',
       }
+    }
+
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, deletedAt: null },
+      select: { status: true, lockedAt: true },
+    })
+
+    if (!invoice) {
+      return { allowed: false, reason: 'الفاتورة غير موجودة' }
+    }
+
+    if (invoice.lockedAt || invoice.status === 'PAID' || invoice.status === 'PARTIALLY_PAID') {
+      return { allowed: false, reason: 'لا يمكن حذف فاتورة عليها مدفوعات أو مقفلة' }
     }
 
     return { allowed: true }

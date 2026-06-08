@@ -10,7 +10,7 @@ import { use, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, Loader2, Save, Sparkles, Wand2, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Loader2, Save, Sparkles, Wand2, CheckCircle2, ExternalLink, Trash2, Info, ChevronDown, Check, Copy, Eye, Plus, Layout, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,11 +44,19 @@ import {
   type AISuggestPayload,
 } from '@/components/features/equipment/ai-suggest-preview-dialog'
 import { FormProgressSidebar } from '@/components/features/equipment/form-progress-sidebar'
+import { stringifySeoKeywords } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { PhotoGateIndicator } from '@/components/features/equipment/photo-gate-indicator'
 import { SmartFillDropdown } from '@/components/features/equipment/smart-fill-dropdown'
 import { TranslationTabSwitcher } from '@/components/features/equipment/translation-tab-switcher'
 import type { FillScope } from '@/components/features/equipment/smart-fill-dropdown'
 import type { TranslationData } from '@/components/features/equipment/translation-tab-switcher'
+import {
+  CrewEquipmentFields,
+  crewProfileFromForm,
+  crewProfileToForm,
+  type CrewProfileFormValues,
+} from '@/components/admin/equipment/crew-equipment-fields'
 
 interface Category {
   id: string
@@ -58,6 +66,95 @@ interface Category {
 interface Brand {
   id: string
   name: string
+}
+
+const INVALID_FIELD_LABELS: Record<string, string> = {
+  sku: 'SKU',
+  model: 'الموديل',
+  categoryId: 'الفئة',
+  brandId: 'العلامة التجارية',
+  condition: 'الحالة',
+  quantityTotal: 'الكمية الإجمالية',
+  quantityAvailable: 'الكمية المتاحة',
+  dailyPrice: 'السعر اليومي',
+  weeklyPrice: 'السعر الأسبوعي',
+  monthlyPrice: 'السعر الشهري',
+  purchasePrice: 'سعر الشراء',
+  depositAmount: 'مبلغ التأمين',
+  requiresDeposit: 'إلزامية التأمين',
+  featuredImageUrl: 'الصورة المميزة',
+  galleryImageUrls: 'معرض الصور',
+  videoUrl: 'رابط الفيديو',
+  translations: 'الترجمات',
+  specifications: 'المواصفات',
+  relatedEquipmentIds: 'المعدات ذات الصلة',
+  boxContents: 'محتوى الصندوق',
+  bufferTime: 'وقت الفاصل',
+  bufferTimeUnit: 'وحدة الوقت',
+}
+
+const INVALID_FIELD_TAB_MAP: Record<string, string> = {
+  sku: 'info',
+  model: 'info',
+  categoryId: 'info',
+  brandId: 'info',
+  condition: 'info',
+  quantityTotal: 'info',
+  quantityAvailable: 'info',
+  dailyPrice: 'info',
+  weeklyPrice: 'info',
+  monthlyPrice: 'info',
+  purchasePrice: 'info',
+  depositAmount: 'info',
+  requiresDeposit: 'info',
+  featuredImageUrl: 'media',
+  galleryImageUrls: 'media',
+  videoUrl: 'media',
+  translations: 'content',
+  specifications: 'specs',
+  relatedEquipmentIds: 'related',
+  boxContents: 'content',
+  tags: 'content',
+  bufferTime: 'info',
+  bufferTimeUnit: 'info',
+  featured: 'info',
+}
+
+function normalizeMediaUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('uploads/')) {
+    return `/${trimmed}`
+  }
+  if (trimmed.startsWith('www.')) {
+    return `https://${trimmed}`
+  }
+  return trimmed
+}
+
+function isGalleryUnchanged(currentGallery: string[], originalGallery: string[]): boolean {
+  return (
+    currentGallery.length === originalGallery.length &&
+    currentGallery.every((url, i) => url === originalGallery[i])
+  )
+}
+
+function parseApiErrorPayload(payload: unknown, fallback: string): string {
+  if (!payload || typeof payload !== 'object') return fallback
+
+  const rec = payload as Record<string, unknown>
+  if (typeof rec.error === 'string' && rec.error.trim()) return rec.error
+
+  if (rec.error && typeof rec.error === 'object') {
+    const fieldErrors = rec.error as Record<string, unknown>
+    const messages = Object.values(fieldErrors)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .map((value) => String(value).trim())
+      .filter(Boolean)
+    if (messages.length > 0) return messages.slice(0, 3).join(' - ')
+  }
+
+  return fallback
 }
 
 export default function EditEquipmentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +167,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
   const [categories, setCategories] = useState<Category[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [activeTab, setActiveTab] = useState('info')
-  const [activeLocale, setActiveLocale] = useState<'ar' | 'en' | 'zh'>('ar')
+  const [activeLocale, setActiveLocale] = useState<'ar' | 'en' | 'zh' | 'fr'>('ar')
   const [applyScope, setApplyScope] = useState<FillScope>('all')
   const [showAISuggest, setShowAISuggest] = useState(false)
   const [aiSuggestLoading, setAiSuggestLoading] = useState(false)
@@ -82,6 +179,14 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
   const [comboDiscountPercent, setComboDiscountPercent] = useState(10)
   const [comboSettingsLoading, setComboSettingsLoading] = useState(false)
   const [comboSettingsSaving, setComboSettingsSaving] = useState(false)
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false)
+  const [savingMediaOnly, setSavingMediaOnly] = useState(false)
+
+  // Track original image URLs loaded from server to avoid creating duplicate media records
+  const [originalFeaturedImageUrl, setOriginalFeaturedImageUrl] = useState('')
+  const [originalGalleryImageUrls, setOriginalGalleryImageUrls] = useState<string[]>([])
+  const [originalVideoUrl, setOriginalVideoUrl] = useState('')
+  const [crewFields, setCrewFields] = useState<CrewProfileFormValues>(crewProfileToForm(null))
 
   const {
     register,
@@ -135,20 +240,30 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
 
       const equipmentData = await equipmentRes.json()
       setEquipment(equipmentData)
+      setCrewFields(crewProfileToForm(equipmentData.customFields as Record<string, unknown>))
 
       // Get featured image (first image)
-      const featuredImage = equipmentData.media?.find((m: any) => m.type === 'image')?.url || ''
-      const galleryImages =
+      const featuredImageRaw = equipmentData.media?.find((m: any) => m.type === 'image')?.url || ''
+      const galleryImagesRaw =
         equipmentData.media
           ?.filter((m: any, i: number) => m.type === 'image' && i > 0)
           .map((m: any) => m.url) || []
-      const video = equipmentData.media?.find((m: any) => m.type === 'video')?.url || ''
+      const videoRaw = equipmentData.media?.find((m: any) => m.type === 'video')?.url || ''
 
-      // Format translations from the translations object. Always populate all 3 locales
+      const featuredImage = normalizeMediaUrl(featuredImageRaw)
+      const galleryImages = galleryImagesRaw.map((url: string) => normalizeMediaUrl(url))
+      const video = normalizeMediaUrl(videoRaw)
+
+      // Remember originals to avoid re-creating identical media records on save
+      setOriginalFeaturedImageUrl(featuredImage)
+      setOriginalGalleryImageUrls(galleryImages)
+      setOriginalVideoUrl(video)
+
+      // Format translations from the translations object. Always populate all locales
       // so the form has the correct structure; use empty strings when no data.
-      const locales = ['ar', 'en', 'zh'] as const
+      const locales = ['ar', 'en', 'zh', 'fr'] as const
       const translations: Array<{
-        locale: 'ar' | 'en' | 'zh'
+        locale: 'ar' | 'en' | 'zh' | 'fr'
         name?: string
         description?: string
         shortDescription?: string
@@ -194,8 +309,10 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
         translations: translations.length > 0 ? translations : undefined,
         relatedEquipmentIds: equipmentData.relatedEquipmentIds || [],
         boxContents: equipmentData.boxContents || undefined,
+        tags: equipmentData.tags || undefined,
         bufferTime: equipmentData.bufferTime || undefined,
         bufferTimeUnit: (equipmentData.bufferTimeUnit as 'hours' | 'days') || 'hours',
+        featured: equipmentData.featured || false,
         depositAmount:
           equipmentData.customFields?.depositAmount != null
             ? Number(equipmentData.customFields.depositAmount)
@@ -236,25 +353,61 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
   const onSubmit = async (data: UpdateEquipmentFormData) => {
     setSubmitting(true)
     try {
+      // Only send image/video fields if they actually changed to avoid duplicate media records
+      const payload = { ...data }
+      const isCrew =
+        equipment?.category?.slug === 'crew' ||
+        (equipment?.customFields as Record<string, unknown> | undefined)?.itemType === 'crew'
+      if (isCrew) {
+        Object.assign(payload, crewProfileFromForm(crewFields))
+      }
+      if (payload.featuredImageUrl === originalFeaturedImageUrl) {
+        delete payload.featuredImageUrl
+      }
+      const currentGallery = payload.galleryImageUrls || []
+      const galleryUnchanged =
+        currentGallery.length === originalGalleryImageUrls.length &&
+        currentGallery.every((url, i) => url === originalGalleryImageUrls[i])
+      if (galleryUnchanged) {
+        delete payload.galleryImageUrls
+      }
+      if (payload.videoUrl === originalVideoUrl) {
+        delete payload.videoUrl
+      }
+
       const response = await fetch(`/api/equipment/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'فشل تحديث المعدة')
+        const error = await response.json().catch(() => null)
+        throw new Error(parseApiErrorPayload(error, 'فشل تحديث المعدة'))
       }
 
-      toast({
-        title: 'نجح',
-        description: 'تم تحديث المعدة بنجاح',
-      })
+      const updatedEquipment = await response.json()
+      const syncWarn = updatedEquipment.warnings?.syncToProduct as
+        | { ok: false; message: string }
+        | undefined
+      if (syncWarn && syncWarn.ok === false) {
+        toast({
+          title: 'تم الحفظ',
+          description: `تم الحفظ، لكن مزامنة مواصفات المنتج فشلت: ${syncWarn.message}`,
+        })
+      } else {
+        toast({
+          title: 'تم الحفظ',
+          description: 'تم تحديث المعدة بنجاح',
+        })
+      }
+      setShowSaveSuccess(true)
+      window.setTimeout(() => setShowSaveSuccess(false), 2500)
+      // Reload data in place to reflect saved state
+      await loadData()
 
-      router.push(`/admin/inventory/equipment/${id}`)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -264,6 +417,113 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleSaveMediaOnly = async () => {
+    setSavingMediaOnly(true)
+    try {
+      const featuredImageUrl = watch('featuredImageUrl') || ''
+      const galleryImageUrls = watch('galleryImageUrls') || []
+      const videoUrl = watch('videoUrl') || ''
+
+      const payload: Record<string, unknown> = {}
+      if (featuredImageUrl !== originalFeaturedImageUrl) {
+        payload.featuredImageUrl = featuredImageUrl
+      }
+      const galleryUnchanged = isGalleryUnchanged(galleryImageUrls, originalGalleryImageUrls)
+      if (!galleryUnchanged) {
+        payload.galleryImageUrls = galleryImageUrls
+      }
+      if (videoUrl !== originalVideoUrl) {
+        payload.videoUrl = videoUrl
+      }
+
+      if (Object.keys(payload).length === 0) {
+        toast({
+          title: 'لا توجد تغييرات',
+          description: 'لم يتم تعديل الصور أو الفيديو.',
+        })
+        return
+      }
+
+      const response = await fetch(`/api/equipment/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null)
+        throw new Error(parseApiErrorPayload(error, 'فشل حفظ الوسائط'))
+      }
+
+      toast({
+        title: 'تم حفظ الوسائط',
+        description: 'تم حفظ الصور/الفيديو حتى مع وجود أخطاء في تبويبات أخرى.',
+      })
+      setShowSaveSuccess(true)
+      window.setTimeout(() => setShowSaveSuccess(false), 2500)
+      await loadData()
+    } catch (error) {
+      toast({
+        title: 'تعذر حفظ الوسائط',
+        description: error instanceof Error ? error.message : 'حدث خطأ أثناء حفظ الوسائط',
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingMediaOnly(false)
+    }
+  }
+
+  const onInvalidSubmit = (formErrors: import('react-hook-form').FieldErrors<UpdateEquipmentFormData>) => {
+    const featuredImageUrl = watch('featuredImageUrl') || ''
+    const galleryImageUrls = watch('galleryImageUrls') || []
+    const videoUrl = watch('videoUrl') || ''
+    const mediaChanged =
+      featuredImageUrl !== originalFeaturedImageUrl ||
+      !isGalleryUnchanged(galleryImageUrls, originalGalleryImageUrls) ||
+      videoUrl !== originalVideoUrl
+
+    const invalidFields = Object.keys(formErrors)
+    const hasOnlyMediaErrors =
+      invalidFields.length > 0 &&
+      invalidFields.every((field) =>
+        ['featuredImageUrl', 'galleryImageUrls', 'videoUrl'].includes(field)
+      )
+
+    // Preserve current media tab UX: if media changed and the blocking errors are in other tabs,
+    // save media immediately without redirecting the user to specifications tab.
+    if (mediaChanged && !hasOnlyMediaErrors) {
+      toast({
+        title: 'تم اكتشاف أخطاء في تبويبات أخرى',
+        description: 'سيتم حفظ الوسائط فقط الآن بدون نقلك من تبويب الوسائط.',
+      })
+      void handleSaveMediaOnly()
+      return
+    }
+
+    const firstInvalidField = invalidFields[0]
+    if (firstInvalidField) {
+      const targetTab = INVALID_FIELD_TAB_MAP[firstInvalidField]
+      if (targetTab) {
+        setActiveTab(targetTab)
+      }
+    }
+
+    const visibleLabels = invalidFields
+      .slice(0, 3)
+      .map((field) => INVALID_FIELD_LABELS[field] ?? field)
+    const hasMore = invalidFields.length > 3
+    const fieldsText =
+      visibleLabels.length > 0
+        ? `الحقول غير الصالحة: ${visibleLabels.join('، ')}${hasMore ? ' ...' : ''}`
+        : 'توجد حقول غير صالحة. راجع البيانات المطلوبة ثم أعد المحاولة.'
+
+    toast({
+      title: 'تعذر الحفظ',
+      description: fieldsText,
+      variant: 'destructive',
+    })
   }
 
   const watchedTranslations = watch('translations') || []
@@ -287,17 +547,9 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
           | 'empty',
       },
       {
-        id: 'translations',
-        label: 'الترجمات',
+        id: 'content',
+        label: 'المحتوى و SEO',
         status: (watchedTranslations.some((t) => t.name) ? 'complete' : 'empty') as
-          | 'complete'
-          | 'warning'
-          | 'empty',
-      },
-      {
-        id: 'seo',
-        label: 'SEO',
-        status: (watchedTranslations.some((t) => t.seoTitle) ? 'complete' : 'empty') as
           | 'complete'
           | 'warning'
           | 'empty',
@@ -312,22 +564,21 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
         detail: `${photoCount}/4`,
       },
       {
-        id: 'specifications',
+        id: 'specs',
         label: 'المواصفات',
         status: (watchedSpecifications && Object.keys(watchedSpecifications).length > 0
           ? 'complete'
           : 'empty') as 'complete' | 'warning' | 'empty',
       },
       { id: 'related', label: 'ذات الصلة', status: 'complete' as const },
-      { id: 'settings', label: 'الإعدادات', status: 'complete' as const },
     ],
     [watch('sku'), watch('categoryId'), watchedTranslations, watchedSpecifications, photoCount]
   )
 
-  const translationDataForSwitcher = useMemo((): Record<'ar' | 'en' | 'zh', TranslationData> => {
-    const base = { ar: {}, en: {}, zh: {} } as Record<'ar' | 'en' | 'zh', TranslationData>
+  const translationDataForSwitcher = useMemo((): Record<'ar' | 'en' | 'zh' | 'fr', TranslationData> => {
+    const base = { ar: {}, en: {}, zh: {}, fr: {} } as Record<'ar' | 'en' | 'zh' | 'fr', TranslationData>
     for (const t of watchedTranslations) {
-      const loc = t.locale as 'ar' | 'en' | 'zh'
+      const loc = t.locale as 'ar' | 'en' | 'zh' | 'fr'
       if (base[loc]) {
         base[loc] = {
           name: t.name,
@@ -364,6 +615,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
     const data = await res.json()
     return {
       specs: data.specs ?? {},
+      structuredSpecs: data.structuredSpecs ?? undefined,
       shortDescription: data.shortDescription ?? '',
       longDescription: data.longDescription ?? '',
       seo: data.seo ?? { metaTitle: '', metaDescription: '', metaKeywords: '' },
@@ -371,6 +623,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
       tags: data.tags,
       relatedEquipmentIds: data.relatedEquipmentIds,
       translations: data.translations,
+      confidence: data.confidence,
     }
   }
 
@@ -419,19 +672,106 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
     // --- Specs ---
     if (scope === 'all' || scope === 'specs') {
       if (payload.specs && Object.keys(payload.specs).length > 0) {
-        const current = (watch('specifications') as Record<string, unknown> | undefined) ?? {}
-        const merged: Record<string, unknown> = { ...current }
-        for (const [k, v] of Object.entries(payload.specs)) {
-          const existing = merged[k]
-          if (existing == null || (typeof existing === 'string' && existing.trim() === '')) {
-            merged[k] = v
-            filledCount++
+        const current = watch('specifications')
+        const isCurrentStructured =
+          current &&
+          typeof current === 'object' &&
+          'groups' in current &&
+          Array.isArray((current as Record<string, unknown>).groups)
+
+        if (payload.structuredSpecs && payload.structuredSpecs.groups?.length > 0) {
+          // ✅ API returned proper structured specs — use directly, preserving any existing data
+          // Merge: if current already has structured groups, merge new specs into existing groups
+          // otherwise just replace with the AI structured version
+          if (isCurrentStructured) {
+            // Merge new highlights/quickSpecs if current ones are empty
+            const cur = current as import('@/lib/types/specifications.types').StructuredSpecifications
+            const merged = {
+              ...payload.structuredSpecs,
+              highlights:
+                !cur.highlights || cur.highlights.length === 0
+                  ? payload.structuredSpecs.highlights
+                  : cur.highlights,
+              quickSpecs:
+                !cur.quickSpecs || cur.quickSpecs.length === 0
+                  ? payload.structuredSpecs.quickSpecs
+                  : cur.quickSpecs,
+              // Merge groups: add specs from AI groups that are missing in current groups
+              groups: payload.structuredSpecs.groups.map((aiGroup) => {
+                const existingGroup = cur.groups.find((g) => g.label === aiGroup.label)
+                if (!existingGroup) return aiGroup
+                // Add specs from AI group that aren't already in existing group
+                const existingKeys = new Set(existingGroup.specs.map((s) => s.key))
+                const newSpecs = aiGroup.specs.filter(
+                  (s) =>
+                    !existingKeys.has(s.key) ||
+                    !existingGroup.specs.find(
+                      (e) => e.key === s.key && e.value && String(e.value).trim() !== ''
+                    )
+                )
+                return {
+                  ...existingGroup,
+                  specs: [
+                    ...existingGroup.specs.map((s) => {
+                      const val = String(s.value ?? '').trim()
+                      const isCorruptOrEmpty = !val || val.includes('[object Object]') || val === 'undefined'
+                      if (isCorruptOrEmpty) {
+                        const aiSpec = aiGroup.specs.find((a) => a.key === s.key)
+                        return aiSpec ? { ...s, value: String(aiSpec.value ?? '').trim() } : s
+                      }
+                      return s
+                    }),
+                    ...newSpecs
+                      .filter((ns) => !existingGroup.specs.find((e) => e.key === ns.key))
+                      .map((ns) => ({ ...ns, value: String(ns.value ?? '').trim() })),
+                  ],
+                }
+              }),
+            }
+            setValue(
+              'specifications',
+              merged as UpdateEquipmentFormData['specifications']
+            )
+          } else {
+            // Current is flat or empty — replace with AI structured specs
+            setValue(
+              'specifications',
+              payload.structuredSpecs as UpdateEquipmentFormData['specifications']
+            )
           }
+          filledCount += Object.keys(payload.specs).length
+        } else {
+          // Fallback: flat merge (only fill empty keys in current flat specs)
+          const currentFlat = (current as Record<string, unknown> | undefined) ?? {}
+          const merged: Record<string, string> = {}
+          // Copy current values as strings
+          for (const [k, v] of Object.entries(currentFlat)) {
+            merged[k] = String(v ?? '').trim()
+          }
+          // Merge AI suggestions safely
+          for (const [k, v] of Object.entries(payload.specs)) {
+            const existing = merged[k]
+            // Treat [object Object] as empty during merge
+            const isCorrupt = existing?.includes('[object Object]')
+            if (existing == null || existing === '' || isCorrupt) {
+              merged[k] = String(v ?? '').trim()
+              filledCount++
+            }
+          }
+          setValue('specifications', merged as UpdateEquipmentFormData['specifications'])
         }
-        setValue('specifications', merged as UpdateEquipmentFormData['specifications'])
+
         if (payload.confidence && Object.keys(payload.confidence).length > 0) {
           const specConfidences = Object.entries(payload.confidence).filter(
-            ([k]) => !['shortDescription', 'longDescription', 'seoTitle', 'seoDescription', 'boxContents', 'tags'].includes(k)
+            ([k]) =>
+              ![
+                'shortDescription',
+                'longDescription',
+                'seoTitle',
+                'seoDescription',
+                'boxContents',
+                'tags',
+              ].includes(k)
           )
           const avg =
             specConfidences.length > 0
@@ -454,7 +794,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
       scope === 'seo' ||
       scope === 'translations'
     ) {
-      const locales = ['ar', 'en', 'zh'] as const
+      const locales = ['ar', 'en', 'zh', 'fr'] as const
       const trans = [...(watch('translations') || [])]
 
       for (const locale of locales) {
@@ -510,8 +850,10 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
             }
           }
           if (!t.seoKeywords || String(t.seoKeywords).trim() === '') {
-            const aiKw = aiLocale?.seoKeywords ?? (locale === 'en' ? payload.seo?.metaKeywords : '')
-            if (aiKw && aiKw.trim() !== '') {
+            const aiKw = stringifySeoKeywords(
+              aiLocale?.seoKeywords ?? (locale === 'en' ? payload.seo?.metaKeywords : '')
+            )
+            if (aiKw) {
               t.seoKeywords = aiKw
               filledCount++
             }
@@ -640,6 +982,12 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
           <p className="mt-1 text-sm text-neutral-600">تعديل معلومات المعدة: {equipment.sku}</p>
         </div>
         <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm" className="gap-2 border-sky-300 text-sky-700 hover:bg-sky-50 hover:text-sky-800 hidden md:flex">
+            <Link href={`/equipment/${equipment.slug || equipment.id}`} target="_blank">
+              <ExternalLink className="h-4 w-4" />
+              رؤية في الموقع
+            </Link>
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -666,7 +1014,14 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             إلغاء
           </Button>
-          <Button size="sm" onClick={handleSubmit(onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>)} disabled={submitting || autoFilling}>
+          <Button
+            size="sm"
+            onClick={handleSubmit(
+              onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>,
+              onInvalidSubmit
+            )}
+            disabled={submitting || autoFilling}
+          >
             {submitting && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             <Save className="ms-2 h-4 w-4" />
             حفظ التغييرات
@@ -714,36 +1069,30 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
       />
 
       <div className="flex gap-6">
-        <form onSubmit={handleSubmit(onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>)} className="flex-1 space-y-6">
+        <form
+          onSubmit={handleSubmit(
+            onSubmit as import('react-hook-form').SubmitHandler<UpdateEquipmentFormData>,
+            onInvalidSubmit
+          )}
+          className="flex-1 space-y-6"
+        >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="info">المعلومات الأساسية</TabsTrigger>
-              <TabsTrigger value="translations" className="relative">
-                الترجمات
-                {aiFilled && (
-                  <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="seo" className="relative">
-                SEO
+              <TabsTrigger value="content" className="relative">
+                المحتوى و SEO
                 {aiFilled && (
                   <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="media">الوسائط</TabsTrigger>
-              <TabsTrigger value="specifications" className="relative">
+              <TabsTrigger value="specs" className="relative">
                 المواصفات
                 {aiFilled && (
                   <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="related">ذات الصلة</TabsTrigger>
-              <TabsTrigger value="settings" className="relative">
-                الإعدادات
-                {aiFilled && (
-                  <span className="absolute -left-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
-                )}
-              </TabsTrigger>
             </TabsList>
 
             {/* Tab 1: Basic Info */}
@@ -756,7 +1105,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="sku">SKU</Label>
-                      <Input id="sku" {...register('sku')} placeholder="اختياري — يُولَّد تلقائياً عند الإنشاء إن تُرك فارغاً" dir="ltr" />
+                      <Input id="sku" {...register('sku')} placeholder="اختياري — يُولَّد تلقائياً عند الإنشاء إن تُرك فارغاً" dir={EMBED_LTR} />
                       {errors.sku && <p className="text-sm text-error-600">{errors.sku.message}</p>}
                     </div>
 
@@ -789,6 +1138,17 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         <p className="text-sm text-error-600">{errors.categoryId.message}</p>
                       )}
                     </div>
+
+                    {(equipment?.category?.slug === 'crew' ||
+                      (equipment?.customFields as Record<string, unknown> | undefined)?.itemType ===
+                        'crew') && (
+                      <div className="md:col-span-2">
+                        <CrewEquipmentFields
+                          values={crewFields}
+                          onChange={(patch) => setCrewFields((prev) => ({ ...prev, ...patch }))}
+                        />
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="brandId">العلامة التجارية</Label>
@@ -834,7 +1194,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         id="barcode"
                         {...register('barcode')}
                         placeholder="1234567890"
-                        dir="ltr"
+                        dir={EMBED_LTR}
                       />
                     </div>
                   </div>
@@ -900,7 +1260,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         step="0.01"
                         {...register('dailyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.dailyPrice && (
                         <p className="text-sm text-error-600">{errors.dailyPrice.message}</p>
@@ -916,7 +1276,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         step="0.01"
                         {...register('weeklyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.weeklyPrice && (
                         <p className="text-sm text-error-600">{errors.weeklyPrice.message}</p>
@@ -932,7 +1292,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         step="0.01"
                         {...register('monthlyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.monthlyPrice && (
                         <p className="text-sm text-error-600">{errors.monthlyPrice.message}</p>
@@ -948,7 +1308,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                         step="0.01"
                         {...register('depositAmount', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.depositAmount && (
                         <p className="text-sm text-error-600">{errors.depositAmount.message}</p>
@@ -968,26 +1328,61 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                     <p className="text-xs text-neutral-500 md:col-span-2">
                       الافتراضي: لا يتطلب تأمين. فعّل إذا كان هذا المنتج يتطلب تأميناً من العميل.
                     </p>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="purchasePrice" className="text-neutral-500">
-                        سعر الشراء
-                      </Label>
-                      <Input
-                        id="purchasePrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...register('purchasePrice', { valueAsNumber: true })}
-                        placeholder="0.00"
-                        dir="ltr"
-                        className="max-w-xs"
-                      />
-                      <p className="text-xs text-neutral-500">
-                        للتتبع وسند الأمر فقط — لا يظهر للعميل
-                      </p>
-                      {errors.purchasePrice && (
-                        <p className="text-sm text-error-600">{errors.purchasePrice.message}</p>
-                      )}
+                    <div className="border-t border-neutral-200 pt-4 mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 md:col-span-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="bufferTime">وقت التحضير والصيانة (Buffer Time)</Label>
+                        <Input
+                          id="bufferTime"
+                          type="number"
+                          min="0"
+                          {...register('bufferTime', { valueAsNumber: true })}
+                          placeholder="0"
+                        />
+                        {errors.bufferTime && (
+                          <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
+                        <Select
+                          defaultValue={equipment.bufferTimeUnit || 'hours'}
+                          onValueChange={(value) =>
+                            setValue('bufferTimeUnit', value as 'hours' | 'days')
+                          }
+                        >
+                          <SelectTrigger id="bufferTimeUnit">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="hours">ساعات</SelectItem>
+                            <SelectItem value="days">أيام</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-neutral-200 pt-4 md:col-span-3">
+                      <div className="space-y-2 max-w-xs">
+                        <Label htmlFor="purchasePrice" className="text-neutral-500">
+                          سعر الشراء
+                        </Label>
+                        <Input
+                          id="purchasePrice"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          {...register('purchasePrice', { valueAsNumber: true })}
+                          placeholder="0.00"
+                          dir="rtl"
+                        />
+                        <p className="text-xs text-neutral-500">
+                          للتتبع وسند الأمر فقط — لا يظهر للعميل
+                        </p>
+                        {errors.purchasePrice && (
+                          <p className="text-sm text-error-600">{errors.purchasePrice.message}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -999,6 +1394,17 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="featured"
+                        {...register('featured')}
+                        className="h-4 w-4 rounded border-neutral-300"
+                      />
+                      <Label htmlFor="featured" className="cursor-pointer">
+                        معدة مميزة (Featured)
+                      </Label>
+                    </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -1027,8 +1433,8 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
               </Card>
             </TabsContent>
 
-            {/* Tab 2: Translations */}
-            <TabsContent value="translations" className="space-y-6">
+            {/* Tab 2: Content (Translations, SEO, Tags, BoxContents) */}
+            <TabsContent value="content" className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>الترجمات</CardTitle>
@@ -1111,10 +1517,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            {/* Tab 3: SEO */}
-            <TabsContent value="seo" className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>SEO (تحسين محركات البحث)</CardTitle>
@@ -1123,7 +1526,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {(['ar', 'en', 'zh'] as const).map((locale) => {
+                  {(['ar', 'en', 'zh', 'fr'] as const).map((locale) => {
                     const translation = watchedTranslations.find((t) => t.locale === locale) || {
                       locale,
                       seoTitle: '',
@@ -1168,33 +1571,75 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                   })}
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>إضافات</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="boxContents">محتوى الصندوق</Label>
+                      <Textarea
+                        id="boxContents"
+                        {...register('boxContents')}
+                        placeholder="ماذا يوجد داخل الصندوق؟"
+                        rows={4}
+                        dir="rtl"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tags">الوسوم (Tags)</Label>
+                      <Input
+                        id="tags"
+                        {...register('tags')}
+                        placeholder="كاميرا, سينما, تصوير, 4K..."
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Tab 4: Media */}
             <TabsContent value="media" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>الوسائط</CardTitle>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle>الوسائط</CardTitle>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveMediaOnly}
+                      disabled={savingMediaOnly || submitting}
+                    >
+                      {savingMediaOnly && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
+                      حفظ الوسائط فقط
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <PhotoGateIndicator photoCount={photoCount} />
                   <ImageUpload
                     value={watch('featuredImageUrl')}
-                    onChange={(url) => setValue('featuredImageUrl', url)}
+                    onChange={(url) => setValue('featuredImageUrl', url, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
                     label="الصورة المميزة"
                     equipmentId={id}
                   />
 
                   <ImageGallery
                     value={watch('galleryImageUrls') || []}
-                    onChange={(urls) => setValue('galleryImageUrls', urls)}
+                    onChange={(urls) => setValue('galleryImageUrls', urls, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
                     label="معرض الصور"
                     equipmentId={id}
                   />
 
                   <VideoUrlInput
                     value={watch('videoUrl')}
-                    onChange={(url) => setValue('videoUrl', url)}
+                    onChange={(url) => setValue('videoUrl', url, { shouldValidate: true, shouldDirty: true, shouldTouch: true })}
                     label="رابط الفيديو"
                   />
                 </CardContent>
@@ -1202,13 +1647,13 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
             </TabsContent>
 
             {/* Tab 5: Specifications */}
-            <TabsContent value="specifications" className="space-y-6">
+            <TabsContent value="specs" className="space-y-6">
               <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_340px]">
                 <Card className="min-w-0">
                   <CardHeader>
                     <CardTitle>المواصفات</CardTitle>
                     <p className="mt-2 text-sm text-neutral-600">
-                      أدخل مواصفات المعدة باستخدام أي من الطرق المتاحة.
+                    أدخل المواصفات بشكل منظم. ابدأ بالتحرير المباشر ثم راجع المعاينة قبل الحفظ.
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -1239,6 +1684,54 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                 </Card>
                 <SpecificationsLivePreview specifications={(watchedSpecifications ?? undefined) as import('@/lib/types/specifications.types').AnySpecifications | undefined} />
               </div>
+
+              <details className="group">
+                <summary className="flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-dashed border-border-light bg-surface-light/30 p-4 transition-colors hover:bg-surface-light/50">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-text-muted transition-colors group-hover:text-brand-primary" />
+                    <CardTitle className="text-sm">حوكمة المواصفات (للمتقدمين)</CardTitle>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-text-muted transition-transform group-open:rotate-180" />
+                </summary>
+                <Card className="mt-2 border-dashed shadow-none">
+                  <CardContent className="grid gap-4 pt-4 text-sm sm:grid-cols-2">
+                    <div>
+                      <p className="text-neutral-500">مصدر المواصفات (specSource)</p>
+                      <p className="font-medium" dir="ltr">
+                        {watch('specSource') ?? equipment?.specSource ?? '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-neutral-500">ثقة الاستنتاج (specConfidence)</p>
+                      <p className="font-medium">
+                        {watch('specConfidence') != null
+                          ? `${Math.round(Number(watch('specConfidence')) * 100)}%`
+                          : equipment?.specConfidence != null
+                            ? `${Math.round(Number(equipment.specConfidence) * 100)}%`
+                            : '—'}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-neutral-500">آخر استنتاج (specLastInferredAt)</p>
+                      <p className="font-medium" dir="ltr">
+                        {watch('specLastInferredAt')
+                          ? new Date(watch('specLastInferredAt') as Date).toLocaleString('ar-SA')
+                          : equipment?.specLastInferredAt
+                            ? new Date(equipment.specLastInferredAt).toLocaleString('ar-SA')
+                            : '—'}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-neutral-500">القائمة السوداء (specBlacklist)</p>
+                      <pre className="mt-1 max-h-32 overflow-auto rounded-md border bg-neutral-50 p-2 text-xs" dir="ltr">
+                        {equipment?.specBlacklist != null
+                          ? JSON.stringify(equipment.specBlacklist, null, 2)
+                          : '—'}
+                      </pre>
+                    </div>
+                  </CardContent>
+                </Card>
+              </details>
             </TabsContent>
 
             {/* Tab 6: Related Equipment */}
@@ -1282,7 +1775,7 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
                                 Math.min(100, Math.max(0, Number(e.target.value) || 0))
                               )
                             }
-                            dir="ltr"
+                            dir="rtl"
                           />
                         </div>
                         <Button
@@ -1357,67 +1850,16 @@ export default function EditEquipmentPage({ params }: { params: Promise<{ id: st
               </Card>
             </TabsContent>
 
-            {/* Tab 7: Settings */}
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>الإعدادات الإضافية</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="boxContents">محتوى الصندوق</Label>
-                    <Textarea
-                      id="boxContents"
-                      {...register('boxContents')}
-                      placeholder="قائمة بمحتويات الصندوق أو الكيت..."
-                      rows={6}
-                      dir="rtl"
-                    />
-                    <p className="text-xs text-neutral-500">
-                      يمكنك إدخال نص عادي أو HTML. سيتم اكتشاف التنسيق تلقائياً.
-                    </p>
-                  </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="bufferTime">وقت الفاصل</Label>
-                      <Input
-                        id="bufferTime"
-                        type="number"
-                        min="0"
-                        {...register('bufferTime', { valueAsNumber: true })}
-                        placeholder="0"
-                      />
-                      {errors.bufferTime && (
-                        <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
-                      <Select
-                        defaultValue={equipment.bufferTimeUnit || 'hours'}
-                        onValueChange={(value) =>
-                          setValue('bufferTimeUnit', value as 'hours' | 'days')
-                        }
-                      >
-                        <SelectTrigger id="bufferTimeUnit">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hours">ساعات</SelectItem>
-                          <SelectItem value="days">أيام</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 border-t pt-6">
+            {showSaveSuccess && (
+              <div className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 text-xs font-medium text-emerald-700">
+                تم الحفظ بنجاح
+              </div>
+            )}
             <Button type="button" variant="outline" onClick={() => router.back()}>
               إلغاء
             </Button>

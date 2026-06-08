@@ -11,6 +11,8 @@ import { CalendarDays } from 'lucide-react'
 
 interface AvailabilityPreviewProps {
   equipmentId: string
+  /** Number of days to preview (default 14). Crew uses 28. */
+  dayCount?: number
 }
 
 interface DayStatus {
@@ -18,7 +20,7 @@ interface DayStatus {
   available: boolean
 }
 
-export function AvailabilityPreview({ equipmentId }: AvailabilityPreviewProps) {
+export function AvailabilityPreview({ equipmentId, dayCount = 14 }: AvailabilityPreviewProps) {
   const { t } = useLocale()
   const [days, setDays] = useState<DayStatus[]>([])
   const [loading, setLoading] = useState(false)
@@ -30,7 +32,7 @@ export function AvailabilityPreview({ equipmentId }: AvailabilityPreviewProps) {
     setLoading(true)
     try {
       const today = new Date()
-      const checks = Array.from({ length: 14 }).map((_, i) => {
+      const checks = Array.from({ length: dayCount }).map((_, i) => {
         const d = new Date(today)
         d.setDate(d.getDate() + i)
         const dateStr = d.toISOString().slice(0, 10)
@@ -50,7 +52,11 @@ export function AvailabilityPreview({ equipmentId }: AvailabilityPreviewProps) {
     } finally {
       setLoading(false)
     }
-  }, [equipmentId])
+  }, [equipmentId, dayCount])
+
+  useEffect(() => {
+    setDays([])
+  }, [dayCount])
 
   useEffect(() => {
     if (open && days.length === 0) fetchAvailability()

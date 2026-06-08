@@ -31,6 +31,14 @@ describe('category.validator', () => {
       expect(result.success).toBe(true)
     })
 
+    it('accepts crew subcategory slugs', () => {
+      const result = createCategorySchema.safeParse({
+        name: 'Focus Puller',
+        slug: 'crew-focus-puller',
+      })
+      expect(result.success).toBe(true)
+    })
+
     it('accepts optional slug', () => {
       const result = createCategorySchema.safeParse({ name: 'Cameras' })
       expect(result.success).toBe(true)

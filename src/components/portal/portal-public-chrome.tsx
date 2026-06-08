@@ -15,6 +15,7 @@ import { PublicFooter } from '@/components/public/public-footer'
 import { WhatsAppCta } from '@/components/public/whatsapp-cta'
 import { PortalSidebar } from '@/components/layouts/portal-sidebar'
 import { PortalMobileNav } from '@/components/layouts/portal-mobile-nav'
+import { useLocale } from '@/hooks/use-locale'
 
 interface PortalPublicChromeProps {
   children: ReactNode
@@ -33,6 +34,7 @@ function hiddenRoutesFromFlags(flags: PublicFeatureFlags): Set<string> {
 }
 
 export function PortalPublicChrome({ children, flags }: PortalPublicChromeProps) {
+  const { t, dir } = useLocale()
   const hiddenRoutes = hiddenRoutesFromFlags(flags)
 
   return (
@@ -41,14 +43,14 @@ export function PortalPublicChrome({ children, flags }: PortalPublicChromeProps)
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-public-button focus:bg-brand-primary focus:px-4 focus:py-2 focus:text-white focus:outline-none"
       >
-        تخطي إلى المحتوى الرئيسي
+        {t('blog.skipToContent')}
       </Link>
       <PublicHeader hiddenRoutes={hiddenRoutes} />
       <main
         id="main-content"
         className="flex min-h-[calc(100vh-72px-1px)] flex-col bg-background pb-[64px] lg:pb-0"
       >
-        <div className="flex min-h-full w-full flex-1" dir="rtl">
+        <div className="flex min-h-full w-full flex-1" dir={dir}>
           <aside className="hidden lg:block">
             <PortalSidebar />
           </aside>

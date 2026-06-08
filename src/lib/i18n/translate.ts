@@ -6,6 +6,7 @@
 
 import type { Locale } from './locales'
 import { DEFAULT_LOCALE } from './locales'
+import { applyRuntimeMessageValues } from './runtime-message-values'
 
 // Message structure: nested objects with string values
 type Messages = Record<string, string | Record<string, unknown>>
@@ -44,8 +45,9 @@ async function loadMessages(locale: Locale): Promise<Messages> {
   }
 
   // Cache the loaded messages
-  messageCache.set(locale, messages)
-  return messages
+  const runtimeMessages = applyRuntimeMessageValues(messages)
+  messageCache.set(locale, runtimeMessages)
+  return runtimeMessages
 }
 
 /**
@@ -79,8 +81,9 @@ export function getMessages(locale: Locale): Messages {
         default:
           messages = require('@/messages/ar.json')
       }
-      messageCache.set(locale, messages)
-      return messages
+      const runtimeMessages = applyRuntimeMessageValues(messages)
+      messageCache.set(locale, runtimeMessages)
+      return runtimeMessages
     } catch (error) {
       console.error(`Failed to load messages for locale ${locale}:`, error)
     }
@@ -105,8 +108,9 @@ export function getMessages(locale: Locale): Messages {
       default:
         messages = require('@/messages/ar.json') as Messages
     }
-    messageCache.set(locale, messages)
-    return messages
+    const runtimeMessages = applyRuntimeMessageValues(messages)
+    messageCache.set(locale, runtimeMessages)
+    return runtimeMessages
   } catch (error) {
     console.error(`Failed to load messages for locale ${locale}:`, error)
     return {} as Messages

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { InvoicePdfService } from '@/lib/services/invoice-pdf.service'
+import { calculateRentalDays } from '@/lib/pricing/rental-days'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -64,10 +65,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   for (const be of booking.equipment) {
     const eq = be.equipment as { name?: string; model?: string; dailyPrice?: unknown }
-    const days = Math.max(
-      1,
-      Math.ceil((booking.endDate.getTime() - booking.startDate.getTime()) / 86400000)
-    )
+    const days = calculateRentalDays(booking.startDate, booking.endDate)
     const unitPrice = Number(eq?.dailyPrice ?? 0)
     items.push({
       description: eq?.name ?? eq?.model ?? 'Equipment',

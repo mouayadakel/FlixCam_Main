@@ -145,7 +145,7 @@ export default function NotificationTemplatesPage() {
       channel: '',
       subject: '',
       bodyText:
-        'Hello {{customerName}},\n\nYour booking {{bookingId}} is confirmed.\n\nTotal: {{totalAmount}}',
+        'Hello {{customerName}},\n\nYour booking {{bookingNumber}} is confirmed.\n\nPaid amount: {{amount}}',
       bodyHtml: '',
       isActive: true,
       language: 'en',
@@ -244,8 +244,13 @@ export default function NotificationTemplatesPage() {
         bodyText: form.bodyText.replace(/\{\{(\w+)\}\}/g, (_, k) => {
           const d: Record<string, string> = {
             customerName: 'Ahmed',
-            bookingId: 'BK-001',
+            bookingId: 'booking-1',
+            bookingNumber: 'BK-001',
             totalAmount: '500 SAR',
+            amount: '500 SAR',
+            startDate: '2026-06-01',
+            endDate: '2026-06-03',
+            confirmationUrl: 'https://flixcam.rent/booking/confirmation/booking-1',
           }
           return d[k] ?? `{{${k}}}`
         }),
@@ -275,8 +280,13 @@ export default function NotificationTemplatesPage() {
         bodyText: form.bodyText.replace(/\{\{(\w+)\}\}/g, (_, k) => {
           const d: Record<string, string> = {
             customerName: 'Ahmed',
-            bookingId: 'BK-001',
+            bookingId: 'booking-1',
+            bookingNumber: 'BK-001',
             totalAmount: '500 SAR',
+            amount: '500 SAR',
+            startDate: '2026-06-01',
+            endDate: '2026-06-03',
+            confirmationUrl: 'https://flixcam.rent/booking/confirmation/booking-1',
           }
           return d[k] ?? `{{${k}}}`
         }),
@@ -314,8 +324,9 @@ export default function NotificationTemplatesPage() {
         <CardHeader>
           <CardTitle>القوالب</CardTitle>
           <CardDescription>
-            فلتر حسب المشغّل والقناة. استخدم متغيرات في النص: {`{{customerName}}`}،{' '}
-            {`{{bookingId}}`}، {`{{totalAmount}}`}.
+            فلتر حسب المشغّل والقناة. من المتغيرات المتاحة: {`{{customerName}}`}،{' '}
+            {`{{bookingNumber}}`}، {`{{amount}}`}، {`{{startDate}}`}، {`{{endDate}}`}،{' '}
+            {`{{confirmationUrl}}`}.
           </CardDescription>
         </CardHeader>
         <CardContent>

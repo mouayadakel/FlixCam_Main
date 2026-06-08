@@ -10,6 +10,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { prisma } from '@/lib/db/prisma'
 import { isStructuredSpecifications, isFlatSpecifications } from '@/lib/types/specifications.types'
 import { convertFlatToStructured, validateSpecifications } from '@/lib/utils/specifications.utils'
+import { resolveTemplateName } from '@/lib/ai/spec-templates'
 
 // ============================================================================
 // Types
@@ -113,7 +114,9 @@ async function convertEquipmentSpecifications(
   }
 
   try {
-    const categoryHint = equipment.category.slug ?? equipment.category.name ?? ''
+    const categoryHint = resolveTemplateName(
+      equipment.category.slug ?? equipment.category.name ?? ''
+    )
     const flatSpecs = equipment.specifications as Record<string, unknown>
     const structuredSpecs = convertFlatToStructured(flatSpecs, categoryHint)
 

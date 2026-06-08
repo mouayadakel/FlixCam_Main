@@ -3,16 +3,29 @@
  */
 
 import { InvoicePolicy } from '@/lib/policies/invoice.policy'
+import { prisma } from '@/lib/db/prisma'
+
+jest.mock('@/lib/db/prisma', () => ({
+  prisma: {
+    invoice: { findFirst: jest.fn() },
+  },
+}))
 
 jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
   hasPermission: jest.fn(),
 }))
 
 const { hasPermission } = require('@/lib/auth/permissions')
+const mockInvoiceFindFirst = prisma.invoice.findFirst as jest.Mock
 
 describe('InvoicePolicy', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockInvoiceFindFirst.mockResolvedValue({
+      status: 'DRAFT',
+      lockedAt: null,
+    })
   })
 
   describe('canCreate', () => {

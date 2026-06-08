@@ -1,0 +1,11 @@
+{
+  "name": "FlixCam",
+  "short_name": "FlixCam",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "theme_color": "#8CC63F",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "start_url": "/"
+}

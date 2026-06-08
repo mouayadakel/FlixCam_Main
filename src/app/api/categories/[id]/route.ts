@@ -9,24 +9,37 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
 import { updateCategorySchema } from '@/lib/validators/category.validator'
 import { handleApiError } from '@/lib/utils/api-helpers'
-import { UnauthorizedError, NotFoundError } from '@/lib/errors'
+import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/lib/errors'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { cacheDelete } from '@/lib/cache'
 
 function shapeCategory(c: {
   id: string
   name: string
+  nameAr?: string | null
+  nameEn?: string | null
+  nameZh?: string | null
+  nameFr?: string | null
   slug: string
   description: string | null
   parentId: string | null
+  isActive: boolean
+  sortOrder: number
   createdAt: Date
   _count: { equipment: number; children: number }
 }) {
   return {
     id: c.id,
     name: c.name,
+    nameAr: c.nameAr ?? null,
+    nameEn: c.nameEn ?? null,
+    nameZh: c.nameZh ?? null,
+    nameFr: c.nameFr ?? null,
     slug: c.slug,
     description: c.description ?? null,
     parentId: c.parentId ?? null,
+    isActive: c.isActive,
+    sortOrder: c.sortOrder,
     equipmentCount: c._count.equipment,
     childrenCount: c._count.children,
     createdAt: c.createdAt.toISOString(),
@@ -47,9 +60,15 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       select: {
         id: true,
         name: true,
+        nameAr: true,
+        nameEn: true,
+        nameZh: true,
+        nameFr: true,
         slug: true,
         description: true,
         parentId: true,
+        isActive: true,
+        sortOrder: true,
         createdAt: true,
         _count: { select: { equipment: true, children: true } },
       },
@@ -68,7 +87,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
-    if (!session?.user) throw new UnauthorizedError()
+    if (!session?.user?.id) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, PERMISSIONS.CATEGORY_UPDATE))) {
+      throw new ForbiddenError('You do not have permission to update categories')
+    }
 
     const { id } = await params
     const body = await request.json()
@@ -95,12 +117,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const updateData: {
       name?: string
+      nameAr?: string | null
+      nameEn?: string | null
+      nameZh?: string | null
+      nameFr?: string | null
       slug?: string
       description?: string | null
       parentId?: string | null
+      isActive?: boolean
+      sortOrder?: number
       updatedBy?: string
     } = { updatedBy: session.user.id }
     if (parsed.name !== undefined) updateData.name = parsed.name.trim()
+    if (parsed.nameAr !== undefined) updateData.nameAr = parsed.nameAr?.trim() || null
+    if (parsed.nameEn !== undefined) updateData.nameEn = parsed.nameEn?.trim() || null
+    if (parsed.nameZh !== undefined) updateData.nameZh = parsed.nameZh?.trim() || null
+    if (parsed.nameFr !== undefined) updateData.nameFr = parsed.nameFr?.trim() || null
     if (parsed.slug !== undefined) {
       const newSlug = (parsed.slug.trim() || existing.slug)
         .toLowerCase()
@@ -119,6 +151,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (parsed.description !== undefined)
       updateData.description = parsed.description?.trim() ?? null
     if (parsed.parentId !== undefined) updateData.parentId = parsed.parentId ?? null
+    if (parsed.isActive !== undefined) updateData.isActive = parsed.isActive
+    if (parsed.sortOrder !== undefined) updateData.sortOrder = parsed.sortOrder
 
     const category = await prisma.category.update({
       where: { id },
@@ -126,9 +160,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       select: {
         id: true,
         name: true,
+        nameAr: true,
+        nameEn: true,
+        nameZh: true,
+        nameFr: true,
         slug: true,
         description: true,
         parentId: true,
+        isActive: true,
+        sortOrder: true,
         createdAt: true,
         _count: { select: { equipment: true, children: true } },
       },
@@ -150,7 +190,10 @@ export async function DELETE(
 ) {
   try {
     const session = await auth()
-    if (!session?.user) throw new UnauthorizedError()
+    if (!session?.user?.id) throw new UnauthorizedError()
+    if (!(await hasPermission(session.user.id, PERMISSIONS.CATEGORY_DELETE))) {
+      throw new ForbiddenError('You do not have permission to delete categories')
+    }
 
     const { id } = await params
     const existing = await prisma.category.findFirst({

@@ -192,11 +192,10 @@ async function main() {
       links: {
         createMany: {
           data: [
-            { textAr: 'حسابي', textEn: 'My Account', linkType: 'internal', url: '/portal', icon: 'user', order: 1, enabled: true },
-            { textAr: 'الطلبات', textEn: 'Orders', linkType: 'internal', url: '/portal', icon: 'shopping-bag', order: 2, enabled: true },
-            { textAr: 'المفضلة', textEn: 'Wishlist', linkType: 'internal', url: '/portal', icon: 'heart', order: 3, enabled: true },
+            { textAr: 'حسابي', textEn: 'My Account', linkType: 'internal', url: '/portal/dashboard', icon: 'user', order: 1, enabled: true },
+            { textAr: 'الطلبات', textEn: 'Orders', linkType: 'internal', url: '/portal/bookings', icon: 'shopping-bag', order: 2, enabled: true },
+            { textAr: 'المفضلة', textEn: 'Wishlist', linkType: 'internal', url: '/portal/saved', icon: 'heart', order: 3, enabled: true },
             { textAr: 'المدونة', textEn: 'Blog', linkType: 'internal', url: '/blog', icon: 'book', order: 4, enabled: true },
-            { textAr: 'الوظائف', textEn: 'Careers', linkType: 'internal', url: '/careers', icon: 'briefcase', order: 5, enabled: true },
           ],
         },
       },

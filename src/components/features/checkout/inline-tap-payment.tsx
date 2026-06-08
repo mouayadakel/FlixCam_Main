@@ -6,22 +6,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useLocale } from '@/hooks/use-locale'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useCheckoutStore } from '@/lib/stores/checkout.store'
 import { useCartStore } from '@/lib/stores/cart.store'
-
-const VAT_RATE = 0.15
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
 
 interface InlineTapPaymentProps {
   totalAmount: number
@@ -29,6 +20,14 @@ interface InlineTapPaymentProps {
   className?: string
   /** Selected payment gateway slug (e.g. tap, moyasar). Sent to create-session. */
   gateway?: string
+  disabled?: boolean
+  canSubmit?: boolean
+  blockedSubmitMessage?: string
+}
+
+function formatErrorWithRequestId(errorMessage: string, requestId?: string): string {
+  if (!requestId || typeof requestId !== 'string') return errorMessage
+  return `${errorMessage} (Ref: ${requestId})`
 }
 
 export function InlineTapPayment({
@@ -36,19 +35,39 @@ export function InlineTapPayment({
   onError,
   className,
   gateway,
+  disabled = false,
+  canSubmit = true,
+  blockedSubmitMessage,
 }: InlineTapPaymentProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
   const details = useCheckoutStore((s) => s.details)
   const formValues = useCheckoutStore((s) => s.formValues)
+  const smsConfirmationOptIn = useCheckoutStore((s) => s.smsConfirmationOptIn)
+  const whatsappConfirmationOptIn = useCheckoutStore((s) => s.whatsappConfirmationOptIn)
   const items = useCartStore((s) => s.items)
   const fetchCart = useCartStore((s) => s.fetchCart)
 
   const handleComplete = async () => {
-    if (!details || items.length === 0) {
+    if (!canSubmit) {
+      onError?.(blockedSubmitMessage || t('checkout.legalRequired'))
+      return
+    }
+
+    const guestEmail = (formValues.guest_checkout_email as string) ?? details?.email ?? ''
+    const contactName = details?.name || (formValues.receiver_name as string) || ''
+    const contactPhone = details?.phone || (formValues.receiver_phone as string) || ''
+
+    if (!contactName || !contactPhone || items.length === 0) {
       onError?.(t('checkout.completePrevious'))
       return
     }
+    if (!session?.user?.id && !guestEmail.trim()) {
+      onError?.(t('checkout.detailsEmail'))
+      return
+    }
+
     setLoading(true)
     onError?.('')
     try {
@@ -58,18 +77,18 @@ export function InlineTapPayment({
         body: JSON.stringify({
           ...(gateway && { gateway }),
           checkoutDetails: {
-            name: details.name,
-            email: details.email,
-            phone: details.phone,
+            name: contactName,
+            email: guestEmail,
+            phone: contactPhone,
           },
           receiver: {
-            name: (formValues.receiver_name as string) ?? details.name,
+            name: (formValues.receiver_name as string) ?? contactName,
             idNumber: formValues.receiver_id_number as string | undefined,
-            phone: (formValues.receiver_phone as string) ?? details.phone,
+            phone: (formValues.receiver_phone as string) ?? contactPhone,
             idPhotoUrl: formValues.receiver_id_photo as string | undefined,
           },
-          fulfillmentMethod: details.deliveryMethod,
-          deliveryAddress: details.deliveryAddress ?? undefined,
+          fulfillmentMethod: details?.deliveryMethod,
+          deliveryAddress: details?.deliveryAddress ?? undefined,
           deliveryLat: (formValues.delivery_address_map as { lat?: number })?.lat,
           deliveryLng: (formValues.delivery_address_map as { lng?: number })?.lng,
           preferredTimeSlot: formValues.preferred_time_slot as string | undefined,
@@ -80,12 +99,20 @@ export function InlineTapPayment({
                 relation: formValues.emergency_relation as string | undefined,
               }
             : undefined,
-          checkoutFormData: formValues,
+          checkoutFormData: {
+            ...formValues,
+            sms_confirmation_opt_in: smsConfirmationOptIn,
+            whatsapp_confirmation_opt_in: whatsappConfirmationOptIn,
+          },
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        onError?.(data.error || t('checkout.paymentSessionFailed'))
+        const baseMessage =
+          typeof data.error === 'string' && data.error.length > 0
+            ? data.error
+            : t('checkout.paymentSessionFailed')
+        onError?.(formatErrorWithRequestId(baseMessage, data.requestId))
         setLoading(false)
         return
       }
@@ -94,9 +121,9 @@ export function InlineTapPayment({
         window.location.href = data.redirectUrl
         return
       }
-      if (data.bookingId) {
+      if (data.bookingId && data.gateway === 'moyasar' && data.moyasar?.publishableKey) {
         useCheckoutStore.getState().clearCheckout()
-        window.location.href = `/booking/confirmation/${data.bookingId}`
+        window.location.href = `/checkout/moyasar/${data.bookingId}`
         return
       }
       onError?.(t('checkout.paymentSessionFailed'))
@@ -113,7 +140,7 @@ export function InlineTapPayment({
         type="button"
         size="lg"
         className="w-full font-semibold"
-        disabled={loading || !details || items.length === 0}
+        disabled={disabled || loading || !details || items.length === 0}
         onClick={handleComplete}
       >
         {loading ? (
@@ -122,7 +149,7 @@ export function InlineTapPayment({
             {t('checkout.processing')}
           </>
         ) : (
-          `${t('checkout.completeBooking')} – ${formatSar(totalAmount)}`
+          `${t('checkout.completeBooking')} – ${formatSar(totalAmount, locale)}`
         )}
       </Button>
     </div>

@@ -8,10 +8,11 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { AuditService } from './audit.service'
+import { CreditLimitService } from './credit-limit.service'
 import { EventBus } from '@/lib/events/event-bus'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
-import { hasPermission } from '@/lib/auth/permissions'
-import { UserRole } from '@prisma/client'
+import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
+import { UserRole, UserStatus } from '@prisma/client'
 import { hashPassword } from '@/lib/auth/auth-helpers'
 import type {
   Client,
@@ -26,6 +27,24 @@ import type {
  * Manages client users (users with DATA_ENTRY role or other client roles)
  */
 export class ClientService {
+  private static mapClientStatusToPrisma(status: ClientStatus): UserStatus {
+    const map: Record<ClientStatus, UserStatus> = {
+      active: UserStatus.ACTIVE,
+      suspended: UserStatus.LOCKED,
+      inactive: UserStatus.LOCKED,
+    }
+    return map[status] ?? UserStatus.ACTIVE
+  }
+
+  private static mapPrismaStatusToClient(status: string): ClientStatus {
+    const map: Record<string, ClientStatus> = {
+      ACTIVE: 'active',
+      SUSPENDED: 'suspended',
+      LOCKED: 'inactive',
+      PENDING: 'inactive',
+    }
+    return map[status] || 'active'
+  }
   /**
    * Create new client
    */
@@ -35,7 +54,7 @@ export class ClientService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Client> {
     // Check permission
-    const canCreate = await hasPermission(userId, 'client.create' as any)
+    const canCreate = await hasPermission(userId, PERMISSIONS.CLIENT_CREATE)
     if (!canCreate) {
       throw new ForbiddenError('You do not have permission to create clients')
     }
@@ -55,9 +74,8 @@ export class ClientService {
     // Hash password
     const passwordHash = await hashPassword(input.password)
 
-    // Create user with client role (default: CUSTOMER)
     const role = input.role || UserRole.CUSTOMER
-    const status = input.status || 'active'
+    const status = input.status ? this.mapClientStatusToPrisma(input.status) : 'ACTIVE'
 
     const user = await prisma.user.create({
       data: {
@@ -101,7 +119,7 @@ export class ClientService {
    */
   static async getById(id: string, userId: string): Promise<Client> {
     // Check permission
-    const canView = await hasPermission(userId, 'client.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.CLIENT_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view clients')
     }
@@ -143,7 +161,7 @@ export class ClientService {
     } = {}
   ): Promise<{ clients: Client[]; total: number; page: number; pageSize: number }> {
     // Check permission
-    const canView = await hasPermission(userId, 'client.read' as any)
+    const canView = await hasPermission(userId, PERMISSIONS.CLIENT_READ)
     if (!canView) {
       throw new ForbiddenError('You do not have permission to view clients')
     }
@@ -157,7 +175,7 @@ export class ClientService {
     }
 
     if (filters.status) {
-      where.status = filters.status
+      where.status = this.mapClientStatusToPrisma(filters.status)
     }
 
     if (filters.role) {
@@ -234,7 +252,7 @@ export class ClientService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<Client> {
     // Check permission
-    const canUpdate = await hasPermission(userId, 'client.update' as any)
+    const canUpdate = await hasPermission(userId, PERMISSIONS.CLIENT_UPDATE)
     if (!canUpdate) {
       throw new ForbiddenError('You do not have permission to update clients')
     }
@@ -256,8 +274,11 @@ export class ClientService {
 
     if (input.name !== undefined) updateData.name = input.name
     if (input.phone !== undefined) updateData.phone = input.phone
-    if (input.status !== undefined) updateData.status = input.status
+    if (input.status !== undefined) updateData.status = this.mapClientStatusToPrisma(input.status)
     if (input.role !== undefined) updateData.role = input.role
+    if (input.creditLimit !== undefined) {
+      updateData.creditLimit = CreditLimitService.parseCreditLimit(input.creditLimit)
+    }
 
     const updated = await prisma.user.update({
       where: { id },
@@ -296,7 +317,7 @@ export class ClientService {
     auditContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<void> {
     // Check permission
-    const canDelete = await hasPermission(userId, 'client.delete' as any)
+    const canDelete = await hasPermission(userId, PERMISSIONS.CLIENT_DELETE)
     if (!canDelete) {
       throw new ForbiddenError('You do not have permission to delete clients')
     }
@@ -383,11 +404,15 @@ export class ClientService {
       name: user.name,
       phone: user.phone,
       role: user.role,
-      status: user.status as ClientStatus,
+      status: this.mapPrismaStatusToClient(user.status),
       twoFactorEnabled: user.twoFactorEnabled,
       verificationStatus: user.verificationStatus ?? undefined,
       segmentId: user.segmentId ?? undefined,
       segmentName: user.segment?.name ?? undefined,
+      isBlacklisted: user.isBlacklisted ?? false,
+      blacklistReason: user.blacklistReason ?? null,
+      blacklistedAt: user.blacklistedAt ?? null,
+      creditLimit: user.creditLimit != null ? Number(user.creditLimit) : null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }

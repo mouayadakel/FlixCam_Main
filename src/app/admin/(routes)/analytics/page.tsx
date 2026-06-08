@@ -11,6 +11,7 @@ import Link from 'next/link'
 import {
   BarChart3,
   TrendingUp,
+  TrendingDown,
   DollarSign,
   Calendar,
   Users,
@@ -112,6 +113,21 @@ interface CustomerInsights {
   acquisition: Array<{ month: string; count: number }>
 }
 
+interface PaymentFunnelData {
+  hours: number
+  total: number
+  success: number
+  failed: number
+  processing: number
+  pending: number
+  refunded: number
+  successRate: number
+  queue: {
+    pending: number
+    failed: number
+  }
+}
+
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'معلق',
   CONFIRMED: 'مؤكد',
@@ -152,6 +168,7 @@ export default function AnalyticsPage() {
   const [utilization, setUtilization] = useState<UtilizationData | null>(null)
   const [bookingAnalytics, setBookingAnalytics] = useState<BookingAnalytics | null>(null)
   const [customerInsights, setCustomerInsights] = useState<CustomerInsights | null>(null)
+  const [paymentFunnel, setPaymentFunnel] = useState<PaymentFunnelData | null>(null)
   const [loading, setLoading] = useState(true)
   const [trendsDays, setTrendsDays] = useState('30')
   const [utilDays, setUtilDays] = useState('30')
@@ -213,6 +230,17 @@ export default function AnalyticsPage() {
     }
   }, [customerDays])
 
+  const loadPaymentFunnel = useCallback(async () => {
+    try {
+      const res = await fetch('/api/analytics/payment-funnel?hours=24')
+      if (res.ok) {
+        setPaymentFunnel(await res.json())
+      }
+    } catch {
+      /* non-critical */
+    }
+  }, [])
+
   useEffect(() => {
     const run = async () => {
       setLoading(true)
@@ -222,11 +250,12 @@ export default function AnalyticsPage() {
         loadUtilization(),
         loadBookingAnalytics(),
         loadCustomerInsights(),
+        loadPaymentFunnel(),
       ])
       setLoading(false)
     }
     run()
-  }, [loadExecutive, loadTrends, loadUtilization, loadBookingAnalytics, loadCustomerInsights])
+  }, [loadExecutive, loadTrends, loadUtilization, loadBookingAnalytics, loadCustomerInsights, loadPaymentFunnel])
 
   useEffect(() => {
     if (!loading) loadTrends()
@@ -252,6 +281,7 @@ export default function AnalyticsPage() {
       loadUtilization(),
       loadBookingAnalytics(),
       loadCustomerInsights(),
+      loadPaymentFunnel(),
     ]).finally(() => setLoading(false))
   }
 
@@ -354,6 +384,59 @@ export default function AnalyticsPage() {
               <p className="text-xs text-muted-foreground">
                 نشط هذا الشهر: {executive.customers.active} · جديد:{' '}
                 {executive.customers.newThisMonth}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {paymentFunnel && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">نجاح المدفوعات (24 ساعة)</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">{paymentFunnel.successRate}%</p>
+              <p className="text-xs text-muted-foreground">
+                {paymentFunnel.success}/{paymentFunnel.total} عملية
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">مدفوعات فاشلة</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-red-600">{paymentFunnel.failed}</p>
+              <p className="text-xs text-muted-foreground">آخر 24 ساعة</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">قيد المعالجة</CardTitle>
+              <RefreshCw className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-blue-600">
+                {paymentFunnel.processing + paymentFunnel.pending}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                معالجة: {paymentFunnel.processing} · انتظار: {paymentFunnel.pending}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">طابور ويب هوك Moyasar</CardTitle>
+              <BarChart3 className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{paymentFunnel.queue.pending}</p>
+              <p className="text-xs text-muted-foreground">
+                Pending: {paymentFunnel.queue.pending} · Failed: {paymentFunnel.queue.failed}
               </p>
             </CardContent>
           </Card>
@@ -813,7 +896,7 @@ export default function AnalyticsPage() {
                               <TableCell className="font-medium">{i + 1}</TableCell>
                               <TableCell>
                                 <div>{c.name}</div>
-                                <div className="text-xs text-muted-foreground" dir="ltr">
+                                <div className="text-xs text-muted-foreground" dir="rtl">
                                   {c.email}
                                 </div>
                               </TableCell>

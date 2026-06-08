@@ -15,6 +15,7 @@ import {
   Aperture,
   Speaker,
   Grip,
+  Users,
 } from 'lucide-react'
 
 export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
@@ -29,6 +30,7 @@ export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   sound: Mic2,
   microphone: Mic2,
   grip: Grip,
+  crew: Users,
   film: Film,
   video: Video,
   monitor: Monitor,

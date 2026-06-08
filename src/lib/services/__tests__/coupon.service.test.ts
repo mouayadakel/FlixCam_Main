@@ -8,19 +8,30 @@ import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 
 jest.mock('@/lib/db/prisma', () => ({
   prisma: {
-    coupon: { findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), update: jest.fn(), count: jest.fn() },
+    coupon: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+      count: jest.fn(),
+    },
   },
 }))
 
 jest.mock('@/lib/services/audit.service', () => ({ AuditService: { log: jest.fn().mockResolvedValue(undefined) } }))
 jest.mock('@/lib/events/event-bus', () => ({ EventBus: { emit: jest.fn().mockResolvedValue(undefined) } }))
 const mockHasPermission = jest.fn().mockResolvedValue(true)
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: (...args: unknown[]) => mockHasPermission(...args) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: (...args: unknown[]) => mockHasPermission(...args),
+}))
 
 const mockFindFirst = prisma.coupon.findFirst as jest.Mock
 const mockCreate = prisma.coupon.create as jest.Mock
 const mockFindMany = prisma.coupon.findMany as jest.Mock
 const mockUpdate = prisma.coupon.update as jest.Mock
+const mockUpdateMany = prisma.coupon.updateMany as jest.Mock
 
 describe('CouponService', () => {
   beforeEach(() => {
@@ -386,7 +397,7 @@ describe('CouponService', () => {
       })
       const result = await CouponService.validate('SAVE10', 1000)
       expect(result.valid).toBe(false)
-      expect(result.error).toBe('الكوبون منتهي الصلاحية')
+      expect(result.error).toBe('الكوبون منتهي الصلاحية | Coupon is expired')
     })
 
     it('returns invalid when validFrom > now (الكوبون غير فعال بعد)', async () => {
@@ -401,7 +412,7 @@ describe('CouponService', () => {
       })
       const result = await CouponService.validate('SAVE10', 1000)
       expect(result.valid).toBe(false)
-      expect(result.error).toBe('الكوبون غير فعال بعد')
+      expect(result.error).toBe('الكوبون غير فعال بعد | Coupon is not active yet')
     })
 
     it('returns invalid when status is not active', async () => {
@@ -526,11 +537,11 @@ describe('CouponService', () => {
           validUntil: new Date(Date.now() + 86400000),
         })
         .mockResolvedValueOnce({ id: 'c1', usedCount: 2 })
-      mockUpdate.mockResolvedValue({})
+      mockUpdateMany.mockResolvedValue({ count: 1 })
       await CouponService.apply('SAVE10', 'u1')
-      expect(mockUpdate).toHaveBeenCalledWith(
+      expect(mockUpdateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ usedCount: 3 }),
+          data: expect.objectContaining({ usedCount: { increment: 1 } }),
         })
       )
     })

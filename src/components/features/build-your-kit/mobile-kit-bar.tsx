@@ -15,27 +15,19 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ChevronUp } from 'lucide-react'
-
-const VAT_RATE = 0.15
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 export function MobileKitBar() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
   const durationDays = useKitWizardStore((s) => s.durationDays)
   const setView = useKitWizardStore((s) => s.setView)
 
   const selectedCount = getKitWizardSelectedCount({ selectedEquipment })
   const totalAmount = getKitWizardTotalAmount({ selectedEquipment, durationDays })
-  const vatAmount = Math.round(totalAmount * VAT_RATE * 100) / 100
+  const vatAmount = Math.round(totalAmount * vatRate * 100) / 100
   const totalWithVat = totalAmount + vatAmount
   const totalUnits = Object.values(selectedEquipment).reduce((sum, { qty }) => sum + qty, 0)
 
@@ -65,7 +57,7 @@ export function MobileKitBar() {
           >
             <div className="text-start">
               <p className="text-sm font-medium text-text-heading">
-                {totalUnits} {t('kit.items')} · {formatSar(totalWithVat)}
+                {totalUnits} {t('kit.items')} · {formatSar(totalWithVat, locale)}
               </p>
               <p className="text-xs text-text-muted">
                 {t('kit.duration')}: {durationDays}{' '}
@@ -85,7 +77,7 @@ export function MobileKitBar() {
                 <li key={id} className="flex items-center justify-between gap-2 text-sm">
                   <span className="min-w-0 truncate text-text-heading">{item.model ?? id}</span>
                   <span className="shrink-0 text-text-muted">
-                    {item.qty} × {formatSar(item.dailyPrice)}/day
+                    {item.qty} × {formatSar(item.dailyPrice, locale)}/day
                   </span>
                 </li>
               ))}
@@ -93,15 +85,15 @@ export function MobileKitBar() {
             <div className="space-y-1 border-t border-border-light pt-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-muted">{t('kit.subtotal')}</span>
-                <span>{formatSar(totalAmount)}</span>
+                <span>{formatSar(totalAmount, locale)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">{t('kit.vat')}</span>
-                <span>{formatSar(vatAmount)}</span>
+                <span>{formatSar(vatAmount, locale)}</span>
               </div>
               <div className="flex justify-between border-t border-border-light pt-2 font-semibold">
                 <span>{t('kit.total')}</span>
-                <span>{formatSar(totalWithVat)}</span>
+                <span>{formatSar(totalWithVat, locale)}</span>
               </div>
             </div>
             <Button

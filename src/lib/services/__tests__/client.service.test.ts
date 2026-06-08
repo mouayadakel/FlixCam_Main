@@ -15,7 +15,10 @@ jest.mock('@/lib/db/prisma', () => ({
 
 jest.mock('@/lib/services/audit.service', () => ({ AuditService: { log: jest.fn().mockResolvedValue(undefined) } }))
 jest.mock('@/lib/events/event-bus', () => ({ EventBus: { emit: jest.fn().mockResolvedValue(undefined) } }))
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: jest.fn().mockResolvedValue(true) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: jest.fn().mockResolvedValue(true),
+}))
 jest.mock('@/lib/auth/auth-helpers', () => ({ hashPassword: jest.fn().mockResolvedValue('hashed') }))
 
 const mockUserFindFirst = prisma.user.findFirst as jest.Mock
@@ -62,8 +65,8 @@ describe('ClientService', () => {
           data: expect.objectContaining({
             email: 'c@test.com',
             name: 'Client',
-            role: UserRole.DATA_ENTRY,
-            status: 'active',
+            role: UserRole.CUSTOMER,
+            status: 'ACTIVE',
           }),
         })
       )
@@ -83,15 +86,15 @@ describe('ClientService', () => {
       ).rejects.toThrow('Email already exists')
     })
 
-    it('uses default role DATA_ENTRY and status active when not provided', async () => {
+    it('uses default role CUSTOMER and status ACTIVE when not provided', async () => {
       mockUserFindFirst.mockResolvedValue(null)
       mockUserCreate.mockResolvedValue({ ...sampleUser })
       await ClientService.create({ email: 'c@test.com', password: 'x' }, 'admin-1')
       expect(mockUserCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            role: UserRole.DATA_ENTRY,
-            status: 'active',
+            role: UserRole.CUSTOMER,
+            status: 'ACTIVE',
           }),
         })
       )
@@ -108,7 +111,7 @@ describe('ClientService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             role: UserRole.ADMIN,
-            status: 'suspended',
+            status: 'LOCKED',
           }),
         })
       )
@@ -208,7 +211,7 @@ describe('ClientService', () => {
       await ClientService.list('admin-1', { status: 'suspended' })
       expect(mockUserFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ status: 'suspended' }),
+          where: expect.objectContaining({ status: 'LOCKED' }),
         })
       )
     })
@@ -319,7 +322,7 @@ describe('ClientService', () => {
       expect(mockUserUpdate).toHaveBeenCalledWith({
         where: { id: 'u1' },
         data: expect.objectContaining({
-          status: 'suspended',
+          status: 'LOCKED',
           updatedBy: 'admin-1',
         }),
       })

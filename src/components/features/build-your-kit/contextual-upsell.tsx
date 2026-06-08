@@ -14,17 +14,9 @@ import {
 } from '@/lib/stores/kit-wizard.store'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatSar } from '@/lib/utils/format.utils'
 
 const FREE_DELIVERY_THRESHOLD_SAR = 2000
-
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 type UpsellRule = {
   id: string
@@ -35,7 +27,7 @@ type UpsellRule = {
 }
 
 export function ContextualUpsell() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const selectedEquipment = useKitWizardStore((s) => s.selectedEquipment)
   const durationDays = useKitWizardStore((s) => s.durationDays)
   const categorySteps = useKitWizardStore((s) => s.categorySteps)
@@ -99,7 +91,7 @@ export function ContextualUpsell() {
     rules.push({
       id: 'bundle-proximity',
       messageKey: 'kit.upsellBundleProximity',
-      messagePayload: { amount: formatSar(gapToFreeDelivery) },
+      messagePayload: { amount: formatSar(gapToFreeDelivery, locale) },
       variant: 'success',
     })
   }

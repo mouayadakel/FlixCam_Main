@@ -7,15 +7,21 @@
 import { theme } from './theme'
 
 export const siteConfig = {
-  /** Contact information – replace via NEXT_PUBLIC_CONTACT_* in production */
+  /** Contact information from NEXT_PUBLIC_* env (see .env.example) */
   contact: {
-    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? '+966 11 XXX XXXX',
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'contact@flixcam.rent',
+    phone:
+      process.env.NEXT_PUBLIC_BUSINESS_PHONE ??
+      process.env.NEXT_PUBLIC_CONTACT_PHONE ??
+      '',
+    email:
+      process.env.NEXT_PUBLIC_BUSINESS_EMAIL ??
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL ??
+      'info@flixcam.rent',
     /** WhatsApp number (E.164 without +) for wa.me links */
-    whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '966500000000',
-    instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://instagram.com',
-    tiktokUrl: process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://tiktok.com',
-    linkedinUrl: process.env.NEXT_PUBLIC_LINKEDIN_URL ?? 'https://linkedin.com',
+    whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '',
+    instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? '',
+    tiktokUrl: process.env.NEXT_PUBLIC_TIKTOK_URL ?? '',
+    linkedinUrl: process.env.NEXT_PUBLIC_LINKEDIN_URL ?? '',
   },
   /** Brand name and tagline from theme (FLIXCAM) */
   brandName: theme.brandName,

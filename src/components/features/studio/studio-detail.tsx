@@ -4,7 +4,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { StudioHeader } from './studio-header'
 import { StudioGallery } from './studio-gallery'
@@ -22,13 +22,37 @@ import { useLocale } from '@/hooks/use-locale'
 import { CalendarDays, Users } from 'lucide-react'
 import type { StudioPublicData } from '@/lib/types/studio.types'
 import { trackStudioEvent } from '@/lib/analytics'
+import { useWhatsAppPrefillStore } from '@/lib/stores/whatsapp-prefill.store'
 
 interface StudioDetailProps {
   studio: StudioPublicData
+  sharePageUrl: string
+  shareImageUrl?: string
 }
 
-export function StudioDetail({ studio }: StudioDetailProps) {
+export function StudioDetail({ studio, sharePageUrl, shareImageUrl }: StudioDetailProps) {
   const { t } = useLocale()
+  const setWaOverride = useWhatsAppPrefillStore((s) => s.setMessageOverride)
+  useEffect(() => {
+    const msg = `Hi, I'd like to book the ${studio.name} studio`
+    setWaOverride(msg)
+
+    import('@/lib/analytics/track-event').then(({ trackMarketingEvent }) => {
+      trackMarketingEvent({
+        eventType: 'ViewContent',
+        entityType: 'Studio',
+        entityId: studio.id,
+        value: studio.hourlyRate,
+        price: studio.hourlyRate,
+        quantity: 1,
+        itemName: studio.name,
+        itemCategory: 'Studio',
+      })
+    })
+
+    return () => setWaOverride(null)
+  }, [studio.name, studio.id, studio.hourlyRate, setWaOverride])
+
   const hasPackages = studio.packages.length > 0
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
     hasPackages
@@ -60,7 +84,11 @@ export function StudioDetail({ studio }: StudioDetailProps) {
 
   return (
     <div className="space-y-8" dir="rtl">
-      <StudioHeader studio={studio} />
+      <StudioHeader
+        studio={studio}
+        sharePageUrl={sharePageUrl}
+        shareImageUrl={shareImageUrl}
+      />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">

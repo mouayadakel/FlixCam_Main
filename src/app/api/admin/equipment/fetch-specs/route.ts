@@ -23,6 +23,32 @@ const bodySchema = z.object({
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+function createStableSpecKey(
+  rawKey: string | undefined,
+  rawLabel: string | undefined,
+  groupIndex: number,
+  specIndex: number,
+  usedKeys: Set<string>
+): string {
+  const candidate = (rawKey || rawLabel || `spec-${groupIndex + 1}-${specIndex + 1}`)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+  const baseKey = candidate || `spec_${groupIndex + 1}_${specIndex + 1}`
+  let stableKey = baseKey
+  let suffix = 2
+
+  while (usedKeys.has(stableKey)) {
+    stableKey = `${baseKey}_${suffix}`
+    suffix += 1
+  }
+
+  usedKeys.add(stableKey)
+  return stableKey
+}
+
 export async function POST(request: NextRequest) {
   const rateLimit = rateLimitAPI(request)
   if (!rateLimit.allowed) {
@@ -60,15 +86,16 @@ export async function POST(request: NextRequest) {
       categoryHint
     )
 
+    const usedKeys = new Set<string>()
     const specifications: StructuredSpecifications = {
       highlights: extracted.highlights,
       quickSpecs: extracted.quickSpecs,
       groups: extracted.groups.map((g, i) => ({
         ...g,
         priority: g.priority ?? i + 1,
-        specs: (g.specs ?? []).map((s) => ({
+        specs: (g.specs ?? []).map((s, specIndex) => ({
           ...s,
-          key: s.key || `spec_${Math.random().toString(36).slice(2, 8)}`,
+          key: createStableSpecKey(s.key, s.label, i, specIndex, usedKeys),
           label: s.label || '—',
           value: s.value ?? '—',
         })),

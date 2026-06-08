@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { useLocale } from '@/hooks/use-locale'
 import { GoogleMapPicker } from '../google-map-picker'
+import { UploadCloud } from 'lucide-react'
 
 export interface CheckoutFormFieldConfig {
   id: string
@@ -44,6 +45,10 @@ interface BaseFieldProps {
   error?: string
 }
 
+const LABEL_CLASS = 'mb-2 block text-sm font-medium text-[#4B5563]'
+const CONTROL_CLASS =
+  'h-12 rounded-xl border border-[#E5E7EB] bg-white px-4 text-base text-gray-900 shadow-sm placeholder:text-[#9CA3AF] focus-visible:ring-2 focus-visible:ring-[#7C3AED]/30'
+
 function useLabel(field: CheckoutFormFieldConfig): string {
   const locale = useLocale()
   const lang = locale.locale?.startsWith('ar') ? 'ar' : 'en'
@@ -62,7 +67,7 @@ export function TextField({ field, value, onChange, error }: BaseFieldProps) {
   const placeholder = usePlaceholder(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -71,7 +76,8 @@ export function TextField({ field, value, onChange, error }: BaseFieldProps) {
         value={(value as string) ?? ''}
         onChange={(e) => onChange(field.fieldKey, e.target.value)}
         placeholder={placeholder}
-        className={error ? 'border-destructive' : undefined}
+        autoComplete={field.fieldKey === 'receiver_name' ? 'name' : undefined}
+        className={`${CONTROL_CLASS} ${error ? 'border-destructive' : ''}`}
       />
       {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
@@ -83,7 +89,7 @@ export function NumberField({ field, value, onChange, error }: BaseFieldProps) {
   const placeholder = usePlaceholder(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -92,7 +98,7 @@ export function NumberField({ field, value, onChange, error }: BaseFieldProps) {
         value={(value as number) ?? ''}
         onChange={(e) => onChange(field.fieldKey, e.target.valueAsNumber)}
         placeholder={placeholder}
-        className={error ? 'border-destructive' : undefined}
+        className={`${CONTROL_CLASS} ${error ? 'border-destructive' : ''}`}
       />
       {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
@@ -104,7 +110,7 @@ export function PhoneField({ field, value, onChange, error }: BaseFieldProps) {
   const placeholder = usePlaceholder(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -113,7 +119,8 @@ export function PhoneField({ field, value, onChange, error }: BaseFieldProps) {
         value={(value as string) ?? ''}
         onChange={(e) => onChange(field.fieldKey, e.target.value)}
         placeholder={placeholder}
-        className={error ? 'border-destructive' : undefined}
+        autoComplete="tel"
+        className={`${CONTROL_CLASS} ${error ? 'border-destructive' : ''}`}
       />
       {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
@@ -125,7 +132,7 @@ export function EmailField({ field, value, onChange, error }: BaseFieldProps) {
   const placeholder = usePlaceholder(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -134,7 +141,8 @@ export function EmailField({ field, value, onChange, error }: BaseFieldProps) {
         value={(value as string) ?? ''}
         onChange={(e) => onChange(field.fieldKey, e.target.value)}
         placeholder={placeholder}
-        className={error ? 'border-destructive' : undefined}
+        autoComplete="email"
+        className={`${CONTROL_CLASS} ${error ? 'border-destructive' : ''}`}
       />
       {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
@@ -150,7 +158,7 @@ export function CheckboxField({ field, value, onChange, error }: BaseFieldProps)
           checked={!!value}
           onCheckedChange={(v) => onChange(field.fieldKey, !!v)}
         />
-        <Label className="font-normal">
+        <Label className="font-normal text-sm text-[#4B5563]">
           {label}
           {field.isRequired && ' *'}
         </Label>
@@ -165,7 +173,7 @@ export function TextareaField({ field, value, onChange, error }: BaseFieldProps)
   const placeholder = usePlaceholder(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -174,7 +182,7 @@ export function TextareaField({ field, value, onChange, error }: BaseFieldProps)
         onChange={(e) => onChange(field.fieldKey, e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className={error ? 'border-destructive' : undefined}
+        className={`min-h-[110px] rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-[#9CA3AF] focus-visible:ring-2 focus-visible:ring-[#7C3AED]/30 ${error ? 'border-destructive' : ''}`}
       />
       {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
@@ -188,7 +196,7 @@ export function DropdownField({ field, value, onChange, error }: BaseFieldProps)
   const lang = locale.locale?.startsWith('ar') ? 'ar' : 'en'
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -196,7 +204,7 @@ export function DropdownField({ field, value, onChange, error }: BaseFieldProps)
         value={(value as string) ?? ''}
         onValueChange={(v) => onChange(field.fieldKey, v)}
       >
-        <SelectTrigger className={error ? 'border-destructive' : undefined}>
+        <SelectTrigger className={`${CONTROL_CLASS} ${error ? 'border-destructive' : ''}`}>
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
         <SelectContent>
@@ -220,7 +228,7 @@ export function RadioField({ field, value, onChange, error }: BaseFieldProps) {
   const current = (value as string) ?? ''
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -229,7 +237,7 @@ export function RadioField({ field, value, onChange, error }: BaseFieldProps) {
           <label
             key={i}
             htmlFor={`${field.fieldKey}-${i}`}
-            className="flex cursor-pointer items-center gap-2 font-normal"
+            className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 font-normal text-[#4B5563] shadow-sm"
           >
             <input
               id={`${field.fieldKey}-${i}`}
@@ -296,10 +304,13 @@ export function FileField({ field, value, onChange, error }: BaseFieldProps) {
 
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
+      {field.fieldKey === 'receiver_id_photo' && (
+        <p className="text-sm text-[#6B7280]">(صوره الهويه امامي)</p>
+      )}
       <Input
         ref={inputRef}
         type="file"
@@ -315,7 +326,13 @@ export function FileField({ field, value, onChange, error }: BaseFieldProps) {
             alt="Preview"
             className="h-20 w-20 rounded object-cover border"
           />
-          <Button type="button" variant="outline" size="sm" onClick={handleChange}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleChange}
+            className="rounded-xl border-[#E5E7EB] bg-white px-4 text-[#4B5563] hover:bg-[#F9FAFB]"
+          >
             Change
           </Button>
         </div>
@@ -325,6 +342,7 @@ export function FileField({ field, value, onChange, error }: BaseFieldProps) {
           variant="outline"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
+          className="h-12 rounded-xl border-[#E5E7EB] bg-white px-4 text-[#4B5563] shadow-sm hover:bg-[#F9FAFB]"
         >
           {uploading ? (
             <>
@@ -332,7 +350,10 @@ export function FileField({ field, value, onChange, error }: BaseFieldProps) {
               Uploading...
             </>
           ) : (
-            'Upload ID photo'
+            <>
+              <UploadCloud className="me-2 h-4 w-4" />
+              رفع صورة الهوية
+            </>
           )}
         </Button>
       )}
@@ -348,7 +369,7 @@ export function DateField({ field, value, onChange, error }: BaseFieldProps) {
   const str = v ? ((v as unknown) instanceof Date ? (v as Date).toISOString().slice(0, 10) : String(v).slice(0, 10)) : ''
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>
@@ -387,7 +408,7 @@ export function SignatureField({ field, value, onChange, error }: BaseFieldProps
   const label = useLabel(field)
   return (
     <div className="space-y-2">
-      <Label>
+      <Label className={LABEL_CLASS}>
         {label}
         {field.isRequired && ' *'}
       </Label>

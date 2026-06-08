@@ -30,12 +30,14 @@ export interface HomeTrustSignalsProps {
   equipmentCount: number
   rentalsCount?: number
   yearFounded?: number
+  showHowItWorks?: boolean
 }
 
 export function HomeTrustSignals({
   equipmentCount,
   rentalsCount = 0,
   yearFounded = 2020,
+  showHowItWorks = true,
 }: HomeTrustSignalsProps) {
   const { t } = useLocale()
 
@@ -95,30 +97,31 @@ export function HomeTrustSignals({
           ))}
         </div>
 
-        {/* How It Works – vertical steps on mobile, row on desktop */}
-        <div className="mt-10 border-t border-border-light/50 pt-10">
-          <h3 className="mb-6 text-center text-lg font-semibold text-text-heading">
-            {t('home.howItWorksTitle')}
-          </h3>
-          <div className="relative flex flex-col gap-4 md:flex-row md:flex-wrap md:justify-center md:gap-4">
-            {/* Vertical connecting line on mobile (start side for RTL) */}
-            <span
-              className="absolute bottom-4 start-[13px] top-4 w-px bg-border-light/80 md:hidden rtl:end-[13px] rtl:start-auto"
-              aria-hidden
-            />
-            {HOW_IT_WORKS_STEPS.map((step, i) => (
-              <div
-                key={step.key}
-                className="relative flex min-h-[48px] items-center gap-3 rounded-xl border border-border-light/60 bg-surface-light/50 px-4 py-3 ps-10 md:py-2.5 md:ps-4 rtl:pe-10 rtl:ps-4"
-              >
-                <span className="absolute start-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white md:relative md:start-auto md:h-8 md:w-8 rtl:end-2 rtl:start-auto rtl:md:end-auto">
-                  {i + 1}
-                </span>
-                <span className="text-sm font-medium text-text-heading">{t(step.key)}</span>
-              </div>
-            ))}
+        {showHowItWorks && (
+          <div className="mt-10 border-t border-border-light/50 pt-10">
+            <h3 className="mb-6 text-center text-lg font-semibold text-text-heading">
+              {t('home.howItWorksTitle')}
+            </h3>
+            <div className="relative flex flex-col gap-4 md:flex-row md:flex-wrap md:justify-center md:gap-4">
+              {/* Vertical connecting line on mobile (start side for RTL) */}
+              <span
+                className="absolute bottom-4 start-[13px] top-4 w-px bg-border-light/80 md:hidden rtl:end-[13px] rtl:start-auto"
+                aria-hidden
+              />
+              {HOW_IT_WORKS_STEPS.map((step, i) => (
+                <div
+                  key={step.key}
+                  className="relative flex min-h-[48px] items-center gap-3 rounded-xl border border-border-light/60 bg-surface-light/50 px-4 py-3 ps-10 md:py-2.5 md:ps-4 rtl:pe-10 rtl:ps-4"
+                >
+                  <span className="absolute start-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white md:relative md:start-auto md:h-8 md:w-8 rtl:end-2 rtl:start-auto rtl:md:end-auto">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm font-medium text-text-heading">{t(step.key)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </PublicContainer>
     </section>
   )

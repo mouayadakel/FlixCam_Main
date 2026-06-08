@@ -21,6 +21,7 @@ export async function GET() {
     }
 
     const branches = await prisma.branch.findMany({
+      where: { deletedAt: null },
       orderBy: { name: 'asc' },
     })
 

@@ -63,12 +63,10 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
               src={failedImageIds.has(m.id) ? EQUIPMENT_PLACEHOLDER_IMAGE : m.url}
               alt={`${alt} - ${i + 1}`}
               fill
-              className="object-cover"
+              className="object-contain bg-surface-light transition-opacity duration-300"
+              style={{ objectFit: 'contain' }}
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={i === 0}
-              unoptimized={
-                failedImageIds.has(m.id) ? false : isExternalImageUrl(m.url)
-              }
               onError={() =>
                 setFailedImageIds((prev) => {
                   if (prev.has(m.id)) return prev
@@ -128,9 +126,9 @@ export function EquipmentGallery({ media, alt }: EquipmentGalleryProps) {
                 src={failedImageIds.has(m.id) ? EQUIPMENT_PLACEHOLDER_IMAGE : m.url}
                 alt={`${alt} - thumbnail ${i + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain bg-surface-light"
+                style={{ objectFit: 'contain' }}
                 sizes="92px"
-                unoptimized={failedImageIds.has(m.id) ? false : isExternalImageUrl(m.url)}
                 onError={() =>
                   setFailedImageIds((prev) => {
                     if (prev.has(m.id)) return prev

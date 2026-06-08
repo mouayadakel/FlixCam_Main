@@ -20,7 +20,15 @@ jest.mock('@/lib/db/prisma', () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
     },
+    booking: {
+      aggregate: jest.fn().mockResolvedValue({ _sum: { totalAmount: null } }),
+    },
+    event: { create: jest.fn().mockResolvedValue({ id: 'evt_1' }) },
   },
+}))
+
+jest.mock('@/lib/events/event-bus', () => ({
+  EventBus: { emit: jest.fn().mockResolvedValue(undefined) },
 }))
 
 jest.mock('bcryptjs', () => ({

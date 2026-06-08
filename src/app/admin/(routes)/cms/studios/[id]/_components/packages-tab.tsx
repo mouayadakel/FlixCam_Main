@@ -38,10 +38,19 @@ interface StudioPackage {
 
 const MAX_PACKAGES = 15
 
+/**
+ * Coerce API/prisma-style values to a number. JSON responses encode Decimal as string;
+ * only handling number + in-memory Prisma Decimal caused price to read as 0 in the UI.
+ */
 function toNum(v: unknown): number {
-  if (typeof v === 'number') return v
-  if (v && typeof v === 'object' && 'toNumber' in v)
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = parseFloat(v)
+    return Number.isFinite(n) ? n : 0
+  }
+  if (v && typeof v === 'object' && 'toNumber' in v) {
     return (v as { toNumber: () => number }).toNumber()
+  }
   return 0
 }
 
@@ -281,7 +290,7 @@ export function CmsStudioPackagesTab({ studioId, onRefresh }: PackagesTabProps) 
                   id="pkg-nameZh"
                   value={form.nameZh}
                   onChange={(e) => setForm((f) => ({ ...f, nameZh: e.target.value }))}
-                  dir="ltr"
+                  dir="rtl"
                 />
               </div>
               <div className="space-y-2">

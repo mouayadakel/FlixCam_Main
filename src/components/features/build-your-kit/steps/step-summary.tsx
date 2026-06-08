@@ -33,21 +33,14 @@ import {
   KitPrebuiltComparison,
   type PrebuiltKitMatch,
 } from '@/components/features/build-your-kit/kit-prebuilt-comparison'
+import { formatSar } from '@/lib/utils/format.utils'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
-const VAT_RATE = 0.15
 const EQUIPMENT_PLACEHOLDER = '/images/equipment-placeholder.svg'
 
-function formatSar(value: number): string {
-  return new Intl.NumberFormat('en-SA', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
 export function StepSummary() {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const { vatRate } = useVatRate()
   const router = useRouter()
   const { toast } = useToast()
 
@@ -69,7 +62,7 @@ export function StepSummary() {
 
   const totalDaily = getKitWizardTotalDaily({ selectedEquipment })
   const subtotal = getKitWizardTotalAmount({ selectedEquipment, durationDays })
-  const vatAmount = Math.round(subtotal * VAT_RATE * 100) / 100
+  const vatAmount = Math.round(subtotal * vatRate * 100) / 100
   const total = subtotal + vatAmount
 
   const [matchingKits, setMatchingKits] = useState<PrebuiltKitMatch[]>([])
@@ -90,7 +83,7 @@ export function StepSummary() {
   >()
   for (const [id, item] of Object.entries(selectedEquipment)) {
     const catId = item.categoryId ?? 'other'
-    const name = categoryIdToName.get(catId) ?? 'Other'
+    const name = categoryIdToName.get(catId) ?? t('kit.otherCategory')
     if (!byCategory.has(catId)) byCategory.set(catId, { name, entries: [] })
     byCategory.get(catId)!.entries.push([id, item])
   }
@@ -299,7 +292,7 @@ export function StepSummary() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium text-text-heading">{item.model ?? id}</p>
                         <p className="text-sm text-text-muted">
-                          {formatSar(item.dailyPrice)} / {t('kit.perDay')} × {item.qty}
+                          {formatSar(item.dailyPrice, locale)} / {t('kit.perDay')} × {item.qty}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -337,14 +330,14 @@ export function StepSummary() {
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
-                        <span className="w-20 text-end font-semibold">{formatSar(lineTotal)}</span>
+                        <span className="w-20 text-end font-semibold">{formatSar(lineTotal, locale)}</span>
                       </div>
                     </li>
                   )
                 })}
               </ul>
               <p className="mt-2 text-end text-sm text-text-muted">
-                {name} subtotal: {formatSar(catSubtotal)}/day
+                {name} subtotal: {formatSar(catSubtotal, locale)}/day
               </p>
             </li>
           )
@@ -355,15 +348,15 @@ export function StepSummary() {
       <div className="mb-6 space-y-2 rounded-xl border border-border-light bg-surface-light p-4">
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">{t('kit.subtotal')}</span>
-          <span>{formatSar(subtotal)}</span>
+          <span>{formatSar(subtotal, locale)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">{t('kit.vat')}</span>
-          <span>{formatSar(vatAmount)}</span>
+          <span>{formatSar(vatAmount, locale)}</span>
         </div>
         <div className="flex justify-between border-t border-border-light pt-3 font-semibold">
           <span>{t('kit.total')}</span>
-          <span>{formatSar(total)}</span>
+          <span>{formatSar(total, locale)}</span>
         </div>
       </div>
 
@@ -424,7 +417,7 @@ export function StepSummary() {
                       <p className="font-medium text-text-heading">{s.equipmentName}</p>
                       <p className="mb-2 text-sm text-text-muted">{s.reason}</p>
                       <p className="mb-2 text-sm text-text-muted">
-                        {formatSar(s.dailyPrice)}/day · Qty {s.quantity}
+                        {formatSar(s.dailyPrice, locale)}/day · Qty {s.quantity}
                       </p>
                       <Button
                         size="sm"

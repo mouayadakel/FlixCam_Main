@@ -8,7 +8,9 @@ import { getImportWorker } from '@/lib/queue/import.worker'
 import { getAIProcessingWorker } from '@/lib/queue/ai-processing.worker'
 import { getImageProcessingWorker } from '@/lib/queue/image-processing.worker'
 import { getBackfillWorker } from '@/lib/queue/backfill.worker'
-import { backfillQueue } from '@/lib/queue/backfill.queue'
+import { getBackfillQueue } from '@/lib/queue/backfill.queue'
+import { getNotificationWorker } from '@/lib/queue/notification.worker'
+import { isBullMqNotificationsEnabled } from '@/lib/queue/notification.queue'
 
 console.log('Starting background workers...')
 
@@ -27,6 +29,16 @@ console.log('✓ Image processing worker started')
 // Start backfill worker
 const backfillWorker = getBackfillWorker()
 console.log('✓ Backfill worker started')
+
+let notificationWorker: ReturnType<typeof getNotificationWorker> | null = null
+if (isBullMqNotificationsEnabled()) {
+  notificationWorker = getNotificationWorker()
+  console.log('✓ Notification worker started (BullMQ)')
+} else {
+  console.log('○ Notification worker skipped (memory mode — set REDIS_URL or NOTIFICATION_QUEUE_MODE=bullmq)')
+}
+
+const backfillQueue = getBackfillQueue()
 
 // Nightly scan at 2:00 AM (queue products with gaps for backfill)
 backfillQueue
@@ -57,6 +69,7 @@ process.on('SIGINT', async () => {
   await aiWorker.close()
   await imageWorker.close()
   await backfillWorker.close()
+  if (notificationWorker) await notificationWorker.close()
   process.exit(0)
 })
 
@@ -66,5 +79,6 @@ process.on('SIGTERM', async () => {
   await aiWorker.close()
   await imageWorker.close()
   await backfillWorker.close()
+  if (notificationWorker) await notificationWorker.close()
   process.exit(0)
 })

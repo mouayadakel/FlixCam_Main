@@ -84,9 +84,10 @@ export async function renderTemplate(
   language: string,
   data: Record<string, unknown>
 ): Promise<RenderResult | null> {
-  const template = await prisma.notificationTemplate.findUnique({
+  const template = await prisma.notificationTemplate.findFirst({
     where: {
-      slug_language: { slug, language: language || 'en' },
+      slug,
+      language: language || 'en',
       isActive: true,
     },
   })

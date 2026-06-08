@@ -1,9 +1,7 @@
 /**
  * @file portal/dashboard/page.tsx
- * @description Client portal dashboard with KPI cards and booking overview
+ * @description Client portal dashboard with KPI cards, booking timeline, and quick actions
  * @module app/portal/dashboard
- * @author Engineering Team
- * @created 2026-01-28
  */
 
 import { auth } from '@/lib/auth'
@@ -13,13 +11,52 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Calendar, DollarSign, Package, Clock, ArrowLeft, FileText, Receipt } from 'lucide-react'
+import {
+  Calendar,
+  DollarSign,
+  Package,
+  Clock,
+  ArrowLeft,
+  FileText,
+  Receipt,
+  RotateCcw,
+  Building2,
+} from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
-import { BookingStatus } from '@prisma/client'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
+import type { LaunchLocale } from '@/lib/i18n/locales'
+import { BookingTimeline } from '@/components/portal/booking-timeline'
+import { PortalInvoiceDownloadButton } from '@/components/features/portal/portal-invoice-download-button'
+import { BookingStatusBadge } from '@/components/shared/domain-status-badges'
+
+/** One line under past bookings / list: reflects studio-only vs gear vs mixed. */
+function portalBookingSummaryLine(
+  booking: {
+    equipment: { id: string }[]
+    studio: { name: string } | null
+  },
+  locale: LaunchLocale
+): string {
+  const eq = booking.equipment.length
+  const st = booking.studio
+  if (st != null && eq === 0) {
+    return t(locale, 'portal.bookingSummaryStudioOnly').replace('{name}', st.name)
+  }
+  if (st != null && eq > 0) {
+    return t(locale, 'portal.bookingSummaryMixed')
+      .replace('{count}', String(eq))
+      .replace('{name}', st.name)
+  }
+  if (eq > 0) {
+    return t(locale, 'portal.bookingSummaryGearOnly').replace('{count}', String(eq))
+  }
+  return t(locale, 'portal.bookingSummaryEmpty')
+}
 
 export default async function PortalDashboardPage() {
   const session = await auth()
+  const { locale, dir } = await getRequestLocale()
 
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/portal/dashboard')
@@ -34,6 +71,13 @@ export default async function PortalDashboardPage() {
       deletedAt: null,
     },
     include: {
+      studio: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
       equipment: {
         include: {
           equipment: {
@@ -49,6 +93,12 @@ export default async function PortalDashboardPage() {
         where: {
           status: 'SUCCESS',
         },
+      },
+      invoices: {
+        where: { deletedAt: null },
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
       },
     },
     orderBy: {
@@ -93,201 +143,190 @@ export default async function PortalDashboardPage() {
 
   // Categorize bookings
   const activeBookings = bookings.filter((b) => b.status === 'ACTIVE' || b.status === 'CONFIRMED')
-  const upcomingBookings = bookings.filter(
-    (b) =>
-      b.status === 'CONFIRMED' &&
-      new Date(b.startDate) > new Date() &&
-      new Date(b.startDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  )
   const pastBookings = bookings.filter((b) => b.status === 'CLOSED' || b.status === 'RETURNED')
 
-  function getStatusBadge(status: BookingStatus) {
-    const statusConfig: Record<
-      BookingStatus,
-      { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-    > = {
-      DRAFT: { label: t('ar', 'portal.statusDraft'), variant: 'outline' },
-      RISK_CHECK: { label: t('ar', 'portal.statusRiskCheck'), variant: 'outline' },
-      PAYMENT_PENDING: { label: t('ar', 'portal.statusPaymentPending'), variant: 'secondary' },
-      CONFIRMED: { label: t('ar', 'portal.statusConfirmed'), variant: 'default' },
-      ACTIVE: { label: t('ar', 'portal.statusActive'), variant: 'default' },
-      RETURNED: { label: t('ar', 'portal.statusReturned'), variant: 'secondary' },
-      CLOSED: { label: t('ar', 'portal.statusClosed'), variant: 'outline' },
-      CANCELLED: { label: t('ar', 'portal.statusCancelled'), variant: 'destructive' },
-    }
-
-    const config = statusConfig[status] || { label: status, variant: 'outline' }
-
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'portal.dashboard')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('ar', 'portal.welcomeMessage')}</p>
+    <div className="space-y-8" dir={dir}>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">{t(locale, 'portal.dashboard')}</h1>
+        <p className="text-muted-foreground">{t(locale, 'portal.welcomeMessage')}</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="border-brand-primary/10 bg-brand-primary/[0.02]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'portal.totalBookings')}</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">{t(locale, 'portal.totalBookings')}</CardTitle>
+            <Calendar className="h-4 w-4 text-brand-primary/60" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalBookings}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'portal.allBookings')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'portal.allBookings')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'portal.totalSpent')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'portal.totalSpent')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(totalSpent._sum.amount?.toNumber() ?? 0)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'portal.paidSoFar')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'portal.paidSoFar')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('ar', 'portal.upcomingReturns')}
+              {t(locale, 'portal.upcomingReturns')}
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{upcomingReturns}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'portal.nextSevenDays')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'portal.nextSevenDays')}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Active Bookings */}
+      {/* Active Bookings - High Focus */}
       {activeBookings.length > 0 && (
-        <Card>
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Package className="h-5 w-5 text-brand-primary" />
+            {t(locale, 'portal.activeBookings')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {activeBookings.map((booking) => (
+              <Card key={booking.id} className="overflow-hidden border-brand-primary/20 shadow-lg group hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-brand-primary/5 pb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-lg">
+                      {t(locale, 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
+                    </span>
+                    <BookingStatusBadge status={booking.status} />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  <BookingTimeline
+                    status={booking.status}
+                    startDate={booking.startDate}
+                    endDate={booking.endDate}
+                  />
+
+                  {booking.studio != null && (
+                    <Link
+                      href={`/studios/${booking.studio.slug}`}
+                      className="-mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-brand-primary"
+                    >
+                      <Building2 className="h-4 w-4 shrink-0" />
+                      <span>{t(locale, 'portal.studioBooking')}: {booking.studio.name}</span>
+                    </Link>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">{portalBookingSummaryLine(booking, locale)}</p>
+
+                  <div className="pt-4 border-t flex items-center justify-between">
+                    <div className="text-sm">
+                        <p className="text-muted-foreground">{t(locale, 'portal.totalAmount')}</p>
+                        <p className="font-bold text-brand-primary">{formatCurrency(booking.totalAmount.toNumber())}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <PortalInvoiceDownloadButton booking={booking} />
+                        <Link href={`/portal/bookings/${booking.id}`}>
+                          <Button variant="outline" size="sm" className="gap-2 border-brand-primary/20 hover:bg-brand-primary/5">
+                            {t(locale, 'portal.viewDetails')}
+                            <ArrowLeft className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Past Bookings & Quick Re-book */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              {t('ar', 'portal.activeBookings')}
-            </CardTitle>
+            <CardTitle className="text-lg">{t(locale, 'portal.pastBookings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {activeBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                      <span className="font-medium">
-                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
-                      </span>
-                      {getStatusBadge(booking.status)}
-                    </div>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>
-                        {t('ar', 'portal.fromTo')
-                          .replace('{from}', formatDate(booking.startDate))
-                          .replace('{to}', formatDate(booking.endDate))}
-                      </div>
-                      <div>{formatCurrency(booking.totalAmount.toNumber())}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/portal/bookings/${booking.id}`}>
-                      <Button variant="outline" size="sm">
-                        {t('ar', 'portal.viewDetails')}
-                      </Button>
-                    </Link>
-                  </div>
+              {pastBookings.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+                   <RotateCcw className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                   <p>{t(locale, 'portal.noPastBookings')}</p>
                 </div>
-              ))}
+              ) : (
+                pastBookings.map((booking) => (
+                  <div key={booking.id} className="flex items-center justify-between p-4 border rounded-xl hover:bg-slate-50 transition-colors group">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold">{booking.bookingNumber}</p>
+                          <Badge variant="outline" className="text-[10px] h-4">{formatDate(booking.startDate)}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {portalBookingSummaryLine(booking, locale)} •{' '}
+                          {formatCurrency(booking.totalAmount.toNumber())}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <PortalInvoiceDownloadButton booking={booking} />
+                        <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
+                          <Link href={`/portal/bookings/${booking.id}`}>{t(locale, 'portal.viewDetails')}</Link>
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-brand-primary border-brand-primary/30 hover:bg-brand-primary/5 gap-2">
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          {t(locale, 'portal.rebook')}
+                        </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Upcoming Bookings */}
-      {upcomingBookings.length > 0 && (
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {t('ar', 'portal.upcomingBookings')}
-            </CardTitle>
+            <CardTitle className="text-lg">{t(locale, 'portal.quickActions')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                      <span className="font-medium">
-                        {t('ar', 'portal.bookingHash').replace('{number}', booking.bookingNumber)}
-                      </span>
-                      {getStatusBadge(booking.status)}
-                    </div>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>
-                        {t('ar', 'portal.fromTo')
-                          .replace('{from}', formatDate(booking.startDate))
-                          .replace('{to}', formatDate(booking.endDate))}
-                      </div>
-                      <div>{formatCurrency(booking.totalAmount.toNumber())}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/portal/bookings/${booking.id}`}>
-                      <Button variant="outline" size="sm">
-                        {t('ar', 'portal.viewDetails')}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('ar', 'portal.quickActions')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <CardContent className="grid gap-3">
+            <Link href="/studios">
+              <Button variant="outline" className="w-full justify-start gap-2 h-11">
+                <Building2 className="h-4 w-4 text-brand-primary" />
+                {t(locale, 'portal.bookStudio')}
+              </Button>
+            </Link>
             <Link href="/portal/bookings">
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="ms-2 h-4 w-4" />
-                {t('ar', 'portal.viewAllBookings')}
+              <Button variant="outline" className="w-full justify-start gap-2 h-11">
+                <Calendar className="h-4 w-4 text-brand-primary" />
+                {t(locale, 'portal.viewAllBookings')}
               </Button>
             </Link>
             <Link href="/portal/contracts">
-              <Button variant="outline" className="w-full justify-start">
-                <FileText className="ms-2 h-4 w-4" />
-                {t('ar', 'portal.contracts')}
+              <Button variant="outline" className="w-full justify-start gap-2 h-11">
+                <FileText className="h-4 w-4 text-brand-primary" />
+                {t(locale, 'portal.contracts')}
               </Button>
             </Link>
             <Link href="/portal/invoices">
-              <Button variant="outline" className="w-full justify-start">
-                <Receipt className="ms-2 h-4 w-4" />
-                {t('ar', 'portal.invoices')}
+              <Button variant="outline" className="w-full justify-start gap-2 h-11">
+                <Receipt className="h-4 w-4 text-brand-primary" />
+                {t(locale, 'portal.invoices')}
               </Button>
             </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

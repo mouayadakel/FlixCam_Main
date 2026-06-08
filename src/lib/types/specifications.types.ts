@@ -56,7 +56,7 @@ export interface SpecGroup {
   /** Group label in Arabic (optional) */
   labelAr?: string
   /** Icon identifier (maps to lucide-react icon) */
-  icon: string
+  icon: IconName
   /** Display priority (lower numbers appear first) */
   priority: number
   /** Array of specifications in this group */
@@ -68,7 +68,7 @@ export interface SpecGroup {
  */
 export interface SpecHighlight {
   /** Icon identifier */
-  icon: string
+  icon: IconName
   /** Main label */
   label: string
   /** Main value to display */
@@ -82,7 +82,7 @@ export interface SpecHighlight {
  */
 export interface QuickSpec {
   /** Icon identifier */
-  icon: string
+  icon: IconName
   /** Label text */
   label: string
   /** Value text */

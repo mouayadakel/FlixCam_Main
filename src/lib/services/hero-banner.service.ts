@@ -4,6 +4,7 @@
  * @module services/hero-banner
  */
 
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/db/prisma'
 import { cacheGet, cacheSet, cacheDelete } from '@/lib/cache'
 import { AuditService } from '@/lib/services/audit.service'
@@ -23,6 +24,12 @@ export interface HeroSlidePublic {
   id: string
   imageUrl: string
   mobileImageUrl: string | null
+  mobileAspectRatio: string
+  mobileFocalX: number
+  mobileFocalY: number
+  desktopAspectRatio: string
+  desktopFocalX: number
+  desktopFocalY: number
   videoUrl: string | null
   titleAr: string
   titleEn: string
@@ -84,6 +91,12 @@ function toSlidePublic(s: {
   id: string
   imageUrl: string
   mobileImageUrl: string | null
+  mobileAspectRatio: string
+  mobileFocalX: number
+  mobileFocalY: number
+  desktopAspectRatio: string
+  desktopFocalX: number
+  desktopFocalY: number
   videoUrl: string | null
   titleAr: string
   titleEn: string
@@ -112,6 +125,12 @@ function toSlidePublic(s: {
     id: s.id,
     imageUrl: s.imageUrl,
     mobileImageUrl: s.mobileImageUrl,
+    mobileAspectRatio: s.mobileAspectRatio,
+    mobileFocalX: s.mobileFocalX,
+    mobileFocalY: s.mobileFocalY,
+    desktopAspectRatio: s.desktopAspectRatio,
+    desktopFocalX: s.desktopFocalX,
+    desktopFocalY: s.desktopFocalY,
     videoUrl: s.videoUrl,
     titleAr: s.titleAr,
     titleEn: s.titleEn,
@@ -361,6 +380,12 @@ export class HeroBannerService {
         bannerId,
         imageUrl: data.imageUrl,
         mobileImageUrl: data.mobileImageUrl || null,
+        mobileAspectRatio: data.mobileAspectRatio ?? 'auto',
+        mobileFocalX: data.mobileFocalX ?? 50,
+        mobileFocalY: data.mobileFocalY ?? 50,
+        desktopAspectRatio: data.desktopAspectRatio ?? '16/9',
+        desktopFocalX: data.desktopFocalX ?? 50,
+        desktopFocalY: data.desktopFocalY ?? 50,
         videoUrl: data.videoUrl || null,
         titleAr: data.titleAr,
         titleEn: data.titleEn,
@@ -420,6 +445,12 @@ export class HeroBannerService {
       data: {
         ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
         ...(data.mobileImageUrl !== undefined && { mobileImageUrl: data.mobileImageUrl || null }),
+        ...(data.mobileAspectRatio !== undefined && { mobileAspectRatio: data.mobileAspectRatio }),
+        ...(data.mobileFocalX !== undefined && { mobileFocalX: data.mobileFocalX }),
+        ...(data.mobileFocalY !== undefined && { mobileFocalY: data.mobileFocalY }),
+        ...(data.desktopAspectRatio !== undefined && { desktopAspectRatio: data.desktopAspectRatio }),
+        ...(data.desktopFocalX !== undefined && { desktopFocalX: data.desktopFocalX }),
+        ...(data.desktopFocalY !== undefined && { desktopFocalY: data.desktopFocalY }),
         ...(data.videoUrl !== undefined && { videoUrl: data.videoUrl || null }),
         ...(data.titleAr !== undefined && { titleAr: data.titleAr }),
         ...(data.titleEn !== undefined && { titleEn: data.titleEn }),
@@ -517,6 +548,12 @@ export class HeroBannerService {
       await cacheDelete(CACHE_NS, `${HERO_BANNER_KEY_PREFIX}${pageSlug}`)
     } catch {
       // ignore
+    }
+    try {
+      // Bust Next.js `unstable_cache` used on public pages (e.g. `src/app/page.tsx`).
+      revalidateTag(`public-hero-banner-${pageSlug}`, 'max')
+    } catch {
+      // ignore (non-Next contexts e.g. unit tests)
     }
   }
 }

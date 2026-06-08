@@ -8,7 +8,7 @@ jest.mock('@/lib/db/prisma', () => ({
   prisma: {
     user: { findUnique: jest.fn() },
     userPermission: { findMany: jest.fn() },
-    assignedUserRole: { findFirst: jest.fn() },
+    assignedUserRole: { findFirst: jest.fn(), findMany: jest.fn() },
   },
 }))
 jest.mock('../matches-permission', () => ({
@@ -34,6 +34,7 @@ import { prisma } from '@/lib/db/prisma'
 const mockUserFindUnique = prisma.user.findUnique as jest.Mock
 const mockUserPermissionFindMany = prisma.userPermission.findMany as jest.Mock
 const mockAssignedUserRoleFindFirst = prisma.assignedUserRole.findFirst as jest.Mock
+const mockAssignedUserRoleFindMany = prisma.assignedUserRole.findMany as jest.Mock
 
 describe('permissions', () => {
   beforeEach(() => {
@@ -41,6 +42,7 @@ describe('permissions', () => {
     process.env = { ...originalEnv }
     delete process.env.USE_NEW_RBAC
     mockAssignedUserRoleFindFirst.mockResolvedValue(null)
+    mockAssignedUserRoleFindMany.mockResolvedValue([])
     mockPermissionServiceHasPermission.mockResolvedValue(false)
     mockPermissionServiceGetEffectivePermissions.mockResolvedValue([])
   })
@@ -106,6 +108,20 @@ describe('permissions', () => {
       mockUserFindUnique.mockResolvedValue({ role: 'DATA_ENTRY' })
       mockUserPermissionFindMany.mockResolvedValue([])
       const result = await hasPermission('user_1', 'booking.create')
+      expect(result).toBe(true)
+    })
+
+    it('returns true when assigned RBAC role grants permission in legacy mode', async () => {
+      mockUserFindUnique.mockResolvedValue({ role: 'CUSTOMER' })
+      mockUserPermissionFindMany.mockResolvedValue([])
+      mockAssignedUserRoleFindMany.mockResolvedValue([
+        {
+          role: {
+            rolePermissions: [{ permission: { name: 'equipment.update_metadata' } }],
+          },
+        },
+      ])
+      const result = await hasPermission('user_1', 'equipment.update_metadata')
       expect(result).toBe(true)
     })
 
@@ -190,6 +206,26 @@ describe('permissions', () => {
       mockUserFindUnique.mockResolvedValue({ role: 'ADMIN' })
       const result = await getUserPermissions('user_1')
       expect(result).toContain('custom.permission')
+      expect(result).toContain('booking.create')
+    })
+
+    it('returns merged explicit assigned-role and legacy role permissions', async () => {
+      mockUserPermissionFindMany.mockResolvedValue([
+        { permission: { name: 'custom.permission' } },
+      ])
+      mockAssignedUserRoleFindMany.mockResolvedValue([
+        {
+          role: {
+            rolePermissions: [{ permission: { name: 'equipment.update_metadata' } }],
+          },
+        },
+      ])
+      mockUserFindUnique.mockResolvedValue({ role: 'CUSTOMER' })
+
+      const result = await getUserPermissions('user_1')
+
+      expect(result).toContain('custom.permission')
+      expect(result).toContain('equipment.update_metadata')
       expect(result).toContain('booking.create')
     })
   })

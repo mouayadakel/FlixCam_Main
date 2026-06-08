@@ -28,10 +28,11 @@ export const checkOutSchema = z.object({
 export const checkInSchema = z.object({
   bookingId: z.string().min(1, 'معرف الحجز مطلوب'),
   equipmentIds: z.array(z.string().min(1)).min(1, 'يجب تحديد معدات واحدة على الأقل'),
-  checklist: z.array(inspectionChecklistItemSchema).min(1, 'يجب ملء قائمة التحقق'),
+  checklist: z.array(inspectionChecklistItemSchema).optional(),
   notes: z.string().optional(),
   condition: z.nativeEnum(EquipmentCondition).optional(),
   damageReport: z.string().optional(),
+  images: z.array(z.string().url()).optional(),
 })
 
 export const inventoryFilterSchema = z.object({

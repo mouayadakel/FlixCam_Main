@@ -6,6 +6,8 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { Decimal } from '@prisma/client/runtime/library'
+import { calculateVAT, getVATRate } from '@/lib/vat'
+import { calculateRentalDays } from '@/lib/pricing/rental-days'
 import { EquipmentService } from './equipment.service'
 import { StudioService } from './studio.service'
 
@@ -50,37 +52,9 @@ export interface PricingQuote {
 }
 
 export class PricingService {
-  // VAT rate: 15%
-  private static readonly VAT_RATE = 0.15
-
-  /**
-   * Calculate number of rental days (weekend logic: Fri-Mon = 1 day)
-   */
+  /** @deprecated Use calculateRentalDays from @/lib/pricing/rental-days */
   static calculateRentalDays(startDate: Date, endDate: Date): number {
-    let days = 0
-    const current = new Date(startDate)
-
-    while (current < endDate) {
-      const dayOfWeek = current.getDay() // 0 = Sunday, 5 = Friday, 6 = Saturday
-
-      // Weekend logic: Friday to Monday counts as 1 day
-      if (dayOfWeek === 5) {
-        // Friday - check if next day is Saturday
-        const nextDay = new Date(current)
-        nextDay.setDate(nextDay.getDate() + 1)
-        if (nextDay.getDay() === 6 && nextDay < endDate) {
-          // Skip to Monday
-          current.setDate(current.getDate() + 3)
-          days += 1
-          continue
-        }
-      }
-
-      days += 1
-      current.setDate(current.getDate() + 1)
-    }
-
-    return days
+    return calculateRentalDays(startDate, endDate)
   }
 
   /**
@@ -209,8 +183,10 @@ export class PricingService {
       })
 
       if (equipmentItem) {
-        // Use daily price as base value (could be improved with actual equipment value)
-        const equipmentValue = Number(equipmentItem.dailyPrice) * 10 // Estimate: 10 days worth
+        const equipmentValue =
+          equipmentItem.purchasePrice != null
+            ? Number(equipmentItem.purchasePrice)
+            : Number(equipmentItem.dailyPrice) * 10
         totalEquipmentValue += equipmentValue * eq.quantity
       }
     }
@@ -227,11 +203,10 @@ export class PricingService {
     return Math.round(deposit * 100) / 100 // Round to 2 decimal places
   }
 
-  /**
-   * Calculate VAT (15%)
-   */
-  static calculateVAT(subtotal: number): number {
-    return Math.round(subtotal * this.VAT_RATE * 100) / 100
+  /** VAT on taxable subtotal using company-configured rate. */
+  static async calculateVATAmount(subtotal: number): Promise<number> {
+    const rate = await getVATRate()
+    return calculateVAT(subtotal, rate).toNumber()
   }
 
   /**
@@ -288,8 +263,8 @@ export class PricingService {
     // Calculate subtotal
     const subtotal = equipmentSubtotal + studioSubtotal
 
-    // Calculate VAT (15%)
-    const vatAmount = this.calculateVAT(subtotal)
+    const rateDec = await getVATRate()
+    const vatAmount = calculateVAT(subtotal, rateDec).toNumber()
 
     // Calculate deposit
     const depositAmount = await this.calculateDeposit(input.equipment)
@@ -302,7 +277,7 @@ export class PricingService {
       studioSubtotal,
       subtotal,
       vatAmount,
-      vatRate: this.VAT_RATE,
+      vatRate: rateDec.toNumber(),
       depositAmount,
       totalAmount,
       breakdown: {

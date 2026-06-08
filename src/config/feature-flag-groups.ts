@@ -103,6 +103,34 @@ export const FEATURE_FLAG_META: Record<string, Omit<FeatureFlagMeta, 'name'>> = 
     group: 'public_website',
     sortOrder: 8,
   },
+  enable_home_categories_section: {
+    label: 'Homepage Categories Section',
+    labelAr: 'قسم التصنيفات في الصفحة الرئيسية',
+    description: 'Show categories cards section on homepage',
+    group: 'public_website',
+    sortOrder: 9,
+  },
+  enable_home_new_arrivals_section: {
+    label: 'Homepage New Arrivals Section',
+    labelAr: 'قسم وصل حديثاً في الصفحة الرئيسية',
+    description: 'Show new arrivals section on homepage',
+    group: 'public_website',
+    sortOrder: 10,
+  },
+  enable_home_top_brands_section: {
+    label: 'Homepage Top Brands Section',
+    labelAr: 'قسم أبرز العلامات في الصفحة الرئيسية',
+    description: 'Show top brands section on homepage',
+    group: 'public_website',
+    sortOrder: 11,
+  },
+  enable_home_how_it_works_block: {
+    label: 'Homepage How It Works Block',
+    labelAr: 'كتلة كيف يعمل في الصفحة الرئيسية',
+    description: 'Show How It Works block inside trust section on homepage',
+    group: 'public_website',
+    sortOrder: 12,
+  },
 
   // ─── Control Panel (Admin Sidebar) ───────────────────────────
   enable_admin_ai: {

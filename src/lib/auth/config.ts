@@ -8,6 +8,43 @@ import type { NextAuthConfig } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
+interface AssignedRoleRecord {
+  role: {
+    name: string
+  }
+}
+
+async function getActiveAssignedRoleNames(
+  prismaClient: {
+    assignedUserRole: {
+      findMany: (args: {
+        where: {
+          userId: string
+          OR: Array<{ expiresAt: null } | { expiresAt: { gt: Date } }>
+        }
+        select: { role: { select: { name: true } } }
+      }) => Promise<AssignedRoleRecord[]>
+    }
+  },
+  userId: string
+): Promise<string[]> {
+  const assignedRoles = await prismaClient.assignedUserRole.findMany({
+    where: {
+      userId,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    select: {
+      role: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  })
+
+  return assignedRoles.map((item) => item.role.name)
+}
+
 export const authConfig: NextAuthConfig = {
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
@@ -24,6 +61,7 @@ export const authConfig: NextAuthConfig = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        otp: { label: '2FA Code', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -167,6 +205,20 @@ export const authConfig: NextAuthConfig = {
 
         await safeLogAttempt({ userId: user.id, email, ipAddress: ip, userAgent, status: 'success' })
 
+        const { STAFF_ROLES_REQUIRING_2FA, validateUserTwoFactorToken } = await import(
+          '@/lib/auth/two-factor-auth'
+        )
+        if (STAFF_ROLES_REQUIRING_2FA.has(user.role) && user.twoFactorEnabled) {
+          const otp = String(credentials.otp ?? '').trim()
+          if (!otp) {
+            throw new Error('TwoFactorRequired')
+          }
+          const validOtp = await validateUserTwoFactorToken(user.id, otp)
+          if (!validOtp) {
+            throw new Error('InvalidTwoFactorCode')
+          }
+        }
+
         if (lockedUntil) {
           try {
             await prisma.user.update({
@@ -178,11 +230,14 @@ export const authConfig: NextAuthConfig = {
           }
         }
 
+        const assignedRoles = await getActiveAssignedRoleNames(prisma, user.id)
+
         return {
           id: user.id,
           email: user.email,
           name: user.name || undefined,
           role: user.role,
+          assignedRoles,
         }
       },
     }),
@@ -208,17 +263,19 @@ export const authConfig: NextAuthConfig = {
         if (!user || user.deletedAt || user.status !== 'ACTIVE') return null
 
         await cacheDelete('authToken', token)
+        const assignedRoles = await getActiveAssignedRoleNames(prisma, user.id)
         return {
           id: user.id,
           email: user.email,
           name: user.name || undefined,
           role: user.role,
+          assignedRoles,
         }
       },
     }),
   ],
   callbacks: {
-    async signIn({ account, profile }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === 'google' && profile?.email) {
         const { prisma } = await import('@/lib/db/prisma')
         const dbUser = await prisma.user.findUnique({
@@ -228,6 +285,14 @@ export const authConfig: NextAuthConfig = {
           return false
         }
       }
+
+      // Phase 6: Whale Detection
+      if (user?.id) {
+        import('@/lib/services/messaging-automation.service').then(({ processEventForMessaging }) => {
+          processEventForMessaging('user.whale_sign_in', { userId: user.id }).catch(() => {})
+        })
+      }
+
       return true
     },
     async jwt({ token, user, account }) {
@@ -236,14 +301,20 @@ export const authConfig: NextAuthConfig = {
         if (fromCredentials) {
           token.id = user.id as string
           token.role = (user as { role?: string }).role as string
+          token.assignedRoles = (user as { assignedRoles?: string[] }).assignedRoles
         } else if (account?.provider === 'google' && (user as { email?: string }).email) {
           const { prisma } = await import('@/lib/db/prisma')
           const dbUser = await prisma.user.findUnique({
             where: { email: (user as { email: string }).email },
+            select: {
+              id: true,
+              role: true,
+            },
           })
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
+            token.assignedRoles = await getActiveAssignedRoleNames(prisma, dbUser.id)
           }
         }
       }
@@ -253,6 +324,9 @@ export const authConfig: NextAuthConfig = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.assignedRoles = Array.isArray(token.assignedRoles)
+          ? (token.assignedRoles as string[])
+          : []
       }
       return session
     },

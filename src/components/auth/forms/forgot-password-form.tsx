@@ -23,6 +23,8 @@ import { useLocale } from '@/hooks/use-locale'
 import { sendOtpSchema, forgotPasswordSchema, resetPasswordSchema } from '@/lib/validators/auth.validator'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
+import { getConfiguredPhonePlaceholder } from '@/lib/utils/contact-phone'
 
 export interface ForgotPasswordFormProps {
   onBackToLogin: () => void
@@ -48,6 +50,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [inlineError, setInlineError] = useState<string | null>(null)
   const [resendTimer, setResendTimer] = useState(0)
+  const phonePlaceholder = getConfiguredPhonePlaceholder()
   const mounted = useRef(true)
 
   useEffect(() => {
@@ -482,7 +485,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
           <h3 className="text-lg font-semibold text-text-heading">{t('auth.verifyTitle')}</h3>
           <p className="text-sm text-text-muted">
             {t('auth.codeSentTo')} <br />
-            <span className="font-semibold text-text-body" dir="ltr">
+            <span className="font-semibold text-text-body" dir={EMBED_LTR}>
               {masked}
             </span>
           </p>
@@ -496,7 +499,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               disabled={isLoading}
               autoFocus
             >
-              <InputOTPGroup dir="ltr">
+              <InputOTPGroup dir={EMBED_LTR}>
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
@@ -559,7 +562,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
             {t('auth.resetSentToEmail')}
           </p>
           {masked && (
-            <p className="text-sm font-semibold text-text-body" dir="ltr">
+            <p className="text-sm font-semibold text-text-body" dir={EMBED_LTR}>
               {masked}
             </p>
           )}
@@ -591,7 +594,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     <div className="flex flex-col gap-4">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {recoveryMethod === 'phone' ? (
-          <div className="space-y-2" dir="ltr">
+          <div className="space-y-2" dir={EMBED_LTR}>
             <Label
               htmlFor="forgot-phone"
               className="text-sm font-medium text-text-heading"
@@ -610,7 +613,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
                 defaultCountry="SA"
                 countries={['SA']}
                 addInternationalOption={false}
-                placeholder="05XXXXXXXX"
+                placeholder={phonePlaceholder}
                 value={phone}
                 onChange={(val) => setPhone((val as string) ?? '')}
                 disabled={isLoading}

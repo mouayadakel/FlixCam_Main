@@ -43,6 +43,8 @@ import {
   type AISuggestPayload,
 } from '@/components/features/equipment/ai-suggest-preview-dialog'
 import { FormProgressSidebar } from '@/components/features/equipment/form-progress-sidebar'
+import { stringifySeoKeywords } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { PhotoGateIndicator } from '@/components/features/equipment/photo-gate-indicator'
 import { SmartFillDropdown } from '@/components/features/equipment/smart-fill-dropdown'
 import type { FillScope } from '@/components/features/equipment/smart-fill-dropdown'
@@ -67,7 +69,7 @@ export default function NewEquipmentPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [activeTab, setActiveTab] = useState('info')
-  const [activeLocale, setActiveLocale] = useState<'ar' | 'en' | 'zh'>('ar')
+  const [activeLocale, setActiveLocale] = useState<'ar' | 'en' | 'zh' | 'fr'>('ar')
   const [applyScope, setApplyScope] = useState<FillScope>('all')
   const [showAISuggest, setShowAISuggest] = useState(false)
   const [aiSuggestLoading, setAiSuggestLoading] = useState(false)
@@ -223,10 +225,10 @@ export default function NewEquipmentPage() {
     ]
   )
 
-  const translationDataForSwitcher = useMemo((): Record<'ar' | 'en' | 'zh', TranslationData> => {
-    const base = { ar: {}, en: {}, zh: {} } as Record<'ar' | 'en' | 'zh', TranslationData>
+  const translationDataForSwitcher = useMemo((): Record<'ar' | 'en' | 'zh' | 'fr', TranslationData> => {
+    const base = { ar: {}, en: {}, zh: {}, fr: {} } as Record<'ar' | 'en' | 'zh' | 'fr', TranslationData>
     for (const t of watchedTranslations) {
-      const loc = t.locale as 'ar' | 'en' | 'zh'
+      const loc = t.locale as 'ar' | 'en' | 'zh' | 'fr'
       if (base[loc]) {
         base[loc] = {
           name: t.name,
@@ -355,7 +357,7 @@ export default function NewEquipmentPage() {
       scope === 'seo' ||
       scope === 'translations'
     ) {
-      const locales = ['ar', 'en', 'zh'] as const
+      const locales = ['ar', 'en', 'zh', 'fr'] as const
       const trans = [...(watch('translations') || [])]
 
       for (const locale of locales) {
@@ -409,8 +411,10 @@ export default function NewEquipmentPage() {
             }
           }
           if (!t.seoKeywords || String(t.seoKeywords).trim() === '') {
-            const aiKw = aiLocale?.seoKeywords ?? (locale === 'en' ? payload.seo?.metaKeywords : '')
-            if (aiKw && aiKw.trim() !== '') {
+            const aiKw = stringifySeoKeywords(
+              aiLocale?.seoKeywords ?? (locale === 'en' ? payload.seo?.metaKeywords : '')
+            )
+            if (aiKw) {
               t.seoKeywords = aiKw
               filledCount++
             }
@@ -530,8 +534,9 @@ export default function NewEquipmentPage() {
       translations: 'content',
       tags: 'content',
       boxContents: 'content',
-      bufferTime: 'content',
-      bufferTimeUnit: 'content',
+      bufferTime: 'info',
+      bufferTimeUnit: 'info',
+      featured: 'info',
       featuredImageUrl: 'media',
       galleryImageUrls: 'media',
       videoUrl: 'media',
@@ -567,21 +572,6 @@ export default function NewEquipmentPage() {
   const onSubmit = async (data: CreateEquipmentFormData) => {
     setLoading(true)
     try {
-      // Filter out empty translations and ensure at least one
-      const validTranslations = (data.translations || []).filter(
-        (t) => t.name && t.name.trim().length > 0
-      )
-
-      if (validTranslations.length === 0) {
-        toast({
-          title: 'خطأ',
-          description: 'يجب إدخال ترجمة واحدة على الأقل (العربية مفضلة)',
-          variant: 'destructive',
-        })
-        setLoading(false)
-        return
-      }
-
       // Separate data URLs (temporary file uploads) from regular URLs
       const featuredImageDataUrl =
         data.featuredImageUrl?.startsWith('blob:') || data.featuredImageUrl?.startsWith('data:')
@@ -595,7 +585,7 @@ export default function NewEquipmentPage() {
       // Prepare payload - exclude data URLs for now
       const payload = {
         ...data,
-        translations: validTranslations,
+        translations: data.translations?.length ? data.translations : undefined,
         featuredImageUrl: featuredImageDataUrl ? undefined : data.featuredImageUrl,
         galleryImageUrls: data.galleryImageUrls?.filter(
           (url) => !url.startsWith('blob:') && !url.startsWith('data:')
@@ -621,24 +611,31 @@ export default function NewEquipmentPage() {
 
       const equipment = await response.json()
 
-      // Upload files if there are any data URLs (for new equipment)
-      // Note: This is a fallback - users should use URLs for new equipment
-      // But if they selected files, we'll try to convert and upload them
+      const publishHint =
+        equipment && typeof equipment === 'object' && 'warnings' in equipment
+          ? (equipment as { warnings?: { publishState?: string } }).warnings?.publishState
+          : undefined
+
+      // Upload files if there are any data URLs... (existing logic)
       if (featuredImageDataUrl || galleryImageDataUrls.length > 0) {
         toast({
           title: 'تنبيه',
-          description:
-            'تم إنشاء المعدة. يُفضل استخدام روابط URLs للصور. يمكنك رفع الملفات من صفحة التعديل.',
+          description: 'تم إنشاء المعدة. يُفضل استخدام روابط URLs للصور.',
           variant: 'default',
+        })
+      } else if (publishHint) {
+        toast({
+          title: 'تم الحفظ',
+          description: publishHint,
         })
       } else {
         toast({
           title: 'نجح',
-          description: 'تم إنشاء المعدة بنجاح',
+          description: 'تم إنشاء المعدة بنجاح، يمكنك الآن رفع الصور.',
         })
       }
 
-      router.push(`/admin/inventory/equipment/${equipment.id}`)
+      router.push(`/admin/inventory/equipment/${equipment.id}/edit`)
     } catch (error) {
       toast({
         title: 'خطأ',
@@ -772,7 +769,7 @@ export default function NewEquipmentPage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="sku">SKU</Label>
-                      <Input id="sku" {...register('sku')} placeholder="اختياري — يُولَّد تلقائياً إن تُرك فارغاً" dir="ltr" />
+                      <Input id="sku" {...register('sku')} placeholder="اختياري — يُولَّد تلقائياً إن تُرك فارغاً" dir={EMBED_LTR} />
                       {errors.sku && <p className="text-sm text-error-600">{errors.sku.message}</p>}
                     </div>
 
@@ -873,7 +870,7 @@ export default function NewEquipmentPage() {
                         id="barcode"
                         {...register('barcode')}
                         placeholder="1234567890"
-                        dir="ltr"
+                        dir={EMBED_LTR}
                       />
                     </div>
                   </div>
@@ -939,7 +936,7 @@ export default function NewEquipmentPage() {
                         step="0.01"
                         {...register('dailyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.dailyPrice && (
                         <p className="text-sm text-error-600">{errors.dailyPrice.message}</p>
@@ -955,7 +952,7 @@ export default function NewEquipmentPage() {
                         step="0.01"
                         {...register('weeklyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.weeklyPrice && (
                         <p className="text-sm text-error-600">{errors.weeklyPrice.message}</p>
@@ -971,7 +968,7 @@ export default function NewEquipmentPage() {
                         step="0.01"
                         {...register('monthlyPrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.monthlyPrice && (
                         <p className="text-sm text-error-600">{errors.monthlyPrice.message}</p>
@@ -987,7 +984,7 @@ export default function NewEquipmentPage() {
                         step="0.01"
                         {...register('depositAmount', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       {errors.depositAmount && (
                         <p className="text-sm text-error-600">{errors.depositAmount.message}</p>
@@ -1009,6 +1006,40 @@ export default function NewEquipmentPage() {
                     </p>
                   </div>
 
+                  <div className="border-t border-neutral-200 pt-4 mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="bufferTime">وقت التحضير والصيانة (Buffer Time)</Label>
+                      <Input
+                        id="bufferTime"
+                        type="number"
+                        min="0"
+                        {...register('bufferTime', { valueAsNumber: true })}
+                        placeholder="0"
+                      />
+                      {errors.bufferTime && (
+                        <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
+                      <Select
+                        defaultValue="hours"
+                        onValueChange={(value) =>
+                          setValue('bufferTimeUnit', value as 'hours' | 'days')
+                        }
+                      >
+                        <SelectTrigger id="bufferTimeUnit">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hours">ساعات</SelectItem>
+                          <SelectItem value="days">أيام</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   {/* سعر الشراء — internal only, for tracking and سند الأمر */}
                   <div className="border-t border-neutral-200 pt-4">
                     <div className="space-y-2 max-w-xs">
@@ -1022,7 +1053,7 @@ export default function NewEquipmentPage() {
                         step="0.01"
                         {...register('purchasePrice', { valueAsNumber: true })}
                         placeholder="0.00"
-                        dir="ltr"
+                        dir="rtl"
                       />
                       <p className="text-xs text-neutral-500">
                         للتتبع وسند الأمر فقط — لا يظهر للعميل
@@ -1041,6 +1072,17 @@ export default function NewEquipmentPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="featured"
+                        {...register('featured')}
+                        className="h-4 w-4 rounded border-neutral-300"
+                      />
+                      <Label htmlFor="featured" className="cursor-pointer">
+                        معدات مميزة (Featured)
+                      </Label>
+                    </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -1158,7 +1200,7 @@ export default function NewEquipmentPage() {
                   <CardTitle>SEO (تحسين محركات البحث)</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {(['ar', 'en', 'zh'] as const).map((locale) => {
+                  {(['ar', 'en', 'zh', 'fr'] as const).map((locale) => {
                     const translation = watchedTranslations.find((t) => t.locale === locale) || {
                       locale,
                       seoTitle: '',
@@ -1226,42 +1268,8 @@ export default function NewEquipmentPage() {
                       id="tags"
                       {...register('tags')}
                       placeholder="كاميرا, سينما, تصوير, 4K..."
-                      dir="ltr"
+                      dir="rtl"
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="bufferTime">وقت الفاصل</Label>
-                      <Input
-                        id="bufferTime"
-                        type="number"
-                        min="0"
-                        {...register('bufferTime', { valueAsNumber: true })}
-                        placeholder="0"
-                      />
-                      {errors.bufferTime && (
-                        <p className="text-sm text-error-600">{errors.bufferTime.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bufferTimeUnit">وحدة الوقت</Label>
-                      <Select
-                        defaultValue="hours"
-                        onValueChange={(value) =>
-                          setValue('bufferTimeUnit', value as 'hours' | 'days')
-                        }
-                      >
-                        <SelectTrigger id="bufferTimeUnit">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hours">ساعات</SelectItem>
-                          <SelectItem value="days">أيام</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1377,7 +1385,7 @@ export default function NewEquipmentPage() {
                                 Math.min(100, Math.max(0, Number(e.target.value) || 0))
                               )
                             }
-                            dir="ltr"
+                            dir="rtl"
                           />
                         </div>
                         <Button

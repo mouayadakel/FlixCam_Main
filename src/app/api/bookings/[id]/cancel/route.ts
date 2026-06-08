@@ -6,21 +6,19 @@
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
-import { AuditService } from '@/lib/services/audit.service'
+import { calculateCancellationRefund } from '@/lib/booking/cancellation-refund'
 import { logger } from '@/lib/logger'
+import { BookingService } from '@/lib/services/booking.service'
+import { PaymentService } from '@/lib/services/payment.service'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { Decimal } from '@prisma/client/runtime/library'
-import { BookingStatus, RefundStatus, BookingItemStatus } from '@prisma/client'
+import { BookingStatus } from '@prisma/client'
 
 const cancelSchema = z.object({
   reason: z.string().min(1, 'Reason is required'),
 })
 
 const CANCELLABLE_STATUSES = ['CONFIRMED', 'PAYMENT_PENDING', 'DRAFT'] as const
-const FULL_REFUND_WINDOW_HOURS = 48
-const PARTIAL_REFUND_WINDOW_HOURS = 24
-const PARTIAL_REFUND_PERCENT = 50
 
 export async function POST(
   req: NextRequest,
@@ -57,7 +55,6 @@ export async function POST(
 
     const booking = await prisma.booking.findUnique({
       where: { id, deletedAt: null },
-      include: { equipment: true },
     })
 
     if (!booking) {
@@ -82,74 +79,39 @@ export async function POST(
       )
     }
 
-    const now = new Date()
-    const startDate = new Date(booking.startDate)
-    const hoursUntilStart =
-      (startDate.getTime() - now.getTime()) / (1000 * 60 * 60)
-
-    let refundPercentage: number
-    let refundAmount: Decimal
-
-    const totalAmount = Number(booking.totalAmount)
-
-    if (hoursUntilStart >= FULL_REFUND_WINDOW_HOURS) {
-      refundPercentage = 100
-      refundAmount = new Decimal(totalAmount)
-    } else if (hoursUntilStart >= PARTIAL_REFUND_WINDOW_HOURS) {
-      refundPercentage = PARTIAL_REFUND_PERCENT
-      refundAmount = new Decimal((totalAmount * PARTIAL_REFUND_PERCENT) / 100)
-    } else {
-      refundPercentage = 0
-      refundAmount = new Decimal(0)
+    if (booking.status === BookingStatus.CANCELLED) {
+      return NextResponse.json({ error: 'Booking is already cancelled' }, { status: 400 })
     }
 
-    const message =
-      refundPercentage === 100
-        ? 'Full refund will be processed.'
-        : refundPercentage === 50
-          ? 'Partial refund (50%) will be processed.'
-          : 'No refund applicable for cancellations within 24 hours of start.'
+    const { refundPercentage, refundAmountSar, message } = calculateCancellationRefund(booking)
 
-    await prisma.$transaction(async (tx) => {
-      await tx.booking.update({
-        where: { id },
-        data: {
-          status: BookingStatus.CANCELLED,
-          cancelledAt: now,
-          cancellationReason: reason,
-          refundAmount,
-          refundStatus: RefundStatus.PENDING,
-          updatedBy: userId,
-        },
-      })
+    const ipAddress =
+      req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    const userAgent = req.headers.get('user-agent') || 'unknown'
 
-      if (booking.equipment.length > 0) {
-        await tx.bookingEquipment.updateMany({
-          where: { bookingId: id, deletedAt: null },
-          data: { itemStatus: BookingItemStatus.PENDING },
-        })
-      }
-    })
+    await BookingService.cancel(id, userId, reason, { ipAddress, userAgent })
 
-    await AuditService.log({
-      action: 'booking.cancelled',
+    const refundResult = await PaymentService.refundBookingCancellationPayments({
+      bookingId: id,
       userId,
-      resourceType: 'booking',
-      resourceId: id,
-      metadata: {
-        reason,
-        refundAmount: Number(refundAmount),
-        refundPercentage,
-        previousStatus: booking.status,
-      },
+      refundAmountSar,
+      reason: `Booking cancellation: ${reason}`,
     })
+
+    if (refundResult.errors.length > 0) {
+      logger.warn('Booking cancellation: partial refund failures', {
+        bookingId: id,
+        errors: refundResult.errors,
+      })
+    }
 
     return NextResponse.json({
       success: true,
       data: {
-        refundAmount: Number(refundAmount),
+        refundAmount: refundResult.refundedSar || refundAmountSar,
         refundPercentage,
         message,
+        refundErrors: refundResult.errors.length > 0 ? refundResult.errors : undefined,
       },
     })
   } catch (error) {

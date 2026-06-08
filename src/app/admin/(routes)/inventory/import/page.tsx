@@ -28,6 +28,7 @@ import { DropZone } from '@/components/features/import/drop-zone'
 import { ColumnMapper, type MappedColumn } from '@/components/features/import/column-mapper'
 import { ValidationReport } from '@/components/features/import/validation-report'
 import { ImportSummary } from '@/components/features/import/import-summary'
+import { SpecsImportValidator } from '@/components/features/import/specs-import-validator'
 import { StatusBadge } from '@/components/shared/status-badge'
 import {
   type ValidationResult,
@@ -462,6 +463,8 @@ export default function ImportPage() {
             categoryName,
             brand: row['Brand'] ?? row['brand'] ?? row['Manufacturer'] ?? row['الماركة'] ?? '',
             specifications: row['Specifications'] ?? row['specifications'] ?? {},
+            specificationsRawNotes:
+              row['specifications_notes'] ?? row['Specifications Notes'] ?? row['Specifications_Notes'] ?? '',
             boxContents:
               row['WITB'] ??
               row['Box Contents'] ??
@@ -1036,6 +1039,7 @@ export default function ImportPage() {
             </Accordion>
 
             {validationSummary && <ValidationReport result={validationSummary} />}
+            <SpecsImportValidator sheetsMetadata={sheetsMetadata} columnMappings={columnMappings} />
 
             {!allSheetsMapped && (
               <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">

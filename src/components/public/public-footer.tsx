@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { getFooterIcon } from '@/lib/footer-icons'
 import { PAYMENT_METHODS } from '@/components/public/payment-method-icons'
 import { Mail, Phone, ArrowRight, Instagram, MessageCircle, Linkedin, CreditCard } from 'lucide-react'
+import { useBranding } from '@/hooks/use-branding'
 
 const CATEGORY_LINKS = [
   { href: '/equipment', key: 'nav.equipment' },
@@ -33,6 +34,21 @@ const ABOUT_LINKS = [
   { href: '/faq', key: 'nav.faq' },
   { href: '/policies', key: 'nav.policies' },
 ] as const
+
+/** Paths not shown in the footer legal strip (terms / policies stay in nav columns if configured). */
+const HIDDEN_FOOTER_LEGAL_PATHS = new Set(['/terms', '/policies'])
+
+function footerLegalPath(url: string): string {
+  try {
+    const pathname = url.startsWith('http://') || url.startsWith('https://')
+      ? new URL(url).pathname
+      : url.split('?')[0] ?? url
+    const trimmed = pathname.replace(/\/+$/, '')
+    return trimmed === '' ? '/' : trimmed
+  } catch {
+    return url.split('?')[0]?.replace(/\/+$/, '') || '/'
+  }
+}
 
 interface PublicFooterProps {
   hiddenRoutes?: Set<string>
@@ -113,9 +129,15 @@ type FooterApi = {
 
 function NewsletterBlock({
   newsletter,
+  socialLinks,
+  socialHoverEffect,
+  socialHoverColor,
   getText,
 }: {
   newsletter: NonNullable<FooterApi['newsletter']>
+  socialLinks: FooterApi['socialLinks']
+  socialHoverEffect?: string | null
+  socialHoverColor?: string | null
   getText: (ar: string, en: string) => string
 }) {
   const [email, setEmail] = useState('')
@@ -145,11 +167,23 @@ function NewsletterBlock({
     }
   }
 
+  const effect = socialHoverEffect ?? 'lift'
+  const hoverColor = socialHoverColor ?? ''
+  const hasCustomColor = Boolean(hoverColor)
+  const wrapperStyle = hasCustomColor ? { ['--footer-social-hover' as string]: hoverColor } : undefined
+  const baseClass = 'flex h-10 w-10 items-center justify-center rounded-[4px] bg-white/5 transition-all duration-200'
+  const effectClasses: Record<string, string> = {
+    lift: 'hover:-translate-y-0.5 hover:bg-brand-primary hover:text-white hover:shadow-lg',
+    scale: 'hover:scale-110 hover:text-white ' + (hasCustomColor ? 'footer-social-hover-bg' : 'hover:bg-brand-primary'),
+    glow: 'hover:-translate-y-0.5 hover:text-white ' + (hasCustomColor ? 'footer-social-hover-glow' : 'hover:shadow-lg hover:bg-brand-primary'),
+    background: 'hover:-translate-y-0.5 hover:text-white ' + (hasCustomColor ? 'footer-social-hover-bg' : 'hover:bg-brand-primary'),
+  }
+
   return (
     <div className="border-b border-white/10">
-      <PublicContainer>
-        <div className="flex flex-col items-center gap-6 py-12 md:flex-row md:justify-between md:gap-12">
-          <div className="text-center md:text-start">
+      <PublicContainer className="py-8 text-xs">
+        <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-12 md:gap-8 text-center">
+          <div className="text-center md:col-span-4 md:text-start">
             <h3 className="text-xl font-bold text-inverse-heading">
               {getText(newsletter.titleAr, newsletter.titleEn)}
             </h3>
@@ -157,20 +191,50 @@ function NewsletterBlock({
               {getText(newsletter.descriptionAr, newsletter.descriptionEn)}
             </p>
           </div>
-          <form onSubmit={handleSubmit} className="flex w-full max-w-md gap-2">
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={getText(newsletter.placeholderAr, newsletter.placeholderEn)}
-              className="h-12 flex-1 rounded-[4px] border-white/10 bg-white/10 text-white placeholder:text-white/40 focus-visible:ring-brand-primary/30"
-              disabled={submitting || success}
-              required
-            />
-            <Button type="submit" disabled={submitting || success} className="h-12 rounded-[4px] bg-brand-primary px-6 font-semibold">
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </form>
+          <div className="md:col-span-5">
+            <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md gap-2 md:mx-0">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={getText(newsletter.placeholderAr, newsletter.placeholderEn)}
+                className="h-12 flex-1 rounded-[4px] border-white/10 bg-white/10 text-white placeholder:text-white/40 focus-visible:ring-brand-primary/30"
+                disabled={submitting || success}
+                required
+              />
+              <Button type="submit" disabled={submitting || success} className="h-12 rounded-[4px] bg-brand-primary px-6 font-semibold">
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
+          {socialLinks.length > 0 && (
+            <div className="text-center md:col-span-3 md:text-start" style={wrapperStyle}>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-inverse-heading">
+                  {getText('تابعنا', 'Follow Us')}
+                </h3>
+                <div className="mt-3 flex flex-wrap justify-center gap-3 md:justify-start">
+                  {socialLinks.map((social) => {
+                    const Icon = getFooterIcon(social.platform)
+                    return (
+                      <a
+                        key={social.id}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${baseClass} ${effectClasses[effect] ?? effectClasses.lift}`}
+                        aria-label={social.platform}
+                      >
+                        {social.customIcon ? (
+                          <Image src={social.customIcon} alt="" width={20} height={20} />
+                        ) : Icon ? (
+                          <Icon className="h-5 w-5" />
+                        ) : null}
+                      </a>
+                    )
+                  })}
+                </div>
+            </div>
+          )}
         </div>
         {success && (
           <p className="text-center text-sm text-green-400" role="status">
@@ -204,7 +268,7 @@ function StaticFooterFallback({ hiddenRoutes, t }: { hiddenRoutes?: Set<string>;
     <footer id="site-footer" className="bg-footer-gradient text-inverse-body">
       <div className="border-b border-white/10">
         <PublicContainer>
-          <div className="flex flex-col items-center gap-6 py-12 md:flex-row md:justify-between md:gap-12">
+          <div className="flex flex-col items-center gap-6 py-[27px] md:flex-row md:justify-between md:gap-12">
             <div className="text-center md:text-start">
               <h3 className="text-xl font-bold text-inverse-heading">{t('footer.contactUs')}</h3>
               <p className="mt-1 text-sm text-inverse-body/80">{t('footer.gotQuestion')}</p>
@@ -227,13 +291,13 @@ function StaticFooterFallback({ hiddenRoutes, t }: { hiddenRoutes?: Set<string>;
           </div>
         </PublicContainer>
       </div>
-      <PublicContainer>
-        <div className="grid grid-cols-1 gap-10 py-14 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+      <PublicContainer className="text-xs">
+        <div className="grid grid-cols-1 gap-10 py-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           <div className="lg:col-span-1">
             <Link href="/" className="inline-flex flex-col gap-1 transition-opacity hover:opacity-90" aria-label={siteConfig.brandName}>
               <span
-                className="block h-8 w-[120px] shrink-0 bg-[length:200%_100%] bg-[position:100%_0] bg-no-repeat"
-                style={{ backgroundImage: `url(${siteConfig.logoInverted})` }}
+                className="block h-8 w-[120px] shrink-0 bg-contain bg-left bg-no-repeat"
+                style={{ backgroundImage: `url(${useBranding().logoUrl || siteConfig.logoInverted})` }}
                 aria-hidden
               />
               <span className="sr-only">{siteConfig.brandName}</span>
@@ -330,6 +394,7 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
   const { t, locale } = useLocale()
   const [footerData, setFooterData] = useState<FooterApi | null>(null)
   const [loading, setLoading] = useState(true)
+  const { logoUrl } = useBranding()
 
   useEffect(() => {
     let cancelled = false
@@ -364,6 +429,16 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
   }
 
   const linkStyle = { color: footerData.linkColor }
+  const contactTypeOrder: Record<string, number> = {
+    phone: 0,
+    email: 1,
+    address: 2,
+  }
+  const orderedContacts = [...footerData.contacts].sort((a, b) => {
+    const aOrder = contactTypeOrder[a.type] ?? 99
+    const bOrder = contactTypeOrder[b.type] ?? 99
+    return aOrder - bOrder
+  })
   const filteredColumns = footerData.columns.map((col) => ({
     ...col,
     links: col.links.filter((link) => !hiddenRoutes?.has(link.url)),
@@ -375,13 +450,16 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
       {footerData.newsletter?.enabled && (
         <NewsletterBlock
           newsletter={footerData.newsletter}
+          socialLinks={footerData.socialLinks}
+          socialHoverEffect={footerData.socialHoverEffect}
+          socialHoverColor={footerData.socialHoverColor}
           getText={getText}
         />
       )}
 
       {/* Main grid */}
-      <PublicContainer>
-        <div className="grid grid-cols-1 gap-10 py-14 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+      <PublicContainer className="text-xs">
+        <div className="grid grid-cols-1 gap-10 py-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Brand + contacts */}
           <div className="lg:col-span-1">
             {footerData.brand?.showBrand && (
@@ -389,48 +467,26 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
                 <Link href="/" className="inline-flex flex-col gap-1 transition-opacity hover:opacity-90" aria-label={getText(footerData.brand.companyNameAr, footerData.brand.companyNameEn)}>
                   {footerData.brand.logoLight && (
                     <span className="relative block h-8 w-[120px] shrink-0">
-                      <Image src={footerData.brand.logoLight} alt="" width={120} height={32} className="object-contain object-left" />
+                      <Image
+                        src={
+                          footerData.brand.logoLight === '/logos/flixcam-light.svg' ||
+                          footerData.brand.logoLight === '/images/flixcam-logo.png'
+                            ? '/images/flixcam-logo.avif'
+                            : footerData.brand.logoLight
+                        }
+                        alt=""
+                        width={120}
+                        height={32}
+                        className="object-contain object-left"
+                      />
                     </span>
                   )}
                   <span className="sr-only">{getText(footerData.brand.companyNameAr, footerData.brand.companyNameEn)}</span>
                 </Link>
-                <p className="mt-3 text-sm leading-relaxed opacity-80">
+                <p className="mt-3 text-xs leading-relaxed opacity-80">
                   {getText(footerData.brand.descriptionAr, footerData.brand.descriptionEn)}
                 </p>
               </>
-            )}
-            {footerData.contacts.length > 0 && (
-              <div className="mt-6 space-y-3">
-                {footerData.contacts.map((contact) => {
-                  let href = contact.value
-                  if (contact.type === 'phone') {
-                    href = contact.whatsappEnabled
-                      ? getWhatsAppUrl({ number: contact.value.replace(/\D/g, '') })
-                      : `tel:${contact.value.replace(/\s/g, '')}`
-                  } else if (contact.type === 'email') {
-                    href = `mailto:${contact.value}`
-                  } else if (contact.type === 'address' && contact.mapsLink) {
-                    href = contact.mapsLink
-                  }
-                  const Icon = contact.icon ? getFooterIcon(contact.icon) : null
-                  return (
-                    <a
-                      key={contact.id}
-                      href={href}
-                      target={contact.type === 'address' && contact.mapsLink ? '_blank' : undefined}
-                      rel={contact.type === 'address' && contact.mapsLink ? 'noopener noreferrer' : undefined}
-                      className="flex items-center gap-3 text-sm transition-colors hover:opacity-90"
-                    >
-                      {Icon && (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                      )}
-                      {getText(contact.labelAr, contact.labelEn)}: {contact.value}
-                    </a>
-                  )
-                })}
-              </div>
             )}
           </div>
 
@@ -455,7 +511,7 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
                       {getText(link.textAr, link.textEn)}
                     </>
                   )
-                  const className = "inline-block text-sm opacity-80 transition-all hover:opacity-100"
+                  const className = "inline-block text-xs opacity-80 transition-all hover:opacity-100"
                   if (link.linkType === 'external') {
                     return (
                       <li key={link.id}>
@@ -478,7 +534,7 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
           ))}
 
           {/* Social */}
-          {footerData.socialLinks.length > 0 && (() => {
+          {footerData.socialLinks.length > 0 && !footerData.newsletter?.enabled && (() => {
             const effect = footerData.socialHoverEffect ?? 'lift'
             const hoverColor = footerData.socialHoverColor ?? ''
             const hasCustomColor = Boolean(hoverColor)
@@ -519,6 +575,45 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
               </div>
             )
           })()}
+
+          {orderedContacts.length > 0 && (
+            <div className="lg:col-span-4">
+              <div
+                className="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 overflow-x-auto pb-1 md:flex-nowrap md:gap-x-7"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                {orderedContacts.map((contact) => {
+                  let href = contact.value
+                  if (contact.type === 'phone') {
+                    href = contact.whatsappEnabled
+                      ? getWhatsAppUrl({ number: contact.value.replace(/\D/g, '') })
+                      : `tel:${contact.value.replace(/\s/g, '')}`
+                  } else if (contact.type === 'email') {
+                    href = `mailto:${contact.value}`
+                  } else if (contact.type === 'address' && contact.mapsLink) {
+                    href = contact.mapsLink
+                  }
+                  const Icon = contact.icon ? getFooterIcon(contact.icon) : null
+                  return (
+                    <a
+                      key={contact.id}
+                      href={href}
+                      target={contact.type === 'address' && contact.mapsLink ? '_blank' : undefined}
+                      rel={contact.type === 'address' && contact.mapsLink ? 'noopener noreferrer' : undefined}
+                      className="inline-flex items-center gap-3 whitespace-nowrap rounded-[6px] px-2 py-1 text-sm leading-6 transition-colors hover:bg-white/5 hover:opacity-100"
+                    >
+                      {Icon && (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                      )}
+                      {getText(contact.labelAr, contact.labelEn)}: {contact.value}
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </PublicContainer>
 
@@ -537,7 +632,9 @@ export function PublicFooter({ hiddenRoutes }: PublicFooterProps = {}) {
                   : getText(footerData.legal.copyrightAr, footerData.legal.copyrightEn)}
               </p>
               <div className="flex flex-wrap items-center gap-4">
-                {footerData.legal.links.map((l, i) => (
+                {footerData.legal.links
+                  .filter((l) => !HIDDEN_FOOTER_LEGAL_PATHS.has(footerLegalPath(l.url)))
+                  .map((l, i) => (
                   <Link key={i} href={l.url} className="text-xs opacity-70 hover:opacity-100 transition-opacity" style={linkStyle}>
                     {getText(l.textAr, l.textEn)}
                   </Link>

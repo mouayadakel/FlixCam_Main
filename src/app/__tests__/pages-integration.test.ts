@@ -26,7 +26,8 @@ function findPageFiles(dir: string, acc: string[] = []): string[] {
 describe('Pages integration (Phase 8)', () => {
   describe('Page files exist', () => {
     it('has public homepage', () => {
-      const home = path.join(APP_DIR, '(public)', 'page.tsx')
+      // Homepage lives at app root (not route group) — see src/app/page.tsx comment re Turbopack.
+      const home = path.join(APP_DIR, 'page.tsx')
       expect(fs.existsSync(home)).toBe(true)
     })
 

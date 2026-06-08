@@ -19,10 +19,11 @@ jest.mock('@/lib/db/prisma', () => ({
       create: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       deleteMany: jest.fn(),
       delete: jest.fn(),
     },
-    equipment: { findFirst: jest.fn(), findMany: jest.fn() },
+    equipment: { findFirst: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() },
     studio: { findFirst: jest.fn() },
     kit: { findFirst: jest.fn(), findMany: jest.fn() },
     coupon: { findFirst: jest.fn() },
@@ -95,7 +96,7 @@ describe('CartService', () => {
       expect(result).toBeDefined()
       expect(mockCartFindFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: 'user-1' },
+          where: { deletedAt: null, userId: 'user-1' },
         })
       )
     })
@@ -133,26 +134,52 @@ describe('CartService', () => {
       expect(mockCartCreate).not.toHaveBeenCalled()
     })
 
-    it('deletes and recreates when cart expired', async () => {
+    it('soft-deletes and recreates when cart expired', async () => {
       const expired = new Date(Date.now() - 1000)
       mockCartFindFirst.mockResolvedValue(emptyCartWithItems({ expiresAt: expired }))
-      mockCartItemDeleteMany.mockResolvedValue({})
-      mockCartDelete.mockResolvedValue({})
+      ;(mockPrisma.cartItem.updateMany as jest.Mock).mockResolvedValue({ count: 0 })
+      mockCartUpdate.mockResolvedValue({})
       mockCartCreate.mockResolvedValue(emptyCartWithItems({ id: 'cart-2' }))
       const result = await CartService.getOrCreateCart(null, 'sess-1')
-      expect(mockCartItemDeleteMany).toHaveBeenCalled()
-      expect(mockCartDelete).toHaveBeenCalled()
+      expect(mockPrisma.cartItem.updateMany).toHaveBeenCalled()
+      expect(mockCartUpdate).toHaveBeenCalled()
       expect(mockCartCreate).toHaveBeenCalled()
       expect(result.id).toBe('cart-2')
     })
   })
 
   describe('addItem', () => {
+    it('rejects quote-only crew roles', async () => {
+      mockEquipmentFindFirst.mockResolvedValue({
+        dailyPrice: 5000,
+        weeklyPrice: 25000,
+        monthlyPrice: 75000,
+        sku: 'CREW-DOP',
+        customFields: { itemType: 'crew', bookingMode: 'quote' },
+        category: { slug: 'crew' },
+      })
+
+      await expect(
+        CartService.addItem('cart-1', {
+          itemType: 'EQUIPMENT',
+          equipmentId: 'crew-dop',
+          quantity: 1,
+          startDate: new Date('2026-06-01'),
+          endDate: new Date('2026-06-05'),
+        })
+      ).rejects.toThrow(/custom quote/i)
+
+      expect(mockCartItemCreate).not.toHaveBeenCalled()
+    })
+
     it('adds equipment item and recalculates cart', async () => {
       mockEquipmentFindFirst.mockResolvedValue({
         dailyPrice: 100,
         weeklyPrice: 500,
         monthlyPrice: 2000,
+        sku: 'CAM-1',
+        customFields: {},
+        category: { slug: 'cameras' },
       })
       mockCartItemCreate.mockResolvedValue({})
       mockCartFindUnique
@@ -178,6 +205,9 @@ describe('CartService', () => {
         dailyPrice: 100,
         weeklyPrice: 500,
         monthlyPrice: 2000,
+        sku: 'CAM-1',
+        customFields: {},
+        category: { slug: 'cameras' },
       })
       mockCartItemCreate.mockResolvedValue({})
       mockCartFindUnique
@@ -740,6 +770,7 @@ describe('CartService', () => {
         })
       )
       mockEquipmentFindMany.mockResolvedValue([{ id: 'eq1', quantityTotal: 5 }])
+      ;(mockPrisma.equipment.findUnique as jest.Mock).mockResolvedValue({ quantityTotal: 5 })
       if (mockBookingEquipmentAggregate) {
         mockBookingEquipmentAggregate.mockResolvedValue({ _sum: { quantity: 0 } })
       }

@@ -26,10 +26,11 @@ export interface CheckOutInput {
 export interface CheckInInput {
   bookingId: string
   equipmentIds: string[]
-  checklist: InspectionInput['checklist']
+  checklist?: InspectionInput['checklist']
   notes?: string
   condition?: EquipmentCondition
   damageReport?: string
+  images?: string[]
 }
 
 export interface WarehouseInventoryItem {
@@ -241,8 +242,9 @@ export class WarehouseService {
               bookingId: input.bookingId,
               equipmentId,
               type: 'check_in',
-              checklist: input.checklist,
+              checklist: input.checklist || [{ item: 'General Return', status: 'ok' }],
               notes: input.notes,
+              images: input.images,
             },
             userId,
             auditContext

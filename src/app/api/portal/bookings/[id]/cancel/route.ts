@@ -7,7 +7,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
+import { calculateCancellationRefund } from '@/lib/booking/cancellation-refund'
+import { logger } from '@/lib/logger'
 import { BookingService } from '@/lib/services/booking.service'
+import { PaymentService } from '@/lib/services/payment.service'
 import { cancelBookingSchema } from '@/lib/validators/booking.validator'
 import { BookingStatus } from '@prisma/client'
 
@@ -78,6 +81,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
+    const { refundAmountSar, message } = calculateCancellationRefund(booking)
+
     await BookingService.transitionState(
       bookingId,
       BookingStatus.CANCELLED,
@@ -86,8 +91,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       validated.reason
     )
 
+    const refundResult = await PaymentService.refundBookingCancellationPayments({
+      bookingId,
+      userId: session.user.id,
+      refundAmountSar,
+      reason: `Portal cancellation: ${validated.reason ?? 'customer request'}`,
+    })
+
+    if (refundResult.errors.length > 0) {
+      logger.warn('Portal booking cancellation: refund failures', {
+        bookingId,
+        errors: refundResult.errors,
+      })
+    }
+
     return NextResponse.json({
       message: 'تم إلغاء الحجز بنجاح.',
+      refundAmount: refundResult.refundedSar || refundAmountSar,
+      refundMessage: message,
     })
   } catch (error) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {

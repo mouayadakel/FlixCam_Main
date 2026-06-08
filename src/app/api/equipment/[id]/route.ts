@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { EquipmentService } from '@/lib/services/equipment.service'
 import { updateEquipmentSchema } from '@/lib/validators/equipment.validator'
+import { cacheClearNamespace, cacheDelete } from '@/lib/cache'
 
 function coerceEquipmentBody(body: Record<string, unknown>) {
   const out: Record<string, unknown> = { ...body }
@@ -99,6 +100,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       updatedBy: session.user.id,
     })
 
+    // Clear public cache so updates are reflected immediately
+    await cacheClearNamespace('equipmentList')
+    await cacheDelete('equipmentDetail', id)
+
     return NextResponse.json(equipment)
   } catch (error) {
     console.error('Error updating equipment:', error)
@@ -126,6 +131,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const { id } = await params
     await EquipmentService.deleteEquipment(id, session.user.id)
+
+    // Clear public cache so deletions are reflected immediately
+    await cacheClearNamespace('equipmentList')
+    await cacheDelete('equipmentDetail', id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

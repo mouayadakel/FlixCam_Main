@@ -16,12 +16,16 @@ export const paymentStatusSchema = z.nativeEnum(PaymentStatus, {
 export const createPaymentSchema = z.object({
   bookingId: z.string().min(1, 'معرف الحجز مطلوب'),
   amount: z.number().min(0.01, 'المبلغ يجب أن يكون أكبر من 0'),
+  gateway: z.string().optional(),
+  externalId: z.string().optional(),
   tapTransactionId: z.string().optional(),
   tapChargeId: z.string().optional(),
 })
 
 export const updatePaymentSchema = z.object({
   status: paymentStatusSchema.optional(),
+  gateway: z.string().optional(),
+  externalId: z.string().optional(),
   tapTransactionId: z.string().optional(),
   tapChargeId: z.string().optional(),
 })

@@ -28,9 +28,10 @@ interface NewArrivalsItem {
 
 interface HomeNewArrivalsProps {
   items: NewArrivalsItem[]
+  maxItems?: number
 }
 
-export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
+export function HomeNewArrivals({ items, maxItems = 8 }: HomeNewArrivalsProps) {
   const { t } = useLocale()
   const [imageSrcById, setImageSrcById] = useState<Record<string, string>>({})
 
@@ -51,12 +52,12 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
   }, [])
 
   return (
-    <section className="bg-white py-10 md:py-14">
+    <section className="bg-white py-[1rem] md:py-[1rem]">
       <PublicContainer>
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-[0.8rem] flex items-end justify-between">
           <div>
             <h2 className="text-section-title text-text-heading">{t('home.newArrivalsTitle')}</h2>
-            <p className="mt-2 text-body-main text-text-body">{t('home.newArrivalsSubtitle')}</p>
+            <p className="mt-1 text-[14px] text-text-body">{t('home.newArrivalsSubtitle')}</p>
           </div>
           <Button
             variant="ghost"
@@ -72,7 +73,7 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
 
         {items.length === 0 ? (
           <>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -102,8 +103,8 @@ export function HomeNewArrivals({ items }: HomeNewArrivalsProps) {
           </>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-              {items.slice(0, 8).map((item, index) => {
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
+              {items.slice(0, maxItems).map((item, index) => {
                 const soldOut = (item.quantityAvailable ?? 0) <= 0
                 return (
                   <Link

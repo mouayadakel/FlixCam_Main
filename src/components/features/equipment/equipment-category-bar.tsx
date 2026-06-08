@@ -21,21 +21,21 @@ export interface EquipmentCategoryBarCategory {
 
 interface EquipmentCategoryBarProps {
   categories: EquipmentCategoryBarCategory[]
-  currentCategoryId: string
+  currentCategorySlug: string
 }
 
-export function EquipmentCategoryBar({ categories, currentCategoryId }: EquipmentCategoryBarProps) {
+export function EquipmentCategoryBar({ categories, currentCategorySlug }: EquipmentCategoryBarProps) {
   const { t } = useLocale()
   const parents = useMemo(() => categories.filter((c) => !c.parentId), [categories])
 
   const { currentParentId, subcategories } = useMemo(() => {
-    if (!currentCategoryId) return { currentParentId: null, subcategories: [] }
-    const current = categories.find((c) => c.id === currentCategoryId)
+    if (!currentCategorySlug) return { currentParentId: null, subcategories: [] }
+    const current = categories.find((c) => c.slug === currentCategorySlug)
     if (!current) return { currentParentId: null, subcategories: [] }
     const parentId = current.parentId ?? current.id
     const children = categories.filter((c) => c.parentId === parentId)
     return { currentParentId: parentId, subcategories: children }
-  }, [categories, currentCategoryId])
+  }, [categories, currentCategorySlug])
 
   const showSubcategories = subcategories.length > 0
 
@@ -51,16 +51,16 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
             href="/equipment"
             className={cn(
               'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors',
-              !currentCategoryId
+              !currentCategorySlug
                 ? 'border-brand-primary bg-brand-primary text-white'
                 : 'border-border-light/60 bg-surface-light text-text-body hover:border-brand-primary/30 hover:bg-brand-primary/10 hover:text-brand-primary'
             )}
-            aria-current={!currentCategoryId ? 'true' : undefined}
+            aria-current={!currentCategorySlug ? 'true' : undefined}
           >
             <span
               className={cn(
                 'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
-                !currentCategoryId ? 'bg-white/20' : 'bg-brand-primary/10 text-brand-primary'
+                !currentCategorySlug ? 'bg-white/20' : 'bg-brand-primary/10 text-brand-primary'
               )}
             >
               <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
@@ -69,11 +69,11 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
           </Link>
           {parents.map((cat) => {
             const Icon = getCategoryIcon(cat.slug)
-            const isActive = currentCategoryId === cat.id
+            const isActive = currentCategorySlug === cat.slug
             return (
               <Link
                 key={cat.id}
-                href={`/equipment?categoryId=${cat.id}`}
+                href={`/equipment?categoryId=${cat.slug}`}
                 className={cn(
                   'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors',
                   isActive
@@ -102,11 +102,11 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
         <div className="flex min-w-0 items-center gap-1.5">
           {showSubcategories ? (
             subcategories.map((cat) => {
-              const isActive = currentCategoryId === cat.id
+              const isActive = currentCategorySlug === cat.slug
               return (
                 <Link
                   key={cat.id}
-                  href={`/equipment?categoryId=${cat.id}`}
+                  href={`/equipment?categoryId=${cat.slug}`}
                   className={cn(
                     'shrink-0 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors',
                     isActive
@@ -121,7 +121,7 @@ export function EquipmentCategoryBar({ categories, currentCategoryId }: Equipmen
             })
           ) : (
             <span className="text-xs text-text-muted" role="status">
-              {currentCategoryId
+              {currentCategorySlug
                 ? (t('equipment.noSubcategories') ?? 'No subcategories')
                 : (t('equipment.selectCategoryForSubcategories') ??
                   'Select a category above to see subcategories')}

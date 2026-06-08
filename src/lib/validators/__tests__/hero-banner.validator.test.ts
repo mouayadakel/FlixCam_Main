@@ -44,6 +44,15 @@ describe('hero-banner.validator', () => {
       })
       expect(result.success).toBe(false)
     })
+    it('accepts uploaded site path for imageUrl', () => {
+      const result = createSlideSchema.safeParse({
+        imageUrl: '/uploads/cms/hero-banners/b1/abc123.jpg',
+        mobileImageUrl: '/uploads/cms/hero-banners/b1/m.jpg',
+        titleAr: 'عنوان',
+        titleEn: 'Title',
+      })
+      expect(result.success).toBe(true)
+    })
   })
 
   describe('reorderSlidesSchema', () => {

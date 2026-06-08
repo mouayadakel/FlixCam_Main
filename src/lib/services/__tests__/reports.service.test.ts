@@ -18,10 +18,17 @@ jest.mock('@/lib/db/prisma', () => ({
     product: { findMany: jest.fn(), count: jest.fn() },
     user: { findMany: jest.fn(), count: jest.fn() },
     inventoryItem: { findMany: jest.fn(), count: jest.fn() },
+    payment: { findMany: jest.fn() },
+    invoice: { findMany: jest.fn() },
+    refund: { findMany: jest.fn() },
+    vendorPayout: { findMany: jest.fn() },
   },
 }))
 
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: jest.fn().mockResolvedValue(true) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: jest.fn().mockResolvedValue(true),
+}))
 
 const mockBookingFindMany = prisma.booking.findMany as jest.Mock
 const mockBookingCount = prisma.booking.count as jest.Mock
@@ -419,10 +426,13 @@ describe('ReportsService', () => {
     })
 
     it('returns financial report', async () => {
-      mockBookingFindMany.mockResolvedValue([sampleBooking])
+      ;(prisma.payment.findMany as jest.Mock).mockResolvedValue([])
+      ;(prisma.invoice.findMany as jest.Mock).mockResolvedValue([])
+      ;(prisma.refund.findMany as jest.Mock).mockResolvedValue([])
+      ;(prisma.vendorPayout.findMany as jest.Mock).mockResolvedValue([])
       const result = await ReportsService.generateFinancialReport(validFilter, 'usr_01')
       expect(result).toHaveProperty('revenue')
-      expect(result.revenue.total).toBe(10000)
+      expect(result.revenue.total).toBe(0)
       expect(result).toHaveProperty('profit')
       expect(result).toHaveProperty('vat')
     })

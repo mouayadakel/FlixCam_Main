@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/hooks/use-locale'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -140,7 +141,7 @@ export function ReceiversList() {
                         </Badge>
                       )}
                     </p>
-                    <p className="text-sm text-muted-foreground" dir="ltr">
+                    <p className="text-sm text-muted-foreground" dir={EMBED_LTR}>
                       {r.phone}
                     </p>
                   </div>

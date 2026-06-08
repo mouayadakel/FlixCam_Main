@@ -47,6 +47,8 @@ export function LoginForm({
   const [googleLoading, setGoogleLoading] = useState(false)
   const [keepSignedIn, setKeepSignedIn] = useState(true)
   const [usePhoneLogin, setUsePhoneLogin] = useState(false)
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -63,10 +65,27 @@ export function LoginForm({
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
+        otp: needsTwoFactor ? otpCode : undefined,
         redirect: false,
       })
       if (result?.error) {
         console.error('[LOGIN FORM] Sign in failed:', result?.error)
+        if (result.error === 'TwoFactorRequired') {
+          setNeedsTwoFactor(true)
+          toast({
+            title: t('auth.twoFA'),
+            description: t('auth.twoFADesc'),
+          })
+          return
+        }
+        if (result.error === 'InvalidTwoFactorCode') {
+          toast({
+            title: t('auth.loginError'),
+            description: isRtl ? 'رمز المصادقة الثنائية غير صحيح' : 'Invalid 2FA code',
+            variant: 'destructive',
+          })
+          return
+        }
         if (result.error === 'AccountNotVerified') {
           toast({
             title: t('auth.accountNotVerified'),
@@ -185,6 +204,23 @@ export function LoginForm({
             </p>
           )}
         </div>
+        {needsTwoFactor && (
+          <div className="space-y-2">
+            <Label htmlFor="login-otp" className="text-sm font-medium text-text-heading">
+              {t('auth.twoFA')}
+            </Label>
+            <Input
+              id="login-otp"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              value={otpCode}
+              onChange={(event) => setOtpCode(event.target.value)}
+              disabled={isLoading}
+              className="h-12 rounded-lg border-border-input px-4 py-3 text-base"
+            />
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-text-body">
             <Checkbox

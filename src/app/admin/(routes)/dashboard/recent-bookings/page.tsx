@@ -6,13 +6,14 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   RecentBookingsTable,
   type RecentBookingRow,
 } from '@/components/dashboard/recent-bookings-table'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminLive } from '@/lib/hooks/use-admin-live'
 import Link from 'next/link'
 
 export default function DashboardRecentBookingsPage() {
@@ -20,29 +21,44 @@ export default function DashboardRecentBookingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch('/api/bookings?limit=10&offset=0')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load bookings')
-        return res.json()
-      })
-      .then((data) => {
-        const items = data.data ?? []
-        const rows: RecentBookingRow[] = items.map((b: any) => ({
-          id: b.id,
-          booking_number: b.bookingNumber ?? b.booking_number ?? '-',
-          client_id: b.customerId ?? b.customer?.id ?? '',
-          client_name: b.customer?.name ?? b.customer?.email ?? 'عميل',
-          state: (b.status ?? '').toLowerCase(),
-          start_date: b.startDate,
-          end_date: b.endDate,
-          total: Number(b.totalAmount ?? b.total ?? 0),
-        }))
-        setBookings(rows)
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
+  const loadBookings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/bookings?limit=10&offset=0')
+      if (!res.ok) throw new Error('Failed to load bookings')
+      const data = await res.json()
+      const items = data.data ?? []
+      const rows: RecentBookingRow[] = items.map((b: any) => ({
+        id: b.id,
+        booking_number: b.bookingNumber ?? b.booking_number ?? '-',
+        client_id: b.customerId ?? b.customer?.id ?? '',
+        client_name: b.customer?.name ?? b.customer?.email ?? 'عميل',
+        state: (b.status ?? '').toLowerCase(),
+        start_date: b.startDate,
+        end_date: b.endDate,
+        total: Number(b.totalAmount ?? b.total ?? 0),
+      }))
+      setBookings(rows)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load bookings')
+    }
   }, [])
+
+  useEffect(() => {
+    loadBookings()
+      .finally(() => setLoading(false))
+
+    const timer = window.setInterval(loadBookings, 30000)
+    return () => window.clearInterval(timer)
+  }, [loadBookings])
+
+  useAdminLive((event) => {
+    if (event.startsWith('booking.') || event.startsWith('payment.')) {
+      loadBookings().catch(() => {
+        // Ignore transient refresh failures
+      })
+    }
+  })
 
   return (
     <div className="space-y-6" dir="rtl">

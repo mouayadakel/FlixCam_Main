@@ -35,7 +35,23 @@ async function fetchFirstBlogSlug() {
   }
 }
 
+async function resolveChromePath() {
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH
+  const { execSync } = require('child_process')
+  for (const bin of ['chromium-browser', 'chromium', 'google-chrome-stable', 'google-chrome']) {
+    try {
+      return execSync(`command -v ${bin}`, { encoding: 'utf8' }).trim()
+    } catch {
+      // try next
+    }
+  }
+  return undefined
+}
+
 async function main() {
+  const chromePath = await resolveChromePath()
+  if (chromePath) process.env.CHROME_PATH = chromePath
+
   const chromeLauncher = await import('chrome-launcher')
   const lighthouse = (await import('lighthouse')).default
 

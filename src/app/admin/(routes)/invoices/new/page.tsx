@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/utils/format.utils'
 import type { InvoiceType } from '@/lib/types/invoice.types'
+import { useVatRate } from '@/hooks/use-vat-rate'
 
 interface Client {
   id: string
@@ -48,8 +49,6 @@ const INVOICE_TYPES: { value: InvoiceType; labelAr: string }[] = [
   { value: 'adjustment', labelAr: 'تعديل' },
 ]
 
-const VAT_RATE = 0.15
-
 function toDateInputValue(d: Date): string {
   return d.toISOString().split('T')[0]
 }
@@ -58,6 +57,7 @@ export default function NewInvoicePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { vatRate, percentLabel } = useVatRate()
   const [loading, setLoading] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
 
@@ -119,7 +119,7 @@ export default function NewInvoicePage() {
     item.quantity * (item.days || 1) * item.unitPrice
   const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0)
   const afterDiscount = Math.max(0, subtotal - formData.discount)
-  const vatAmount = afterDiscount * VAT_RATE
+  const vatAmount = afterDiscount * vatRate
   const totalAmount = afterDiscount + vatAmount
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -433,7 +433,7 @@ export default function NewInvoicePage() {
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-600">
-                <span>ضريبة القيمة المضافة (15%)</span>
+                <span>ضريبة القيمة المضافة ({percentLabel})</span>
                 <span className="tabular-nums">{formatCurrency(vatAmount)}</span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-3 text-lg font-bold">

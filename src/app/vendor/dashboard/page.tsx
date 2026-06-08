@@ -12,9 +12,11 @@ import { Package, Calendar, DollarSign, TrendingUp, ArrowLeft } from 'lucide-rea
 import { formatCurrency, formatDate } from '@/lib/utils/format.utils'
 import { VendorDashboardClient } from './vendor-dashboard-client'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 export default async function VendorDashboardPage() {
   const session = await auth()
+  const { locale, dir } = await getRequestLocale()
   if (!session?.user?.id) redirect('/login?callbackUrl=/vendor/dashboard')
 
   const vendor = await prisma.vendor.findFirst({
@@ -81,9 +83,9 @@ export default async function VendorDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('ar', 'vendor.dashboard')}</h1>
+        <h1 className="text-3xl font-bold">{t(locale, 'vendor.dashboard')}</h1>
         <p className="mt-2 text-muted-foreground">
-          {t('ar', 'vendor.welcome').replace('{name}', vendor.companyName)}
+          {t(locale, 'vendor.welcome').replace('{name}', vendor.companyName)}
         </p>
       </div>
 
@@ -91,50 +93,50 @@ export default async function VendorDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('ar', 'vendor.listedEquipment')}
+              {t(locale, 'vendor.listedEquipment')}
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{equipmentCount}</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t('ar', 'vendor.activeEquipment')}
+              {t(locale, 'vendor.activeEquipment')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.activeRentals')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'vendor.activeRentals')}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeRentalsCount}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.now')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'vendor.now')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.monthEarnings')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'vendor.monthEarnings')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(monthNet)}</div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t('ar', 'vendor.netAfterCommission')}
+              {t(locale, 'vendor.netAfterCommission')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('ar', 'vendor.totalEarnings')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t(locale, 'vendor.totalEarnings')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(allTimeNet)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{t('ar', 'vendor.allTime')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t(locale, 'vendor.allTime')}</p>
           </CardContent>
         </Card>
       </div>
@@ -142,7 +144,7 @@ export default async function VendorDashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('ar', 'vendor.monthlyEarnings')}</CardTitle>
+            <CardTitle>{t(locale, 'vendor.monthlyEarnings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <VendorDashboardClient monthlyData={monthlyData} />
@@ -151,16 +153,16 @@ export default async function VendorDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t('ar', 'vendor.recentBookings')}</CardTitle>
+            <CardTitle>{t(locale, 'vendor.recentBookings')}</CardTitle>
             <Link href="/vendor/bookings">
               <Button variant="ghost" size="sm">
-                {t('ar', 'vendor.viewAll')}
+                {t(locale, 'vendor.viewAll')}
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
             {recentBookings.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('ar', 'vendor.noBookingsYet')}</p>
+              <p className="text-sm text-muted-foreground">{t(locale, 'vendor.noBookingsYet')}</p>
             ) : (
               <div className="space-y-3">
                 {recentBookings.map((b) => (
@@ -190,21 +192,21 @@ export default async function VendorDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('ar', 'vendor.quickActions')}</CardTitle>
+          <CardTitle>{t(locale, 'vendor.quickActions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Link href="/vendor/equipment/new">
               <Button>
                 <ArrowLeft className="ms-2 h-4 w-4" />
-                {t('ar', 'vendor.addNewEquipment')}
+                {t(locale, 'vendor.addNewEquipment')}
               </Button>
             </Link>
             <Link href="/vendor/equipment">
-              <Button variant="outline">{t('ar', 'vendor.viewEquipment')}</Button>
+              <Button variant="outline">{t(locale, 'vendor.viewEquipment')}</Button>
             </Link>
             <Link href="/vendor/payouts">
-              <Button variant="outline">{t('ar', 'vendor.viewPayouts')}</Button>
+              <Button variant="outline">{t(locale, 'vendor.viewPayouts')}</Button>
             </Link>
           </div>
         </CardContent>

@@ -16,7 +16,10 @@ jest.mock('@/lib/db/prisma', () => ({
 jest.mock('@/lib/services/audit.service', () => ({ AuditService: { log: jest.fn().mockResolvedValue(undefined) } }))
 jest.mock('@/lib/events/event-bus', () => ({ EventBus: { emit: jest.fn().mockResolvedValue(undefined) } }))
 const mockHasPermission = jest.fn().mockResolvedValue(true)
-jest.mock('@/lib/auth/permissions', () => ({ hasPermission: (...args: unknown[]) => mockHasPermission(...args) }))
+jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
+  hasPermission: (...args: unknown[]) => mockHasPermission(...args),
+}))
 
 const mockFindFirst = prisma.maintenance.findFirst as jest.Mock
 const mockCreate = prisma.maintenance.create as jest.Mock
@@ -497,7 +500,9 @@ describe('MaintenanceService', () => {
       mockEquipmentUpdate.mockResolvedValue({})
       await MaintenanceService.complete('m1', { equipmentConditionAfter: 'GOOD' }, 'u1')
       expect(mockEquipmentUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { condition: 'GOOD', updatedBy: 'u1' } })
+        expect.objectContaining({
+          data: expect.objectContaining({ condition: 'GOOD', updatedBy: 'u1' }),
+        })
       )
     })
   })

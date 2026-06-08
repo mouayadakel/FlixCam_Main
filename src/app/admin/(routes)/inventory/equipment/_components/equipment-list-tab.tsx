@@ -19,6 +19,8 @@ import {
   Power,
   PowerOff,
   Trash2,
+  ExternalLink,
+  Copy,
 } from 'lucide-react'
 import { SpecificationsAuditDialog } from '@/components/admin/specifications/SpecificationsAuditDialog'
 import { Button } from '@/components/ui/button'
@@ -54,6 +56,17 @@ interface EquipmentWithRelations extends Equipment {
   brand: { id: string; name: string; slug: string } | null
   media: Array<{ id: string; url: string }>
   maintenance?: Array<{ completedDate: string }>
+  rentalCycles: number
+  maxCyclesBeforeService: number
+  needsService: boolean
+}
+
+const getHealthColor = (cycles: number, max: number) => {
+  const percentage = (cycles / max) * 100
+  if (percentage >= 100) return 'text-red-600'
+  if (percentage >= 75) return 'text-orange-500'
+  if (percentage >= 50) return 'text-amber-500'
+  return 'text-green-600'
 }
 
 const CONDITION_COLORS: Record<EquipmentCondition, string> = {
@@ -475,6 +488,7 @@ export default function EquipmentListTab() {
                     <TableHead>الفئة</TableHead>
                     <TableHead>العلامة التجارية</TableHead>
                     <TableHead>حالة المعدة</TableHead>
+                    <TableHead>الصحة</TableHead>
                     <TableHead>المتاح / الإجمالي</TableHead>
                     <TableHead>آخر صيانة</TableHead>
                     <TableHead>السعر اليومي</TableHead>
@@ -536,6 +550,28 @@ export default function EquipmentListTab() {
                             {CONDITION_LABELS[item.condition]}
                           </Badge>
                         </TableCell>
+                        <TableCell className="align-middle">
+                          <div className="flex flex-col gap-1 min-w-[80px]">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className={`text-[10px] font-bold ${getHealthColor(item.rentalCycles, item.maxCyclesBeforeService)}`}>
+                                {Math.max(0, 100 - Math.round(((item.rentalCycles || 0) / (item.maxCyclesBeforeService || 50)) * 100))}%
+                              </span>
+                              {item.needsService && (
+                                <AlertTriangle className="h-3 w-3 text-red-500 animate-pulse" />
+                              )}
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/50">
+                              <div 
+                                className={`h-full transition-all ${
+                                  ((item.rentalCycles || 0) / (item.maxCyclesBeforeService || 50)) >= 1 ? 'bg-red-500' :
+                                  ((item.rentalCycles || 0) / (item.maxCyclesBeforeService || 50)) >= 0.75 ? 'bg-orange-400' :
+                                  'bg-green-500'
+                                }`}
+                                style={{ width: `${Math.min(100, ((item.rentalCycles || 0) / (item.maxCyclesBeforeService || 50)) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        </TableCell>
                         <TableCell className="inline-flex items-center gap-1">
                           <span
                             className={
@@ -567,6 +603,26 @@ export default function EquipmentListTab() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const slug = item.slug || item.id
+                                const url = `${window.location.origin}/equipment/${slug}`
+                                navigator.clipboard.writeText(url)
+                                toast({
+                                  title: 'تم النسخ',
+                                  description: 'تم نسخ رابط المعدة إلى الحافظة',
+                                })
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild title="رؤية في الموقع">
+                              <Link href={`/equipment/${item.slug || item.id}`} target="_blank">
+                                <ExternalLink className="h-4 w-4" />
+                              </Link>
+                            </Button>
                             <Button variant="ghost" size="sm" asChild>
                               <Link href={`/admin/inventory/equipment/${item.id}`}>عرض</Link>
                             </Button>

@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Package, Plus } from 'lucide-react'
+import { Package, Plus, ExternalLink } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/format.utils'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 export default async function VendorEquipmentPage() {
   const session = await auth()
+  const { locale, dir } = await getRequestLocale()
   if (!session?.user?.id) redirect('/login?callbackUrl=/vendor/equipment')
 
   const vendor = await prisma.vendor.findFirst({
@@ -41,13 +43,13 @@ export default async function VendorEquipmentPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t('ar', 'vendor.equipmentPage')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('ar', 'vendor.manageEquipmentDesc')}</p>
+          <h1 className="text-3xl font-bold">{t(locale, 'vendor.equipmentPage')}</h1>
+          <p className="mt-1 text-muted-foreground">{t(locale, 'vendor.manageEquipmentDesc')}</p>
         </div>
         <Link href="/vendor/equipment/new">
           <Button>
             <Plus className="ms-2 h-4 w-4" />
-            {t('ar', 'vendor.addNewEquipment')}
+            {t(locale, 'vendor.addNewEquipment')}
           </Button>
         </Link>
       </div>
@@ -56,16 +58,16 @@ export default async function VendorEquipmentPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            {t('ar', 'vendor.equipmentList')} ({equipment.length})
+            {t(locale, 'vendor.equipmentList')} ({equipment.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {equipment.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
               <Package className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>{t('ar', 'vendor.noEquipmentYet')}</p>
+              <p>{t(locale, 'vendor.noEquipmentYet')}</p>
               <Link href="/vendor/equipment/new">
-                <Button className="mt-4">{t('ar', 'vendor.addFirstEquipment')}</Button>
+                <Button className="mt-4">{t(locale, 'vendor.addFirstEquipment')}</Button>
               </Link>
             </div>
           ) : (
@@ -108,13 +110,13 @@ export default async function VendorEquipmentPage() {
                             }
                           >
                             {status === 'pending_review'
-                              ? t('ar', 'vendor.pendingReview')
+                              ? t(locale, 'vendor.pendingReview')
                               : status === 'approved'
-                                ? t('ar', 'vendor.approved')
-                                : t('ar', 'vendor.rejected')}
+                                ? t(locale, 'vendor.approved')
+                                : t(locale, 'vendor.rejected')}
                           </Badge>
                           {!eq.isActive && (
-                            <Badge variant="outline">{t('ar', 'vendor.inactive')}</Badge>
+                            <Badge variant="outline">{t(locale, 'vendor.inactive')}</Badge>
                           )}
                         </div>
                       </div>
@@ -123,12 +125,17 @@ export default async function VendorEquipmentPage() {
                       <div className="text-end">
                         <div className="font-medium">{formatCurrency(Number(eq.dailyPrice))}</div>
                         <div className="text-xs text-muted-foreground">
-                          {t('ar', 'vendor.perDay')}
+                          {t(locale, 'vendor.perDay')}
                         </div>
                       </div>
+                      <Link href={`/equipment/${eq.slug || eq.id}`} target="_blank">
+                        <Button variant="ghost" size="sm" title={t(locale, 'vendor.viewOnSite')}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Link href={`/vendor/equipment/${eq.id}`}>
                         <Button variant="outline" size="sm">
-                          {t('ar', 'vendor.edit')}
+                          {t(locale, 'vendor.edit')}
                         </Button>
                       </Link>
                     </div>

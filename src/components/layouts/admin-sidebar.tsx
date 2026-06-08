@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useAdminFeatureFlags } from '@/lib/hooks/use-admin-feature-flags'
+import { useBranding } from '@/hooks/use-branding'
 import { ADMIN_SIDEBAR_FLAG_MAP } from '@/config/feature-flag-groups'
 import {
   Home,
@@ -58,6 +59,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, href: '/admin/dashboard', permission: 'dashboard.read' },
       { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center', permission: 'dashboard.read', activePaths: ['/admin/action-center', '/admin/approvals', '/admin/notifications'] },
       { label: { ar: 'العمليات الحية', en: 'Live Operations' }, href: '/admin/live-ops', permission: 'dashboard.read' },
+      { label: { ar: 'المهام المجدولة', en: 'Cron & Jobs' }, href: '/admin/ops/cron', permission: 'system.health_check' },
     ],
   },
   {
@@ -124,8 +126,19 @@ const sidebarSections: SidebarSection[] = [
     icon: Users,
     items: [
       { label: { ar: 'العملاء', en: 'Clients' }, href: '/admin/clients', permission: 'client.read', activePaths: ['/admin/clients', '/admin/reviews', '/admin/settings/customer-segments'] },
+      { label: { ar: 'القائمة السوداء', en: 'Blacklist' }, href: '/admin/clients/blacklist', permission: 'client.blacklist', activePaths: ['/admin/clients/blacklist'] },
       { label: { ar: 'الكوبونات والخصومات', en: 'Coupons & Discounts' }, href: '/admin/coupons', permission: 'coupon.read', activePaths: ['/admin/coupons', '/admin/discounts'] },
-      { label: { ar: 'التسويق', en: 'Marketing' }, href: '/admin/marketing', permission: 'marketing.read' },
+      { label: { ar: 'التسويق — لوحة', en: 'Marketing Hub' }, href: '/admin/marketing', permission: 'marketing.read', activePaths: ['/admin/marketing'] },
+      { label: { ar: 'الحملات', en: 'Campaigns' }, href: '/admin/marketing/campaigns', permission: 'marketing.read', activePaths: ['/admin/marketing/campaigns'] },
+      { label: { ar: 'تحليل العزو (ROI)', en: 'Attribution ROI' }, href: '/admin/marketing/attribution', permission: 'marketing.read' },
+      { label: { ar: 'مركز الأتمتة الذكي', en: 'Automation Hub' }, href: '/admin/marketing/automation', permission: 'marketing.read' },
+      { label: { ar: 'البكسلات', en: 'Pixels' }, href: '/admin/marketing/pixels', permission: 'marketing.read' },
+      { label: { ar: 'SEO', en: 'SEO' }, href: '/admin/marketing/seo', permission: 'marketing.read' },
+      { label: { ar: 'التواصل الاجتماعي', en: 'Social' }, href: '/admin/marketing/social', permission: 'marketing.read' },
+      { label: { ar: 'تحليلات التسويق', en: 'Mkt Analytics' }, href: '/admin/marketing/analytics', permission: 'marketing.read' },
+      { label: { ar: 'توقعات المخزون', en: 'Inventory Forecast' }, href: '/admin/marketing/forecasting', permission: 'marketing.read' },
+      { label: { ar: 'البريد والنشرة', en: 'Email' }, href: '/admin/marketing/email', permission: 'marketing.read' },
+      { label: { ar: 'المشاركات', en: 'Shares' }, href: '/admin/marketing/shares', permission: 'marketing.read' },
     ],
   },
   {
@@ -135,6 +148,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'المحتوى', en: 'CMS' }, href: '/admin/cms', permission: 'settings.update', activePaths: ['/admin/cms', '/admin/cms/faq', '/admin/cms/policies', '/admin/cms/featured', '/admin/cms/checkout-form', '/admin/cms/footer'] },
       { label: { ar: 'الفوتر', en: 'Footer' }, href: '/admin/cms/footer', permission: 'settings.update', activePaths: ['/admin/cms/footer'] },
       { label: { ar: 'محتوى الاستوديو', en: 'Studios CMS' }, href: '/admin/cms/studios', permission: 'cms.studio.read' },
+      { label: { ar: 'محتوى الباقات', en: 'Packages CMS' }, href: '/admin/cms/packages', permission: 'settings.update', activePaths: ['/admin/cms/packages'] },
       { label: { ar: 'مركز الرسائل', en: 'Messaging Center' }, href: '/admin/cms/messaging-center', permission: 'settings.read' },
       { label: { ar: 'البانر الرئيسي', en: 'Hero Banners' }, href: '/admin/settings/hero-banners', permission: 'settings.update', activePaths: ['/admin/settings/hero-banners'] },
     ],
@@ -158,7 +172,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'المستخدمون والأدوار', en: 'Users & Roles' }, href: '/admin/users', permission: 'user.read', activePaths: ['/admin/users', '/admin/settings/roles', '/admin/settings/audit-log'] },
       { label: { ar: 'الدفع والتوصيل', en: 'Payment & Delivery' }, href: '/admin/settings/checkout', permission: 'settings.read', activePaths: ['/admin/settings/checkout', '/admin/settings/otp-payment', '/admin/settings/delivery-zones', '/admin/settings/payment-gateways'] },
       { label: { ar: 'الموقع', en: 'Website' }, href: '/admin/settings/website-pages', permission: 'settings.read', activePaths: ['/admin/settings/website-pages', '/admin/settings/hero-banners', '/admin/settings/notification-templates', '/admin/settings/promissory-note'] },
-      { label: { ar: 'التكاملات والذكاء الاصطناعي', en: 'Integrations & AI' }, href: '/admin/settings/integrations', permission: 'settings.read', activePaths: ['/admin/settings/integrations', '/admin/settings/ai', '/admin/settings/ai-control'] },
+      { label: { ar: 'التكاملات والذكاء الاصطناعي', en: 'Integrations & AI' }, href: '/admin/settings/integrations', permission: 'settings.read', activePaths: ['/admin/settings/integrations', '/admin/settings/ai', '/admin/settings/ai-control', '/admin/settings/chatbot', '/admin/support/conversations'] },
     ],
   },
 ]
@@ -167,6 +181,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { hasPermission, loading, error } = usePermissions()
   const { flags: featureFlags, loading: flagsLoading } = useAdminFeatureFlags()
+  const { logoUrl } = useBranding()
 
   const isItemVisibleByFlag = (href: string): boolean => {
     const flagName = ADMIN_SIDEBAR_FLAG_MAP[href]
@@ -177,6 +192,21 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>([])
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
+
+  // Load language preference from localStorage on mount
+  useEffect(() => {
+    const savedLang = localStorage.getItem('admin-sidebar-language')
+    if (savedLang === 'ar' || savedLang === 'en') {
+      setLanguage(savedLang)
+    }
+  }, [])
+
+  const handleLanguageToggle = () => {
+    const newLang = language === 'ar' ? 'en' : 'ar'
+    setLanguage(newLang)
+    localStorage.setItem('admin-sidebar-language', newLang)
+  }
+
   // Listen for mobile toggle events from header
   useEffect(() => {
     const handleToggle = () => {
@@ -250,7 +280,7 @@ export function AdminSidebar() {
               aria-label="FlixCam.rent"
             >
               <Image
-                src="/images/flixcam-logo.png"
+                src={logoUrl || '/images/flixcam-logo.png'}
                 alt="FlixCam.rent"
                 width={140}
                 height={44}
@@ -359,7 +389,7 @@ export function AdminSidebar() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+              onClick={handleLanguageToggle}
               className="w-full justify-start"
             >
               <span className="text-sm">{language === 'ar' ? 'English' : 'العربية'}</span>

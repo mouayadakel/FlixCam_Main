@@ -10,6 +10,7 @@ import { PublicContainer } from '@/components/public/public-container'
 import { getIcon } from '@/lib/utils/category-icons'
 import { ChevronRight, LayoutGrid } from 'lucide-react'
 import { t } from '@/lib/i18n/translate'
+import { getRequestLocale } from '@/lib/i18n/request-locale'
 
 async function getCategories() {
   return unstable_cache(
@@ -37,6 +38,7 @@ async function getCategories() {
 }
 
 export default async function CategoriesPage() {
+  const { locale } = await getRequestLocale()
   const categories = await getCategories()
   const totalItems = categories.reduce((sum, c) => sum + c.equipmentCount, 0)
 
@@ -52,10 +54,10 @@ export default async function CategoriesPage() {
               className="mb-4 flex items-center gap-1.5 text-sm text-text-muted"
             >
               <Link href="/" className="transition-colors hover:text-text-heading">
-                {t('ar', 'nav.home')}
+                {t(locale, 'nav.home')}
               </Link>
               <ChevronRight className="h-3.5 w-3.5" />
-              <span className="font-medium text-text-heading">{t('ar', 'equipment.category')}</span>
+              <span className="font-medium text-text-heading">{t(locale, 'equipment.category')}</span>
             </nav>
 
             <div className="flex items-center gap-4">
@@ -64,15 +66,15 @@ export default async function CategoriesPage() {
               </div>
               <div>
                 <h1 className="text-section-title text-text-heading">
-                  {t('ar', 'equipment.browseByCategory')}
+                  {t(locale, 'equipment.browseByCategory')}
                 </h1>
                 <p className="mt-1 text-body-main text-text-body">
-                  {t('ar', 'equipment.categoriesCount').replace(
+                  {t(locale, 'equipment.categoriesCount').replace(
                     '{count}',
                     String(categories.length)
                   )}{' '}
                   &middot;{' '}
-                  {t('ar', 'equipment.itemsAvailable').replace('{count}', String(totalItems))}
+                  {t(locale, 'equipment.itemsAvailable').replace('{count}', String(totalItems))}
                 </p>
               </div>
             </div>
@@ -103,11 +105,11 @@ export default async function CategoriesPage() {
                     <p className="mt-1 text-sm text-text-muted">
                       <span className="font-semibold text-text-body">{cat.equipmentCount}</span>{' '}
                       {cat.equipmentCount === 1
-                        ? t('ar', 'equipment.item')
-                        : t('ar', 'equipment.items')}
+                        ? t(locale, 'equipment.item')
+                        : t(locale, 'equipment.items')}
                     </p>
                     <div className="mt-4 flex translate-x-[-4px] items-center gap-1 text-sm font-medium text-brand-primary opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-                      {t('ar', 'equipment.browse')}
+                      {t(locale, 'equipment.browse')}
                       <ChevronRight className="h-3.5 w-3.5" />
                     </div>
                   </Link>
@@ -120,10 +122,10 @@ export default async function CategoriesPage() {
                 <LayoutGrid className="h-8 w-8 text-text-muted/40" />
               </div>
               <p className="text-lg font-medium text-text-heading">
-                {t('ar', 'equipment.noCategoriesYet')}
+                {t(locale, 'equipment.noCategoriesYet')}
               </p>
               <p className="mt-1 text-sm text-text-muted">
-                {t('ar', 'equipment.noCategoriesDesc')}
+                {t(locale, 'equipment.noCategoriesDesc')}
               </p>
             </div>
           )}

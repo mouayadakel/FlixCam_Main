@@ -27,6 +27,10 @@ su - postgres -c "psql -d flixcam_rent -c \"SELECT pg_terminate_backend(pid) FRO
 echo "🗄️ Running migrations..."
 npx prisma migrate deploy
 
+echo "🌱 Seeding idempotent CMS defaults (footer + chatbot)..."
+npm run db:seed:footer || true
+npx tsx scripts/seed-chatbot-settings.ts || true
+
 echo "⚙️ Generating Prisma client..."
 npx prisma generate
 
@@ -41,6 +45,14 @@ npm run build
 
 echo "♻️ Restarting app..."
 pm2 restart all
+
+echo "🔍 Running production verification..."
+npm run verify:production || true
+if curl -sf "${APP_URL:-http://localhost:3000}/api/health" >/dev/null 2>&1; then
+  BASE_URL="${APP_URL:-http://localhost:3000}" npm run verify:production:http || true
+else
+  echo "⚠️  App not responding yet — skip HTTP smoke (run: BASE_URL=https://your-domain npm run verify:production:http)"
+fi
 
 echo "📋 Checking logs..."
 pm2 logs --lines 20

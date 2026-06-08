@@ -1,0 +1,1078 @@
+{
+  "schema_version": "1.0",
+  "document_type": "ga4_gtm_data_layer_spec",
+  "project": {
+    "name": "FlixCam",
+    "description": "Professional camera and film equipment rental e-commerce data layer",
+    "description_ar": "طبقة بيانات التجارة الإلكترونية لتأجير الكاميرات ومعدات الإنتاج السينمائي الاحترافية",
+    "business_model": "equipment_rental",
+    "region": "Saudi Arabia",
+    "region_ar": "المملكة العربية السعودية",
+    "city": "Riyadh",
+    "city_ar": "الرياض",
+    "currency": "SAR",
+    "languages": ["ar", "en"],
+    "default_language": "ar",
+    "analytics_platform": "GA4",
+    "tag_manager": "GTM",
+    "compliance": "PDPL (Saudi Personal Data Protection Law)",
+    "compliance_ar": "نظام حماية البيانات الشخصية (PDPL)"
+  },
+  "i18n_conventions": {
+    "event_names": "Use the same English event names for GA4/GTM in both locales (e.g. page_view, add_to_cart).",
+    "human_readable_payloads": "Send item_name, item_list_name, page_title, and search_term in the language currently displayed (ar or en).",
+    "routing": "Pass language (ar|en) and text_direction (rtl|ltr) on page_view and where relevant.",
+    "consent_pdpl": "Set user_id and PII-derived fields only after analytics consent under PDPL and Consent Mode v2."
+  },
+  "dataLayer_events": {
+    "page_level": {
+      "page_view": {
+        "event": "page_view",
+        "description": "Fires on every page load",
+        "description_ar": "يُرسَل عند تحميل كل صفحة",
+        "ga4_event": "page_view",
+        "parameters": {
+          "page_type": {
+            "type": "string",
+            "enum": ["home", "category", "product", "cart", "checkout", "confirmation", "blog", "faq", "contact", "about", "account"],
+            "example": "product"
+          },
+          "page_title": {
+            "type": "string",
+            "example": "Sony FX6 - Full Frame Cinema Camera",
+            "example_ar": "سوني FX6 — كاميرا سينمائية بإطار كامل"
+          },
+          "page_location": {
+            "type": "string",
+            "example": "https://flixcam.sa/en/cameras/sony-fx6",
+            "example_ar": "https://flixcam.sa/ar/cameras/sony-fx6"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["ar", "en"],
+            "example": "en"
+          },
+          "text_direction": {
+            "type": "string",
+            "enum": ["rtl", "ltr"],
+            "example": "ltr",
+            "example_ar_locale": "rtl"
+          },
+          "user_login_status": {
+            "type": "string",
+            "enum": ["logged_in", "guest"],
+            "example": "logged_in"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "FLX-USR-00482"
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'page_view', page_type: 'product', page_title: 'Sony FX6 - Full Frame Cinema Camera', page_location: 'https://flixcam.sa/en/cameras/sony-fx6', language: 'en', text_direction: 'ltr', user_login_status: 'logged_in', user_id: 'FLX-USR-00482' });",
+        "sample_code_ar_ui": "dataLayer.push({ event: 'page_view', page_type: 'product', page_title: 'سوني FX6 — كاميرا سينمائية بإطار كامل', page_location: 'https://flixcam.sa/ar/cameras/sony-fx6', language: 'ar', text_direction: 'rtl', user_login_status: 'logged_in', user_id: 'FLX-USR-00482' });"
+      }
+    },
+    "ecommerce_funnel": {
+      "view_item_list": {
+        "event": "view_item_list",
+        "description": "User browses a category page",
+        "description_ar": "المستخدم يتصفح صفحة تصنيف",
+        "ga4_event": "view_item_list",
+        "parameters": {
+          "item_list_id": {
+            "type": "string",
+            "example": "cameras"
+          },
+          "item_list_name": {
+            "type": "string",
+            "example": "Cameras",
+            "example_ar": "الكاميرات"
+          },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "item_brand": "Sony",
+              "item_category": "Cameras",
+              "item_category2": "Cinema Cameras",
+              "price": 850,
+              "price_unit": "daily",
+              "currency": "SAR",
+              "availability": "in_stock",
+              "index": 0
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'view_item_list', ecommerce: { item_list_id: 'cameras', item_list_name: 'Cameras', items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', item_brand: 'Sony', item_category: 'Cameras', item_category2: 'Cinema Cameras', price: 850, price_unit: 'daily', currency: 'SAR', availability: 'in_stock', index: 0 }, { item_id: 'FLX-CAM-002', item_name: 'ARRI ALEXA Mini LF', item_brand: 'ARRI', item_category: 'Cameras', item_category2: 'Cinema Cameras', price: 3500, price_unit: 'daily', currency: 'SAR', availability: 'in_stock', index: 1 }] } });"
+      },
+      "select_item": {
+        "event": "select_item",
+        "description": "User clicks on a specific equipment item from a list",
+        "description_ar": "المستخدم ينقر على عنصر معدات من القائمة",
+        "ga4_event": "select_item",
+        "parameters": {
+          "item_list_id": { "type": "string", "example": "cameras" },
+          "item_list_name": { "type": "string", "example": "Cameras", "example_ar": "الكاميرات" },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "item_brand": "Sony",
+              "item_category": "Cameras",
+              "price": 850,
+              "currency": "SAR",
+              "index": 0
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'select_item', ecommerce: { item_list_id: 'cameras', item_list_name: 'Cameras', items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', item_brand: 'Sony', item_category: 'Cameras', price: 850, currency: 'SAR', index: 0 }] } });"
+      },
+      "view_item": {
+        "event": "view_item",
+        "description": "Product detail page loads",
+        "description_ar": "تحميل صفحة تفاصيل المنتج",
+        "ga4_event": "view_item",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "description": "Daily rental rate", "description_ar": "سعر التأجير اليومي", "example": 850 },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "item_brand": "Sony",
+              "item_category": "Cameras",
+              "item_category2": "Cinema Cameras",
+              "item_variant": "Body Only",
+              "price_daily": 850,
+              "price_weekly": 4500,
+              "price_monthly": 15000,
+              "currency": "SAR",
+              "availability": "in_stock",
+              "condition": "excellent",
+              "image_url": "https://flixcam.sa/images/sony-fx6.jpg"
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'view_item', ecommerce: { currency: 'SAR', value: 850, items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', item_brand: 'Sony', item_category: 'Cameras', item_category2: 'Cinema Cameras', item_variant: 'Body Only', price_daily: 850, price_weekly: 4500, price_monthly: 15000, currency: 'SAR', availability: 'in_stock', condition: 'excellent' }] } });"
+      },
+      "add_to_cart": {
+        "event": "add_to_cart",
+        "description": "User adds equipment to rental cart",
+        "description_ar": "المستخدم يضيف معدات إلى سلة التأجير",
+        "ga4_event": "add_to_cart",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "description": "Total rental value for selected duration", "description_ar": "إجمالي قيمة التأجير للمدة المختارة", "example": 4500 },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "item_brand": "Sony",
+              "item_category": "Cameras",
+              "price": 4500,
+              "price_unit": "weekly",
+              "currency": "SAR",
+              "quantity": 1,
+              "rental_start_date": "2026-06-01",
+              "rental_end_date": "2026-06-07",
+              "rental_duration_days": 7
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'add_to_cart', ecommerce: { currency: 'SAR', value: 4500, items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', item_brand: 'Sony', item_category: 'Cameras', price: 4500, price_unit: 'weekly', currency: 'SAR', quantity: 1, rental_start_date: '2026-06-01', rental_end_date: '2026-06-07', rental_duration_days: 7 }] } });"
+      },
+      "remove_from_cart": {
+        "event": "remove_from_cart",
+        "description": "User removes equipment from rental cart",
+        "description_ar": "المستخدم يزيل معدات من سلة التأجير",
+        "ga4_event": "remove_from_cart",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "example": 4500 },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "quantity": 1,
+              "price": 4500,
+              "currency": "SAR"
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'remove_from_cart', ecommerce: { currency: 'SAR', value: 4500, items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', quantity: 1, price: 4500, currency: 'SAR' }] } });"
+      },
+      "view_cart": {
+        "event": "view_cart",
+        "description": "User views the rental cart page",
+        "description_ar": "المستخدم يعرض صفحة سلة التأجير",
+        "ga4_event": "view_cart",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "description": "Total cart value", "description_ar": "إجمالي قيمة السلة", "example": 7200 },
+          "items": {
+            "type": "array",
+            "description": "All items currently in the cart",
+            "description_ar": "جميع العناصر في السلة حالياً"
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'view_cart', ecommerce: { currency: 'SAR', value: 7200, items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', price: 4500, quantity: 1 }, { item_id: 'FLX-LNS-010', item_name: 'ARRI Signature Prime 35mm', price: 2700, quantity: 1 }] } });"
+      },
+      "begin_checkout": {
+        "event": "begin_checkout",
+        "description": "User initiates checkout process",
+        "description_ar": "المستخدم يبدأ عملية إتمام الطلب",
+        "ga4_event": "begin_checkout",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "example": 7200 },
+          "coupon": { "type": "string", "example": "FIRSTRENT10" },
+          "items": { "type": "array" }
+        },
+        "sample_code": "dataLayer.push({ event: 'begin_checkout', ecommerce: { currency: 'SAR', value: 7200, coupon: 'FIRSTRENT10', items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', price: 4500, quantity: 1 }, { item_id: 'FLX-LNS-010', item_name: 'ARRI Signature Prime 35mm', price: 2700, quantity: 1 }] } });"
+      },
+      "add_shipping_info": {
+        "event": "add_shipping_info",
+        "description": "User selects delivery or self-pickup",
+        "description_ar": "المستخدم يختار التوصيل أو الاستلام من الفرع",
+        "ga4_event": "add_shipping_info",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "example": 7200 },
+          "shipping_tier": {
+            "type": "string",
+            "enum": ["delivery_riyadh", "delivery_nationwide", "self_pickup"],
+            "example": "delivery_riyadh"
+          },
+          "delivery_fee": { "type": "number", "example": 150 },
+          "delivery_address_city": { "type": "string", "example": "Riyadh", "example_ar": "الرياض" },
+          "delivery_address_district": { "type": "string", "example": "Al Olaya", "example_ar": "العليا" },
+          "items": { "type": "array" }
+        },
+        "sample_code": "dataLayer.push({ event: 'add_shipping_info', ecommerce: { currency: 'SAR', value: 7200, shipping_tier: 'delivery_riyadh', delivery_fee: 150, delivery_address_city: 'Riyadh', delivery_address_district: 'Al Olaya', items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', price: 4500, quantity: 1 }] } });"
+      },
+      "add_payment_info": {
+        "event": "add_payment_info",
+        "description": "User selects payment method",
+        "description_ar": "المستخدم يختار طريقة الدفع",
+        "ga4_event": "add_payment_info",
+        "parameters": {
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "example": 7350 },
+          "payment_type": {
+            "type": "string",
+            "enum": ["credit_card", "mada", "apple_pay", "tamara_bnpl", "bank_transfer", "stc_pay"],
+            "example": "mada"
+          },
+          "items": { "type": "array" }
+        },
+        "sample_code": "dataLayer.push({ event: 'add_payment_info', ecommerce: { currency: 'SAR', value: 7350, payment_type: 'mada', items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', price: 4500, quantity: 1 }] } });"
+      },
+      "purchase": {
+        "event": "purchase",
+        "description": "Rental order confirmed",
+        "description_ar": "تم تأكيد طلب التأجير",
+        "ga4_event": "purchase",
+        "parameters": {
+          "transaction_id": { "type": "string", "example": "FLX-ORD-2026-00193" },
+          "currency": { "type": "string", "example": "SAR" },
+          "value": { "type": "number", "description": "Total rental value including fees", "description_ar": "إجمالي قيمة التأجير شاملة الرسوم", "example": 7350 },
+          "tax": { "type": "number", "description": "15% VAT", "description_ar": "ضريبة القيمة المضافة 15٪", "example": 1102.5 },
+          "shipping": { "type": "number", "example": 150 },
+          "coupon": { "type": "string", "example": "FIRSTRENT10" },
+          "discount_amount": { "type": "number", "example": 720 },
+          "deposit_amount": { "type": "number", "description": "Security deposit held", "description_ar": "مبلغ التأمين/العهدة المحجوز", "example": 5000 },
+          "rental_period_start": { "type": "string", "format": "date", "example": "2026-06-01" },
+          "rental_period_end": { "type": "string", "format": "date", "example": "2026-06-07" },
+          "rental_duration_days": { "type": "integer", "example": 7 },
+          "delivery_method": { "type": "string", "example": "delivery_riyadh" },
+          "payment_method": { "type": "string", "example": "mada" },
+          "insurance_added": { "type": "boolean", "example": true },
+          "items": {
+            "type": "array",
+            "items_schema": {
+              "item_id": "FLX-CAM-001",
+              "item_name": "Sony FX6",
+              "item_brand": "Sony",
+              "item_category": "Cameras",
+              "item_category2": "Cinema Cameras",
+              "price": 4500,
+              "price_unit": "weekly",
+              "currency": "SAR",
+              "quantity": 1,
+              "rental_start_date": "2026-06-01",
+              "rental_end_date": "2026-06-07"
+            }
+          }
+        },
+        "sample_code": "dataLayer.push({ event: 'purchase', ecommerce: { transaction_id: 'FLX-ORD-2026-00193', currency: 'SAR', value: 7350, tax: 1102.5, shipping: 150, coupon: 'FIRSTRENT10', discount_amount: 720, deposit_amount: 5000, rental_period_start: '2026-06-01', rental_period_end: '2026-06-07', rental_duration_days: 7, delivery_method: 'delivery_riyadh', payment_method: 'mada', insurance_added: true, items: [{ item_id: 'FLX-CAM-001', item_name: 'Sony FX6', item_brand: 'Sony', item_category: 'Cameras', item_category2: 'Cinema Cameras', price: 4500, price_unit: 'weekly', currency: 'SAR', quantity: 1 }, { item_id: 'FLX-LNS-010', item_name: 'ARRI Signature Prime 35mm', item_brand: 'ARRI', item_category: 'Lenses', item_category2: 'Prime Lenses', price: 2700, price_unit: 'weekly', currency: 'SAR', quantity: 1 }] } });"
+      }
+    },
+    "rental_specific": {
+      "rental_date_selected": {
+        "event": "rental_date_selected",
+        "description": "User picks rental start and end dates",
+        "description_ar": "المستخدم يحدد تاريخَي بداية ونهاية التأجير",
+        "ga4_event": "rental_date_selected",
+        "event_type": "custom",
+        "parameters": {
+          "item_id": { "type": "string", "example": "FLX-CAM-001" },
+          "item_name": { "type": "string", "example": "Sony FX6" },
+          "rental_start_date": { "type": "string", "format": "date", "example": "2026-06-01" },
+          "rental_end_date": { "type": "string", "format": "date", "example": "2026-06-07" },
+          "rental_duration_days": { "type": "integer", "example": 7 },
+          "rate_type_applied": { "type": "string", "enum": ["daily", "weekly", "monthly"], "example": "weekly" },
+          "estimated_total": { "type": "number", "example": 4500 }
+        },
+        "sample_code": "dataLayer.push({ event: 'rental_date_selected', item_id: 'FLX-CAM-001', item_name: 'Sony FX6', rental_start_date: '2026-06-01', rental_end_date: '2026-06-07', rental_duration_days: 7, rate_type_applied: 'weekly', estimated_total: 4500 });"
+      },
+      "rental_extension_request": {
+        "event": "rental_extension_request",
+        "description": "User requests to extend an active rental",
+        "description_ar": "المستخدم يطلب تمديد تأجير نشط",
+        "ga4_event": "rental_extension_request",
+        "event_type": "custom",
+        "parameters": {
+          "order_id": { "type": "string", "example": "FLX-ORD-2026-00193" },
+          "item_id": { "type": "string", "example": "FLX-CAM-001" },
+          "original_end_date": { "type": "string", "example": "2026-06-07" },
+          "requested_end_date": { "type": "string", "example": "2026-06-14" },
+          "extension_days": { "type": "integer", "example": 7 },
+          "extension_cost": { "type": "number", "example": 4500 }
+        },
+        "sample_code": "dataLayer.push({ event: 'rental_extension_request', order_id: 'FLX-ORD-2026-00193', item_id: 'FLX-CAM-001', original_end_date: '2026-06-07', requested_end_date: '2026-06-14', extension_days: 7, extension_cost: 4500 });"
+      },
+      "equipment_availability_check": {
+        "event": "equipment_availability_check",
+        "description": "User checks if item is available for specific dates",
+        "description_ar": "المستخدم يتحقق من توفر المعدات لتواريخ محددة",
+        "ga4_event": "equipment_availability_check",
+        "event_type": "custom",
+        "parameters": {
+          "item_id": { "type": "string", "example": "FLX-LGT-005" },
+          "item_name": { "type": "string", "example": "Aputure 600d Pro" },
+          "check_start_date": { "type": "string", "example": "2026-07-10" },
+          "check_end_date": { "type": "string", "example": "2026-07-15" },
+          "result": { "type": "string", "enum": ["available", "unavailable", "partial"], "example": "available" }
+        },
+        "sample_code": "dataLayer.push({ event: 'equipment_availability_check', item_id: 'FLX-LGT-005', item_name: 'Aputure 600d Pro', check_start_date: '2026-07-10', check_end_date: '2026-07-15', result: 'available' });"
+      },
+      "package_selected": {
+        "event": "package_selected",
+        "description": "User selects a bundle/package",
+        "description_ar": "المستخدم يختار باقة أو حزمة معدات",
+        "ga4_event": "package_selected",
+        "event_type": "custom",
+        "parameters": {
+          "package_id": { "type": "string", "example": "FLX-PKG-FILMMAKER-PRO" },
+          "package_name": { "type": "string", "example": "Filmmaker Pro Package", "example_ar": "باقة صانع الأفلام الاحترافية" },
+          "package_items_count": { "type": "integer", "example": 8 },
+          "package_daily_rate": { "type": "number", "example": 5500 },
+          "package_weekly_rate": { "type": "number", "example": 28000 },
+          "savings_vs_individual": { "type": "number", "example": 4200 },
+          "currency": { "type": "string", "example": "SAR" }
+        },
+        "sample_code": "dataLayer.push({ event: 'package_selected', package_id: 'FLX-PKG-FILMMAKER-PRO', package_name: 'Filmmaker Pro Package', package_items_count: 8, package_daily_rate: 5500, package_weekly_rate: 28000, savings_vs_individual: 4200, currency: 'SAR' });"
+      },
+      "quote_request": {
+        "event": "quote_request",
+        "description": "User submits a custom quote request for large orders",
+        "description_ar": "المستخدم يقدّم طلب عرض سعر لطلبات كبيرة",
+        "ga4_event": "quote_request",
+        "event_type": "custom",
+        "parameters": {
+          "items_count": { "type": "integer", "example": 15 },
+          "rental_duration_days": { "type": "integer", "example": 30 },
+          "project_type": { "type": "string", "enum": ["film", "commercial", "event", "documentary", "tv_series", "corporate", "other"], "example": "commercial" },
+          "estimated_value": { "type": "number", "example": 85000 }
+        },
+        "sample_code": "dataLayer.push({ event: 'quote_request', items_count: 15, rental_duration_days: 30, project_type: 'commercial', estimated_value: 85000 });"
+      },
+      "insurance_added": {
+        "event": "insurance_added",
+        "description": "User opts into equipment protection/insurance",
+        "description_ar": "المستخدم يختار تأمين/حماية للمعدات",
+        "ga4_event": "insurance_added",
+        "event_type": "custom",
+        "parameters": {
+          "insurance_type": { "type": "string", "enum": ["basic", "premium", "full_coverage"], "example": "premium" },
+          "insurance_cost": { "type": "number", "example": 350 },
+          "covered_items_count": { "type": "integer", "example": 3 },
+          "total_equipment_value": { "type": "number", "example": 120000 },
+          "currency": { "type": "string", "example": "SAR" }
+        },
+        "sample_code": "dataLayer.push({ event: 'insurance_added', insurance_type: 'premium', insurance_cost: 350, covered_items_count: 3, total_equipment_value: 120000, currency: 'SAR' });"
+      }
+    },
+    "user_events": {
+      "login": {
+        "event": "login",
+        "description": "User logs in",
+        "description_ar": "تسجيل دخول المستخدم",
+        "ga4_event": "login",
+        "parameters": {
+          "method": { "type": "string", "enum": ["email", "google", "phone_otp", "apple"], "example": "phone_otp" }
+        },
+        "sample_code": "dataLayer.push({ event: 'login', method: 'phone_otp' });"
+      },
+      "sign_up": {
+        "event": "sign_up",
+        "description": "New user registers",
+        "description_ar": "تسجيل مستخدم جديد",
+        "ga4_event": "sign_up",
+        "parameters": {
+          "method": { "type": "string", "enum": ["email", "google", "phone_otp", "apple"], "example": "email" },
+          "user_type": { "type": "string", "enum": ["individual", "company"], "example": "company" }
+        },
+        "sample_code": "dataLayer.push({ event: 'sign_up', method: 'email', user_type: 'company' });"
+      },
+      "wishlist_add": {
+        "event": "wishlist_add",
+        "description": "User adds item to wishlist",
+        "description_ar": "المستخدم يضيف عنصرًا إلى قائمة الأمنيات",
+        "ga4_event": "add_to_wishlist",
+        "parameters": {
+          "item_id": { "type": "string", "example": "FLX-CAM-003" },
+          "item_name": { "type": "string", "example": "RED V-Raptor" },
+          "item_category": { "type": "string", "example": "Cameras" },
+          "price": { "type": "number", "example": 5000 },
+          "currency": { "type": "string", "example": "SAR" }
+        },
+        "sample_code": "dataLayer.push({ event: 'wishlist_add', ecommerce: { items: [{ item_id: 'FLX-CAM-003', item_name: 'RED V-Raptor', item_category: 'Cameras', price: 5000, currency: 'SAR' }] } });"
+      },
+      "wishlist_remove": {
+        "event": "wishlist_remove",
+        "description": "User removes item from wishlist",
+        "description_ar": "المستخدم يزيل عنصرًا من قائمة الأمنيات",
+        "ga4_event": "wishlist_remove",
+        "event_type": "custom",
+        "parameters": {
+          "item_id": { "type": "string", "example": "FLX-CAM-003" },
+          "item_name": { "type": "string", "example": "RED V-Raptor" }
+        },
+        "sample_code": "dataLayer.push({ event: 'wishlist_remove', item_id: 'FLX-CAM-003', item_name: 'RED V-Raptor' });"
+      }
+    },
+    "engagement_events": {
+      "search": {
+        "event": "search",
+        "description": "Internal site search",
+        "description_ar": "البحث داخل الموقع",
+        "ga4_event": "search",
+        "parameters": {
+          "search_term": { "type": "string", "example": "sony fx6", "example_ar": "سوني fx6" },
+          "results_count": { "type": "integer", "example": 3 },
+          "language": { "type": "string", "example": "en" }
+        },
+        "sample_code": "dataLayer.push({ event: 'search', search_term: 'sony fx6', results_count: 3, language: 'en' });"
+      },
+      "filter_applied": {
+        "event": "filter_applied",
+        "description": "User applies a filter on category page",
+        "description_ar": "المستخدم يطبّق عامل تصفية في صفحة التصنيف",
+        "ga4_event": "filter_applied",
+        "event_type": "custom",
+        "parameters": {
+          "filter_type": { "type": "string", "enum": ["category", "brand", "price_range", "availability", "condition", "resolution"], "example": "brand" },
+          "filter_value": { "type": "string", "example": "Sony", "example_ar": "سوني" },
+          "page_type": { "type": "string", "example": "category" },
+          "results_count": { "type": "integer", "example": 8 }
+        },
+        "sample_code": "dataLayer.push({ event: 'filter_applied', filter_type: 'brand', filter_value: 'Sony', page_type: 'category', results_count: 8 });"
+      },
+      "sort_applied": {
+        "event": "sort_applied",
+        "description": "User changes sort order",
+        "description_ar": "المستخدم يغيّر ترتيب الفرز",
+        "ga4_event": "sort_applied",
+        "event_type": "custom",
+        "parameters": {
+          "sort_type": { "type": "string", "enum": ["price_low_high", "price_high_low", "newest", "most_popular", "rating"], "example": "price_low_high" }
+        },
+        "sample_code": "dataLayer.push({ event: 'sort_applied', sort_type: 'price_low_high' });"
+      },
+      "blog_read": {
+        "event": "blog_read",
+        "description": "User reads a blog article",
+        "description_ar": "المستخدم يقرأ مقالاً في المدونة",
+        "ga4_event": "blog_read",
+        "event_type": "custom",
+        "parameters": {
+          "article_title": {
+            "type": "string",
+            "example": "Top 5 Cinema Cameras for Desert Filming in Saudi Arabia",
+            "example_ar": "أفضل 5 كاميرات سينمائية لتصوير الصحراء في السعودية"
+          },
+          "article_category": { "type": "string", "example": "Guides", "example_ar": "أدلة" },
+          "article_language": { "type": "string", "example": "en" },
+          "estimated_read_time_min": { "type": "integer", "example": 7 }
+        },
+        "sample_code": "dataLayer.push({ event: 'blog_read', article_title: 'Top 5 Cinema Cameras for Desert Filming in Saudi Arabia', article_category: 'Guides', article_language: 'en', estimated_read_time_min: 7 });"
+      },
+      "contact_form_submit": {
+        "event": "contact_form_submit",
+        "description": "User submits the contact form",
+        "description_ar": "المستخدم يرسل نموذج الاتصال",
+        "ga4_event": "generate_lead",
+        "parameters": {
+          "form_type": { "type": "string", "enum": ["general_inquiry", "quote_request", "support", "partnership"], "example": "general_inquiry" },
+          "language": { "type": "string", "example": "ar" }
+        },
+        "sample_code": "dataLayer.push({ event: 'contact_form_submit', form_type: 'general_inquiry', language: 'ar' });"
+      },
+      "click_phone": {
+        "event": "click_phone",
+        "description": "User clicks phone number",
+        "description_ar": "المستخدم ينقر على رقم الهاتف",
+        "ga4_event": "click_phone",
+        "event_type": "custom",
+        "parameters": {
+          "phone_number": { "type": "string", "example": "+966XXXXXXXXX" },
+          "click_location": { "type": "string", "enum": ["header", "footer", "contact_page", "product_page"], "example": "header" }
+        },
+        "sample_code": "dataLayer.push({ event: 'click_phone', phone_number: '+966XXXXXXXXX', click_location: 'header' });"
+      },
+      "click_whatsapp": {
+        "event": "click_whatsapp",
+        "description": "User clicks WhatsApp link",
+        "description_ar": "المستخدم ينقر على رابط واتساب",
+        "ga4_event": "click_whatsapp",
+        "event_type": "custom",
+        "parameters": {
+          "click_location": { "type": "string", "example": "floating_button" },
+          "page_type": { "type": "string", "example": "product" }
+        },
+        "sample_code": "dataLayer.push({ event: 'click_whatsapp', click_location: 'floating_button', page_type: 'product' });"
+      },
+      "click_email": {
+        "event": "click_email",
+        "description": "User clicks email link",
+        "description_ar": "المستخدم ينقر على رابط البريد الإلكتروني",
+        "ga4_event": "click_email",
+        "event_type": "custom",
+        "parameters": {
+          "click_location": { "type": "string", "example": "footer" }
+        },
+        "sample_code": "dataLayer.push({ event: 'click_email', click_location: 'footer' });"
+      },
+      "language_switch": {
+        "event": "language_switch",
+        "description": "User switches site language",
+        "description_ar": "المستخدم يبدّل لغة الموقع",
+        "ga4_event": "language_switch",
+        "event_type": "custom",
+        "parameters": {
+          "from_language": { "type": "string", "example": "ar" },
+          "to_language": { "type": "string", "example": "en" },
+          "page_path": { "type": "string", "example": "/ar/cameras/sony-fx6" }
+        },
+        "sample_code": "dataLayer.push({ event: 'language_switch', from_language: 'ar', to_language: 'en', page_path: '/ar/cameras/sony-fx6' });"
+      }
+    }
+  },
+  "ga4_custom_dimensions": [
+    {
+      "name": "rental_duration_days",
+      "scope": "event",
+      "description": "Number of days in the rental period",
+      "description_ar": "عدد أيام فترة التأجير",
+      "parameter_name": "rental_duration_days"
+    },
+    {
+      "name": "equipment_category",
+      "scope": "event",
+      "description": "Category of rented equipment",
+      "description_ar": "تصنيف المعدات المؤجَّرة",
+      "parameter_name": "item_category"
+    },
+    {
+      "name": "deposit_amount",
+      "scope": "event",
+      "description": "Security deposit amount in SAR",
+      "description_ar": "مبلغ العهدة/التأمين بالريال السعودي",
+      "parameter_name": "deposit_amount"
+    },
+    {
+      "name": "rental_period_start",
+      "scope": "event",
+      "description": "Rental start date",
+      "description_ar": "تاريخ بداية التأجير",
+      "parameter_name": "rental_period_start"
+    },
+    {
+      "name": "rental_period_end",
+      "scope": "event",
+      "description": "Rental end date",
+      "description_ar": "تاريخ نهاية التأجير",
+      "parameter_name": "rental_period_end"
+    },
+    {
+      "name": "delivery_method",
+      "scope": "event",
+      "description": "Delivery or self-pickup",
+      "description_ar": "التوصيل أو الاستلام الذاتي",
+      "parameter_name": "delivery_method"
+    },
+    {
+      "name": "payment_method",
+      "scope": "event",
+      "description": "Payment method used",
+      "description_ar": "طريقة الدفع المستخدمة",
+      "parameter_name": "payment_method"
+    },
+    {
+      "name": "rate_type",
+      "scope": "event",
+      "description": "Pricing tier applied (daily/weekly/monthly)",
+      "description_ar": "نوع السعر المطبَّق (يومي / أسبوعي / شهري)",
+      "parameter_name": "rate_type_applied"
+    },
+    {
+      "name": "insurance_type",
+      "scope": "event",
+      "description": "Equipment insurance tier",
+      "description_ar": "نوع تأمين المعدات",
+      "parameter_name": "insurance_type"
+    },
+    {
+      "name": "project_type",
+      "scope": "event",
+      "description": "Type of project for quote requests",
+      "description_ar": "نوع المشروع في طلبات عرض السعر",
+      "parameter_name": "project_type"
+    },
+    {
+      "name": "site_language",
+      "scope": "event",
+      "description": "Active language (ar/en)",
+      "description_ar": "لغة الواجهة النشطة (ar/en)",
+      "parameter_name": "language"
+    },
+    {
+      "name": "user_type",
+      "scope": "user",
+      "description": "Individual or company account",
+      "description_ar": "حساب فردي أو شركة",
+      "parameter_name": "user_type"
+    }
+  ],
+  "ga4_custom_metrics": [
+    {
+      "name": "deposit_amount",
+      "scope": "event",
+      "description": "Security deposit held in SAR",
+      "description_ar": "قيمة العهدة المحجوزة بالريال السعودي",
+      "parameter_name": "deposit_amount",
+      "unit": "currency"
+    },
+    {
+      "name": "insurance_cost",
+      "scope": "event",
+      "description": "Insurance premium in SAR",
+      "description_ar": "قسط التأمين بالريال السعودي",
+      "parameter_name": "insurance_cost",
+      "unit": "currency"
+    },
+    {
+      "name": "package_savings",
+      "scope": "event",
+      "description": "Savings from choosing a package vs individual items",
+      "description_ar": "الوفرة من اختيار باقة مقابل تأجير العناصر منفردة",
+      "parameter_name": "savings_vs_individual",
+      "unit": "currency"
+    }
+  ],
+  "gtm_configuration": {
+    "tags": [
+      {
+        "tag_name": "GA4 - Page View",
+        "tag_type": "GA4 Event",
+        "event_name": "page_view",
+        "trigger": "All Pages",
+        "parameters": ["page_type", "language", "text_direction", "user_login_status"]
+      },
+      {
+        "tag_name": "GA4 - View Item List",
+        "tag_type": "GA4 Event",
+        "event_name": "view_item_list",
+        "trigger": "Custom Event - view_item_list",
+        "parameters": ["ecommerce.item_list_id", "ecommerce.item_list_name", "ecommerce.items"]
+      },
+      {
+        "tag_name": "GA4 - View Item",
+        "tag_type": "GA4 Event",
+        "event_name": "view_item",
+        "trigger": "Custom Event - view_item",
+        "parameters": ["ecommerce.currency", "ecommerce.value", "ecommerce.items"]
+      },
+      {
+        "tag_name": "GA4 - Add to Cart",
+        "tag_type": "GA4 Event",
+        "event_name": "add_to_cart",
+        "trigger": "Custom Event - add_to_cart",
+        "parameters": ["ecommerce.currency", "ecommerce.value", "ecommerce.items"]
+      },
+      {
+        "tag_name": "GA4 - Begin Checkout",
+        "tag_type": "GA4 Event",
+        "event_name": "begin_checkout",
+        "trigger": "Custom Event - begin_checkout",
+        "parameters": ["ecommerce.currency", "ecommerce.value", "ecommerce.coupon", "ecommerce.items"]
+      },
+      {
+        "tag_name": "GA4 - Purchase",
+        "tag_type": "GA4 Event",
+        "event_name": "purchase",
+        "trigger": "Custom Event - purchase",
+        "parameters": ["ecommerce.transaction_id", "ecommerce.value", "ecommerce.tax", "ecommerce.shipping", "ecommerce.items", "rental_duration_days", "deposit_amount", "payment_method", "delivery_method", "insurance_added"]
+      },
+      {
+        "tag_name": "GA4 - Rental Date Selected",
+        "tag_type": "GA4 Event",
+        "event_name": "rental_date_selected",
+        "trigger": "Custom Event - rental_date_selected",
+        "parameters": ["item_id", "rental_start_date", "rental_end_date", "rental_duration_days", "rate_type_applied"]
+      },
+      {
+        "tag_name": "GA4 - Package Selected",
+        "tag_type": "GA4 Event",
+        "event_name": "package_selected",
+        "trigger": "Custom Event - package_selected",
+        "parameters": ["package_id", "package_name", "package_daily_rate", "savings_vs_individual"]
+      },
+      {
+        "tag_name": "GA4 - Quote Request",
+        "tag_type": "GA4 Event",
+        "event_name": "quote_request",
+        "trigger": "Custom Event - quote_request",
+        "parameters": ["items_count", "rental_duration_days", "project_type", "estimated_value"]
+      },
+      {
+        "tag_name": "GA4 - Search",
+        "tag_type": "GA4 Event",
+        "event_name": "search",
+        "trigger": "Custom Event - search",
+        "parameters": ["search_term", "results_count"]
+      },
+      {
+        "tag_name": "GA4 - Language Switch",
+        "tag_type": "GA4 Event",
+        "event_name": "language_switch",
+        "trigger": "Custom Event - language_switch",
+        "parameters": ["from_language", "to_language"]
+      },
+      {
+        "tag_name": "GA4 - WhatsApp Click",
+        "tag_type": "GA4 Event",
+        "event_name": "click_whatsapp",
+        "trigger": "Custom Event - click_whatsapp",
+        "parameters": ["click_location", "page_type"]
+      }
+    ],
+    "triggers": [
+      { "name": "All Pages", "type": "Page View" },
+      { "name": "CE - view_item_list", "type": "Custom Event", "event_name": "view_item_list" },
+      { "name": "CE - select_item", "type": "Custom Event", "event_name": "select_item" },
+      { "name": "CE - view_item", "type": "Custom Event", "event_name": "view_item" },
+      { "name": "CE - add_to_cart", "type": "Custom Event", "event_name": "add_to_cart" },
+      { "name": "CE - remove_from_cart", "type": "Custom Event", "event_name": "remove_from_cart" },
+      { "name": "CE - view_cart", "type": "Custom Event", "event_name": "view_cart" },
+      { "name": "CE - begin_checkout", "type": "Custom Event", "event_name": "begin_checkout" },
+      { "name": "CE - add_shipping_info", "type": "Custom Event", "event_name": "add_shipping_info" },
+      { "name": "CE - add_payment_info", "type": "Custom Event", "event_name": "add_payment_info" },
+      { "name": "CE - purchase", "type": "Custom Event", "event_name": "purchase" },
+      { "name": "CE - rental_date_selected", "type": "Custom Event", "event_name": "rental_date_selected" },
+      { "name": "CE - rental_extension_request", "type": "Custom Event", "event_name": "rental_extension_request" },
+      { "name": "CE - equipment_availability_check", "type": "Custom Event", "event_name": "equipment_availability_check" },
+      { "name": "CE - package_selected", "type": "Custom Event", "event_name": "package_selected" },
+      { "name": "CE - quote_request", "type": "Custom Event", "event_name": "quote_request" },
+      { "name": "CE - insurance_added", "type": "Custom Event", "event_name": "insurance_added" },
+      { "name": "CE - login", "type": "Custom Event", "event_name": "login" },
+      { "name": "CE - sign_up", "type": "Custom Event", "event_name": "sign_up" },
+      { "name": "CE - search", "type": "Custom Event", "event_name": "search" },
+      { "name": "CE - filter_applied", "type": "Custom Event", "event_name": "filter_applied" },
+      { "name": "CE - language_switch", "type": "Custom Event", "event_name": "language_switch" },
+      { "name": "CE - click_whatsapp", "type": "Custom Event", "event_name": "click_whatsapp" },
+      { "name": "CE - click_phone", "type": "Custom Event", "event_name": "click_phone" },
+      { "name": "CE - contact_form_submit", "type": "Custom Event", "event_name": "contact_form_submit" }
+    ],
+    "variables": [
+      { "name": "DLV - ecommerce", "type": "Data Layer Variable", "data_layer_variable": "ecommerce" },
+      { "name": "DLV - ecommerce.items", "type": "Data Layer Variable", "data_layer_variable": "ecommerce.items" },
+      { "name": "DLV - ecommerce.transaction_id", "type": "Data Layer Variable", "data_layer_variable": "ecommerce.transaction_id" },
+      { "name": "DLV - ecommerce.value", "type": "Data Layer Variable", "data_layer_variable": "ecommerce.value" },
+      { "name": "DLV - ecommerce.currency", "type": "Data Layer Variable", "data_layer_variable": "ecommerce.currency" },
+      { "name": "DLV - page_type", "type": "Data Layer Variable", "data_layer_variable": "page_type" },
+      { "name": "DLV - language", "type": "Data Layer Variable", "data_layer_variable": "language" },
+      { "name": "DLV - user_login_status", "type": "Data Layer Variable", "data_layer_variable": "user_login_status" },
+      { "name": "DLV - user_id", "type": "Data Layer Variable", "data_layer_variable": "user_id" },
+      { "name": "DLV - rental_duration_days", "type": "Data Layer Variable", "data_layer_variable": "rental_duration_days" },
+      { "name": "DLV - payment_method", "type": "Data Layer Variable", "data_layer_variable": "payment_method" },
+      { "name": "DLV - delivery_method", "type": "Data Layer Variable", "data_layer_variable": "delivery_method" },
+      { "name": "DLV - deposit_amount", "type": "Data Layer Variable", "data_layer_variable": "deposit_amount" },
+      { "name": "DLV - search_term", "type": "Data Layer Variable", "data_layer_variable": "search_term" },
+      { "name": "DLV - filter_type", "type": "Data Layer Variable", "data_layer_variable": "filter_type" },
+      { "name": "DLV - filter_value", "type": "Data Layer Variable", "data_layer_variable": "filter_value" },
+      { "name": "DLV - insurance_type", "type": "Data Layer Variable", "data_layer_variable": "insurance_type" },
+      { "name": "DLV - rate_type_applied", "type": "Data Layer Variable", "data_layer_variable": "rate_type_applied" }
+    ]
+  },
+  "validation_checklist": [
+    {
+      "test_id": "TC-001",
+      "event": "page_view",
+      "scenario": "Load homepage in Arabic",
+      "scenario_ar": "تحميل الصفحة الرئيسية بالعربية",
+      "expected": "page_type=home, language=ar, text_direction=rtl",
+      "expected_ar": "page_type=home، language=ar، text_direction=rtl",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-002",
+      "event": "page_view",
+      "scenario": "Load homepage in English",
+      "scenario_ar": "تحميل الصفحة الرئيسية بالإنجليزية",
+      "expected": "page_type=home, language=en, text_direction=ltr",
+      "expected_ar": "page_type=home، language=en، text_direction=ltr",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-003",
+      "event": "view_item_list",
+      "scenario": "Browse Cameras category",
+      "scenario_ar": "تصفح تصنيف الكاميرات",
+      "expected": "item_list_id=cameras, items array populated with all visible products",
+      "expected_ar": "item_list_id=cameras ومصفوفة items تشمل كل المنتجات الظاهرة",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-004",
+      "event": "view_item",
+      "scenario": "Open Sony FX6 product page",
+      "scenario_ar": "فتح صفحة منتج سوني FX6",
+      "expected": "price_daily, price_weekly, price_monthly all present, availability=in_stock",
+      "expected_ar": "وجود price_daily و price_weekly و price_monthly و availability=in_stock",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-005",
+      "event": "rental_date_selected",
+      "scenario": "Select 7-day rental period",
+      "scenario_ar": "اختيار فترة تأجير 7 أيام",
+      "expected": "rental_duration_days=7, rate_type_applied=weekly",
+      "expected_ar": "rental_duration_days=7 و rate_type_applied=weekly",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-006",
+      "event": "add_to_cart",
+      "scenario": "Add Sony FX6 with 7-day rental to cart",
+      "scenario_ar": "إضافة سوني FX6 بتأجير 7 أيام للسلة",
+      "expected": "price=weekly rate, rental_start_date and rental_end_date present",
+      "expected_ar": "السعر حسب الأسبوع ووجود rental_start_date و rental_end_date",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-007",
+      "event": "remove_from_cart",
+      "scenario": "Remove item from cart",
+      "scenario_ar": "إزالة عنصر من السلة",
+      "expected": "Correct item_id and value",
+      "expected_ar": "صحة item_id و value",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-008",
+      "event": "begin_checkout",
+      "scenario": "Click checkout with coupon applied",
+      "scenario_ar": "الضغط على إتمام الطلب مع وجود كوبون",
+      "expected": "coupon field populated, value reflects discount",
+      "expected_ar": "حقل coupon مكتمل وتعكس value الخصم",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-009",
+      "event": "add_shipping_info",
+      "scenario": "Select self-pickup",
+      "scenario_ar": "اختيار الاستلام الذاتي",
+      "expected": "shipping_tier=self_pickup, delivery_fee=0",
+      "expected_ar": "shipping_tier=self_pickup و delivery_fee=0",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-010",
+      "event": "add_shipping_info",
+      "scenario": "Select Riyadh delivery",
+      "scenario_ar": "اختيار توصيل داخل الرياض",
+      "expected": "shipping_tier=delivery_riyadh, delivery_fee>0, city=Riyadh",
+      "expected_ar": "shipping_tier=delivery_riyadh و delivery_fee>0 والمدينة الرياض",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-011",
+      "event": "add_payment_info",
+      "scenario": "Select Mada payment",
+      "scenario_ar": "اختيار الدفع عبر مدى",
+      "expected": "payment_type=mada",
+      "expected_ar": "payment_type=mada",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-012",
+      "event": "add_payment_info",
+      "scenario": "Select Tamara BNPL",
+      "scenario_ar": "اختيار تمارا (اشتري الآن وادفع لاحقاً)",
+      "expected": "payment_type=tamara_bnpl",
+      "expected_ar": "payment_type=tamara_bnpl",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-013",
+      "event": "purchase",
+      "scenario": "Complete rental order with insurance",
+      "scenario_ar": "إكمال طلب تأجير مع تأمين",
+      "expected": "transaction_id unique, deposit_amount>0, insurance_added=true, VAT=15%",
+      "expected_ar": "transaction_id فريد و deposit_amount>0 و insurance_added=true و ضريبة 15٪",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-014",
+      "event": "package_selected",
+      "scenario": "Select Filmmaker Pro Package",
+      "scenario_ar": "اختيار باقة Filmmaker Pro",
+      "expected": "package_id, savings_vs_individual calculated correctly",
+      "expected_ar": "package_id صحيح وحساب savings_vs_individual صحيح",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-015",
+      "event": "quote_request",
+      "scenario": "Submit custom quote for 30-day commercial shoot",
+      "scenario_ar": "إرسال طلب عرض سعر لتصوير تجاري لمدة 30 يوماً",
+      "expected": "project_type=commercial, rental_duration_days=30",
+      "expected_ar": "project_type=commercial و rental_duration_days=30",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-016",
+      "event": "equipment_availability_check",
+      "scenario": "Check availability for unavailable item",
+      "scenario_ar": "التحقق من التوفر لعنصر غير متاح",
+      "expected": "result=unavailable",
+      "expected_ar": "result=unavailable",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-017",
+      "event": "search",
+      "scenario": "Search for 'aputure' in Arabic site",
+      "scenario_ar": "البحث عن «أبتشر» في واجهة عربية",
+      "expected": "search_term populated, results_count accurate, language=ar",
+      "expected_ar": "search_term مُعبأ و results_count دقيق و language=ar",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-018",
+      "event": "language_switch",
+      "scenario": "Switch from Arabic to English on product page",
+      "scenario_ar": "التبديل من العربية إلى الإنجليزية من صفحة منتج",
+      "expected": "from_language=ar, to_language=en, page_path correct",
+      "expected_ar": "from_language=ar و to_language=en ومسار الصفحة page_path صحيح",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-019",
+      "event": "click_whatsapp",
+      "scenario": "Click floating WhatsApp button on product page",
+      "scenario_ar": "النقر على زر واتساب العائم في صفحة منتج",
+      "expected": "click_location=floating_button, page_type=product",
+      "expected_ar": "click_location=floating_button و page_type=product",
+      "status": "pending"
+    },
+    {
+      "test_id": "TC-020",
+      "event": "insurance_added",
+      "scenario": "Add premium insurance at checkout",
+      "scenario_ar": "إضافة تأمين ممتاز عند الدفع",
+      "expected": "insurance_type=premium, insurance_cost>0",
+      "expected_ar": "insurance_type=premium و insurance_cost>0",
+      "status": "pending"
+    }
+  ],
+  "implementation_notes": {
+    "bilingual_tracking": {
+      "description": "How to handle Arabic RTL and English LTR tracking",
+      "description_ar": "كيفية التعامل مع التتبع في الواجهة العربية (يمين‑للاتجاه) والإنجليزية (يسار‑للاتجاه)",
+      "recommendations": [
+        "Pass 'language' and 'text_direction' parameters with every page_view event",
+        "Use the same event names regardless of language — differentiate via the language parameter",
+        "Ensure product names in the data layer use the language currently displayed to the user",
+        "Create a GA4 audience segment for each language to compare behavior",
+        "Track language_switch events to measure which language users prefer"
+      ],
+      "recommendations_ar": [
+        "أرسل معاملتي language و text_direction مع كل حدث page_view",
+        "استخدم أسماء الأحداث نفسها بغض النظر عن اللغة؛ التمييز عبر معامل language",
+        "اضبط أسماء المنتجات في طبقة البيانات وفق اللغة المعروضة للمستخدم",
+        "أنشئ شرائح جماهير GA4 لكل لغة لمقارنة السلوك",
+        "تتبع أحداث language_switch لفهم تفضيل اللغة"
+      ]
+    },
+    "saudi_payment_methods": {
+      "description": "Enhanced conversions for Mada, Tamara, STC Pay",
+      "description_ar": "تحسين التحويلات لمدى وتمارا وSTC Pay",
+      "recommendations": [
+        "Enable GA4 Enhanced Conversions and pass hashed email + phone with purchase events",
+        "Map payment_type values to GA4 payment_method dimension for reporting",
+        "Track Tamara BNPL separately to measure buy-now-pay-later adoption",
+        "For Mada debit card transactions, ensure the payment gateway passes success callbacks to trigger the purchase event"
+      ],
+      "recommendations_ar": [
+        "فعِّل Enhanced Conversions في GA4 وأرسل البريد والجوال بعد التجزئة (hashed) مع purchase",
+        "اربط قيم payment_type ببُعد payment_method في GA4 للتقارير",
+        "تتبع تمارا (BNPL) بشكل منفصل لقياس اعتماد «اشتر الآن ادفع لاحقاً»",
+        "لمعاملات مدى تأكد من أن البوابة ترسل callback نجاح لإطلاق حدث purchase"
+      ]
+    },
+    "server_side_tagging": {
+      "description": "Recommended server-side GTM setup",
+      "description_ar": "إعداد موصى به لعلامات GTM من جانب الخادم",
+      "recommendations": [
+        "Deploy a server-side GTM container on Google Cloud (me-central1 region for Saudi Arabia)",
+        "Route GA4 hits through server-side container for improved data accuracy",
+        "Implement server-side enhanced conversions for Google Ads",
+        "Use server-side tagging for Meta Conversions API (Facebook/Instagram ads)"
+      ],
+      "recommendations_ar": [
+        "انشر حاوية GTM جانب الخادم على Google Cloud (منطقة me-central1 المناسبة للسعودية)",
+        "وجِّه ضربات GA4 عبر الحاوية لتحسين دقة البيانات",
+        "نفّذ enhanced conversions جانب الخادم لإعلانات Google",
+        "استخدم العلامات من جانب الخادم لواجهة Meta Conversions"
+      ]
+    },
+    "pdpl_compliance": {
+      "description": "Saudi Personal Data Protection Law compliance",
+      "description_ar": "الامتثال لنظام حماية البيانات الشخصية السعودي",
+      "recommendations": [
+        "Implement a cookie consent banner in both Arabic and English",
+        "Use GTM Consent Mode v2 with default denied state",
+        "Categorize tags: analytics_storage, ad_storage, functionality_storage, personalization_storage",
+        "Allow granular consent per category",
+        "Store consent preferences and honor them on return visits",
+        "Ensure user_id is only set after consent is granted"
+      ],
+      "recommendations_ar": [
+        "اعرض لوحة موافقة ملفات تعريف الارتباط بالعربية والإنجليزية",
+        "استخدم Consent Mode v2 في GTM بحالة الرفض الافتراضية",
+        "صنَّف العلامات: analytics_storage و ad_storage و functionality_storage و personalization_storage",
+        "اسمح بالموافقة التفصيلية لكل فئة",
+        "خزّن تفضيلات الموافقة واحترمها في الزيارات اللاحقة",
+        "اضبط user_id فقط بعد منح الموافقة"
+      ]
+    }
+  }
+}

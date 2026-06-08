@@ -1,4 +1,5 @@
 import type { SendSmsResult } from '@/lib/services/sms.service'
+import { getConfiguredPhonePlaceholder } from '@/lib/utils/contact-phone'
 
 export interface DeliverOtpCodeOptions {
   phone: string
@@ -38,8 +39,40 @@ function getSmsUserMessage(result: Pick<SendSmsResult, 'error' | 'twilioCode' | 
     return 'SMS trial: verify this number in Twilio Console. Otherwise contact support.'
   }
   if (result.twilioCode === 21211) {
-    return 'Invalid phone number format. Use 05XXXXXXXX or +9665XXXXXXXX.'
+    return `Invalid phone number format. Use ${getConfiguredPhonePlaceholder()} or +9665XXXXXXXX.`
   }
+  return 'Failed to send OTP. Please try again.'
+}
+
+/**
+ * OTP channel order:
+ * - OTP_TRY_WHATSAPP_FIRST=true → WhatsApp then SMS
+ * - OTP_TRY_WHATSAPP_FIRST=false → SMS then WhatsApp
+ * - Otherwise: if TWILIO_SMS_PHONE_NUMBER is unset but a WhatsApp sender env is set, try WhatsApp first.
+ *   Many deployments use TWILIO_PHONE_NUMBER as non-SMS-capable (Twilio 21659); OTP still works via WhatsApp.
+ */
+function shouldTryWhatsAppFirstForOtp(whatsappOnly: boolean): boolean {
+  if (whatsappOnly) return false
+
+  if (process.env.OTP_TRY_WHATSAPP_FIRST === 'true') return true
+  if (process.env.OTP_TRY_WHATSAPP_FIRST === 'false') return false
+
+  if (process.env.TWILIO_SMS_PHONE_NUMBER?.trim()) return false
+  if (process.env.ENABLE_WHATSAPP !== 'true') return false
+
+  const waSender =
+    process.env.TWILIO_WHATSAPP_PHONE_NUMBER?.trim() || process.env.TWILIO_WHATSAPP_NUMBER?.trim()
+  return !!waSender
+}
+
+function getOtpFailureUserMessage(
+  smsFailure: SendSmsResult | undefined,
+  whatsappFailed: boolean
+): string {
+  if (whatsappFailed && smsFailure?.fromNumberInvalid) {
+    return 'Could not send OTP. Configure a valid SMS sender (TWILIO_SMS_PHONE_NUMBER) or WhatsApp template/sandbox in Twilio. Contact support if this continues.'
+  }
+  if (smsFailure) return getSmsUserMessage(smsFailure)
   return 'Failed to send OTP. Please try again.'
 }
 
@@ -52,30 +85,22 @@ export async function deliverOtpCode({
 }: DeliverOtpCodeOptions): Promise<DeliverOtpCodeResult> {
   let lastError: string | undefined
   let smsFailure: SendSmsResult | undefined
+  let whatsappFailed = false
 
-  if (process.env.ENABLE_WHATSAPP === 'true') {
-    const { WhatsAppService } = await import('@/lib/services/whatsapp.service')
-    const result = await WhatsAppService.sendWhatsAppOtp(phone, code)
-    if (result.ok) {
-      return { ok: true, channel: 'whatsapp' }
-    }
-    lastError = result.error
-    console.error(`${logContext} WhatsApp OTP failed`, {
-      phone,
-      error: result.error,
-      timestamp: new Date().toISOString(),
-    })
-  }
+  const otpTemplateSid =
+    process.env.TWILIO_WHATSAPP_OTP_CONTENT_SID?.trim() ||
+    'HXc4caa42c7314184caa8f84bf81dc091a'
 
-  if (!whatsappOnly && process.env.ENABLE_SMS === 'true') {
+  const whatsappFirst = shouldTryWhatsAppFirstForOtp(whatsappOnly)
+
+  const sendSms = async (): Promise<boolean> => {
+    if (whatsappOnly || process.env.ENABLE_SMS !== 'true') return false
     const { SmsService } = await import('@/lib/services/sms.service')
     const result = smsBody
       ? await SmsService.sendSmsText(phone, smsBody, { logToMessageLog: true })
       : await SmsService.sendSmsOtp(phone, code)
 
-    if (result.ok) {
-      return { ok: true, channel: 'sms' }
-    }
+    if (result.ok) return true
 
     smsFailure = result
     lastError = result.error
@@ -86,6 +111,34 @@ export async function deliverOtpCode({
       fromNumberInvalid: result.fromNumberInvalid,
       timestamp: new Date().toISOString(),
     })
+    return false
+  }
+
+  const sendWa = async (): Promise<boolean> => {
+    if (process.env.ENABLE_WHATSAPP !== 'true') return false
+    const { WhatsAppService } = await import('@/lib/services/whatsapp.service')
+    const result = await WhatsAppService.sendWhatsAppOtp(phone, code, otpTemplateSid)
+    if (result.ok) return true
+
+    whatsappFailed = true
+    lastError = result.error
+    console.error(`${logContext} WhatsApp OTP failed`, {
+      phone,
+      error: result.error,
+      timestamp: new Date().toISOString(),
+    })
+    return false
+  }
+
+  if (whatsappOnly) {
+    const ok = await sendWa()
+    if (ok) return { ok: true, channel: 'whatsapp' }
+  } else if (whatsappFirst) {
+    if (await sendWa()) return { ok: true, channel: 'whatsapp' }
+    if (await sendSms()) return { ok: true, channel: 'sms' }
+  } else {
+    if (await sendSms()) return { ok: true, channel: 'sms' }
+    if (await sendWa()) return { ok: true, channel: 'whatsapp' }
   }
 
   if (process.env.NODE_ENV !== 'production') {
@@ -105,7 +158,7 @@ export async function deliverOtpCode({
   return {
     ok: false,
     error: lastError,
-    userMessage: smsFailure ? getSmsUserMessage(smsFailure) : 'Failed to send OTP. Please try again.',
+    userMessage: getOtpFailureUserMessage(smsFailure, whatsappFailed),
   }
 }
 
@@ -121,16 +174,20 @@ function warnPasswordResetEnv(): void {
     if (!process.env.TWILIO_ACCOUNT_SID?.trim() || !process.env.TWILIO_AUTH_TOKEN?.trim()) {
       checks.push('TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN')
     }
-    if (!process.env.TWILIO_PHONE_NUMBER?.trim()) {
-      checks.push('TWILIO_PHONE_NUMBER')
+    if (
+      !process.env.TWILIO_WHATSAPP_PHONE_NUMBER?.trim() &&
+      !process.env.TWILIO_WHATSAPP_NUMBER?.trim() &&
+      !process.env.TWILIO_PHONE_NUMBER?.trim()
+    ) {
+      checks.push('TWILIO_WHATSAPP_PHONE_NUMBER (or TWILIO_PHONE_NUMBER fallback)')
     }
   }
   if (process.env.ENABLE_SMS === 'true') {
     if (!process.env.TWILIO_ACCOUNT_SID?.trim() || !process.env.TWILIO_AUTH_TOKEN?.trim()) {
       checks.push('TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN')
     }
-    if (!process.env.TWILIO_PHONE_NUMBER?.trim()) {
-      checks.push('TWILIO_PHONE_NUMBER')
+    if (!process.env.TWILIO_SMS_PHONE_NUMBER?.trim() && !process.env.TWILIO_PHONE_NUMBER?.trim()) {
+      checks.push('TWILIO_SMS_PHONE_NUMBER (or TWILIO_PHONE_NUMBER fallback)')
     }
   }
   if (checks.length > 0) {

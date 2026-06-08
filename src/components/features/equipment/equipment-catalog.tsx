@@ -37,33 +37,27 @@ export function EquipmentCatalog() {
   const brandIds = searchParams?.get('brandIds') ?? ''
   const q = searchParams?.get('q') ?? ''
   const sort = searchParams?.get('sort') ?? ''
-  const priceMin = searchParams?.get('priceMin') ?? ''
-  const priceMax = searchParams?.get('priceMax') ?? ''
 
   const activeChips = useMemo(() => {
     const chips: { key: string; label: string }[] = []
     if (q) chips.push({ key: 'q', label: `"${q}"` })
     if (categoryId) {
-      const cat = categories.find((c) => c.id === categoryId)
+      const cat = categories.find((c) => c.slug === categoryId)
       if (cat) chips.push({ key: 'categoryId', label: cat.name })
     }
     if (sort && sort !== 'recommended') chips.push({ key: 'sort', label: sort })
-    if (priceMin) chips.push({ key: 'priceMin', label: `Min ${priceMin}` })
-    if (priceMax) chips.push({ key: 'priceMax', label: `Max ${priceMax}` })
     brandIds.split(',').forEach((bid) => {
       const b = brands.find((x) => x.id === bid.trim())
       if (b) chips.push({ key: `brand:${b.id}`, label: b.name })
     })
     return chips
-  }, [q, categoryId, sort, priceMin, priceMax, brandIds, categories, brands])
+  }, [q, categoryId, sort, brandIds, categories, brands])
 
   const removeChip = (key: string) => {
     const next = new URLSearchParams(searchParams?.toString() ?? '')
     if (key === 'q') next.delete('q')
     else if (key === 'categoryId') next.delete('categoryId')
     else if (key === 'sort') next.delete('sort')
-    else if (key === 'priceMin') next.delete('priceMin')
-    else if (key === 'priceMax') next.delete('priceMax')
     else if (key.startsWith('brand:')) {
       const bid = key.replace('brand:', '')
       const rest = brandIds
@@ -84,8 +78,6 @@ export function EquipmentCatalog() {
     else if (brandId) params.set('brandId', brandId)
     if (q) params.set('q', q)
     if (sort) params.set('sort', sort)
-    if (priceMin) params.set('priceMin', priceMin)
-    if (priceMax) params.set('priceMax', priceMax)
     params.set('skip', String(skip))
     params.set('take', String(PAGE_SIZE))
 
@@ -106,7 +98,7 @@ export function EquipmentCatalog() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : t('common.error')))
       .finally(() => setIsLoading(false))
-  }, [skip, categoryId, brandId, brandIds, q, sort, priceMin, priceMax, t])
+  }, [skip, categoryId, brandId, brandIds, q, sort, t])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(skip / PAGE_SIZE) + 1
@@ -123,7 +115,7 @@ export function EquipmentCatalog() {
             slug: c.slug,
             parentId: c.parentId ?? null,
           }))}
-          currentCategoryId={categoryId}
+          currentCategorySlug={categoryId}
         />
       )}
       <div className="flex flex-col gap-8 lg:flex-row">

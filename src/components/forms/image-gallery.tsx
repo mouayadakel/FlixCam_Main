@@ -6,14 +6,16 @@
 
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, GripVertical, Link as LinkIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { EMBED_LTR } from '@/lib/i18n/bidi'
 import Image from 'next/image'
+import { uploadMediaFile } from '@/lib/utils/media-upload.client'
 
 interface ImageGalleryProps {
   value?: string[]
@@ -32,9 +34,68 @@ export function ImageGallery({
 }: ImageGalleryProps) {
   const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('url')
   const [urlInput, setUrlInput] = useState('')
+  const [urlError, setUrlError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState<string[]>(value)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setImages(value)
+  }, [value])
+
+  const normalizeMediaUrl = (rawValue: string): string => {
+    const trimmed = rawValue.trim()
+    if (!trimmed) return ''
+    if (trimmed.startsWith('uploads/')) {
+      return `/${trimmed}`
+    }
+    if (trimmed.startsWith('www.')) {
+      return `https://${trimmed}`
+    }
+    return trimmed
+  }
+
+  const isValidMediaUrl = (value: string): boolean => {
+    if (!value) return false
+    if (
+      value.startsWith('/') ||
+      value.startsWith('uploads/') ||
+      value.startsWith('./uploads/') ||
+      value.startsWith('data:')
+    ) {
+      return true
+    }
+    try {
+      const parsed = new URL(value)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const isLikelyThumbnailUrl = (value: string): boolean => {
+    if (!value.startsWith('http://') && !value.startsWith('https://')) {
+      return false
+    }
+    try {
+      const parsed = new URL(value)
+      const host = parsed.hostname.toLowerCase()
+      const path = parsed.pathname.toLowerCase()
+      const query = parsed.search.toLowerCase()
+      if (host.includes('encrypted-tbn') && host.includes('gstatic.com')) {
+        return true
+      }
+      if (path === '/images' && query.includes('q=tbn:')) {
+        return true
+      }
+      if (query.includes('tbm=isch')) {
+        return true
+      }
+      return false
+    } catch {
+      return false
+    }
+  }
 
   const updateImages = (newImages: string[]) => {
     setImages(newImages)
@@ -51,9 +112,9 @@ export function ImageGallery({
       const newUrls: string[] = []
 
       for (const file of files) {
-        // Validate file size (10MB)
-        if (file.size > 10 * 1024 * 1024) {
-          alert(`File ${file.name} exceeds 10MB limit`)
+        // Validate file size (60MB)
+        if (file.size > 60 * 1024 * 1024) {
+          alert(`File ${file.name} exceeds 60MB limit`)
           continue
         }
 
@@ -65,21 +126,7 @@ export function ImageGallery({
 
         // Upload file if equipmentId is provided
         if (equipmentId) {
-          const formData = new FormData()
-          formData.append('file', file)
-          formData.append('equipmentId', equipmentId)
-
-          const response = await fetch('/api/media/upload', {
-            method: 'POST',
-            body: formData,
-          })
-
-          if (!response.ok) {
-            const error = await response.json()
-            throw new Error(error.error || 'Failed to upload image')
-          }
-
-          const media = await response.json()
+          const media = await uploadMediaFile({ file, equipmentId })
           newUrls.push(media.url)
         } else {
           // For new equipment, use data URL temporarily
@@ -102,8 +149,18 @@ export function ImageGallery({
   }
 
   const handleAddUrl = () => {
-    if (urlInput.trim()) {
-      updateImages([...images, urlInput.trim()])
+    const normalizedUrl = normalizeMediaUrl(urlInput)
+    if (normalizedUrl) {
+      if (!isValidMediaUrl(normalizedUrl)) {
+        setUrlError('أدخل رابط صورة صالحاً (https://...) أو مساراً محلياً (/uploads/...)')
+        return
+      }
+      if (isLikelyThumbnailUrl(normalizedUrl)) {
+        setUrlError('هذا رابط صورة مصغرة منخفضة الجودة. استخدم رابط الصورة الأصلية بالحجم الكامل.')
+        return
+      }
+      setUrlError('')
+      updateImages([...images, normalizedUrl])
       setUrlInput('')
     }
   }
@@ -141,19 +198,23 @@ export function ImageGallery({
               type="url"
               placeholder="https://example.com/image.jpg"
               value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
+              onChange={(e) => {
+                setUrlInput(e.target.value)
+                if (urlError) setUrlError('')
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
                   handleAddUrl()
                 }
               }}
-              dir="ltr"
+              dir={EMBED_LTR}
             />
             <Button type="button" onClick={handleAddUrl} disabled={!urlInput.trim()}>
               إضافة
             </Button>
           </div>
+          {urlError && <p className="text-xs text-red-600">{urlError}</p>}
         </TabsContent>
 
         <TabsContent value="file" className="space-y-4">

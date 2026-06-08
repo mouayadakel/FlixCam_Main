@@ -75,7 +75,7 @@ export function CmsStudioTrustTab({ studio, onSave, onDirtyChange, saving }: Tru
               value={form.whatsappNumber}
               onChange={(e) => handleChange('whatsappNumber', e.target.value)}
               placeholder="966501234567"
-              dir="ltr"
+              dir="rtl"
             />
           </div>
           <div className="space-y-2">
@@ -87,7 +87,7 @@ export function CmsStudioTrustTab({ studio, onSave, onDirtyChange, saving }: Tru
               value={form.bookingCountDisplay}
               onChange={(e) => handleChange('bookingCountDisplay', e.target.value)}
               placeholder="مثال: 100"
-              dir="ltr"
+              dir="rtl"
             />
             <p className="text-xs text-muted-foreground">
               سيظهر كـ “+100 حجز ناجح” في صفحة الاستوديو

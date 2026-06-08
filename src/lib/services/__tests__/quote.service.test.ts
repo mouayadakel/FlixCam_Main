@@ -19,12 +19,20 @@ jest.mock('@/lib/db/prisma', () => ({
     },
     equipment: { findMany: jest.fn() },
     quoteEquipment: { createMany: jest.fn(), deleteMany: jest.fn() },
-    cart: { findFirst: jest.fn() },
+    cart: { findFirst: jest.fn(), findUnique: jest.fn() },
     kitEquipment: { findMany: jest.fn() },
+    companySettings: {
+      findFirst: jest.fn().mockResolvedValue({ quotePrefix: 'QUO', invoicePrefix: 'INV' }),
+    },
+    invoiceSequence: {
+      upsert: jest.fn().mockResolvedValue({ year: new Date().getFullYear(), lastNum: 1 }),
+    },
+    ledgerEntry: { create: jest.fn().mockResolvedValue({}) },
   },
 }))
 
 jest.mock('@/lib/auth/permissions', () => ({
+  ...jest.requireActual('@/lib/auth/permissions'),
   hasPermission: jest.fn(),
 }))
 
@@ -35,6 +43,18 @@ jest.mock('../pricing.service', () => ({
       vatAmount: 15,
       totalAmount: 115,
       depositAmount: 50,
+      breakdown: {
+        equipment: [
+          {
+            equipmentId: 'e1',
+            sku: 'SKU1',
+            quantity: 1,
+            dailyRate: 20,
+            days: 4,
+            amount: 80,
+          },
+        ],
+      },
     }),
   },
 }))
@@ -79,7 +99,7 @@ const baseQuote = {
   status: 'DRAFT',
   startDate: new Date('2026-03-01'),
   endDate: new Date('2026-03-05'),
-  validUntil: new Date('2026-04-01'),
+  validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   subtotal: 100,
   vatAmount: 15,
   totalAmount: 115,
@@ -99,6 +119,9 @@ describe('QuoteService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     hasPermission.mockResolvedValue(true)
+    mockQuoteFindFirst.mockResolvedValue(null)
+    mockQuoteCreate.mockReset()
+    mockQuoteUpdate.mockReset()
   })
 
   describe('create', () => {
@@ -147,11 +170,8 @@ describe('QuoteService', () => {
       ).rejects.toThrow(ValidationError)
     })
 
-    it('retries generateQuoteNumber when collision occurs', async () => {
+    it('generates quote number from company settings and sequence', async () => {
       mockEquipmentFindMany.mockResolvedValue([{ id: 'e1', dailyPrice: 20 }])
-      mockQuoteFindFirst
-        .mockResolvedValueOnce({ id: 'existing' })
-        .mockResolvedValueOnce(null)
       mockQuoteCreate.mockResolvedValue({
         ...baseQuote,
         equipmentItems: [],
@@ -168,7 +188,8 @@ describe('QuoteService', () => {
         'user_1'
       )
       expect(result).toBeDefined()
-      expect(mockQuoteFindFirst).toHaveBeenCalled()
+      expect(prisma.companySettings.findFirst).toHaveBeenCalled()
+      expect(prisma.invoiceSequence.upsert).toHaveBeenCalled()
     })
 
     it('creates quote and returns transformed result', async () => {
@@ -236,6 +257,25 @@ describe('QuoteService', () => {
     })
 
     it('creates quote when equipment dailyPrice is 0 (uses 0 for dailyRate)', async () => {
+      const { PricingService } = require('../pricing.service')
+      PricingService.generateQuote.mockResolvedValueOnce({
+        subtotal: 0,
+        vatAmount: 0,
+        totalAmount: 0,
+        depositAmount: 0,
+        breakdown: {
+          equipment: [
+            {
+              equipmentId: 'e1',
+              sku: 'SKU1',
+              quantity: 1,
+              dailyRate: 0,
+              days: 4,
+              amount: 0,
+            },
+          ],
+        },
+      })
       mockEquipmentFindMany.mockResolvedValue([{ id: 'e1', dailyPrice: 0 }])
       mockQuoteFindFirst.mockResolvedValue(null)
       mockQuoteCreate.mockResolvedValue({

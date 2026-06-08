@@ -13,29 +13,39 @@ const kitItemSchema = z.object({
 
 export const createKitSchema = z.object({
   name: z.string().min(1).max(120),
+  nameEn: z.string().max(120).optional().nullable(),
+  nameZh: z.string().max(120).optional().nullable(),
   slug: z
     .string()
     .min(1)
     .max(80)
     .regex(/^[a-z0-9_-]+$/),
-  description: z.string().max(1000).optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  descriptionEn: z.string().max(2000).optional().nullable(),
+  descriptionZh: z.string().max(2000).optional().nullable(),
   discountPercent: z.number().min(0).max(100).optional().nullable(),
   isActive: z.boolean().optional().default(true),
-  items: z.array(kitItemSchema).min(1),
+  cmsData: z.any().optional().nullable(),
+  items: z.array(kitItemSchema).min(1, 'Kit must contain at least one item'),
 })
 
 export const updateKitSchema = z.object({
   name: z.string().min(1).max(120).optional(),
+  nameEn: z.string().max(120).optional().nullable(),
+  nameZh: z.string().max(120).optional().nullable(),
   slug: z
     .string()
     .min(1)
     .max(80)
     .regex(/^[a-z0-9_-]+$/)
     .optional(),
-  description: z.string().max(1000).optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  descriptionEn: z.string().max(2000).optional().nullable(),
+  descriptionZh: z.string().max(2000).optional().nullable(),
   discountPercent: z.number().min(0).max(100).optional().nullable(),
   isActive: z.boolean().optional(),
-  items: z.array(kitItemSchema).optional(),
+  cmsData: z.any().optional().nullable(),
+  items: z.array(kitItemSchema).min(1, 'Kit must contain at least one item').optional(),
 })
 
 export type CreateKitInput = z.infer<typeof createKitSchema>

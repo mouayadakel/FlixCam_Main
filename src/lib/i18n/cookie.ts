@@ -34,11 +34,10 @@ export function setLocaleCookie(locale: Locale): void {
 export const LOCALE_INIT_SCRIPT = `
 (function(){
   var m = document.cookie.match(/(?:^|; )NEXT_LOCALE=([^;]*)/);
-  var locale = m ? decodeURIComponent(m[1]) : '';
-  if (locale === 'ar' || locale === 'en' || locale === 'zh') {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-  }
+  var raw = m ? decodeURIComponent(m[1]) : '';
+  var locale = (raw === 'ar' || raw === 'en' || raw === 'zh' || raw === 'fr') ? raw : 'ar';
+  document.documentElement.lang = locale;
+  document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
 })();
 `
   .replace(/\s+/g, ' ')

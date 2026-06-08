@@ -18,6 +18,7 @@ jest.mock('@/lib/db/prisma', () => ({
     },
     category: { findUnique: (...args: unknown[]) => mockCategoryFindUnique(...args) },
     bookingEquipment: { findMany: (...args: unknown[]) => mockBookingEquipmentFindMany(...args) },
+    chatbotSettings: { findUnique: jest.fn().mockResolvedValue(null) },
   },
 }))
 
@@ -1909,6 +1910,65 @@ describe('AIService', () => {
         questionnaireAnswers: { crew_size: 'large' },
       })
       expect(result[0].equipment[0].reason).toContain('Suitable for larger crew')
+    })
+
+    it('appends crew role SKUs when crew_size is large', async () => {
+      mockShootTypeGetBySlug.mockResolvedValue({
+        id: 'st1',
+        name: 'Wedding',
+        slug: 'wedding',
+        recommendations: [
+          {
+            equipmentId: 'eq1',
+            budgetTier: 'PROFESSIONAL',
+            reason: 'Essential camera',
+            defaultQuantity: 1,
+            sortOrder: 0,
+            equipment: {
+              id: 'eq1',
+              sku: 'CAM-1',
+              model: 'Sony FX3',
+              dailyPrice: 500,
+            },
+          },
+        ],
+      })
+      mockEquipmentFindMany.mockResolvedValue([
+        {
+          id: 'crew-ac',
+          sku: 'CREW-1ST-AC',
+          model: 'Focus Puller (1st AC)',
+          slug: 'focus-puller-day-rate',
+          dailyPrice: 1500,
+          quantityAvailable: 10,
+          customFields: {},
+          category: { id: 'cat-crew', name: 'Crew', slug: 'crew' },
+          brand: null,
+          media: [],
+        },
+        {
+          id: 'crew-snd',
+          sku: 'CREW-SOUND-MIX',
+          model: 'Production Sound Mixer',
+          slug: 'production-sound-mixer-day-rate',
+          dailyPrice: 2000,
+          quantityAvailable: 10,
+          customFields: {},
+          category: { id: 'cat-crew', name: 'Crew', slug: 'crew' },
+          brand: null,
+          media: [],
+        },
+      ])
+      const { AIService } = await import('../ai.service')
+      const result = await AIService.buildKit({
+        projectType: 'wedding',
+        duration: 3,
+        shootTypeSlug: 'wedding',
+        questionnaireAnswers: { crew_size: 'large' },
+      })
+      const skus = result[0].equipment.map((e) => e.sku)
+      expect(skus).toContain('CREW-1ST-AC')
+      expect(skus).toContain('CREW-SOUND-MIX')
     })
 
     it('uses OpenAI for kit reasons when Gemini unavailable', async () => {
