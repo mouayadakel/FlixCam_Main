@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { isObjectStorageEnabled, uploadObject } from '@/lib/storage/object-storage'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB (equipment, studio, inspection)
 /** CMS uploads (e.g. hero banners) may use larger hero assets */
@@ -124,12 +125,22 @@ export class MediaService {
       const arrayBuffer = await file.arrayBuffer()
       buffer = Buffer.from(arrayBuffer)
     }
-    await writeFile(filepath, buffer)
+    const objectKey =
+      type === 'equipment'
+        ? `equipment/${id}/${storedName}`
+        : `inspections/${id}/${storedName}`
 
-    // Create relative URL
-    const url = type === 'equipment' 
-      ? `/uploads/equipment/${id}/${storedName}`
-      : `/uploads/inspections/${id}/${storedName}`
+    let url: string
+    if (type === 'equipment' && isObjectStorageEnabled()) {
+      const uploaded = await uploadObject(objectKey, buffer, mimeType)
+      url = uploaded.url
+    } else {
+      await writeFile(filepath, buffer)
+      url =
+        type === 'equipment'
+          ? `/uploads/equipment/${id}/${storedName}`
+          : `/uploads/inspections/${id}/${storedName}`
+    }
 
     const media = await prisma.media.create({
       data: {

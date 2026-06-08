@@ -144,6 +144,7 @@ export default function InvoiceDetailPage() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const [recordingPayment, setRecordingPayment] = useState(false)
   const [syncingDaftra, setSyncingDaftra] = useState(false)
+  const [syncingZatca, setSyncingZatca] = useState(false)
   const [paymentData, setPaymentData] = useState({
     amount: '',
     method: 'cash',
@@ -290,6 +291,34 @@ export default function InvoiceDetailPage() {
     }
   }
 
+  const handleZatcaClearance = async () => {
+    setSyncingZatca(true)
+    try {
+      const response = await fetch(`/api/admin/invoices/${params?.id}/zatca-clearance`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'فشل تخليص ZATCA')
+      }
+      toast({
+        title: 'ZATCA',
+        description: data.submitted
+          ? 'تم إرسال الفاتورة إلى ZATCA بنجاح'
+          : 'تم تجهيز الفاتورة وQR الضريبي',
+      })
+      loadInvoice()
+    } catch (error: unknown) {
+      toast({
+        title: 'ZATCA',
+        description: error instanceof Error ? error.message : 'فشل تخليص ZATCA',
+        variant: 'destructive',
+      })
+    } finally {
+      setSyncingZatca(false)
+    }
+  }
+
   const handleDaftraSync = async () => {
     setSyncingDaftra(true)
     try {
@@ -429,6 +458,18 @@ export default function InvoiceDetailPage() {
           >
             <Download className="me-2 h-4 w-4" />
             تحميل PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleZatcaClearance}
+            disabled={syncingZatca || invoice.zatcaStatus === 'CLEARED'}
+          >
+            {syncingZatca ? (
+              <RefreshCw className="me-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="me-2 h-4 w-4" />
+            )}
+            تخليص ZATCA
           </Button>
         </div>
       </div>

@@ -27,6 +27,10 @@ npm run lint || fail "lint failed"
 step "Running type-check..."
 npm run type-check || fail "type-check failed"
 
+# ── 3b. Translation completeness ───────────────────────────────────
+step "Checking translations (en/ar/zh/fr)..."
+npm run check:translations || fail "translation check failed"
+
 # ── 4. Migration safety scan (portable: no grep -P) ───────────────────
 step "Scanning migrations for unsafe SQL..."
 UNSAFE=0

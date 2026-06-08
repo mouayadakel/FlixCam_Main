@@ -81,6 +81,7 @@ temp/
 
 # Local file storage (uploads)
 storage/
+!src/lib/storage/
 uploads/
 public/photos/
 app/storage/uploads/*

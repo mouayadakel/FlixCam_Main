@@ -3,7 +3,7 @@
  */
 
 import { prisma } from '@/lib/db/prisma'
-import { generateZATCAQR } from '@/lib/zatca/qr'
+import { clearInvoiceWithZatca } from '@/lib/services/zatca-invoice.service'
 import { EmailService } from '@/lib/services/email.service'
 import { PaymentService } from '@/lib/services/payment.service'
 import { alertAdmins } from '@/lib/services/cron-alert.service'
@@ -12,7 +12,7 @@ import { subDays } from 'date-fns'
 
 export const runZatcaInvoiceSync = wrapCronJob('zatca-invoice-sync', async () => {
   const company = await prisma.companySettings.findFirst({
-    select: { vatNumber: true, nameAr: true, nameEn: true, zatcaEnabled: true },
+    select: { vatNumber: true, zatcaEnabled: true },
   })
 
   if (!company?.vatNumber) {
@@ -25,29 +25,24 @@ export const runZatcaInvoiceSync = wrapCronJob('zatca-invoice-sync', async () =>
       zatcaStatus: 'PENDING',
       status: { in: ['SENT', 'PAID', 'PARTIALLY_PAID'] },
     },
+    select: { id: true },
     take: 50,
   })
 
-  let updated = 0
+  let cleared = 0
+  let failed = 0
   for (const inv of pending) {
-    const qr = generateZATCAQR({
-      sellerName: company.nameAr || company.nameEn || 'FlixCam',
-      vatNumber: company.vatNumber,
-      invoiceDate: inv.issueDate,
-      totalWithVAT: Number(inv.totalAmount),
-      vatAmount: Number(inv.vatAmount),
-    })
-    await prisma.invoice.update({
-      where: { id: inv.id },
-      data: {
-        zatcaQR: qr,
-        zatcaStatus: company.zatcaEnabled ? 'SUBMITTED' : 'ACCEPTED',
-      },
-    })
-    updated++
+    const result = await clearInvoiceWithZatca(inv.id)
+    if (result.status === 'REJECTED') failed++
+    else cleared++
   }
 
-  return { scanned: pending.length, updated, zatcaEnabled: company.zatcaEnabled }
+  return {
+    scanned: pending.length,
+    cleared,
+    failed,
+    zatcaEnabled: company.zatcaEnabled,
+  }
 })
 
 export const runAutoRefundCancelled = wrapCronJob('auto-refund-cancelled', async () => {
