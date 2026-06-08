@@ -49,15 +49,30 @@ INVOKE=/home/flixcam.rent/scripts/cron-invoke.sh
 0 13 * * * root $INVOKE /api/cron/run/ga4-sync
 0 14 * * * root $INVOKE /api/cron/publish-scheduled-blog
 */15 * * * * root $INVOKE /api/cron/run/health-check
+*/15 * * * * root $INVOKE /api/cron/run/cron-health-alerts
+0 * * * * root $INVOKE /api/cron/run/dead-letter-review
+0 * * * * root $INVOKE /api/cron/run/waitlist-availability
+30 */6 * * * root $INVOKE /api/cron/run/abandoned-cart-tiered
+
+# ── Phase 6–10 daily jobs ───────────────────────────────────────────────────
+0 1 * * * root $INVOKE /api/cron/run/zatca-invoice-sync
+0 2 * * * root $INVOKE /api/cron/run/auto-refund-cancelled
+0 5 * * * root $INVOKE /api/cron/run/low-stock-alerts
+0 7 * * * root $INVOKE /api/cron/run/infrastructure-health
+30 8 * * * root $INVOKE /api/cron/run/feed-validation
+0 10 * * * root $INVOKE /api/cron/run/invoice-dunning
+0 15 * * * root $INVOKE /api/cron/run/review-request
 
 # ── Weekly (Sunday) ────────────────────────────────────────────────────────
 0 3 * * 0 root $INVOKE /api/cron/run/database-maintenance
 0 4 * * 0 root $INVOKE /api/cron/run/pdpl-archive
+30 4 * * 0 root $INVOKE /api/cron/run/pdpl-restore-drill
 0 5 * * 0 root $INVOKE /api/cron/run/security-scan
 
 # ── Monthly (1st) ──────────────────────────────────────────────────────────
 0 6 1 * * root $INVOKE /api/cron/run/monthly-invoices
 0 7 1 * * root $INVOKE /api/cron/run/credential-rotation-check
+0 8 1 * * root $INVOKE /api/cron/run/vendor-statements
 
 # ── PM2 health watchdog (restart; set WATCHDOG_AUTO_DEPLOY=true for rebuild) ─
 */5 * * * * root /home/flixcam.rent/scripts/health-watchdog.sh >> /var/log/flixcam-watchdog.log 2>&1

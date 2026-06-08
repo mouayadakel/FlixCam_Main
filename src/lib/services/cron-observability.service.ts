@@ -113,6 +113,38 @@ export class CronObservabilityService {
     })
   }
 
+  /** Phase 6c — Daily success/fail counts for last N days */
+  static async getJobHistory(days = 7) {
+    const since = new Date(Date.now() - days * 24 * 60 * 60_000)
+    const logs = await prisma.auditLog.findMany({
+      where: {
+        resourceType: 'CronJob',
+        OR: [{ action: { endsWith: '.completed' } }, { action: { endsWith: '.failed' } }],
+        timestamp: { gte: since },
+      },
+      select: { action: true, timestamp: true, resourceId: true },
+      orderBy: { timestamp: 'asc' },
+    })
+
+    const byDay = new Map<string, { ok: number; failed: number }>()
+    for (let d = 0; d < days; d++) {
+      const key = new Date(Date.now() - (days - 1 - d) * 24 * 60 * 60_000)
+        .toISOString()
+        .slice(0, 10)
+      byDay.set(key, { ok: 0, failed: 0 })
+    }
+
+    for (const log of logs) {
+      const key = log.timestamp.toISOString().slice(0, 10)
+      const bucket = byDay.get(key) ?? { ok: 0, failed: 0 }
+      if (log.action.includes('.failed')) bucket.failed++
+      else bucket.ok++
+      byDay.set(key, bucket)
+    }
+
+    return Array.from(byDay.entries()).map(([date, counts]) => ({ date, ...counts }))
+  }
+
   static async getFailedNotifications(limit = 30) {
     return prisma.auditLog.findMany({
       where: { action: 'NOTIFICATION_FAILED' },

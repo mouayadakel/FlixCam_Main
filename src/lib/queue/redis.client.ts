@@ -17,7 +17,11 @@ export function getRedisClient(): Redis {
     return redisClient
   }
 
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+  // Phase 9d: optional dedicated Redis for BullMQ (falls back to REDIS_URL)
+  const redisUrl =
+    process.env.BULLMQ_REDIS_URL?.trim() ||
+    process.env.REDIS_URL?.trim() ||
+    'redis://localhost:6379'
 
   redisClient = new Redis(redisUrl, {
     maxRetriesPerRequest: null, // Required by BullMQ - must be null for blocking operations

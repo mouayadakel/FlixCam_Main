@@ -158,6 +158,14 @@ export const runSecurityScan = wrapCronJob('security-scan', async () => {
 
   if (npmAuditHigh > 0) {
     findings.push(`${npmAuditHigh} high/critical npm vulnerabilities`)
+    await prisma.auditLog.create({
+      data: {
+        action: 'cron.security.remediation_ticket',
+        resourceType: 'Security',
+        resourceId: 'npm-audit',
+        metadata: { npmAuditHigh, status: 'open' },
+      },
+    })
   }
 
   await prisma.auditLog.create({
@@ -170,4 +178,31 @@ export const runSecurityScan = wrapCronJob('security-scan', async () => {
   })
 
   return { findings, npmAuditHigh, clean: findings.length === 0 }
+})
+
+export const runPdplRestoreDrill = wrapCronJob('pdpl-restore-drill', async () => {
+  const dir = process.env.PDPL_ARCHIVE_DIR || '/var/backups/flixcam/pdpl'
+  let readable = false
+  let sampleFile: string | null = null
+  let sampleValid = false
+
+  try {
+    const entries = await fs.readdir(dir)
+    readable = true
+    const jsonFiles = entries.filter((f) => f.endsWith('.json'))
+    if (jsonFiles.length > 0) {
+      sampleFile = jsonFiles[0]!
+      const raw = await fs.readFile(path.join(dir, sampleFile), 'utf8')
+      JSON.parse(raw)
+      sampleValid = true
+    }
+  } catch (err) {
+    return {
+      dir,
+      readable: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+
+  return { dir, readable, sampleFile, sampleValid, drillPassed: readable && sampleValid }
 })

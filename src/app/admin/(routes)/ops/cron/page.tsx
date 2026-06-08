@@ -21,12 +21,19 @@ interface CronJobRow {
   lastError: string | null
 }
 
+interface HistoryDay {
+  date: string
+  ok: number
+  failed: number
+}
+
 interface CronDashboard {
   jobs: CronJobRow[]
   summary: { total: number; ok: number; failed: number; stale: number; never: number }
   reconciliationMismatches: Array<{ id: string; resourceId: string | null; timestamp: string }>
   payoutsReady: Array<{ id: string; resourceId: string | null; timestamp: string }>
   notificationQueue: { mode: string; pending: number }
+  history?: HistoryDay[]
 }
 
 function statusBadge(status: string) {
@@ -141,6 +148,42 @@ export default function AdminCronPage() {
               </CardContent>
             </Card>
           </div>
+
+          {data.history && data.history.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>7-day cron runs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex h-32 items-end gap-2">
+                  {data.history.map((day) => {
+                    const max = Math.max(1, ...data.history!.map((d) => d.ok + d.failed))
+                    const okH = (day.ok / max) * 100
+                    const failH = (day.failed / max) * 100
+                    return (
+                      <div key={day.date} className="flex flex-1 flex-col items-center gap-1">
+                        <div className="flex w-full flex-1 items-end gap-0.5">
+                          <div
+                            className="flex-1 rounded-t bg-green-500"
+                            style={{ height: `${okH}%`, minHeight: day.ok ? 4 : 0 }}
+                            title={`${day.ok} ok`}
+                          />
+                          <div
+                            className="flex-1 rounded-t bg-red-500"
+                            style={{ height: `${failH}%`, minHeight: day.failed ? 4 : 0 }}
+                            title={`${day.failed} failed`}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {day.date.slice(5)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

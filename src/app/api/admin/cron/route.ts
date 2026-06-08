@@ -19,13 +19,14 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const [jobs, mismatches, payouts, reports, failedNotifications, queue] =
+  const [jobs, mismatches, payouts, reports, failedNotifications, history, queue] =
     await Promise.all([
       CronObservabilityService.getJobStatuses(),
       CronObservabilityService.getReconciliationMismatches(30),
       CronObservabilityService.getPayoutsReadyForSettlement(30),
       CronObservabilityService.getRecentReports(15),
       CronObservabilityService.getFailedNotifications(20),
+      CronObservabilityService.getJobHistory(7),
       Promise.resolve(getQueueStats()),
     ])
 
@@ -44,6 +45,7 @@ export async function GET() {
     payoutsReady: payouts,
     recentReports: reports,
     failedNotifications,
+    history,
     notificationQueue: queue,
   })
 }

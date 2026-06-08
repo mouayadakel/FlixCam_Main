@@ -60,6 +60,7 @@ const sidebarSections: SidebarSection[] = [
       { label: { ar: 'مركز الإجراءات', en: 'Action Center' }, href: '/admin/action-center', permission: 'dashboard.read', activePaths: ['/admin/action-center', '/admin/approvals', '/admin/notifications'] },
       { label: { ar: 'العمليات الحية', en: 'Live Operations' }, href: '/admin/live-ops', permission: 'dashboard.read' },
       { label: { ar: 'المهام المجدولة', en: 'Cron & Jobs' }, href: '/admin/ops/cron', permission: 'system.health_check' },
+      { label: { ar: 'الامتثال', en: 'Compliance' }, href: '/admin/ops/compliance', permission: 'system.health_check' },
     ],
   },
   {

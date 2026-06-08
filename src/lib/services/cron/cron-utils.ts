@@ -4,6 +4,7 @@
 
 import { prisma } from '@/lib/db/prisma'
 import { logger } from '@/lib/logger'
+import { captureCronFailureInSentry } from '@/lib/services/cron-alert.service'
 
 export interface CronJobResult {
   ok: boolean
@@ -77,6 +78,7 @@ export function wrapCronJob<T extends Record<string, unknown>>(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       logger.error(`Cron job failed: ${job}`, { error: message })
+      void captureCronFailureInSentry(job, message)
       const result: CronJobResult = {
         ok: false,
         job,

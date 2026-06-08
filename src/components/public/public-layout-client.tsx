@@ -21,6 +21,7 @@ import { CompareBar } from '@/components/features/equipment/compare-bar'
 import { MobileNavBar } from '@/components/mobile/mobile-nav-bar'
 import { PublicChatWidget } from '@/components/public/public-chat-widget'
 import { PersonalizationProvider } from '@/components/analytics/personalization-provider'
+import { CookieConsentBanner } from '@/components/analytics/cookie-consent-banner'
 
 function envTrackingFallback(): PublicMarketingTrackingConfig {
   return {
@@ -78,6 +79,7 @@ export function PublicLayoutClient({ children, flags, tracking }: PublicLayoutCl
         <PublicChatWidget />
         <CompareBar />
         <AuthModal />
+        <CookieConsentBanner />
       </AuthModalProvider>
     </PersonalizationProvider>
   )

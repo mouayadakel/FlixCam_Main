@@ -149,4 +149,87 @@ export class CheckoutRecoveryService {
 
     return { processed, failures }
   }
+
+  /**
+   * Phase 7b — Tiered WhatsApp recovery: 1h, 24h, 72h after cart abandonment.
+   */
+  static async recoverAbandonedCheckoutsTiered(): Promise<{
+    tier1: number
+    tier2: number
+    tier3: number
+    failures: number
+  }> {
+    const tiers = [
+      { hours: 1, action: 'cart.recovery_tier.1h', windowHours: 0.5 },
+      { hours: 24, action: 'cart.recovery_tier.24h', windowHours: 1 },
+      { hours: 72, action: 'cart.recovery_tier.72h', windowHours: 2 },
+    ] as const
+
+    const counts = { tier1: 0, tier2: 0, tier3: 0, failures: 0 }
+    const now = Date.now()
+
+    for (let i = 0; i < tiers.length; i++) {
+      const tier = tiers[i]!
+      const target = now - tier.hours * 60 * 60_000
+      const windowMs = tier.windowHours * 60 * 60_000
+      const from = new Date(target - windowMs)
+      const to = new Date(target + windowMs)
+
+      const carts = await (prisma.cart as any).findMany({
+        where: {
+          updatedAt: { gte: from, lte: to },
+          userId: { not: null },
+          booking: null,
+          items: { some: {} },
+        },
+        include: {
+          user: { select: { id: true, phone: true, name: true, whatsappOptIn: true } },
+          items: { include: { equipment: { select: { model: true } } } },
+        },
+        take: 30,
+      })
+
+      for (const cart of carts) {
+        const sent = await prisma.auditLog.findFirst({
+          where: { action: tier.action, resourceId: cart.id },
+        })
+        if (sent) continue
+
+        const user = (cart as any).user
+        if (!user?.phone || !WhatsAppService.isWhatsAppConfigured()) continue
+
+        try {
+          const baseUrl = (
+            process.env.NEXT_PUBLIC_APP_URL ??
+            process.env.NEXTAUTH_URL ??
+            'https://flixcam.rent'
+          ).replace(/\/$/, '')
+          const recoveryUrl = `${baseUrl}/checkout?restoreCart=${cart.id}`
+          const msg = `FlixCam — reminder ${tier.hours}h: complete your booking\n${recoveryUrl}`
+
+          await WhatsAppService.sendWhatsAppText(
+            WhatsAppService.normalizePhoneForWhatsApp(user.phone),
+            msg,
+            { recipientUserId: user.id, templateId: `abandoned_cart_${tier.hours}h` }
+          )
+
+          await AuditService.log({
+            action: tier.action,
+            userId: user.id,
+            resourceType: 'cart',
+            resourceId: cart.id,
+            metadata: { tierHours: tier.hours, recoveryUrl },
+          })
+
+          if (i === 0) counts.tier1++
+          else if (i === 1) counts.tier2++
+          else counts.tier3++
+        } catch {
+          counts.failures++
+        }
+      }
+    }
+
+    return counts
+  }
 }

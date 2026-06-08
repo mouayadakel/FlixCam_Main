@@ -181,6 +181,14 @@ export const runWalletSettlements = wrapCronJob('wallet-settlements', async () =
         continue
       }
     }
+    const autoApprove = process.env.WALLET_AUTO_APPROVE_PAYOUTS === 'true'
+    if (autoApprove) {
+      await prisma.vendorPayout.update({
+        where: { id: payout.id },
+        data: { status: 'PROCESSING', notes: 'Auto-approved by wallet-settlements cron' },
+      })
+    }
+
     await prisma.auditLog.create({
       data: {
         action: 'cron.payout.ready_for_settlement',
@@ -190,6 +198,7 @@ export const runWalletSettlements = wrapCronJob('wallet-settlements', async () =
         metadata: {
           vendor: payout.vendor.companyName,
           netAmount: payout.netAmount.toString(),
+          autoApproved: autoApprove,
         },
       },
     })

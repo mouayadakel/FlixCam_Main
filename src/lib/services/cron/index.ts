@@ -40,6 +40,7 @@ import {
 } from './content-cron.service'
 import {
   runPdplArchive,
+  runPdplRestoreDrill,
   runCredentialRotationCheck,
   runSecurityScan,
 } from './compliance-cron.service'
@@ -49,6 +50,24 @@ import {
   runTicketEscalation,
   runSeasonalPromos,
 } from './admin-cron.service'
+import {
+  runCronHealthAlerts,
+  runDeadLetterReview,
+  runInfrastructureHealth,
+} from './observability-cron.service'
+import {
+  runFeedValidation,
+  runWaitlistAvailability,
+  runReviewRequests,
+  runLowStockAlerts,
+  runAbandonedCartTiered,
+} from './growth-cron.service'
+import {
+  runZatcaInvoiceSync,
+  runAutoRefundCancelled,
+  runVendorStatements,
+  runInvoiceDunning,
+} from './finance-cron.service'
 
 export type CronJobHandler = () => Promise<CronJobResult>
 
@@ -83,6 +102,19 @@ export const CRON_JOB_REGISTRY: Record<string, CronJobHandler> = {
   'equipment-specs-validation': runEquipmentSpecsValidation,
   'ticket-escalation': runTicketEscalation,
   'seasonal-promos': runSeasonalPromos,
+  'cron-health-alerts': runCronHealthAlerts,
+  'dead-letter-review': runDeadLetterReview,
+  'infrastructure-health': runInfrastructureHealth,
+  'feed-validation': runFeedValidation,
+  'waitlist-availability': runWaitlistAvailability,
+  'review-request': runReviewRequests,
+  'low-stock-alerts': runLowStockAlerts,
+  'abandoned-cart-tiered': runAbandonedCartTiered,
+  'zatca-invoice-sync': runZatcaInvoiceSync,
+  'auto-refund-cancelled': runAutoRefundCancelled,
+  'vendor-statements': runVendorStatements,
+  'invoice-dunning': runInvoiceDunning,
+  'pdpl-restore-drill': runPdplRestoreDrill,
 }
 
 export const CRON_JOB_SLUGS = Object.keys(CRON_JOB_REGISTRY)
