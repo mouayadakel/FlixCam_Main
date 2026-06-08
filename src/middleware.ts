@@ -248,6 +248,6 @@ export const config = {
     /*
      * Match all request paths except static assets and Next.js internals.
      */
-    '/((?!_next|favicon.ico|robots.txt|sitemap|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|html)$).*)',
+    '/((?!_next|favicon.ico|robots.txt|sitemap|feeds|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|html|xml|csv)$).*)',
   ],
 }

@@ -61,7 +61,9 @@ test.describe('Admin bookings & payments', () => {
     test('cron ops page loads', async ({ page }) => {
       await page.goto(`${BASE}/admin/ops/cron`)
       await expect(page).toHaveURL(/\/admin\/ops\/cron/)
-      await expect(page.getByText(/Cron|Scheduled Jobs/i)).toBeVisible({ timeout: 10000 })
+      await expect(
+        page.getByRole('heading', { name: /Cron & Scheduled Jobs/i })
+      ).toBeVisible({ timeout: 10000 })
     })
   })
 })
